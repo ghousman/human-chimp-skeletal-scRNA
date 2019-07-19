@@ -8,4 +8,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-Welcome to my research website.
+Genevieve Housman
+
+This site contains the workflow and analysis of my human and chimpanzee comparative skeletal single-cell gene expression project.
+

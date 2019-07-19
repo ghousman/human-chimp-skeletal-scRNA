@@ -7,4 +7,4 @@ editor_options:
   chunk_output_type: console
 ---
 
-Describe your project.
+My name is Genevieve Housman, and I am a postdoctoral fellow in the Section of Genetic Medicine at the University of Chicago. This research aims to evaluate single-cell gene expression differences between humans and chimpanzees in iPSCs, MSCs, osteoblasts, and chondrocytes.
