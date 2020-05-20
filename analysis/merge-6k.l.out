@@ -1,0 +1,354 @@
+
+R version 3.5.1 (2018-07-02) -- "Feather Spray"
+Copyright (C) 2018 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> #Load libraries
+> library(Seurat)
+> library(dplyr)
+
+Attaching package: 'dplyr'
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+> library(stringi)
+> library(stringr)
+> library(ggplot2)
+> library(colorspace)
+> library(RColorBrewer)
+> 
+> #Define main directory
+> dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+> 
+> #Load batch info
+> batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+> 
+> #Read in files
+> data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.rds"))
+> 
+> #Merge datasets
+> #Perform log normalization
+> #Reduce dimensionality
+> #Remove excess files
+> #Save merged datasets
+> 
+> #combine ipscs from all samples
+> combo.ipsc    <- merge(data[[1]], y=c(data[[4]],data[[7]],data[[10]],data[[13]],data[[16]],data[[19]]),
++                       add.cell.ids=c("H1C1.I","H1C1-r2.I","H2C2.I","H3C3.I","H4C4.I","H5C5.I","H6C6.I"))
+> #log normalize data
+> combo.ipsc <- NormalizeData(combo.ipsc, verbose=FALSE)
+> #find 6000 most variable genes within each species
+> humans <- FindVariableFeatures(subset(combo.ipsc, species=="Human"), selection.method="vst", nfeatures=6000)
+Calculating gene variances
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Calculating feature variances of standardized and clipped values
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+> chimps <- FindVariableFeatures(subset(combo.ipsc, species=="Chimp"), selection.method="vst", nfeatures=6000)
+Calculating gene variances
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Calculating feature variances of standardized and clipped values
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+> human.features <- VariableFeatures(humans)
+> chimp.features <- VariableFeatures(chimps)
+> features <- intersect(human.features, chimp.features)
+> length(features) #3210 variable genes intersect
+[1] 3210
+> head(features)
+[1] "HSPA1B" "HSPA6"  "NTS"    "MT2A"   "UPP1"   "SOX17" 
+> combo.ipsc <- FindVariableFeatures(combo.ipsc, selection.method="vst", nfeatures=length(features))
+Calculating gene variances
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Calculating feature variances of standardized and clipped values
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+> VariableFeatures(combo.ipsc) <- features
+> rm(humans,chimps,human.features,chimp.features,features)
+> #scale data
+> combo.ipsc <- ScaleData(combo.ipsc, verbose=FALSE)
+> #pca
+> combo.ipsc <- RunPCA(object=combo.ipsc, npcs=100, verbose=FALSE)
+> pva <- combo.ipsc@reductions$pca@stdev^2/combo.ipsc@reductions$pca@misc$total.variance
+> ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+> ndim #26
+[1] 26
+> #umap
+> combo.ipsc <- RunUMAP(combo.ipsc, dims=1:26)
+Warning: The default method for RunUMAP has changed from calling Python UMAP via reticulate to the R-native UWOT using the cosine metric
+To use Python UMAP via reticulate, set umap.method to 'umap-learn' and metric to 'correlation'
+This message will be shown once per session
+12:59:51 UMAP embedding parameters a = 0.9922 b = 1.112
+12:59:51 Read 37509 rows and found 26 numeric columns
+12:59:51 Using Annoy for neighbor search, n_neighbors = 30
+12:59:51 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+12:59:58 Writing NN index file to temp file /tmp/jobs/66111320/Rtmpfp6Poh/filef43464d6e1
+12:59:58 Searching Annoy index using 1 thread, search_k = 3000
+13:00:12 Annoy recall = 100%
+13:00:12 Commencing smooth kNN distance calibration using 1 thread
+13:00:14 Initializing from normalized Laplacian + noise
+13:00:17 Commencing optimization for 200 epochs, with 1633062 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+13:01:06 Optimization finished
+> #save data
+> saveRDS(combo.ipsc, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.merge-6k.l.ipsc.rds"))
+> rm(combo.ipsc)
+> 
+> #combine mscs from all samples
+> combo.msc    <- merge(data[[2]], y=c(data[[5]],data[[8]],data[[11]],data[[14]],data[[17]],data[[20]]),
++                       add.cell.ids=c("H1C1.M","H1C1-r2.M","H2C2.M","H3C3.M","H4C4.M","H5C5.M","H6C6.M"))
+> #log normalize data
+> combo.msc <- NormalizeData(combo.msc, verbose=FALSE)
+> #find 6000 most variable genes within each species
+> humans <- FindVariableFeatures(subset(combo.msc, species=="Human"), selection.method="vst", nfeatures=6000)
+Calculating gene variances
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Calculating feature variances of standardized and clipped values
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+> chimps <- FindVariableFeatures(subset(combo.msc, species=="Chimp"), selection.method="vst", nfeatures=6000)
+Calculating gene variances
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Calculating feature variances of standardized and clipped values
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+> human.features <- VariableFeatures(humans)
+> chimp.features <- VariableFeatures(chimps)
+> features <- intersect(human.features, chimp.features)
+> length(features) #3210 variable genes intersect
+[1] 3961
+> head(features)
+[1] "NPY"   "MGP"   "NPPB"  "TTR"   "CSRP3" "TFPI2"
+> combo.msc <- FindVariableFeatures(combo.msc, selection.method="vst", nfeatures=length(features))
+Calculating gene variances
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Calculating feature variances of standardized and clipped values
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+> VariableFeatures(combo.msc) <- features
+> rm(humans,chimps,human.features,chimp.features,features)
+> #scale data
+> combo.msc <- ScaleData(combo.msc, verbose=FALSE)
+> #pca
+> combo.msc <- RunPCA(object=combo.msc, npcs=100, verbose=FALSE)
+> pva <- combo.msc@reductions$pca@stdev^2/combo.msc@reductions$pca@misc$total.variance
+> ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+> ndim #41
+[1] 41
+> #umap
+> combo.msc <- RunUMAP(combo.msc, dims=1:41)
+13:07:14 UMAP embedding parameters a = 0.9922 b = 1.112
+13:07:14 Read 38594 rows and found 41 numeric columns
+13:07:14 Using Annoy for neighbor search, n_neighbors = 30
+13:07:14 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+13:07:22 Writing NN index file to temp file /tmp/jobs/66111320/Rtmpfp6Poh/filef437b9f167f
+13:07:22 Searching Annoy index using 1 thread, search_k = 3000
+13:07:35 Annoy recall = 100%
+13:07:36 Commencing smooth kNN distance calibration using 1 thread
+13:07:38 Initializing from normalized Laplacian + noise
+13:07:42 Commencing optimization for 200 epochs, with 1652048 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+13:08:31 Optimization finished
+> #save data
+> saveRDS(combo.msc, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.merge-6k.l.msc.rds"))
+> rm(combo.msc)
+> 
+> #combine osteoblasts from all samples
+> combo.osteo    <- merge(data[[3]], y=c(data[[6]],data[[9]],data[[12]],data[[15]],data[[18]],data[[21]]),
++                       add.cell.ids=c("H1C1.O","H1C1-r2.O","H2C2.O","H3C3.O","H4C4.O","H5C5.O","H6C6.O"))
+> #log normalize data
+> combo.osteo <- NormalizeData(combo.osteo, verbose=FALSE)
+> #find 6000 most variable genes within each species
+> humans <- FindVariableFeatures(subset(combo.osteo, species=="Human"), selection.method="vst", nfeatures=6000)
+Calculating gene variances
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Calculating feature variances of standardized and clipped values
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+> chimps <- FindVariableFeatures(subset(combo.osteo, species=="Chimp"), selection.method="vst", nfeatures=6000)
+Calculating gene variances
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Calculating feature variances of standardized and clipped values
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+> human.features <- VariableFeatures(humans)
+> chimp.features <- VariableFeatures(chimps)
+> features <- intersect(human.features, chimp.features)
+> length(features) #3210 variable genes intersect
+[1] 3626
+> head(features)
+[1] "CXCL14" "CHI3L1" "AQP1"   "SAA1"   "SCG2"   "MGP"   
+> combo.osteo <- FindVariableFeatures(combo.osteo, selection.method="vst", nfeatures=length(features))
+Calculating gene variances
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Calculating feature variances of standardized and clipped values
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+> VariableFeatures(combo.osteo) <- features
+> rm(humans,chimps,human.features,chimp.features,features)
+> #scale data
+> combo.osteo <- ScaleData(combo.osteo, verbose=FALSE)
+> #pca
+> combo.osteo <- RunPCA(object=combo.osteo, npcs=100, verbose=FALSE)
+> pva <- combo.osteo@reductions$pca@stdev^2/combo.osteo@reductions$pca@misc$total.variance
+> ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+> ndim #41
+[1] 41
+> #umap
+> combo.osteo <- RunUMAP(combo.osteo, dims=1:41)
+13:13:31 UMAP embedding parameters a = 0.9922 b = 1.112
+13:13:31 Read 26077 rows and found 41 numeric columns
+13:13:31 Using Annoy for neighbor search, n_neighbors = 30
+13:13:31 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+13:13:37 Writing NN index file to temp file /tmp/jobs/66111320/Rtmpfp6Poh/filef4331965d96
+13:13:37 Searching Annoy index using 1 thread, search_k = 3000
+13:13:46 Annoy recall = 100%
+13:13:46 Commencing smooth kNN distance calibration using 1 thread
+13:13:47 Initializing from normalized Laplacian + noise
+13:13:49 Commencing optimization for 200 epochs, with 1117354 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+13:14:23 Optimization finished
+> #save data
+> saveRDS(combo.osteo, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.merge-6k.l.osteo.rds"))
+> rm(combo.osteoblasts)
+Warning message:
+In rm(combo.osteoblasts) : object 'combo.osteoblasts' not found
+> 
+> #combine all collections
+> combo.total  <- merge(data[[1]], y=c(data[[2]],data[[3]],data[[4]],data[[5]],data[[6]],data[[7]],data[[8]],data[[9]],data[[10]],data[[11]],
++                                      data[[12]],data[[13]],data[[14]],data[[15]],data[[16]],data[[17]],data[[18]],data[[19]],data[[20]],data[[21]]),
++                       add.cell.ids=c("H1C1.I","H1C1.M","H1C1.O","H1C1-r2.I","H1C1-r2.M","H1C1-r2.O","H2C2.I","H2C2.M","H2C2.O","H3C3.I","H3C3.M","H3C3.O",
++                                      "H4C4.I","H4C4.M","H4C4.O","H5C5.I","H5C5.M","H5C5.O","H6C6.I","H6C6.M","H6C6.O"))
+> #log normalize data
+> combo.total <- NormalizeData(combo.total, verbose=FALSE)
+> #find 6000 most variable genes within each species
+> humans <- FindVariableFeatures(subset(combo.total, species=="Human"), selection.method="vst", nfeatures=6000)
+Calculating gene variances
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Calculating feature variances of standardized and clipped values
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+> chimps <- FindVariableFeatures(subset(combo.total, species=="Chimp"), selection.method="vst", nfeatures=6000)
+Calculating gene variances
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Calculating feature variances of standardized and clipped values
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+> human.features <- VariableFeatures(humans)
+> chimp.features <- VariableFeatures(chimps)
+> features <- intersect(human.features, chimp.features)
+> length(features) #4168 variable genes intersect
+[1] 4168
+> head(features)
+[1] "NPY"   "NPPB"  "TTR"   "MGP"   "CSRP3" "ELN"  
+> combo.total <- FindVariableFeatures(combo.total, selection.method="vst", nfeatures=length(features))
+Calculating gene variances
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Calculating feature variances of standardized and clipped values
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+> VariableFeatures(combo.total) <- features
+> rm(humans,chimps,human.features,chimp.features,features)
+> #scale data
+> combo.total <- ScaleData(combo.total, verbose=FALSE)
+> #pca
+> combo.total <- RunPCA(object=combo.total, npcs=100, verbose=FALSE)
+> pva <- combo.total@reductions$pca@stdev^2/combo.total@reductions$pca@misc$total.variance
+> ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+> ndim #44
+[1] 44
+> #umap
+> combo.total <- RunUMAP(combo.total, dims=1:44)
+13:27:07 UMAP embedding parameters a = 0.9922 b = 1.112
+13:27:07 Read 102180 rows and found 44 numeric columns
+13:27:07 Using Annoy for neighbor search, n_neighbors = 30
+13:27:07 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+13:27:28 Writing NN index file to temp file /tmp/jobs/66111320/Rtmpfp6Poh/filef4370942e39
+13:27:28 Searching Annoy index using 1 thread, search_k = 3000
+13:28:09 Annoy recall = 100%
+13:28:10 Commencing smooth kNN distance calibration using 1 thread
+13:28:15 Initializing from normalized Laplacian + noise
+13:28:32 Commencing optimization for 200 epochs, with 4476516 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+13:30:49 Optimization finished
+> #save data
+> saveRDS(combo.total, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.merge-6k.l.rds"))
+> rm(combo.total)
+> 
+> proc.time()
+    user   system  elapsed 
+2397.150  310.526 2736.960 

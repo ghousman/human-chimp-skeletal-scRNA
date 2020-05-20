@@ -1,0 +1,130 @@
+
+R version 3.4.3 (2017-11-30) -- "Kite-Eating Tree"
+Copyright (C) 2017 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> #Load libraries
+> library(Seurat)
+> library(dplyr)
+
+Attaching package: 'dplyr'
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+> library(stringi)
+> library(stringr)
+> library(ggplot2)
+> library(grid)
+> library(gbm)
+Loaded gbm 2.1.5
+> library(colorspace)
+> library(RColorBrewer)
+> 
+> library(tidyr)
+> library(UpSetR)
+> library(reshape2)
+
+Attaching package: 'reshape2'
+
+The following object is masked from 'package:tidyr':
+
+    smiths
+
+> 
+> library(CountClust)
+> library(classtpx)
+Loading required package: slam
+> 
+> #Define main directory
+> dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+> 
+> #Load data
+> indv <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv.log.10k.int.rds"))            #integrate across individuals - total
+> 
+> #Add Metadata
+> indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="Sample")
+> indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="H1" & indv$Replicate=="1")] <- "H1-I" 
+> indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="H1" & indv$Replicate=="2")] <- "H1-I-r2" 
+> indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="H2" & indv$Replicate=="1")] <- "H2-I" 
+> indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="H3" & indv$Replicate=="1")] <- "H3-I" 
+> indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="H4" & indv$Replicate=="1")] <- "H4-I" 
+> indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="H5" & indv$Replicate=="1")] <- "H5-I" 
+> indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="H6" & indv$Replicate=="1")] <- "H6-I"
+> indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="C1" & indv$Replicate=="1")] <- "C1-I" 
+> indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="C1" & indv$Replicate=="2")] <- "C1-I-r2" 
+> indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="C2" & indv$Replicate=="1")] <- "C2-I" 
+> indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="C3" & indv$Replicate=="1")] <- "C3-I" 
+> indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="C4" & indv$Replicate=="1")] <- "C4-I" 
+> indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="C5" & indv$Replicate=="1")] <- "C5-I" 
+> indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="C6" & indv$Replicate=="1")] <- "C6-I" 
+> indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="H1" & indv$Replicate=="1")] <- "H1-M" 
+> indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="H1" & indv$Replicate=="2")] <- "H1-M-r2" 
+> indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="H2" & indv$Replicate=="1")] <- "H2-M" 
+> indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="H3" & indv$Replicate=="1")] <- "H3-M" 
+> indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="H4" & indv$Replicate=="1")] <- "H4-M" 
+> indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="H5" & indv$Replicate=="1")] <- "H5-M" 
+> indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="H6" & indv$Replicate=="1")] <- "H6-M"
+> indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="C1" & indv$Replicate=="1")] <- "C1-M" 
+> indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="C1" & indv$Replicate=="2")] <- "C1-M-r2" 
+> indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="C2" & indv$Replicate=="1")] <- "C2-M" 
+> indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="C3" & indv$Replicate=="1")] <- "C3-M" 
+> indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="C4" & indv$Replicate=="1")] <- "C4-M" 
+> indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="C5" & indv$Replicate=="1")] <- "C5-M" 
+> indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="C6" & indv$Replicate=="1")] <- "C6-M" 
+> indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="H1" & indv$Replicate=="1")] <- "H1-O" 
+> indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="H1" & indv$Replicate=="2")] <- "H1-O-r2" 
+> indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="H2" & indv$Replicate=="1")] <- "H2-O" 
+> indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="H3" & indv$Replicate=="1")] <- "H3-O" 
+> indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="H4" & indv$Replicate=="1")] <- "H4-O" 
+> indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="H5" & indv$Replicate=="1")] <- "H5-O" 
+> indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="H6" & indv$Replicate=="1")] <- "H6-O"
+> indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="C1" & indv$Replicate=="1")] <- "C1-O" 
+> indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="C1" & indv$Replicate=="2")] <- "C1-O-r2" 
+> indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="C2" & indv$Replicate=="1")] <- "C2-O" 
+> indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="C3" & indv$Replicate=="1")] <- "C3-O" 
+> indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="C4" & indv$Replicate=="1")] <- "C4-O" 
+> indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="C5" & indv$Replicate=="1")] <- "C5-O" 
+> indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="C6" & indv$Replicate=="1")] <- "C6-O" 
+> 
+> #Load cell atlas data matrix (currated by GAH)
+> hpca <- read.table("/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA/data/HumanPrimaryCellAtlasData-SingleR")
+> hpca.names <- read.csv("/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA/data/HumanPrimaryCellAtlasLabels-SingleR.csv", row.names=1)
+> hpca.names$label <- paste0(hpca.names$geo.curated,"_",hpca.names$label.curated)
+> i=1
+> while(i <= length(colnames(hpca))) {
++   colnames(hpca)[i] <- hpca.names$label[rownames(hpca.names)==colnames(hpca)[i]]
++   i=i+1
++ }
+> 
+> #Subset cell atlas data matrix
+> hpca.sub <- hpca[,c(239:261,416:419,470:474,496,499:515,548:551,592:599,608:616,651:665)]
+> #hpca.sub <- hpca[,unique(c(grep("iPSC", colnames(hpca)),grep("MSC", colnames(hpca)),grep("Osteoblast", colnames(hpca)),
+> #                           grep("Chondrocyte", colnames(hpca)),grep("Adipocyte", colnames(hpca))))]
+> 
+> #Fit GoM Model
+> Combined_GoM <- CountClust::FitGoM(t(as.matrix(indv@assays$RNA@data)), K=c(3:7), tol=0.1, control=list(tmax=100))
+Fitting a Grade of Membership model
+            (Taddy M., AISTATS 2012, JMLR 22,
+            http://proceedings.mlr.press/v22/taddy12/taddy12.pdf)
+
+Estimating on a 102180 samples collection.
+Fit and Bayes Factor Estimation for K = 3
+log posterior increase: 11106725.9, 237226.5, 501088.8, 236183.9, 159504.2, 111159, 97416, 

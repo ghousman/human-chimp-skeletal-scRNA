@@ -1,0 +1,1656 @@
+---
+title: "10x-test-data-ortho-compare"
+author: "Genevieve Housman"
+date: "11/14/2019"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+---
+title: "10x-data-full-cell-type-validation"
+author: "Genevieve Housman"
+date: "11/12/2019"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 10X Data Cellranger Comparison (ortho-exon files only)
+
+Initial loading, processing, and viewing of 10X data using seurat.
+
+Data being examined comes from 1 human and 1 chimpanzee.
+- GHO1 includes iPSCs from both species
+- GHO2 inclues iPSC-derived MSCs from both species
+- GHO3 includes iPSC-MSC-derived chondrocytes
+- GHO4 includes iPSC-MSC-derived osteoblasts
+
+The datasets being evaluated are:
+- [h.orth.c.orth.sppo]: comprises gene count data that were seperately processed using both the human genome (h) and the chimpanzee genome (c), as well as the ortho-exon annotation (orth); species-specific assignments were determined using human-chimpanzee genome combination with ortho-exon annotation (sppo).
+- [h.orfl.c.orfl.spof]: comprises gene count data that were seperately processed using both the human genome (h) and the chimpanzee genome (c), as well as a filtered version of the ortho-exon annotation (orfl); species-specific assignments were determined using human-chimpanzee genome combination with filtered ortho-exon annotation (spof)
+
+These datasets were choses as compared to other dataset options after comparisons performed in 10x-data-cellranger-compare.Rmd.
+
+```{r load libraries}
+
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+```
+
+```{r define data location}
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/scRNA/cellranger-data-full'        #data from three lanes of sequencing
+
+#Define sub-directories
+dir_h.orth.GHO1 <- paste0(dir,'/cellranger-runs-ortho-human/GHO-1/outs')
+dir_h.orth.GHO2 <- paste0(dir,'/cellranger-runs-ortho-human/GHO-2/outs')
+dir_h.orth.GHO3 <- paste0(dir,'/cellranger-runs-ortho-human/GHO-3/outs')
+dir_h.orth.GHO4 <- paste0(dir,'/cellranger-runs-ortho-human/GHO-4/outs')
+dir_c.orth.GHO1 <- paste0(dir,'/cellranger-runs-ortho-chimp/GHO-1/outs')
+dir_c.orth.GHO2 <- paste0(dir,'/cellranger-runs-ortho-chimp/GHO-2/outs')
+dir_c.orth.GHO3 <- paste0(dir,'/cellranger-runs-ortho-chimp/GHO-3/outs')
+dir_c.orth.GHO4 <- paste0(dir,'/cellranger-runs-ortho-chimp/GHO-4/outs')
+dir_hc.orth.GHO1 <- paste0(dir,'/cellranger-runs-ortho-human-chimp/GHO-1/outs')
+dir_hc.orth.GHO2 <- paste0(dir,'/cellranger-runs-ortho-human-chimp/GHO-2/outs')
+dir_hc.orth.GHO3 <- paste0(dir,'/cellranger-runs-ortho-human-chimp/GHO-3/outs')
+dir_hc.orth.GHO4 <- paste0(dir,'/cellranger-runs-ortho-human-chimp/GHO-4/outs')
+dir_h.orfl.GHO1 <- paste0(dir,'/cellranger-runs-ortho-filter-human/GHO-1/outs')
+dir_h.orfl.GHO2 <- paste0(dir,'/cellranger-runs-ortho-filter-human/GHO-2/outs')
+dir_h.orfl.GHO3 <- paste0(dir,'/cellranger-runs-ortho-filter-human/GHO-3/outs')
+dir_h.orfl.GHO4 <- paste0(dir,'/cellranger-runs-ortho-filter-human/GHO-4/outs')
+dir_c.orfl.GHO1 <- paste0(dir,'/cellranger-runs-ortho-filter-chimp/GHO-1/outs')
+dir_c.orfl.GHO2 <- paste0(dir,'/cellranger-runs-ortho-filter-chimp/GHO-2/outs')
+dir_c.orfl.GHO3 <- paste0(dir,'/cellranger-runs-ortho-filter-chimp/GHO-3/outs')
+dir_c.orfl.GHO4 <- paste0(dir,'/cellranger-runs-ortho-filter-chimp/GHO-4/outs')
+dir_hc.orfl.GHO1 <- paste0(dir,'/cellranger-runs-ortho-filter-human-chimp/GHO-1/outs')
+dir_hc.orfl.GHO2 <- paste0(dir,'/cellranger-runs-ortho-filter-human-chimp/GHO-2/outs')
+dir_hc.orfl.GHO3 <- paste0(dir,'/cellranger-runs-ortho-filter-human-chimp/GHO-3/outs')
+dir_hc.orfl.GHO4 <- paste0(dir,'/cellranger-runs-ortho-filter-human-chimp/GHO-4/outs')
+
+#Check that directories contain barcodes.tsv.gz, features.tsv.gz, and matrix.mtx.gz
+#list.files(paste0(dir_hc.orth.GHO1,"/filtered_feature_bc_matrix"))
+#list.files(paste0(dir_hc.orth.GHO1,"/raw_feature_bc_matrix"))
+
+```
+
+```{r compile summary metrics}
+
+#Load summary metrics
+metrics.h.orth.GHO1 <- read.csv(file=paste0(dir_h.orth.GHO1,'/metrics_summary.csv'))
+metrics.h.orth.GHO2 <- read.csv(file=paste0(dir_h.orth.GHO2,'/metrics_summary.csv'))
+metrics.h.orth.GHO3 <- read.csv(file=paste0(dir_h.orth.GHO3,'/metrics_summary.csv'))
+metrics.h.orth.GHO4 <- read.csv(file=paste0(dir_h.orth.GHO4,'/metrics_summary.csv'))
+metrics.c.orth.GHO1 <- read.csv(file=paste0(dir_c.orth.GHO1,'/metrics_summary.csv'))
+metrics.c.orth.GHO2 <- read.csv(file=paste0(dir_c.orth.GHO2,'/metrics_summary.csv'))
+metrics.c.orth.GHO3 <- read.csv(file=paste0(dir_c.orth.GHO3,'/metrics_summary.csv'))
+metrics.c.orth.GHO4 <- read.csv(file=paste0(dir_c.orth.GHO4,'/metrics_summary.csv'))
+metrics.h.orfl.GHO1 <- read.csv(file=paste0(dir_h.orfl.GHO1,'/metrics_summary.csv'))
+metrics.h.orfl.GHO2 <- read.csv(file=paste0(dir_h.orfl.GHO2,'/metrics_summary.csv'))
+metrics.h.orfl.GHO3 <- read.csv(file=paste0(dir_h.orfl.GHO3,'/metrics_summary.csv'))
+metrics.h.orfl.GHO4 <- read.csv(file=paste0(dir_h.orfl.GHO4,'/metrics_summary.csv'))
+metrics.c.orfl.GHO1 <- read.csv(file=paste0(dir_c.orfl.GHO1,'/metrics_summary.csv'))
+metrics.c.orfl.GHO2 <- read.csv(file=paste0(dir_c.orfl.GHO2,'/metrics_summary.csv'))
+metrics.c.orfl.GHO3 <- read.csv(file=paste0(dir_c.orfl.GHO3,'/metrics_summary.csv'))
+metrics.c.orfl.GHO4 <- read.csv(file=paste0(dir_c.orfl.GHO4,'/metrics_summary.csv'))
+
+#Process data
+metrics.h.orth <- rbind(metrics.h.orth.GHO1,metrics.h.orth.GHO2,metrics.h.orth.GHO3,metrics.h.orth.GHO4)
+metrics.c.orth <- rbind(metrics.c.orth.GHO1,metrics.c.orth.GHO2,metrics.c.orth.GHO3,metrics.c.orth.GHO4)
+metrics.h.orfl <- rbind(metrics.h.orfl.GHO1,metrics.h.orfl.GHO2,metrics.h.orfl.GHO3,metrics.h.orfl.GHO4)
+metrics.c.orfl <- rbind(metrics.c.orfl.GHO1,metrics.c.orfl.GHO2,metrics.c.orfl.GHO3,metrics.c.orfl.GHO4)
+
+metrics.h.orth[,c(1:4,19:20)] <- lapply(metrics.h.orth[,c(1:4,19:20)], function(x) as.numeric(gsub(",","",as.character(x))))
+metrics.c.orth[,c(1:4,19:20)] <- lapply(metrics.c.orth[,c(1:4,19:20)], function(x) as.numeric(gsub(",","",as.character(x))))
+metrics.h.orfl[,c(1:4,19:20)] <- lapply(metrics.h.orfl[,c(1:4,19:20)], function(x) as.numeric(gsub(",","",as.character(x))))
+metrics.c.orfl[,c(1:4,19:20)] <- lapply(metrics.c.orfl[,c(1:4,19:20)], function(x) as.numeric(gsub(",","",as.character(x))))
+
+metrics.h.orth[,c(5:18)] <- lapply(metrics.h.orth[,c(5:18)], function(x) as.numeric(gsub("%","",as.character(x)))/100)
+metrics.c.orth[,c(5:18)] <- lapply(metrics.c.orth[,c(5:18)], function(x) as.numeric(gsub("%","",as.character(x)))/100)
+metrics.h.orfl[,c(5:18)] <- lapply(metrics.h.orfl[,c(5:18)], function(x) as.numeric(gsub("%","",as.character(x)))/100)
+metrics.c.orfl[,c(5:18)] <- lapply(metrics.c.orfl[,c(5:18)], function(x) as.numeric(gsub("%","",as.character(x)))/100)
+
+metrics.h.orth$Sample <- c("GHO1","GHO2","GHO3","GHO4")
+metrics.c.orth$Sample <- c("GHO1","GHO2","GHO3","GHO4")
+metrics.h.orfl$Sample <- c("GHO1","GHO2","GHO3","GHO4")
+metrics.c.orfl$Sample <- c("GHO1","GHO2","GHO3","GHO4")
+
+rm(metrics.h.orth.GHO1,metrics.h.orth.GHO2,metrics.h.orth.GHO3,metrics.h.orth.GHO4)
+rm(metrics.c.orth.GHO1,metrics.c.orth.GHO2,metrics.c.orth.GHO3,metrics.c.orth.GHO4)
+rm(metrics.h.orfl.GHO1,metrics.h.orfl.GHO2,metrics.h.orfl.GHO3,metrics.h.orfl.GHO4)
+rm(metrics.c.orfl.GHO1,metrics.c.orfl.GHO2,metrics.c.orfl.GHO3,metrics.c.orfl.GHO4)
+
+#Summarize metrics
+#total number of reads
+CombinePlots(plots=list((ggplot(metrics.h.orth, aes(x=Sample, y=Number.of.Reads))+geom_col()+labs(title="h.orth")+ylim(0,300000000)),
+                        (ggplot(metrics.c.orth, aes(x=Sample, y=Number.of.Reads))+geom_col()+labs(title="c.orth")+ylim(0,300000000)),
+                        (ggplot(metrics.h.orfl, aes(x=Sample, y=Number.of.Reads))+geom_col()+labs(title="h.orfl")+ylim(0,300000000)),
+                        (ggplot(metrics.c.orfl, aes(x=Sample, y=Number.of.Reads))+geom_col()+labs(title="c.orfl")+ylim(0,300000000))), ncol=2)
+
+#percent sequence saturation
+CombinePlots(plots=list((ggplot(metrics.h.orth, aes(x=Sample, y=Sequencing.Saturation))+geom_col()+labs(title="h.orth")+ylim(0,1)),
+                        (ggplot(metrics.c.orth, aes(x=Sample, y=Sequencing.Saturation))+geom_col()+labs(title="c.orth")+ylim(0,1)),
+                        (ggplot(metrics.h.orfl, aes(x=Sample, y=Sequencing.Saturation))+geom_col()+labs(title="h.orfl")+ylim(0,1)),
+                        (ggplot(metrics.c.orfl, aes(x=Sample, y=Sequencing.Saturation))+geom_col()+labs(title="c.orfl")+ylim(0,1))), ncol=2)
+
+#mean reads per cell
+CombinePlots(plots=list((ggplot(metrics.h.orth, aes(x=Sample, y=Mean.Reads.per.Cell))+geom_col()+labs(title="h.orth")+ylim(0,85000)),
+                        (ggplot(metrics.c.orth, aes(x=Sample, y=Mean.Reads.per.Cell))+geom_col()+labs(title="c.orth")+ylim(0,85000)),
+                        (ggplot(metrics.h.orfl, aes(x=Sample, y=Mean.Reads.per.Cell))+geom_col()+labs(title="h.orfl")+ylim(0,85000)),
+                        (ggplot(metrics.c.orfl, aes(x=Sample, y=Mean.Reads.per.Cell))+geom_col()+labs(title="c.orfl")+ylim(0,85000))), ncol=2)
+
+#median genes per cell
+CombinePlots(plots=list((ggplot(metrics.h.orth, aes(x=Sample, y=Median.Genes.per.Cell))+geom_col()+labs(title="h.orth")+ylim(0,4500)),
+                        (ggplot(metrics.c.orth, aes(x=Sample, y=Median.Genes.per.Cell))+geom_col()+labs(title="c.orth")+ylim(0,4500)),
+                        (ggplot(metrics.h.orfl, aes(x=Sample, y=Median.Genes.per.Cell))+geom_col()+labs(title="h.orfl")+ylim(0,4500)),
+                        (ggplot(metrics.c.orfl, aes(x=Sample, y=Median.Genes.per.Cell))+geom_col()+labs(title="c.orfl")+ylim(0,4500))), ncol=2)
+
+#median UMI per cell
+CombinePlots(plots=list((ggplot(metrics.h.orth, aes(x=Sample, y=Median.UMI.Counts.per.Cell))+geom_col()+labs(title="h.orth")+ylim(0,21000)),
+                        (ggplot(metrics.c.orth, aes(x=Sample, y=Median.UMI.Counts.per.Cell))+geom_col()+labs(title="c.orth")+ylim(0,21000)),
+                        (ggplot(metrics.h.orfl, aes(x=Sample, y=Median.UMI.Counts.per.Cell))+geom_col()+labs(title="h.orfl")+ylim(0,21000)),
+                        (ggplot(metrics.c.orfl, aes(x=Sample, y=Median.UMI.Counts.per.Cell))+geom_col()+labs(title="c.orfl")+ylim(0,21000))), ncol=2)
+
+#proportion of Q30 bases in barcode, rna read, and umi
+CombinePlots(plots=list((ggplot(metrics.h.orth, aes(x=Sample, y=Q30.Bases.in.Barcode))+geom_col()+labs(title="h.orth")+ylim(0,1)),
+                        (ggplot(metrics.c.orth, aes(x=Sample, y=Q30.Bases.in.Barcode))+geom_col()+labs(title="c.orth")+ylim(0,1)),
+                        (ggplot(metrics.h.orfl, aes(x=Sample, y=Q30.Bases.in.Barcode))+geom_col()+labs(title="h.orfl")+ylim(0,1)),
+                        (ggplot(metrics.c.orfl, aes(x=Sample, y=Q30.Bases.in.Barcode))+geom_col()+labs(title="c.orfl")+ylim(0,1)),
+                        (ggplot(metrics.h.orth, aes(x=Sample, y=Q30.Bases.in.RNA.Read))+geom_col()+labs(title="h.orth")+ylim(0,1)),
+                        (ggplot(metrics.c.orth, aes(x=Sample, y=Q30.Bases.in.RNA.Read))+geom_col()+labs(title="c.orth")+ylim(0,1)),
+                        (ggplot(metrics.h.orfl, aes(x=Sample, y=Q30.Bases.in.RNA.Read))+geom_col()+labs(title="h.orfl")+ylim(0,1)),
+                        (ggplot(metrics.c.orfl, aes(x=Sample, y=Q30.Bases.in.RNA.Read))+geom_col()+labs(title="c.orfl")+ylim(0,1)),
+                        (ggplot(metrics.h.orth, aes(x=Sample, y=Q30.Bases.in.UMI))+geom_col()+labs(title="h.orth")+ylim(0,1)),
+                        (ggplot(metrics.c.orth, aes(x=Sample, y=Q30.Bases.in.UMI))+geom_col()+labs(title="c.orth")+ylim(0,1)),
+                        (ggplot(metrics.h.orfl, aes(x=Sample, y=Q30.Bases.in.UMI))+geom_col()+labs(title="h.orfl")+ylim(0,1)),
+                        (ggplot(metrics.c.orfl, aes(x=Sample, y=Q30.Bases.in.UMI))+geom_col()+labs(title="c.orfl")+ylim(0,1))), ncol=3)
+
+#reads mapped and confidently mapped to genome
+CombinePlots(plots=list((ggplot(metrics.h.orth, aes(x=Sample, y=Reads.Mapped.to.Genome))+geom_col()+labs(title="h.orth")+ylim(0,1)),
+                        (ggplot(metrics.c.orth, aes(x=Sample, y=Reads.Mapped.to.Genome))+geom_col()+labs(title="c.orth")+ylim(0,1)),
+                        (ggplot(metrics.h.orfl, aes(x=Sample, y=Reads.Mapped.to.Genome))+geom_col()+labs(title="h.orfl")+ylim(0,1)),
+                        (ggplot(metrics.c.orfl, aes(x=Sample, y=Reads.Mapped.to.Genome))+geom_col()+labs(title="c.orfl")+ylim(0,1)),
+                        (ggplot(metrics.h.orth, aes(x=Sample, y=Reads.Mapped.Confidently.to.Genome))+geom_col()+labs(title="h.orth")+ylim(0,1)),
+                        (ggplot(metrics.c.orth, aes(x=Sample, y=Reads.Mapped.Confidently.to.Genome))+geom_col()+labs(title="c.orth")+ylim(0,1)),
+                        (ggplot(metrics.h.orfl, aes(x=Sample, y=Reads.Mapped.Confidently.to.Genome))+geom_col()+labs(title="h.orfl")+ylim(0,1)),
+                        (ggplot(metrics.c.orfl, aes(x=Sample, y=Reads.Mapped.Confidently.to.Genome))+geom_col()+labs(title="c.orfl")+ylim(0,1))), ncol=4)
+
+#reads mapped to intergenic regions, intronic regions, exonic regions, transcriptome, and antisense to gene
+CombinePlots(plots=list((ggplot(metrics.h.orth, aes(x=Sample, y=Reads.Mapped.Confidently.to.Intergenic.Regions))+geom_col()+labs(title="h.orth")+ylim(0,1)),
+                        (ggplot(metrics.h.orth, aes(x=Sample, y=Reads.Mapped.Confidently.to.Intronic.Regions))+geom_col()+labs(title="h.orth")+ylim(0,1)),
+                        (ggplot(metrics.h.orth, aes(x=Sample, y=Reads.Mapped.Confidently.to.Exonic.Regions))+geom_col()+labs(title="h.orth")+ylim(0,1)),
+                        (ggplot(metrics.h.orth, aes(x=Sample, y=Reads.Mapped.Confidently.to.Transcriptome))+geom_col()+labs(title="h.orth")+ylim(0,1)),
+                        (ggplot(metrics.h.orth, aes(x=Sample, y=Reads.Mapped.Antisense.to.Gene))+geom_col()+labs(title="h.orth")+ylim(0,1)),
+                        (ggplot(metrics.c.orth, aes(x=Sample, y=Reads.Mapped.Confidently.to.Intergenic.Regions))+geom_col()+labs(title="c.orth")+ylim(0,1)),
+                        (ggplot(metrics.c.orth, aes(x=Sample, y=Reads.Mapped.Confidently.to.Intronic.Regions))+geom_col()+labs(title="c.orth")+ylim(0,1)),
+                        (ggplot(metrics.c.orth, aes(x=Sample, y=Reads.Mapped.Confidently.to.Exonic.Regions))+geom_col()+labs(title="c.orth")+ylim(0,1)),
+                        (ggplot(metrics.c.orth, aes(x=Sample, y=Reads.Mapped.Confidently.to.Transcriptome))+geom_col()+labs(title="c.orth")+ylim(0,1)),
+                        (ggplot(metrics.c.orth, aes(x=Sample, y=Reads.Mapped.Antisense.to.Gene))+geom_col()+labs(title="c.orth")+ylim(0,1)),
+                        (ggplot(metrics.h.orfl, aes(x=Sample, y=Reads.Mapped.Confidently.to.Intergenic.Regions))+geom_col()+labs(title="h.orfl")+ylim(0,1)),
+                        (ggplot(metrics.h.orfl, aes(x=Sample, y=Reads.Mapped.Confidently.to.Intronic.Regions))+geom_col()+labs(title="h.orfl")+ylim(0,1)),
+                        (ggplot(metrics.h.orfl, aes(x=Sample, y=Reads.Mapped.Confidently.to.Exonic.Regions))+geom_col()+labs(title="h.orfl")+ylim(0,1)),
+                        (ggplot(metrics.h.orfl, aes(x=Sample, y=Reads.Mapped.Confidently.to.Transcriptome))+geom_col()+labs(title="h.orfl")+ylim(0,1)),
+                        (ggplot(metrics.h.orfl, aes(x=Sample, y=Reads.Mapped.Antisense.to.Gene))+geom_col()+labs(title="h.orfl")+ylim(0,1)),
+                        (ggplot(metrics.c.orfl, aes(x=Sample, y=Reads.Mapped.Confidently.to.Intergenic.Regions))+geom_col()+labs(title="c.orfl")+ylim(0,1)),
+                        (ggplot(metrics.c.orfl, aes(x=Sample, y=Reads.Mapped.Confidently.to.Intronic.Regions))+geom_col()+labs(title="c.orfl")+ylim(0,1)),
+                        (ggplot(metrics.c.orfl, aes(x=Sample, y=Reads.Mapped.Confidently.to.Exonic.Regions))+geom_col()+labs(title="c.orfl")+ylim(0,1)),
+                        (ggplot(metrics.c.orfl, aes(x=Sample, y=Reads.Mapped.Confidently.to.Transcriptome))+geom_col()+labs(title="c.orfl")+ylim(0,1)),
+                        (ggplot(metrics.c.orfl, aes(x=Sample, y=Reads.Mapped.Antisense.to.Gene))+geom_col()+labs(title="c.orfl")+ylim(0,1))), ncol=5)
+
+#fraction of reads in cells
+CombinePlots(plots=list((ggplot(metrics.h.orth, aes(x=Sample, y=Fraction.Reads.in.Cells))+geom_col()+labs(title="h.orth")+ylim(0,1)),
+                        (ggplot(metrics.c.orth, aes(x=Sample, y=Fraction.Reads.in.Cells))+geom_col()+labs(title="c.orth")+ylim(0,1)),
+                        (ggplot(metrics.h.orfl, aes(x=Sample, y=Fraction.Reads.in.Cells))+geom_col()+labs(title="h.orfl")+ylim(0,1)),
+                        (ggplot(metrics.c.orfl, aes(x=Sample, y=Fraction.Reads.in.Cells))+geom_col()+labs(title="c.orfl")+ylim(0,1))), ncol=2)
+
+rm(metrics.h.orth,metrics.c.orth)
+rm(metrics.h.orfl,metrics.c.orfl)
+
+```
+
+```{r load species assignments}
+
+#Load species assignment (only possible for human-chimp combo reference)
+hc.orth.spp1 <- read.csv(file=paste0(dir_hc.orth.GHO1,"/analysis/gem_classification.csv"))
+hc.orth.spp2 <- read.csv(file=paste0(dir_hc.orth.GHO2,"/analysis/gem_classification.csv"))
+hc.orth.spp3 <- read.csv(file=paste0(dir_hc.orth.GHO3,"/analysis/gem_classification.csv"))
+hc.orth.spp4 <- read.csv(file=paste0(dir_hc.orth.GHO4,"/analysis/gem_classification.csv"))
+hc.orth.spp1$barcode <- sapply(hc.orth.spp1$barcode, gsub, pattern="-1", replacement="")
+hc.orth.spp2$barcode <- sapply(hc.orth.spp2$barcode, gsub, pattern="-1", replacement="")
+hc.orth.spp3$barcode <- sapply(hc.orth.spp3$barcode, gsub, pattern="-1", replacement="")
+hc.orth.spp4$barcode <- sapply(hc.orth.spp4$barcode, gsub, pattern="-1", replacement="")
+hc.orth.spp1$call <- sapply(hc.orth.spp1$call, gsub, pattern="Pan_tro_3.0", replacement="Chimp")
+hc.orth.spp2$call <- sapply(hc.orth.spp2$call, gsub, pattern="Pan_tro_3.0", replacement="Chimp")
+hc.orth.spp3$call <- sapply(hc.orth.spp3$call, gsub, pattern="Pan_tro_3.0", replacement="Chimp")
+hc.orth.spp4$call <- sapply(hc.orth.spp4$call, gsub, pattern="Pan_tro_3.0", replacement="Chimp")
+hc.orth.spp1$call <- sapply(hc.orth.spp1$call, gsub, pattern="GRCh38", replacement="Human")
+hc.orth.spp2$call <- sapply(hc.orth.spp2$call, gsub, pattern="GRCh38", replacement="Human")
+hc.orth.spp3$call <- sapply(hc.orth.spp3$call, gsub, pattern="GRCh38", replacement="Human")
+hc.orth.spp4$call <- sapply(hc.orth.spp4$call, gsub, pattern="GRCh38", replacement="Human")
+hc.orth.spp1$call <- sapply(hc.orth.spp1$call, gsub, pattern="ortho_", replacement="")
+hc.orth.spp2$call <- sapply(hc.orth.spp2$call, gsub, pattern="ortho_", replacement="")
+hc.orth.spp3$call <- sapply(hc.orth.spp3$call, gsub, pattern="ortho_", replacement="")
+hc.orth.spp4$call <- sapply(hc.orth.spp4$call, gsub, pattern="ortho_", replacement="")
+hc.orfl.spp1 <- read.csv(file=paste0(dir_hc.orfl.GHO1,"/analysis/gem_classification.csv"))
+hc.orfl.spp2 <- read.csv(file=paste0(dir_hc.orfl.GHO2,"/analysis/gem_classification.csv"))
+hc.orfl.spp3 <- read.csv(file=paste0(dir_hc.orfl.GHO3,"/analysis/gem_classification.csv"))
+hc.orfl.spp4 <- read.csv(file=paste0(dir_hc.orfl.GHO4,"/analysis/gem_classification.csv"))
+hc.orfl.spp1$barcode <- sapply(hc.orfl.spp1$barcode, gsub, pattern="-1", replacement="")
+hc.orfl.spp2$barcode <- sapply(hc.orfl.spp2$barcode, gsub, pattern="-1", replacement="")
+hc.orfl.spp3$barcode <- sapply(hc.orfl.spp3$barcode, gsub, pattern="-1", replacement="")
+hc.orfl.spp4$barcode <- sapply(hc.orfl.spp4$barcode, gsub, pattern="-1", replacement="")
+hc.orfl.spp1$call <- sapply(hc.orfl.spp1$call, gsub, pattern="Pan_tro_3.0", replacement="Chimp")
+hc.orfl.spp2$call <- sapply(hc.orfl.spp2$call, gsub, pattern="Pan_tro_3.0", replacement="Chimp")
+hc.orfl.spp3$call <- sapply(hc.orfl.spp3$call, gsub, pattern="Pan_tro_3.0", replacement="Chimp")
+hc.orfl.spp4$call <- sapply(hc.orfl.spp4$call, gsub, pattern="Pan_tro_3.0", replacement="Chimp")
+hc.orfl.spp1$call <- sapply(hc.orfl.spp1$call, gsub, pattern="GRCh38", replacement="Human")
+hc.orfl.spp2$call <- sapply(hc.orfl.spp2$call, gsub, pattern="GRCh38", replacement="Human")
+hc.orfl.spp3$call <- sapply(hc.orfl.spp3$call, gsub, pattern="GRCh38", replacement="Human")
+hc.orfl.spp4$call <- sapply(hc.orfl.spp4$call, gsub, pattern="GRCh38", replacement="Human")
+hc.orfl.spp1$call <- sapply(hc.orfl.spp1$call, gsub, pattern="ortho_filter_", replacement="")
+hc.orfl.spp2$call <- sapply(hc.orfl.spp2$call, gsub, pattern="ortho_filter_", replacement="")
+hc.orfl.spp3$call <- sapply(hc.orfl.spp3$call, gsub, pattern="ortho_filter_", replacement="")
+hc.orfl.spp4$call <- sapply(hc.orfl.spp4$call, gsub, pattern="ortho_filter_", replacement="")
+
+#Examine species assignment data
+table(hc.orth.spp1$call)            #Chimp=3294, Human=2319, Multiplet= 87
+table(hc.orth.spp2$call)            #Chimp=3149, Human=2563, Multiplet=123
+table(hc.orth.spp3$call)            #Chimp=1305, Human=2168, Multiplet=114
+table(hc.orth.spp4$call)            #Chimp=1805, Human=1580, Multiplet= 62
+table(hc.orfl.spp1$call)            #Chimp=3296, Human=2318, Multiplet= 82
+table(hc.orfl.spp2$call)            #Chimp=3149, Human=2557, Multiplet=122
+table(hc.orfl.spp3$call)            #Chimp=1290, Human=2166, Multiplet=105
+table(hc.orfl.spp4$call)            #Chimp=1828, Human=1586, Multiplet= 42
+
+CombinePlots(plots=list((ggplot(hc.orth.spp1, aes(x=call))+geom_bar()+labs(title="iPSC-orth")+ylim(0,3500)),
+                        (ggplot(hc.orth.spp2, aes(x=call))+geom_bar()+labs(title="MSC-orth")+ylim(0,3500)),
+                        (ggplot(hc.orth.spp3, aes(x=call))+geom_bar()+labs(title="chondro-orth")+ylim(0,3500)),
+                        (ggplot(hc.orth.spp4, aes(x=call))+geom_bar()+labs(title="osteo-orth")+ylim(0,3500)),
+                        (ggplot(hc.orfl.spp1, aes(x=call))+geom_bar()+labs(title="iPSC-orfl")+ylim(0,3500)),
+                        (ggplot(hc.orfl.spp2, aes(x=call))+geom_bar()+labs(title="MSC-orfl")+ylim(0,3500)),
+                        (ggplot(hc.orfl.spp3, aes(x=call))+geom_bar()+labs(title="chondro-orfl")+ylim(0,3500)),
+                        (ggplot(hc.orfl.spp4, aes(x=call))+geom_bar()+labs(title="osteo-orfl")+ylim(0,3500))), ncol=4)
+
+```
+
+```{r prepare scRNA data}
+
+#Prepare data for h.orth.c.ortho.sppo
+#(1)load data
+  h.orth.GHO1_data <- Read10X(data=paste0(dir_h.orth.GHO1,"/raw_feature_bc_matrix"))
+  h.orth.GHO2_data <- Read10X(data=paste0(dir_h.orth.GHO2,"/raw_feature_bc_matrix"))
+  h.orth.GHO3_data <- Read10X(data=paste0(dir_h.orth.GHO3,"/raw_feature_bc_matrix"))
+  h.orth.GHO4_data <- Read10X(data=paste0(dir_h.orth.GHO4,"/raw_feature_bc_matrix"))
+  c.orth.GHO1_data <- Read10X(data=paste0(dir_c.orth.GHO1,"/raw_feature_bc_matrix"))
+  c.orth.GHO2_data <- Read10X(data=paste0(dir_c.orth.GHO2,"/raw_feature_bc_matrix"))
+  c.orth.GHO3_data <- Read10X(data=paste0(dir_c.orth.GHO3,"/raw_feature_bc_matrix"))
+  c.orth.GHO4_data <- Read10X(data=paste0(dir_c.orth.GHO4,"/raw_feature_bc_matrix"))
+#(2)create seurat objects
+  h.orth.GHO1 <- CreateSeuratObject(counts=h.orth.GHO1_data, project="iPSC")
+  h.orth.GHO2 <- CreateSeuratObject(counts=h.orth.GHO2_data, project="MSC")
+  h.orth.GHO3 <- CreateSeuratObject(counts=h.orth.GHO3_data, project="chondrocyte")
+  h.orth.GHO4 <- CreateSeuratObject(counts=h.orth.GHO4_data, project="osteoblast")
+  c.orth.GHO1 <- CreateSeuratObject(counts=c.orth.GHO1_data, project="iPSC")
+  c.orth.GHO2 <- CreateSeuratObject(counts=c.orth.GHO2_data, project="MSC")
+  c.orth.GHO3 <- CreateSeuratObject(counts=c.orth.GHO3_data, project="chondrocyte")
+  c.orth.GHO4 <- CreateSeuratObject(counts=c.orth.GHO4_data, project="osteoblast")
+#(3)view details of seurat objects
+  h.orth.GHO1                       #44125 features, 6794880 samples
+  h.orth.GHO2                       #44125 features, 6794880 samples
+  h.orth.GHO3                       #44125 features, 6794880 samples
+  h.orth.GHO4                       #44125 features, 6794880 samples
+  c.orth.GHO1                       #44125 features, 6794880 samples
+  c.orth.GHO2                       #44125 features, 6794880 samples
+  c.orth.GHO3                       #44125 features, 6794880 samples
+  c.orth.GHO4                       #44125 features, 6794880 samples
+#(4)clear raw data from workspace
+  rm(h.orth.GHO1_data,h.orth.GHO2_data,h.orth.GHO3_data,h.orth.GHO4_data)
+  rm(c.orth.GHO1_data,c.orth.GHO2_data,c.orth.GHO3_data,c.orth.GHO4_data)
+#(5)add species assignments to data - sppo
+  m <- match(rownames(h.orth.GHO1@meta.data),hc.orth.spp1$barcode)
+  if(any(is.na(m))) cat("Not all barcodes are in data.\n")
+  h.orth.GHO1 <- AddMetaData(h.orth.GHO1, hc.orth.spp1[m,]$call, col.name="species")
+  m <- match(rownames(h.orth.GHO2@meta.data),hc.orth.spp2$barcode)
+  if(any(is.na(m))) cat("Not all barcodes are in data.\n")
+  h.orth.GHO2 <- AddMetaData(h.orth.GHO2, hc.orth.spp2[m,]$call, col.name="species")
+  m <- match(rownames(h.orth.GHO3@meta.data),hc.orth.spp3$barcode)
+  if(any(is.na(m))) cat("Not all barcodes are in data.\n")
+  h.orth.GHO3 <- AddMetaData(h.orth.GHO3, hc.orth.spp3[m,]$call, col.name="species")
+  m <- match(rownames(h.orth.GHO4@meta.data),hc.orth.spp4$barcode)
+  if(any(is.na(m))) cat("Not all barcodes are in data.\n")
+  h.orth.GHO4 <- AddMetaData(h.orth.GHO4, hc.orth.spp4[m,]$call, col.name="species")
+  m <- match(rownames(c.orth.GHO1@meta.data),hc.orth.spp1$barcode)
+  if(any(is.na(m))) cat("Not all barcodes are in data.\n")
+  c.orth.GHO1 <- AddMetaData(c.orth.GHO1, hc.orth.spp1[m,]$call, col.name="species")
+  m <- match(rownames(c.orth.GHO2@meta.data),hc.orth.spp2$barcode)
+  if(any(is.na(m))) cat("Not all barcodes are in data.\n")
+  c.orth.GHO2 <- AddMetaData(c.orth.GHO2, hc.orth.spp2[m,]$call, col.name="species")
+  m <- match(rownames(c.orth.GHO3@meta.data),hc.orth.spp3$barcode)
+  if(any(is.na(m))) cat("Not all barcodes are in data.\n")
+  c.orth.GHO3 <- AddMetaData(c.orth.GHO3, hc.orth.spp3[m,]$call, col.name="species")
+  m <- match(rownames(c.orth.GHO4@meta.data),hc.orth.spp4$barcode)
+  if(any(is.na(m))) cat("Not all barcodes are in data.\n")
+  c.orth.GHO4 <- AddMetaData(c.orth.GHO4, hc.orth.spp4[m,]$call, col.name="species")
+#(6)view details of species assignments - sppo
+  table(h.orth.GHO1@meta.data$species, useNA="always")   #C=3294, H=2319, M=  87, NA=6789180
+  table(h.orth.GHO2@meta.data$species, useNA="always")   #C=3149, H=2563, M= 123, NA=6789045
+  table(h.orth.GHO3@meta.data$species, useNA="always")   #C=1305, H=2168, M= 114, NA=6791293
+  table(h.orth.GHO4@meta.data$species, useNA="always")   #C=1805, H=1580, M=  62, NA=6791433
+  table(c.orth.GHO1@meta.data$species, useNA="always")   #C=3294, H=2319, M=  87, NA=6789180
+  table(c.orth.GHO2@meta.data$species, useNA="always")   #C=3149, H=2563, M= 123, NA=6789045
+  table(c.orth.GHO3@meta.data$species, useNA="always")   #C=1305, H=2168, M= 114, NA=6791293
+  table(c.orth.GHO4@meta.data$species, useNA="always")   #C=1805, H=1580, M=  62, NA=6791433
+#(7)subset data to only include human and chimp cells/genes - sppo
+# (GHO1)
+  h.orth.sppo.GHO1 <- subset(h.orth.GHO1, subset=species=="Human")
+  c.orth.sppo.GHO1 <- subset(c.orth.GHO1, subset=species=="Chimp")
+# (GHO2)  
+  h.orth.sppo.GHO2 <- subset(h.orth.GHO2, subset=species=="Human")
+  c.orth.sppo.GHO2 <- subset(c.orth.GHO2, subset=species=="Chimp")
+# (GHO3)  
+  h.orth.sppo.GHO3 <- subset(h.orth.GHO3, subset=species=="Human")
+  c.orth.sppo.GHO3 <- subset(c.orth.GHO3, subset=species=="Chimp")
+# (GHO4)  
+  h.orth.sppo.GHO4 <- subset(h.orth.GHO4, subset=species=="Human")
+  c.orth.sppo.GHO4 <- subset(c.orth.GHO4, subset=species=="Chimp")
+#(8)create merged object - sppo
+  h.orth.c.orth.sppo <- merge(h.orth.sppo.GHO1,c(c.orth.sppo.GHO1,
+                          h.orth.sppo.GHO2,c.orth.sppo.GHO2,
+                          h.orth.sppo.GHO3,c.orth.sppo.GHO3,
+                          h.orth.sppo.GHO4,c.orth.sppo.GHO4),
+                        add.cell.ids=c("iPSC","iPSC","MSC","MSC","chondro","chondro","osteo","osteo"),
+                        project="h.orth.c.orth.sppo")
+  saveRDS(h.orth.c.orth.sppo, file = "../data/cellranger-data-full/h.orth.c.orth.sppo.rds")
+#(9)clear excess data from workspace
+  rm(h.orth.GHO1,h.orth.GHO2,h.orth.GHO3,h.orth.GHO4) 
+  rm(c.orth.GHO1,c.orth.GHO2,c.orth.GHO3,c.orth.GHO4)
+  rm(h.orth.sppo.GHO1,h.orth.sppo.GHO2,h.orth.sppo.GHO3,h.orth.sppo.GHO4)
+  rm(c.orth.sppo.GHO1,c.orth.sppo.GHO2,c.orth.sppo.GHO3,c.orth.sppo.GHO4)
+
+#Prepare data for h.orfl.c.orfl.spof
+#(1)load data
+  h.orfl.GHO1_data <- Read10X(data=paste0(dir_h.orfl.GHO1,"/raw_feature_bc_matrix"))
+  h.orfl.GHO2_data <- Read10X(data=paste0(dir_h.orfl.GHO2,"/raw_feature_bc_matrix"))
+  h.orfl.GHO3_data <- Read10X(data=paste0(dir_h.orfl.GHO3,"/raw_feature_bc_matrix"))
+  h.orfl.GHO4_data <- Read10X(data=paste0(dir_h.orfl.GHO4,"/raw_feature_bc_matrix"))
+  c.orfl.GHO1_data <- Read10X(data=paste0(dir_c.orfl.GHO1,"/raw_feature_bc_matrix"))
+  c.orfl.GHO2_data <- Read10X(data=paste0(dir_c.orfl.GHO2,"/raw_feature_bc_matrix"))
+  c.orfl.GHO3_data <- Read10X(data=paste0(dir_c.orfl.GHO3,"/raw_feature_bc_matrix"))
+  c.orfl.GHO4_data <- Read10X(data=paste0(dir_c.orfl.GHO4,"/raw_feature_bc_matrix"))
+#(2)create seurat objects
+  h.orfl.GHO1 <- CreateSeuratObject(counts=h.orfl.GHO1_data, project="iPSC")
+  h.orfl.GHO2 <- CreateSeuratObject(counts=h.orfl.GHO2_data, project="MSC")
+  h.orfl.GHO3 <- CreateSeuratObject(counts=h.orfl.GHO3_data, project="chondrocyte")
+  h.orfl.GHO4 <- CreateSeuratObject(counts=h.orfl.GHO4_data, project="osteoblast")
+  c.orfl.GHO1 <- CreateSeuratObject(counts=c.orfl.GHO1_data, project="iPSC")
+  c.orfl.GHO2 <- CreateSeuratObject(counts=c.orfl.GHO2_data, project="MSC")
+  c.orfl.GHO3 <- CreateSeuratObject(counts=c.orfl.GHO3_data, project="chondrocyte")
+  c.orfl.GHO4 <- CreateSeuratObject(counts=c.orfl.GHO4_data, project="osteoblast")
+#(3)view details of seurat objects
+  h.orfl.GHO1                       #28942 features, 6794880 samples
+  h.orfl.GHO2                       #28942 features, 6794880 samples
+  h.orfl.GHO3                       #28942 features, 6794880 samples
+  h.orfl.GHO4                       #28942 features, 6794880 samples
+  c.orfl.GHO1                       #28942 features, 6794880 samples
+  c.orfl.GHO2                       #28942 features, 6794880 samples
+  c.orfl.GHO3                       #28942 features, 6794880 samples
+  c.orfl.GHO4                       #28942 features, 6794880 samples
+#(4)clear raw data from workspace
+  rm(h.orfl.GHO1_data,h.orfl.GHO2_data,h.orfl.GHO3_data,h.orfl.GHO4_data)
+  rm(c.orfl.GHO1_data,c.orfl.GHO2_data,c.orfl.GHO3_data,c.orfl.GHO4_data)
+#(5)add species assignments to data - spof
+  m <- match(rownames(h.orfl.GHO1@meta.data),hc.orfl.spp1$barcode)
+  if(any(is.na(m))) cat("Not all barcodes are in data.\n")
+  h.orfl.GHO1 <- AddMetaData(h.orfl.GHO1, hc.orfl.spp1[m,]$call, col.name="species")
+  m <- match(rownames(h.orfl.GHO2@meta.data),hc.orfl.spp2$barcode)
+  if(any(is.na(m))) cat("Not all barcodes are in data.\n")
+  h.orfl.GHO2 <- AddMetaData(h.orfl.GHO2, hc.orfl.spp2[m,]$call, col.name="species")
+  m <- match(rownames(h.orfl.GHO3@meta.data),hc.orfl.spp3$barcode)
+  if(any(is.na(m))) cat("Not all barcodes are in data.\n")
+  h.orfl.GHO3 <- AddMetaData(h.orfl.GHO3, hc.orfl.spp3[m,]$call, col.name="species")
+  m <- match(rownames(h.orfl.GHO4@meta.data),hc.orfl.spp4$barcode)
+  if(any(is.na(m))) cat("Not all barcodes are in data.\n")
+  h.orfl.GHO4 <- AddMetaData(h.orfl.GHO4, hc.orfl.spp4[m,]$call, col.name="species")
+  m <- match(rownames(c.orfl.GHO1@meta.data),hc.orfl.spp1$barcode)
+  if(any(is.na(m))) cat("Not all barcodes are in data.\n")
+  c.orfl.GHO1 <- AddMetaData(c.orfl.GHO1, hc.orfl.spp1[m,]$call, col.name="species")
+  m <- match(rownames(c.orfl.GHO2@meta.data),hc.orfl.spp2$barcode)
+  if(any(is.na(m))) cat("Not all barcodes are in data.\n")
+  c.orfl.GHO2 <- AddMetaData(c.orfl.GHO2, hc.orfl.spp2[m,]$call, col.name="species")
+  m <- match(rownames(c.orfl.GHO3@meta.data),hc.orfl.spp3$barcode)
+  if(any(is.na(m))) cat("Not all barcodes are in data.\n")
+  c.orfl.GHO3 <- AddMetaData(c.orfl.GHO3, hc.orfl.spp3[m,]$call, col.name="species")
+  m <- match(rownames(c.orfl.GHO4@meta.data),hc.orfl.spp4$barcode)
+  if(any(is.na(m))) cat("Not all barcodes are in data.\n")
+  c.orfl.GHO4 <- AddMetaData(c.orfl.GHO4, hc.orfl.spp4[m,]$call, col.name="species")
+#(6)view details of species assignments - spof
+  table(h.orfl.GHO1@meta.data$species, useNA="always")   #C=3296, H=2318, M=  82, NA=6789184
+  table(h.orfl.GHO2@meta.data$species, useNA="always")   #C=3149, H=2557, M= 122, NA=6789052
+  table(h.orfl.GHO3@meta.data$species, useNA="always")   #C=1290, H=2166, M= 105, NA=6791319
+  table(h.orfl.GHO4@meta.data$species, useNA="always")   #C=1828, H=1586, M=  42, NA=6791424
+  table(c.orfl.GHO1@meta.data$species, useNA="always")   #C=3296, H=2318, M=  82, NA=6789184
+  table(c.orfl.GHO2@meta.data$species, useNA="always")   #C=3149, H=2557, M= 122, NA=6789052
+  table(c.orfl.GHO3@meta.data$species, useNA="always")   #C=1290, H=2166, M= 105, NA=6791319
+  table(c.orfl.GHO4@meta.data$species, useNA="always")   #C=1828, H=1586, M=  42, NA=6791424
+#(7)subset data to only include human and chimp cells/genes - spof
+# (GHO1)
+  h.orfl.spof.GHO1 <- subset(h.orfl.GHO1, subset=species=="Human")
+  c.orfl.spof.GHO1 <- subset(c.orfl.GHO1, subset=species=="Chimp")
+# (GHO2)  
+  h.orfl.spof.GHO2 <- subset(h.orfl.GHO2, subset=species=="Human")
+  c.orfl.spof.GHO2 <- subset(c.orfl.GHO2, subset=species=="Chimp")
+# (GHO3)  
+  h.orfl.spof.GHO3 <- subset(h.orfl.GHO3, subset=species=="Human")
+  c.orfl.spof.GHO3 <- subset(c.orfl.GHO3, subset=species=="Chimp")
+# (GHO4)  
+  h.orfl.spof.GHO4 <- subset(h.orfl.GHO4, subset=species=="Human")
+  c.orfl.spof.GHO4 <- subset(c.orfl.GHO4, subset=species=="Chimp")
+#(8)create merged object - spof
+  h.orfl.c.orfl.spof <- merge(h.orfl.spof.GHO1,c(c.orfl.spof.GHO1,
+                          h.orfl.spof.GHO2,c.orfl.spof.GHO2,
+                          h.orfl.spof.GHO3,c.orfl.spof.GHO3,
+                          h.orfl.spof.GHO4,c.orfl.spof.GHO4),
+                        add.cell.ids=c("iPSC","iPSC","MSC","MSC","chondro","chondro","osteo","osteo"),
+                        project="h.orfl.c.orfl.spof")
+  saveRDS(h.orfl.c.orfl.spof, file = "../data/cellranger-data-full/h.orfl.c.orfl.spof.rds")
+#(9)clear excess data from workspace
+  rm(h.orfl.GHO1,h.orfl.GHO2,h.orfl.GHO3,h.orfl.GHO4) 
+  rm(c.orfl.GHO1,c.orfl.GHO2,c.orfl.GHO3,c.orfl.GHO4)
+  rm(h.orfl.sppo.GHO1,h.orfl.sppo.GHO2,h.orfl.sppo.GHO3,h.orfl.sppo.GHO4)
+  rm(c.orfl.sppo.GHO1,c.orfl.sppo.GHO2,c.orfl.sppo.GHO3,c.orfl.sppo.GHO4)
+  rm(h.orfl.sppf.GHO1,h.orfl.sppf.GHO2,h.orfl.sppf.GHO3,h.orfl.sppf.GHO4)
+  rm(c.orfl.sppf.GHO1,c.orfl.sppf.GHO2,c.orfl.sppf.GHO3,c.orfl.sppf.GHO4)
+  rm(h.orfl.spof.GHO1,h.orfl.spof.GHO2,h.orfl.spof.GHO3,h.orfl.spof.GHO4)
+  rm(c.orfl.spof.GHO1,c.orfl.spof.GHO2,c.orfl.spof.GHO3,c.orfl.spof.GHO4)
+
+#Clear additional excess data from workspace
+rm(dir_h.orth.GHO1,dir_h.orth.GHO2,dir_h.orth.GHO3,dir_h.orth.GHO4)
+rm(dir_c.orth.GHO1,dir_c.orth.GHO2,dir_c.orth.GHO3,dir_c.orth.GHO4)
+rm(dir_hc.orth.GHO1,dir_hc.orth.GHO2,dir_hc.orth.GHO3,dir_hc.orth.GHO4)
+rm(dir_h.orfl.GHO1,dir_h.orfl.GHO2,dir_h.orfl.GHO3,dir_h.orfl.GHO4)
+rm(dir_c.orfl.GHO1,dir_c.orfl.GHO2,dir_c.orfl.GHO3,dir_c.orfl.GHO4)
+rm(dir_hc.orfl.GHO1,dir_hc.orfl.GHO2,dir_hc.orfl.GHO3,dir_hc.orfl.GHO4)
+rm(hc.orth.spp1,hc.orth.spp2,hc.orth.spp3,hc.orth.spp4)
+rm(hc.orfl.spp1,hc.orfl.spp2,hc.orfl.spp3,hc.orfl.spp4)
+rm(m,i,h,c,h.gene,c.gene)
+
+```
+
+```{r data meta information adjustments}
+
+# Load data
+dir <- "/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA"
+h.orth.c.orth.sppo <- readRDS(paste0(dir,"/data/cellranger-data-full/h.orth.c.orth.sppo.rds"))
+h.orfl.c.orfl.spof <- readRDS(paste0(dir,"/data/cellranger-data-full/h.orfl.c.orfl.spof.rds"))
+
+#Fix meta.data details so that plotting is easier later on
+h.orth.c.orth.sppo@meta.data$species <- factor(h.orth.c.orth.sppo@meta.data$species, levels=c("Human","Chimp"))
+h.orfl.c.orfl.spof@meta.data$species <- factor(h.orfl.c.orfl.spof@meta.data$species, levels=c("Human","Chimp"))
+h.orth.c.orth.sppo@meta.data$orig.ident <- factor(h.orth.c.orth.sppo@meta.data$orig.ident, levels=c("iPSC","MSC","chondrocyte","osteoblast"))
+h.orfl.c.orfl.spof@meta.data$orig.ident <- factor(h.orfl.c.orfl.spof@meta.data$orig.ident, levels=c("iPSC","MSC","chondrocyte","osteoblast"))
+
+#notes: colors for coordination with figures
+#col4=c("pink","mediumorchid","gold","dodgerblue") #colors for cell types
+#scale_fill_manual(values=col4)
+
+```
+
+```{r data qc prefiltering}
+
+#Calculate the percentage of reads that map to the mitochondrial genome
+
+#notes: 0 mito genes in ortho annotations
+#notes: 0 mito genes in ortho-filter annotations
+
+```
+
+```{r data qc prefiltering}
+
+#Check and visualize numbers of cells per species
+table(h.orth.c.orth.sppo@meta.data$species, useNA="always") #H=8630, C=9553, Mult=na, NA=0
+table(h.orfl.c.orfl.spof@meta.data$species, useNA="always") #H=8267, C=9563, Mult=na, NA=0
+
+CombinePlots(plots=list((ggplot(h.orth.c.orth.sppo@meta.data, aes(x=species))+geom_bar()+labs(title="h.orth.c.orth.sppo")+ylim(0,10000)),
+                        (ggplot(h.orfl.c.orfl.spof@meta.data, aes(x=species))+geom_bar()+labs(title="h.orfl.c.orfl.spof")+ylim(0,10000))), ncol=2)
+
+#Show QC metrics for the first 5 cells
+#nFeature_RNA: number of unique genes detected in each cell
+#nCount_RNA: total number of molecules (umi) detected within a cell
+#percent.mt: percentage of reads that map to the mitochondrial genome
+head(h.orth.c.orth.sppo@meta.data, 5)
+head(h.orfl.c.orfl.spof@meta.data, 5)
+
+#Check and visualize QC metrics
+#notes: examined nCount_RNA, nFeature_RNA, percent.mt
+mean(h.orth.c.orth.sppo@meta.data$nCount_RNA)
+mean(h.orth.c.orth.sppo@meta.data$nCount_RNA[which(h.orth.c.orth.sppo[['orig.ident']]=="iPSC")])
+mean(h.orth.c.orth.sppo@meta.data$nCount_RNA[which(h.orth.c.orth.sppo[['orig.ident']]=="MSC")])
+mean(h.orth.c.orth.sppo@meta.data$nCount_RNA[which(h.orth.c.orth.sppo[['orig.ident']]=="chondrocyte")])
+mean(h.orth.c.orth.sppo@meta.data$nCount_RNA[which(h.orth.c.orth.sppo[['orig.ident']]=="osteoblast")])
+mean(h.orfl.c.orfl.spof@meta.data$nCount_RNA)
+mean(h.orfl.c.orfl.spof@meta.data$nCount_RNA[which(h.orfl.c.orfl.spof[['orig.ident']]=="iPSC")])
+mean(h.orfl.c.orfl.spof@meta.data$nCount_RNA[which(h.orfl.c.orfl.spof[['orig.ident']]=="MSC")])
+mean(h.orfl.c.orfl.spof@meta.data$nCount_RNA[which(h.orfl.c.orfl.spof[['orig.ident']]=="chondrocyte")])
+mean(h.orfl.c.orfl.spof@meta.data$nCount_RNA[which(h.orfl.c.orfl.spof[['orig.ident']]=="osteoblast")])
+
+CombinePlots(plots=list((ggplot(h.orth.c.orth.sppo@meta.data, aes(x=orig.ident,y=nCount_RNA,fill=species))+
+                           geom_boxplot()+labs(title="h.orth.c.orth.sppo",x="Cell Type",y="UMI per Cell")+ylim(0,75000)),
+                        (ggplot(h.orfl.c.orfl.spof@meta.data, aes(x=orig.ident,y=nCount_RNA,fill=species))+
+                           geom_boxplot()+labs(title="h.orfl.c.orfl.spof",x="Cell Type",y="UMI per Cell")+ylim(0,75000))), ncol=2)
+
+CombinePlots(plots=list((ggplot(h.orth.c.orth.sppo@meta.data, aes(x=orig.ident,y=nFeature_RNA,fill=species))+
+                           geom_boxplot()+labs(title="h.orth.c.orth.sppo",x="Cell Type",y="Genes per Cell")+ylim(0,8000)),
+                        (ggplot(h.orfl.c.orfl.spof@meta.data, aes(x=orig.ident,y=nFeature_RNA,fill=species))+
+                           geom_boxplot()+labs(title="h.orfl.c.orfl.spof",x="Cell Type",y="Genes per Cell")+ylim(0,8000))), ncol=2)
+
+CombinePlots(plots=list((ggplot(h.orth.c.orth.sppo@meta.data, aes(x=nCount_RNA,y=nFeature_RNA,color=species))+
+                           geom_point(size=2,alpha=0.3)+xlim(0,75000)+ylim(0,8000)+facet_grid(orig.ident ~ .)+
+                           labs(title="h.orth.c.orth.sppo",x="UMI per Cell",y="Genes per Cell")),
+                        (ggplot(h.orfl.c.orfl.spof@meta.data, aes(x=nCount_RNA,y=nFeature_RNA,color=species))+
+                           geom_point(size=2,alpha=0.3)+xlim(0,75000)+ylim(0,8000)+facet_grid(orig.ident ~ .)+
+                           labs(title="h.orfl.c.orfl.spof",x="UMI per Cell",y="Genes per Cell"))), ncol=2)
+
+```
+
+```{r save data temporarily}
+
+dir <- "/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA"
+saveRDS(h.orth.c.orth.sppo, file=paste0(dir,"/data/cellranger-data-full/x-h.orth.c.orth.sppo.rds"))
+saveRDS(h.orfl.c.orfl.spof, file=paste0(dir,"/data/cellranger-data-full/x-h.orfl.c.orfl.spof.rds"))
+
+```
+
+```{r load processed data}
+
+dir <- "/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA"
+h.orth.c.orth.sppo <- readRDS(paste0(dir,"/data/cellranger-data-full/x-h.orth.c.orth.sppo.rds"))
+h.orfl.c.orfl.spof <- readRDS(paste0(dir,"/data/cellranger-data-full/x-h.orfl.c.orfl.spof.rds"))
+
+```
+
+```{r data qc}
+
+#Visualize some qc metrics of data
+# - number of umi per cell (count depth)
+# - reads per genes
+# - expressed genes per cell (complexity)
+# - rarity of genes (cells expressing genes)
+
+#count depth (number of umi per cell)
+CombinePlots(plots=list((ggplot(h.orth.c.orth.sppo@meta.data, aes(x=nCount_RNA,color=species)) +
+                           geom_histogram(fill="white", alpha=0.1, position="identity", binwidth=1000) +
+                           labs(title="h.orth.c.orth.sppo",x="UMI per Cell",y="Count") +
+                           facet_grid(orig.ident ~ .)),
+                        (ggplot(h.orfl.c.orfl.spof@meta.data, aes(x=nCount_RNA,color=species)) +
+                           geom_histogram(fill="white", alpha=0.1, position="identity", binwidth=1000) +
+                           labs(title="h.orfl.c.orfl.spof",x="UMI per Cell",y="Count") +
+                           facet_grid(orig.ident ~ .))), ncol=2)
+#may be good to subset to minimum of 1600 reads or should thresholds be different across different cell types/species?
+CombinePlots(plots=list((ggplot(h.orth.c.orth.sppo@meta.data, aes(x=nCount_RNA,color=species)) +
+                           geom_histogram(fill="white", alpha=0.1, position="identity", binwidth=100) +
+                           labs(title="h.orth.c.orth.sppo",x="UMI per Cell",y="Count") +
+                           geom_vline(xintercept=1600, linetype="dashed") +
+                           xlim(0,4000) +
+                           facet_grid(orig.ident ~ .)),
+                        (ggplot(h.orfl.c.orfl.spof@meta.data, aes(x=nCount_RNA,color=species)) +
+                           geom_histogram(fill="white", alpha=0.1, position="identity", binwidth=100) +
+                           labs(title="h.orfl.c.orfl.spof",x="UMI per Cell",y="Count") +
+                           geom_vline(xintercept=1600, linetype="dashed") +
+                           xlim(0,4000) +
+                           facet_grid(orig.ident ~ .))), ncol=2)
+
+
+#complexity (expressed genes per cell)
+CombinePlots(plots=list((ggplot(h.orth.c.orth.sppo@meta.data, aes(x=nFeature_RNA,color=species)) +
+                           geom_histogram(fill="white", alpha=0.1, position="identity", binwidth=100) +
+                           labs(title="h.orth.c.orth.sppo",x="Genes per Cell",y="Count") +
+                           facet_grid(orig.ident ~ .)),
+                        (ggplot(h.orfl.c.orfl.spof@meta.data, aes(x=nFeature_RNA,color=species)) +
+                           geom_histogram(fill="white", alpha=0.1, position="identity", binwidth=100) +
+                           labs(title="h.orfl.c.orfl.spof",x="Genes per Cell",y="Count") +
+                           facet_grid(orig.ident ~ .))), ncol=2)
+#may be good to subset to minimum of 800 genes or should thresholds be different across different cell types/species?
+CombinePlots(plots=list((ggplot(h.orth.c.orth.sppo@meta.data, aes(x=nFeature_RNA,color=species)) +
+                           geom_histogram(fill="white", alpha=0.1, position="identity", binwidth=50) +
+                           labs(title="h.orth.c.orth.sppo",x="Genes per Cell",y="Count") +
+                           geom_vline(xintercept=800, linetype="dashed") +
+                           xlim(0,2000) +
+                           facet_grid(orig.ident ~ .)),
+                        (ggplot(h.orfl.c.orfl.spof@meta.data, aes(x=nFeature_RNA,color=species)) +
+                           geom_histogram(fill="white", alpha=0.1, position="identity", binwidth=50) +
+                           labs(title="h.orfl.c.orfl.spof",x="Genes per Cell",y="Count") +
+                           geom_vline(xintercept=800, linetype="dashed") +
+                           xlim(0,2000) +
+                           facet_grid(orig.ident ~ .))), ncol=2)
+
+#check correlation between count depth and complexity
+CombinePlots(plots=list((ggplot(h.orth.c.orth.sppo@meta.data, aes(x=nCount_RNA,y=nFeature_RNA,color=species)) +
+                           geom_point(size=0.5,alpha=0.1) +
+                           labs(title="h.orth.c.orth.sppo",x="UMI per Cell",y="Genes per Cell") +
+                           geom_vline(xintercept=1600, linetype="dashed") +
+                           geom_hline(yintercept=800, linetype="dashed") +
+                           facet_grid(orig.ident ~ .)),
+                        (ggplot(h.orfl.c.orfl.spof@meta.data, aes(x=nCount_RNA,y=nFeature_RNA,color=species)) +
+                           geom_point(size=0.5,alpha=0.1) +
+                           labs(title="h.orfl.c.orfl.spof",x="UMI per Cell",y="Genes per Cell") +
+                           geom_vline(xintercept=1600, linetype="dashed") +
+                           geom_hline(yintercept=800, linetype="dashed") +
+                           facet_grid(orig.ident ~ .))), ncol=2)
+
+#investigate potential that cells are actually failed libraries (lower end outliers) or are cell doublets (higher end outliers)
+CombinePlots(plots=list((ggplot(subset(subset(h.orth.c.orth.sppo@meta.data,species%in%"Human"),orig.ident%in%"iPSC"),
+                                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#F8766D") +
+                           labs(title="h.orth.c.orth.sppo:\nHuman iPSCs", x="Cell Rank", y="UMI per Cell")),
+                        (ggplot(subset(subset(h.orth.c.orth.sppo@meta.data,species%in%"Human"),orig.ident%in%"MSC"),
+                                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#F8766D") +
+                           labs(title="h.orth.c.orth.sppo:\nHuman MSCs", x="Cell Rank", y="UMI per Cell")),
+                        (ggplot(subset(subset(h.orth.c.orth.sppo@meta.data,species%in%"Human"),orig.ident%in%"chondrocyte"),
+                                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#F8766D") +
+                           labs(title="h.orth.c.orth.sppo:\nHuman Chondrocytes", x="Cell Rank", y="UMI per Cell")),
+                        (ggplot(subset(subset(h.orth.c.orth.sppo@meta.data,species%in%"Human"),orig.ident%in%"osteoblast"),
+                                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#F8766D") +
+                           labs(title="h.orth.c.orth.sppo:\nHuman Osteoblasts", x="Cell Rank", y="UMI per Cell")),
+                        (ggplot(subset(subset(h.orth.c.orth.sppo@meta.data,species%in%"Chimp"),orig.ident%in%"iPSC"),
+                                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
+                           labs(title="h.orth.c.orth.sppo:\nChimp iPSCs", x="Cell Rank", y="UMI per Cell")),
+                        (ggplot(subset(subset(h.orth.c.orth.sppo@meta.data,species%in%"Chimp"),orig.ident%in%"MSC"),
+                                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
+                           labs(title="h.orth.c.orth.sppo:\nChimp MSCs", x="Cell Rank", y="UMI per Cell")),
+                        (ggplot(subset(subset(h.orth.c.orth.sppo@meta.data,species%in%"Chimp"),orig.ident%in%"chondrocyte"),
+                                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
+                           labs(title="h.orth.c.orth.sppo:\nChimp Chondrocytes", x="Cell Rank", y="UMI per Cell")),
+                        (ggplot(subset(subset(h.orth.c.orth.sppo@meta.data,species%in%"Chimp"),orig.ident%in%"osteoblast"),
+                                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
+                           labs(title="h.orth.c.orth.sppo:\nChimp Osteoblasts", x="Cell Rank", y="UMI per Cell"))), ncol=4)
+CombinePlots(plots=list((ggplot(subset(subset(h.orfl.c.orfl.spof@meta.data,species%in%"Human"),orig.ident%in%"iPSC"),
+                                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#F8766D") +
+                           labs(title="h.orfl.c.orfl.spof:\nHuman iPSCs", x="Cell Rank", y="UMI per Cell")),
+                        (ggplot(subset(subset(h.orfl.c.orfl.spof@meta.data,species%in%"Human"),orig.ident%in%"MSC"),
+                                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#F8766D") +
+                           labs(title="h.orfl.c.orfl.spof:\nHuman MSCs", x="Cell Rank", y="UMI per Cell")),
+                        (ggplot(subset(subset(h.orfl.c.orfl.spof@meta.data,species%in%"Human"),orig.ident%in%"chondrocyte"),
+                                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#F8766D") +
+                           labs(title="h.orfl.c.orfl.spof:\nHuman Chondrocytes", x="Cell Rank", y="UMI per Cell")),
+                        (ggplot(subset(subset(h.orfl.c.orfl.spof@meta.data,species%in%"Human"),orig.ident%in%"osteoblast"),
+                                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#F8766D") +
+                           labs(title="h.orfl.c.orfl.spof:\nHuman Osteoblasts", x="Cell Rank", y="UMI per Cell")),
+                        (ggplot(subset(subset(h.orfl.c.orfl.spof@meta.data,species%in%"Chimp"),orig.ident%in%"iPSC"),
+                                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
+                           labs(title="h.orfl.c.orfl.spof:\nChimp iPSCs", x="Cell Rank", y="UMI per Cell")),
+                        (ggplot(subset(subset(h.orfl.c.orfl.spof@meta.data,species%in%"Chimp"),orig.ident%in%"MSC"),
+                                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
+                           labs(title="h.orfl.c.orfl.spof:\nChimp MSCs", x="Cell Rank", y="UMI per Cell")),
+                        (ggplot(subset(subset(h.orfl.c.orfl.spof@meta.data,species%in%"Chimp"),orig.ident%in%"chondrocyte"),
+                                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
+                           labs(title="h.orfl.c.orfl.spof:\nChimp Chondrocytes", x="Cell Rank", y="UMI per Cell")),
+                        (ggplot(subset(subset(h.orfl.c.orfl.spof@meta.data,species%in%"Chimp"),orig.ident%in%"osteoblast"),
+                                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
+                           labs(title="h.orfl.c.orfl.spof:\nChimp Osteoblasts", x="Cell Rank", y="UMI per Cell"))), ncol=4)
+
+CombinePlots(plots=list((ggplot(subset(subset(h.orth.c.orth.sppo@meta.data,species%in%"Human"),orig.ident%in%"iPSC"),
+                                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#F8766D") +
+                           labs(title="h.orth.c.orth.sppo:\nHuman iPSCs", x="Cell Rank", y="Genes per Cell")),
+                        (ggplot(subset(subset(h.orth.c.orth.sppo@meta.data,species%in%"Human"),orig.ident%in%"MSC"),
+                                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#F8766D") +
+                           labs(title="h.orth.c.orth.sppo:\nHuman MSCs", x="Cell Rank", y="Genes per Cell")),
+                        (ggplot(subset(subset(h.orth.c.orth.sppo@meta.data,species%in%"Human"),orig.ident%in%"chondrocyte"),
+                                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#F8766D") +
+                           labs(title="h.orth.c.orth.sppo:\nHuman Chondrocytes", x="Cell Rank", y="Genes per Cell")),
+                        (ggplot(subset(subset(h.orth.c.orth.sppo@meta.data,species%in%"Human"),orig.ident%in%"osteoblast"),
+                                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#F8766D") +
+                           labs(title="h.orth.c.orth.sppo:\nHuman Osteoblasts", x="Cell Rank", y="Genes per Cell")),
+                        (ggplot(subset(subset(h.orth.c.orth.sppo@meta.data,species%in%"Chimp"),orig.ident%in%"iPSC"),
+                                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
+                           labs(title="h.orth.c.orth.sppo:\nChimp iPSCs", x="Cell Rank", y="Genes per Cell")),
+                        (ggplot(subset(subset(h.orth.c.orth.sppo@meta.data,species%in%"Chimp"),orig.ident%in%"MSC"),
+                                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
+                           labs(title="h.orth.c.orth.sppo:\nChimp MSCs", x="Cell Rank", y="Genes per Cell")),
+                        (ggplot(subset(subset(h.orth.c.orth.sppo@meta.data,species%in%"Chimp"),orig.ident%in%"chondrocyte"),
+                                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
+                           labs(title="h.orth.c.orth.sppo:\nChimp Chondrocytes", x="Cell Rank", y="Genes per Cell")),
+                        (ggplot(subset(subset(h.orth.c.orth.sppo@meta.data,species%in%"Chimp"),orig.ident%in%"osteoblast"),
+                                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
+                           labs(title="h.orth.c.orth.sppo:\nChimp Osteoblasts", x="Cell Rank", y="Genes per Cell"))), ncol=4)
+CombinePlots(plots=list((ggplot(subset(subset(h.orfl.c.orfl.spof@meta.data,species%in%"Human"),orig.ident%in%"iPSC"),
+                                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#F8766D") +
+                           labs(title="h.orfl.c.orfl.spof:\nHuman iPSCs", x="Cell Rank", y="Genes per Cell")),
+                        (ggplot(subset(subset(h.orfl.c.orfl.spof@meta.data,species%in%"Human"),orig.ident%in%"MSC"),
+                                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#F8766D") +
+                           labs(title="h.orfl.c.orfl.spof:\nHuman MSCs", x="Cell Rank", y="Genes per Cell")),
+                        (ggplot(subset(subset(h.orfl.c.orfl.spof@meta.data,species%in%"Human"),orig.ident%in%"chondrocyte"),
+                                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#F8766D") +
+                           labs(title="h.orfl.c.orfl.spof:\nHuman Chondrocytes", x="Cell Rank", y="Genes per Cell")),
+                        (ggplot(subset(subset(h.orfl.c.orfl.spof@meta.data,species%in%"Human"),orig.ident%in%"osteoblast"),
+                                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#F8766D") +
+                           labs(title="h.orfl.c.orfl.spof:\nHuman Osteoblasts", x="Cell Rank", y="Genes per Cell")),
+                        (ggplot(subset(subset(h.orfl.c.orfl.spof@meta.data,species%in%"Chimp"),orig.ident%in%"iPSC"),
+                                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
+                           labs(title="h.orfl.c.orfl.spof:\nChimp iPSCs", x="Cell Rank", y="Genes per Cell")),
+                        (ggplot(subset(subset(h.orfl.c.orfl.spof@meta.data,species%in%"Chimp"),orig.ident%in%"MSC"),
+                                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
+                           labs(title="h.orfl.c.orfl.spof:\nChimp MSCs", x="Cell Rank", y="Genes per Cell")),
+                        (ggplot(subset(subset(h.orfl.c.orfl.spof@meta.data,species%in%"Chimp"),orig.ident%in%"chondrocyte"),
+                                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
+                           labs(title="h.orfl.c.orfl.spof:\nChimp Chondrocytes", x="Cell Rank", y="Genes per Cell")),
+                        (ggplot(subset(subset(h.orfl.c.orfl.spof@meta.data,species%in%"Chimp"),orig.ident%in%"osteoblast"),
+                                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
+                           labs(title="h.orfl.c.orfl.spof:\nChimp Osteoblasts", x="Cell Rank", y="Genes per Cell"))), ncol=4)
+
+#look at genes instead of cells
+df_sppo <- data.frame(
+  counts_per_gene <- Matrix::rowSums(h.orth.c.orth.sppo@assays$RNA@counts),
+  cells_per_gene <- Matrix::rowSums(h.orth.c.orth.sppo@assays$RNA@counts>0)
+)
+colnames(df_sppo) <- c("counts_per_gene","cells_per_gene")
+df_spof <- data.frame(
+  counts_per_gene <- Matrix::rowSums(h.orfl.c.orfl.spof@assays$RNA@counts),
+  cells_per_gene <- Matrix::rowSums(h.orfl.c.orfl.spof@assays$RNA@counts>0)
+)
+colnames(df_spof) <- c("counts_per_gene","cells_per_gene")
+
+#umis per gene
+CombinePlots(plots=list((ggplot(df_sppo, aes(x=log10(counts_per_gene+1))) +
+                           geom_histogram(binwidth=0.2) +
+                           ylim(0,16000) +
+                           labs(title="h.orth.c.orth.sppo",x="UMIs per Gene",y="Count")),
+                        (ggplot(df_spof, aes(x=log10(counts_per_gene+1))) +
+                           geom_histogram(binwidth=0.2) +
+                           ylim(0,16000) +
+                           labs(title="h.orfl.c.orfl.spof",x="UMIs per Gene",y="Count"))), ncol=2)
+
+#rarity of genes (cells expressing genes)
+CombinePlots(plots=list((ggplot(df_sppo, aes(x=log10(cells_per_gene+1))) +
+                           geom_histogram(binwidth=0.1) +
+                           ylim(0,16000) +
+                           labs(title="h.orth.c.orth.sppo",x="Cells per Gene",y="Count")),
+                        (ggplot(df_spof, aes(x=log10(cells_per_gene+1))) +
+                           geom_histogram(binwidth=0.1) +
+                           ylim(0,16000) +
+                           labs(title="h.orfl.c.orfl.spof",x="Cells per Gene",y="Count"))), ncol=2)
+
+#Should I look into assessing expression of housekeeping genes?
+#https://broadinstitute.github.io/2019_scWorkshop/data-wrangling-scrnaseq.html
+
+```
+
+```{r data filtering}
+
+#Filter Barcodes
+
+#library(scater)
+#https://scrnaseq-course.cog.sanger.ac.uk/website/cleaning-the-expression-matrix.html
+#https://broadinstitute.github.io/2019_scWorkshop/data-wrangling-scrnaseq.html#preprocessing-step-1-filter-out-low-quality-cells
+
+#(1a) Filter based on number of read counts in each cell (count depth)
+#(1b) Filter based on number of unique genes detected in each cell (complexity)
+#notes: no filtering on feature counts at this time
+#test <- subset(h.orth.c.orth.sppo, subset=nFeature_RNA>800 && nCount_RNA>1600)
+
+#(2) Filter basted on detectable genes
+#detectable gene: >=1 UMI in >=2 cells (>=5 reads in >=2 cells)
+#genes must be filtered after cell filtering since some genes may only be detected in poor quality cells
+#notes: no filtering on genes at this time
+
+#(3) Filter based on mitochondrial RNA content - CANNOT DO THIS FOR HUMAN-CHIMP COMPARISONS
+#Rationale: cells lyse more easily than mitochondria, so high mito RNA content can signal cell lysis and RNA degradation (ideally percent.mt should be <5%)
+#notes: no filtering on percent mito at this time
+
+```
+
+```{r normalize data}
+
+#Normalize data using default settings
+h.orth.c.orth.sppo <- NormalizeData(h.orth.c.orth.sppo, normalization.method="LogNormalize", scale.factor=10000)
+h.orfl.c.orfl.spof <- NormalizeData(h.orfl.c.orfl.spof, normalization.method="LogNormalize", scale.factor=10000)
+
+#global-scaling normalization method that normalizes the gene expression measurements for each cell by the total expression, multiplies this by a scale factor, and log-transforms the result (simplest and most intuitive method)
+
+```
+
+```{r highly variable feature selection}
+
+#Calculate subset of features that exhibit high cell-to-cell variation in dataset
+h.orth.c.orth.sppo <- FindVariableFeatures(h.orth.c.orth.sppo, selection.method="vst", nfeatures=2000)
+h.orfl.c.orfl.spof <- FindVariableFeatures(h.orfl.c.orfl.spof, selection.method="vst", nfeatures=2000)
+#calculates average expression and dispersion for each gene, places genes into bins, and calculates z-score for dispersion within each bin; this helps control for the relationship between variability and average expression
+
+# Identify 10 most highly variable genes
+top10.h <- head(VariableFeatures(h.orth.c.orth.sppo), 10)
+top10.c <- head(VariableFeatures(h.orfl.c.orfl.spof), 10)
+
+#Plot variable features with top 10 features labels
+LabelPoints(plot=VariableFeaturePlot(h.orth.c.orth.sppo),points=top10.h, repel=TRUE)
+LabelPoints(plot=VariableFeaturePlot(h.orfl.c.orfl.spof),points=top10.c, repel=TRUE)
+
+```
+
+```{r scale data}
+
+#Scale data with linear transformation such that:
+#(1) expression of each gene is shifted so that mean expression across cells is 0
+#(2) expression of each gene is scaled so that variance across cells is 1
+#results of this are stored in pbmc[["RNA"]]@scale.data
+h.orth.c.orth.sppo <- ScaleData(h.orth.c.orth.sppo, features=rownames(h.orth.c.orth.sppo))
+h.orfl.c.orfl.spof <- ScaleData(h.orfl.c.orfl.spof, features=rownames(h.orfl.c.orfl.spof))
+
+```
+
+```{r linear dimensional reduction}
+
+#Perform PCA on scaled data
+h.orth.c.orth.sppo <- RunPCA(h.orth.c.orth.sppo, npcs=100, features=VariableFeatures(object=h.orth.c.orth.sppo), verbose=FALSE)
+h.orfl.c.orfl.spof <- RunPCA(h.orfl.c.orfl.spof, npcs=100, features=VariableFeatures(object=h.orfl.c.orfl.spof), verbose=FALSE)
+###SHOULD I KEEP VARIABLE FEATURES NULL? - doesn't look like results change much
+
+#Determine dimensionality of dataset
+#seurat clusters cells using PCA scores - each PC represents a ‘metafeature’ that combines information across a correlated feature set, the top PCs represent a robust compression of the dataset - need to determine how many PCs to include
+
+#OPTION 1 - Exploring PCs to determine relevant sources of heterogeneity
+#Examine PCA results
+print(h.orth.c.orth.sppo[["pca"]], dims=1:5, nfeatures=5)
+print(h.orfl.c.orfl.spof[["pca"]], dims=1:5, nfeatures=5)
+#Visualize PCA results
+VizDimLoadings(h.orth.c.orth.sppo, dims=1:2, nfeatures=30, reduction="pca", balanced=TRUE)
+VizDimLoadings(h.orfl.c.orfl.spof, dims=1:2, nfeatures=30, reduction="pca", balanced=TRUE)
+DimPlot(h.orth.c.orth.sppo, reduction="pca", group.by="orig.ident", label=TRUE, repel=TRUE, label.size=5)
+DimPlot(h.orfl.c.orfl.spof, reduction="pca", group.by="orig.ident", label=TRUE, repel=TRUE, label.size=5)
+#pca plot for top 500 cells on pc1
+DimHeatmap(h.orth.c.orth.sppo, dims=1, cells=500, balanced=TRUE)
+DimHeatmap(h.orfl.c.orfl.spof, dims=1, cells=500, balanced=TRUE)
+#pca plot for top 500 cells on pc1 through pc9
+DimHeatmap(h.orth.c.orth.sppo, dims=1:9, cells=500, balanced=TRUE)
+DimHeatmap(h.orfl.c.orfl.spof, dims=1:9, cells=500, balanced=TRUE)
+
+#OPTION 2- JackStraw procedure: randomly permute subset of data (1% by default), rerun PCA constructing a null distribution of feature scores, repeat this procedure, identify significant PCs as those with strong enrichment of low p-value features
+#h.orth.c.orth.sppo <- JackStraw(h.orth.c.orth.sppo, num.replicate=100)
+#h.orfl.c.orfl.spof <- JackStraw(h.orfl.c.orfl.spof, num.replicate=100)
+#h.orth.c.orth.sppo <- ScoreJackStraw(h.orth.c.orth.sppo, dims=1:20)
+#h.orfl.c.orfl.spof <- ScoreJackStraw(h.orfl.c.orfl.spof, dims=1:20)
+#visualize the distribution of p-values for each PC with a uniform distribution (dashed line)
+#sign PCs show strong enrichment of features with low p-values (solid curve above dashed line)
+#JackStrawPlot(h.orth.c.orth.sppo, dims=1:20)
+#JackStrawPlot(h.orfl.c.orfl.spof, dims=1:20)
+#TOO COMPUTATIONALLY EXPENSIVE - DO NOT RUN
+
+#OPTION 3 -Elbow plot procedure: ranking of PCs based on the percentage of variance explained by each one
+ElbowPlot(h.orth.c.orth.sppo, ndims=100)
+ElbowPlot(h.orfl.c.orfl.spof, ndims=100)
+
+
+#keep all dims that explaim more than 0.1% of variance
+pva <- h.orth.c.orth.sppo@reductions$pca@stdev^2/h.orth.c.orth.sppo@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001))
+ElbowPlot(h.orth.c.orth.sppo, ndims=100) + geom_vline(xintercept=ndim, linetype="dashed", color="red")
+ndim
+pva <- h.orfl.c.orfl.spof@reductions$pca@stdev^2/h.orfl.c.orfl.spof@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001))
+ElbowPlot(h.orfl.c.orfl.spof, ndims=100) + geom_vline(xintercept=ndim, linetype="dashed", color="red")
+ndim
+#lets retain the first 49PCs for h.orth.c.orth.sppo and first 48PCs for h.orfl.c.orfl.spof
+
+```
+
+```{r clustering}
+
+#Cluster cells using a distance metric based on previously identified PCs and partion cellular distance matrix into clusters by embedding cells in a graph structure (e.g. K-nearest neighbor graph) with edges drawn between cells with similar feature expression patterns and then dividing this graph into highly interconnected ‘quasi-cliques’/‘communities’
+
+#(1)construct KNN graph based on euclidean distance in PCA space and refine edge weights between any two cells based on shared overlap in their local neighborhoods (Jaccard similarity). This step is performed using the FindNeighbors function, and takes as input the previously defined dimensionality of the dataset (first 40 PCs).
+h.orth.c.orth.sppo <- FindNeighbors(h.orth.c.orth.sppo, dims=1:49)
+h.orfl.c.orfl.spof <- FindNeighbors(h.orfl.c.orfl.spof, dims=1:48)
+
+#(2)apply modularity optimization techniques to iteratively group cells together
+h.orth.c.orth.sppo <- FindClusters(h.orth.c.orth.sppo, dims.use=1:49, resolution=0.13)
+h.orfl.c.orfl.spof <- FindClusters(h.orfl.c.orfl.spof, dims.use=1:40, resolution=0.13)
+
+#Look at cluster IDs of the first 5 cells
+head(Idents(h.orth.c.orth.sppo),5)          #13 clusters
+head(Idents(h.orfl.c.orfl.spof),5)          #13 clusters
+
+#Save data
+dir <- "/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA"
+saveRDS(h.orth.c.orth.sppo, file=paste0(dir,"/data/cellranger-data-full/x-h.orth.c.orth.sppo.rds"))
+saveRDS(h.orfl.c.orfl.spof, file=paste0(dir,"/data/cellranger-data-full/x-h.orfl.c.orfl.spof.rds"))
+
+```
+
+```{r non-linear dimensional reduction}
+
+#Run non-linear dimensional reduction (UMAP/tSNE)
+#notes: run this in the terminal and then come back to rstudio
+
+##Install umap
+#module load python/3.7.0
+#module load R/3.5.1
+#R
+#library(reticulate)
+#use_python("/software/python-3.7.0-el7-x86_64/bin/python")
+#py_config()
+#py_discover_config()
+#cd /home/ghousman
+#wget https://github.com/lmcinnes/umap/archive/master.zip
+#unzip master.zip
+#rm master.zip
+#cd umap-master
+#export PYTHONUSERBASE=$HOME/.local/python
+#mkdir -p $PYTHONUSERBASE
+#pip3 install -r requirements.txt --user
+#pip3 install --upgrade pip --user
+#python setup.py install --user
+##notes: package installed in /home/ghousman/.local/python/lib/python3.7/site-packages
+
+#sinteractive --mem=8g
+#module load python/3.7.0
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R
+library(Seurat)
+dir <- "/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA"
+h.orth.c.orth.sppo <- readRDS(paste0(dir,"/data/cellranger-data-full/x-h.orth.c.orth.sppo.rds"))
+h.orth.c.orth.sppo <- RunUMAP(h.orth.c.orth.sppo, dims=1:49)
+saveRDS(h.orth.c.orth.sppo, file = paste0(dir,"/data/cellranger-data-full/xx-h.orth.c.orth.sppo.rds"))
+rm(h.orth.c.orth.sppo)
+h.orfl.c.orfl.spof <- readRDS(paste0(dir,"/data/cellranger-data-full/x-h.orfl.c.orfl.spof.rds"))
+h.orfl.c.orfl.spof <- RunUMAP(h.orfl.c.orfl.spof, dims=1:48)
+saveRDS(h.orfl.c.orfl.spof, file = paste0(dir,"/data/cellranger-data-full/xx-h.orfl.c.orfl.spof.rds"))
+rm(h.orfl.c.orfl.spof)
+
+```
+
+```{r visualize non-linear dimensional reduction}
+
+#Visualize non-linear dimensional reduction (UMAP/tSNE)
+#notes: do this next part in rstudio
+
+dir <- "/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA"
+h.orth.c.orth.sppo <- readRDS(paste0(dir,"/data/cellranger-data-full/xx-h.orth.c.orth.sppo.rds"))
+h.orfl.c.orfl.spof <- readRDS(paste0(dir,"/data/cellranger-data-full/xx-h.orfl.c.orfl.spof.rds"))
+
+#ggplot(as.data.frame(hc.orth.sppo.tot@reductions$umap@cell.embeddings), aes(UMAP_1, UMAP_2))+geom_point()
+CombinePlots(plots=list(DimPlot(h.orth.c.orth.sppo, reduction="umap", label=TRUE),
+                        DimPlot(h.orth.c.orth.sppo, reduction="umap", group.by="species"),
+                        DimPlot(h.orth.c.orth.sppo, reduction="umap", group.by="orig.ident")), ncol=3)
+
+CombinePlots(plots=list(DimPlot(h.orfl.c.orfl.spof, reduction="umap", label=TRUE),
+                        DimPlot(h.orfl.c.orfl.spof, reduction="umap", group.by="species"),
+                        DimPlot(h.orfl.c.orfl.spof, reduction="umap", group.by="orig.ident")), ncol=3)
+
+```
+
+```{r visualize marker expression}
+
+#notes: VlnPlot shows expression probability distributions across clusters
+#notes: FeaturePlot shows feature expression on a UMAP, tSNE, or PCA plot
+#notes: other plotting functions include RidgePlot, CellScatter, and DotPlot
+#notes: DoHeatmap generates an expression heatmap for given cells and features
+
+dir <- "/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA"
+h.orth.c.orth.sppo <- readRDS(paste0(dir,"/data/cellranger-data-full/xx-h.orth.c.orth.sppo.rds"))
+h.orfl.c.orfl.spof <- readRDS(paste0(dir,"/data/cellranger-data-full/xx-h.orfl.c.orfl.spof.rds"))
+
+#ipsc - POU5F1 and TDGF1 slightly increased in iPSCs
+FeaturePlot(h.orth.c.orth.sppo, features=c("NANOG","POU5F1","TDGF1"))
+FeaturePlot(h.orfl.c.orfl.spof, features=c("NANOG","POU5F1","TDGF1"))
+VlnPlot(h.orth.c.orth.sppo, features=c("NANOG","POU5F1","TDGF1"), group.by="orig.ident")
+VlnPlot(h.orfl.c.orfl.spof, features=c("NANOG","POU5F1","TDGF1"), group.by="orig.ident")
+#mesoderm - no genes look good
+FeaturePlot(h.orth.c.orth.sppo, features=c("MIXL1","EOMES"))
+FeaturePlot(h.orfl.c.orfl.spof, features=c("MIXL1","EOMES"))
+VlnPlot(h.orth.c.orth.sppo, features=c("MIXL1","EOMES"), group.by="orig.ident")
+VlnPlot(h.orfl.c.orfl.spof, features=c("MIXL1","EOMES"), group.by="orig.ident")
+#msc - genes generally match expectations
+FeaturePlot(h.orth.c.orth.sppo, features=c("THY1","ENG","NT5E","CD44","ITGB1","CD200","ALCAM","MCAM","NGFR")) #should be positive in msc (THY1 also in iPSC)
+FeaturePlot(h.orfl.c.orfl.spof, features=c("THY1","ENG","NT5E","CD44","ITGB1","CD200","ALCAM","MCAM","NGFR")) #should be positive in msc (THY1 also in iPSC)
+VlnPlot(h.orth.c.orth.sppo, features=c("THY1","ENG","NT5E","CD44","ITGB1","CD200","ALCAM","MCAM","NGFR"), group.by="orig.ident")
+VlnPlot(h.orfl.c.orfl.spof, features=c("THY1","ENG","NT5E","CD44","ITGB1","CD200","ALCAM","MCAM","NGFR"), group.by="orig.ident")
+FeaturePlot(h.orth.c.orth.sppo, features=c("CD34","PTPRC","ITGAM","CD19","HLA-DRB1","CD14","CD79A")) #should be negative in msc
+FeaturePlot(h.orfl.c.orfl.spof, features=c("CD34","PTPRC","ITGAM","CD19","HLA-DRB1","CD14","CD79A")) #should be negative in msc
+VlnPlot(h.orth.c.orth.sppo, features=c("CD34","PTPRC","ITGAM","CD19","HLA-DRB1","CD14","CD79A"), group.by="orig.ident")
+VlnPlot(h.orfl.c.orfl.spof, features=c("CD34","PTPRC","ITGAM","CD19","HLA-DRB1","CD14","CD79A"), group.by="orig.ident")
+#chondrocyte - SOX5/SOX6/SOX9/COL10A1 look okay; COL11A1 in MSCs/chondrocytes/osteoblasts
+FeaturePlot(h.orth.c.orth.sppo, features=c("ACAN","COL2A1","SOX9","COL10A1","COL11A1","SOX5","SOX6"))
+FeaturePlot(h.orfl.c.orfl.spof, features=c("ACAN","COL2A1","SOX9","COL10A1","COL11A1","SOX5","SOX6"))
+VlnPlot(h.orth.c.orth.sppo, features=c("ACAN","COL2A1","SOX9","COL10A1","COL11A1","SOX5","SOX6"), group.by="orig.ident")
+VlnPlot(h.orfl.c.orfl.spof, features=c("ACAN","COL2A1","SOX9","COL10A1","COL11A1","SOX5","SOX6"), group.by="orig.ident")
+#osteoblast - RUNX2 looks okay; COL1A1 in MSCs/chondrocytes/osteoblasts; ALPL in iPSCs
+FeaturePlot(h.orth.c.orth.sppo, features=c("COL1A1","RUNX2","ALPL","IBSP","SP7"))
+FeaturePlot(h.orfl.c.orfl.spof, features=c("COL1A1","RUNX2","ALPL","IBSP","SP7"))
+VlnPlot(h.orth.c.orth.sppo, features=c("COL1A1","RUNX2","ALPL","IBSP","SP7"), group.by="orig.ident")
+VlnPlot(h.orfl.c.orfl.spof, features=c("COL1A1","RUNX2","ALPL","IBSP","SP7"), group.by="orig.ident")
+#other - FABP4/TNNT2 in human chondrocytes; PPARG in chimp osteoblasts; SOX2/EPCAM/MYL7 in iPSCs; GAPDH/GUSB/YWHAZ in iPSCs/MSCs/chondrocytes/osteoblasts
+FeaturePlot(h.orth.c.orth.sppo, features=c("FABP4","PPARG","SOX17","SOX1","SOX2","EPCAM","ALB","HAND1","TNNT2","MYL7","MYH6","GAPDH","YWHAZ"))
+FeaturePlot(h.orfl.c.orfl.spof, features=c("FABP4","PPARG","SOX17","SOX1","SOX2","EPCAM","ALB","HAND1","TNNT2","MYL7","MYH6","GAPDH","YWHAZ"))
+VlnPlot(h.orth.c.orth.sppo, features=c("FABP4","PPARG","SOX17","SOX1","SOX2","EPCAM","ALB","HAND1","TNNT2","MYL7","MYH6","GAPDH","YWHAZ"),
+        group.by="orig.ident")
+VlnPlot(h.orth.c.orth.sppo, features=c("FABP4","PPARG","SOX17","SOX1","SOX2","EPCAM","ALB","HAND1","TNNT2","MYL7","MYH6","GAPDH","YWHAZ"),
+        group.by="orig.ident")
+
+FeaturePlot(h.orth.c.orth.sppo, features="CFL1")   #cofilin - in iPSCs/MSCs/chondrocytes/osteoblasts
+FeaturePlot(h.orth.c.orth.sppo, features="RPSA")   #laminin receptor 1 - in iPSCs/MSCs/chondrocytes/osteoblasts
+FeaturePlot(h.orth.c.orth.sppo, features="SPARC")  #osteonectin - in MSCs/chondrocytes/osteoblasts
+FeaturePlot(h.orth.c.orth.sppo, features="LGALS1") #galectin 1 - in MSCs/chondrocytes/osteoblasts
+FeaturePlot(h.orth.c.orth.sppo, features="TGFB1")  #TGFb1 - in MSCs/chondrocytes/osteoblasts
+FeaturePlot(h.orth.c.orth.sppo, features="TGFB2")  #TGFb2 - in MSCs/osteoblasts
+FeaturePlot(h.orth.c.orth.sppo, features="TGFB3")  #TGFb3 - in chondrocytes
+FeaturePlot(h.orth.c.orth.sppo, features="SPP1")   #osteopontin - in iPSCs
+FeaturePlot(h.orth.c.orth.sppo, features="MMP1")   #matrix metalloproteinase 2 - in MSCs
+FeaturePlot(h.orth.c.orth.sppo, features="MMP2")   #matrix metalloproteinase 2 - in chondrocytes (human) / in MSCs/chondrocytes/osteoblasts (chimp)
+FeaturePlot(h.orth.c.orth.sppo, features="MMP3")   #matrix metalloproteinase 3 - not in any cells
+FeaturePlot(h.orth.c.orth.sppo, features="MMP11")  #matrix metalloproteinase 11 - in chondrocytes 
+FeaturePlot(h.orth.c.orth.sppo, features="MMP14")  #matrix metalloproteinase 14 - in MSCs/chondrocytes/osteoblasts
+FeaturePlot(h.orth.c.orth.sppo, features="MMP16")  #matrix metalloproteinase 16 - in MSCs/chondrocytes/osteoblasts
+FeaturePlot(h.orth.c.orth.sppo, features="ID3")    #inhibitor of DNA binding 3 - in iPSCs/MSCs/chondrocytes/osteoblasts
+#MMP3, MMP11, MMP14, MMP16, ID3 (inhibitor of DNA binding 3)
+
+#pluripotency markers:  NANOG     ENSG00000111704
+#                       POU5F1    ENSG00000204531
+#                       TDGF1     ENSG00000241186
+#mesoderm markers:      MIXL1     ENSG00000185155
+#                       TBXT      ENSG00000164458
+#endomesoderm marker:   EOMES     ENSG00000163508
+#chondrocyte markers:   ACAN      ENSG00000157766
+#                       COL2A1    ENSG00000139219
+#                       SOX9      ENSG00000125398
+#                       COL10A1   ENSG00000123500
+#                       COL11A1   ENSG00000060718
+#                       SOX5      ENSG00000134532
+#                       SOX6      ENSG00000110693
+#osteoblast markers:    COL1A1    ENSG00000108821
+#                       BGLAP     -----
+#                       RUNX2     ENSG00000124813
+#                       ALPL      ENSG00000162551
+#                       IBSP      ENSG00000029559
+#                       SP7       ENSG00000170374
+#adipocyte markers:     FABP4     ENSG00000170323
+#                       PPARG     ENSG00000132170
+#endoderm marker:       SOX17     ENSG00000164736
+#neuroectoderm marker:  SOX1      ENSG00000182968
+#neuroepithelial:       SOX2      ENSG00000181449
+#epithelial marker:     EPCAM     ENSG00000119888
+#hepatocyte marker:     ALB       ENSG00000163631
+#heart/NC marker:       HAND1     ENSG00000113196
+#cardiomyocyte marker:  TNNT2     ENSG00000118194
+#cariac muscle markers: MYL7      ENSG00000106631
+#                       MYH6      ENSG00000197616
+#neutral markers:       GAPDH     ENSG00000111640
+#                       GUSB      -----
+#                       YWHAZ     ENSG00000164924
+
+#Should be positive in iPSC/MSC: THY1 (CD90)
+#Should be positive in MSC: ENG (CD105), NT5E (CD73)
+#Can also be positive in MSC: CD44, ITGB1 (CD29), CD200, ALCAM (CD166), MCAM (CD146), NGFR (CD271)
+#Should be negative in MSCs: CD34, PTPRC (CD45), ITGAM (CD11b), CD19, HLA-DRB1 (HLA-DR)
+#Should also be negative in MSCs: CD14, CD79A (CD79α)
+
+```
+
+Neural lineage markers
+Neuroepithelial cells
+SOX2
+NES
+NOTCH1
+HES1
+Schwann cell precursor
+SOX10
+GAP43
+FABP7
+MPZ
+DHH
+NGFR
+Myelinating Schwann cells
+SOX10
+S100A1
+EGR2
+MPZ
+MBP
+Non myelinating Schwann cells
+SOX10
+S100A1
+GAP43
+NCAM1
+NGFR
+Radial Glia
+VIM
+PAX6
+HES1
+HES5
+TNC
+SLC1A3
+Oligodendroctye precursors
+PDGFRA
+CSPG4
+Oligodendroctyes
+OLIG1
+OLIG2
+OLIG3
+MOG
+CLDN11
+Astrocytes
+GFAP
+SLC1A3
+SLC1A2
+GLUL
+S100B
+ALDH1L1
+Intermediate progenitors
+EOMES
+ASCL1
+Immature Neurons
+DCX
+NEUROD1
+TBR1
+TUBB3
+STMN1
+Mature Neurons
+MAP2
+RBFOX3
+NEFM
+NEFH
+DLG4
+Glutaminergic
+SLC17A7
+SLC17A6
+GRIN1
+GRIN2B
+GABAergic
+SLC6A1
+GABBR1
+GABBR2
+GAD1
+GAD2
+Dopaminergic
+TH
+SLC6A3
+FOXA2
+KCNJ6
+NR4A2
+LMX1B
+
+Ectoderm markers
+VIM
+EMX2
+CDH2
+SOX11
+TTR
+MARCKS
+FABP7
+TMSB15A
+
+Mesoderm Markers
+Cardiomyoctyes precursors
+MESP1
+GATA4
+GATA6
+NKX2-5
+NPPA
+ISL1
+
+Cardiac genes
+TNNT2
+MYH6
+SIRPA
+CD47
+GJA1
+DES
+Skeletal muscle
+PAX3
+PAX7
+MYF5
+MYOD1
+MYOG
+MYF6
+MYH3
+MYH7
+Endothelial cells
+KDR
+CD34
+Adipocytes
+SLC7A10
+SLC36A2
+P2RX5
+MYF5
+EBF2
+PDGFRA
+FGF10
+FGF16
+FGF19
+
+Endoderm
+Hepatocytes
+ALB
+HNF4A
+AFP
+Enterocytes
+KRT18
+EPCAM
+MGAM
+Globlet cells
+KRT1
+EGFR
+ERBB2
+ERBB3
+Airway epithelium
+SCGB3A2
+SCGB3A2
+SCGB3A1
+TP63
+KRT5
+NKX2-1
+
+```{r differential expression}
+
+dir <- "/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA"
+h.orth.c.orth.sppo <- readRDS(paste0(dir,"/data/cellranger-data-full/xx-h.orth.c.orth.sppo.rds"))
+h.orfl.c.orfl.spof <- readRDS(paste0(dir,"/data/cellranger-data-full/xx-h.orfl.c.orfl.spof.rds"))
+
+#Find differentially expressed features that define clusters (cluster biomarkers)
+
+#notes: Seurat identifes positive and negative markers of a single cluster compared to all other cells by default
+#notes: you can designate which groups of clusters vs. each other, or against all cells
+#notes: FindAllMarkers automates this process (identifying positive and negative markers) for all clusters
+
+#notes: min.pct argument requires a feature to be detected at a minimum percentage in either of the two groups of cells
+#notes: thresh.test argument requires a feature to be differentially expressed (on average) by some amount between the two groups
+#notes: max.cells.per.ident can be set to downsample each identity class to have no more cells than whatever this is set to (option to speed up computations)
+#notes: test.use parameter can designate which of several tests for differential expression to use
+
+#find all markers distinguishing iPSC clusters between humans and chimps
+#h.orth.c.orth.sppo: humans (clusters 2) and chimps (clusters 0+11+12)
+#h.orfl.c.orfl.spof: humans (clusters 2) and chimps (clusters 0+11+12)
+compare.i.sppo <- FindMarkers(h.orth.c.orth.sppo, ident.1=2, ident.2=c(0,11,12), logfc.threshold=0.25, test.use="wilcox", min.pct=0.5)
+compare.i.spof <- FindMarkers(h.orfl.c.orfl.spof, ident.1=2, ident.2=c(0,11,12), logfc.threshold=0.25, test.use="wilcox", min.pct=0.5)
+head(compare.i.sppo, n=5) #SLC25A6, ESRG, RPL28, FLNA, ACTC1
+head(compare.i.spof, n=5) #SLC25A6, RPL28, FLNA, ACTC1 CLEC2D
+dim(compare.i.sppo) #641 genes total
+dim(compare.i.spof) #607 genes total
+#find all markers distinguishing MSC clusters between humans and chimps
+#h.orth.c.orth.sppo: humans (clusters 1) and chimps (clusters 4+8)
+#h.orfl.c.orfl.spof: humans (clusters 1) and chimps (clusters 4+8)
+compare.m.sppo <- FindMarkers(h.orth.c.orth.sppo, ident.1=1, ident.2=c(4,8), logfc.threshold=0.25, test.use="wilcox", min.pct=0.5)
+compare.m.spof <- FindMarkers(h.orfl.c.orfl.spof, ident.1=1, ident.2=c(4,8), logfc.threshold=0.25, test.use="wilcox", min.pct=0.5)
+head(compare.m.sppo, n=5) #B2M, SRGN, RGS4, MT2A, FLNA
+head(compare.m.spof, n=5) #B2M, SRGN, RGS4, MT2A, FLNA
+dim(compare.m.sppo) #934 genes total
+dim(compare.m.spof) #906 genes total
+#find all markers distinguishing chondrocyte clusters between humans and chimps
+#h.orfl.c.orfl.spof: humans (clusters 3) and chimps (clusters 7) - excluding cluster 9
+#h.orth.c.orth.sppo: humans (clusters 3) and chimps (clusters 7) - excluding cluster 9
+compare.c.sppo <- FindMarkers(h.orth.c.orth.sppo, ident.1=3, ident.2=7, logfc.threshold=0.25, test.use="wilcox", min.pct=0.5)
+compare.c.spof <- FindMarkers(h.orfl.c.orfl.spof, ident.1=3, ident.2=7, logfc.threshold=0.25, test.use="wilcox", min.pct=0.5)
+head(compare.c.sppo, n=5) #B2M, KDELR2, SLC25A6, DKK2, FLNA
+head(compare.c.spof, n=5) #B2M, KDELR2, SLC25A6, FLNA, DKK2
+dim(compare.c.sppo) #761 genes total
+dim(compare.c.spof) #749 genes total
+#find all markers distinguishing osteoblast clusters between humans and chimps
+#h.orfl.c.orfl.spof: humans (clusters 6) and chimps (clusters 5+10) - excluding cluster 9
+#h.orth.c.orth.sppo: humans (clusters 6) and chimps (clusters 5+10) - excluding cluster 9
+compare.o.sppo <- FindMarkers(h.orth.c.orth.sppo, ident.1=6, ident.2=c(5,10), logfc.threshold=0.25, test.use="wilcox", min.pct=0.5)
+compare.o.spof <- FindMarkers(h.orfl.c.orfl.spof, ident.1=6, ident.2=c(5,10), logfc.threshold=0.25, test.use="wilcox", min.pct=0.5)
+head(compare.o.sppo, n=5) #FLNA, B2M, CRYAB, ANKRD1, SRGN
+head(compare.o.spof, n=5) #FLNA, B2M, CRYAB, ANKRD1, SRGN
+dim(compare.o.sppo) #1281 genes total
+dim(compare.o.spof) #1251 genes total
+#find all markers distinguishing humans and chimps across all cell types
+compare.tot.sppo <- intersect(rownames(compare.i.sppo),intersect(rownames(compare.m.sppo),intersect(rownames(compare.c.sppo),rownames(compare.o.sppo))))
+#96 genes total
+compare.tot.spof <- intersect(rownames(compare.i.spof),intersect(rownames(compare.m.spof),intersect(rownames(compare.c.spof),rownames(compare.o.spof))))
+#86 genes total
+#find markers distinguishing humans and chimps that are specific to each cell type
+compare.i.tot.sppo <- setdiff(rownames(compare.i.sppo),c(rownames(compare.m.sppo),rownames(compare.c.sppo),rownames(compare.o.sppo))) #294 genes total
+compare.m.tot.sppo <- setdiff(rownames(compare.m.sppo),c(rownames(compare.i.sppo),rownames(compare.c.sppo),rownames(compare.o.sppo))) #261 genes total
+compare.c.tot.sppo <- setdiff(rownames(compare.c.sppo),c(rownames(compare.i.sppo),rownames(compare.m.sppo),rownames(compare.o.sppo))) #212 genes total
+compare.o.tot.sppo <- setdiff(rownames(compare.o.sppo),c(rownames(compare.i.sppo),rownames(compare.m.sppo),rownames(compare.c.sppo))) #476 genes total
+head(compare.i.sppo[which(rownames(compare.i.sppo)%in%compare.i.tot.sppo),]) #ESRG, GAL, NNAT, PLA2G16, RAB17
+head(compare.m.sppo[which(rownames(compare.m.sppo)%in%compare.m.tot.sppo),]) #RGS4, CRIP2, WNT5B, ERRFI1, PODXL
+head(compare.c.sppo[which(rownames(compare.c.sppo)%in%compare.c.tot.sppo),]) #COL8A2, DPT, ELAVL2, GPX1, EN1
+head(compare.o.sppo[which(rownames(compare.o.sppo)%in%compare.o.tot.sppo),]) #CSPG4, DSTN, PRSS12, HSPB7, MMP16
+compare.i.tot.spof <- setdiff(rownames(compare.i.spof),c(rownames(compare.m.spof),rownames(compare.c.spof),rownames(compare.o.spof))) #284 genes total
+compare.m.tot.spof <- setdiff(rownames(compare.m.spof),c(rownames(compare.i.spof),rownames(compare.c.spof),rownames(compare.o.spof))) #260 genes total
+compare.c.tot.spof <- setdiff(rownames(compare.c.spof),c(rownames(compare.i.spof),rownames(compare.m.spof),rownames(compare.o.spof))) #211 genes total
+compare.o.tot.spof <- setdiff(rownames(compare.o.spof),c(rownames(compare.i.spof),rownames(compare.m.spof),rownames(compare.c.spof))) #471 genes total
+head(compare.i.spof[which(rownames(compare.i.spof)%in%compare.i.tot.spof),]) #GAL, NNAT, PLA2G16, RAB17, SPP1
+head(compare.m.spof[which(rownames(compare.m.spof)%in%compare.m.tot.spof),]) #RGS4, CRIP2, WNT5B, ERRFI1, PODXL
+head(compare.c.spof[which(rownames(compare.c.spof)%in%compare.c.tot.spof),]) #COL8A2, DPT, ELAVL2, GPX1, EN1
+head(compare.o.spof[which(rownames(compare.o.spof)%in%compare.o.tot.spof),]) #CSPG4, DSTN, PRSS12, HSPB7, EEF1A1
+
+#find all markers distinguishing iPSC clusters from other cell types
+#h.orth.c.orth.sppo: iPSC clusters (clusters 0+2+11+12)
+#h.orfl.c.orfl.spof: iPSC clusters (clusters 0+2+11+12)
+ipsc.orth <- FindMarkers(h.orth.c.orth.sppo, ident.1=c(0,2,11,12), min.pct=0.5, test.use='wilcox') #use negbinom or MAST test instead?
+ipsc.orfl <- FindMarkers(h.orfl.c.orfl.spof, ident.1=c(0,2,11,12), min.pct=0.5, test.use='wilcox')
+head(ipsc.orth, n=5) #L1TD1, SFRP1, SEPHS1, APOE, EPCAM
+head(ipsc.orfl, n=5) #L1TD1, SFRP1, SEPHS1, APOE, EPCAM
+dim(ipsc.orth) #1859 genes total
+dim(ipsc.orfl) #1838 genes total
+#find all markers distinguishing MSC clusters from other cell types
+#h.orth.c.orth.sppo: MSC clusters (clusters 1+4+8)
+#h.orfl.c.orfl.spof: iPSC clusters (clusters 1+4+8)
+msc.orth <- FindMarkers(h.orth.c.orth.sppo, ident.1=c(1,4,8), min.pct=0.5, test.use='wilcox')
+msc.orfl <- FindMarkers(h.orfl.c.orfl.spof, ident.1=c(1,4,8), min.pct=0.5, test.use='wilcox')
+head(msc.orth, n=5) #MMP1, CRYAB, RGS4, TAGLN2, SERPINE1
+head(msc.orfl, n=5) #MMP1, CRYAB, RGS4, TAGLN2, CYTL1
+dim(msc.orth) #682 genes total
+dim(msc.orfl) #677 genes total
+#find all markers distinguishing chondrocyte clusters from other cell types
+#h.orth.c.orth.sppo: chondrocyte clusters (clusters 3+7) - excluding cluster 9
+#h.orfl.c.orfl.spof: chondrocyte clusters (clusters 3+7) - excluding cluster 9
+chondro.orth <- FindMarkers(h.orth.c.orth.sppo, ident.1=c(3,7), min.pct=0.5, test.use='wilcox')
+chondro.orfl <- FindMarkers(h.orfl.c.orfl.spof, ident.1=c(3,7), min.pct=0.5, test.use='wilcox')
+head(chondro.orth, n=5) #LUM, POSTN, COL3A1, CTSK, PTGDS
+head(chondro.orfl, n=5) #LUM, POSTN, COL3A1, CTSK, PTGDS
+dim(chondro.orth) #1391 genes total
+dim(chondro.orfl) #1386 genes total
+#find all markers distinguishing osteoblast clusters from other cell types
+#h.orth.c.orth.sppo: osteoblast clusters (clusters 5+6+10) - excluding cluster 9
+#h.orfl.c.orfl.spof: osteoblast clusters (clusters 5+6+10) - excluding cluster 9
+osteo.orth <- FindMarkers(h.orth.c.orth.sppo, ident.1=c(5,6,10), min.pct=0.5, test.use='wilcox')
+osteo.orfl <- FindMarkers(h.orfl.c.orfl.spof, ident.1=c(5,6,10), min.pct=0.5, test.use='wilcox')
+head(osteo.orth, n=5) #LGALS3, GDF15, TMEM158, RAMP1, FBLNS
+head(osteo.orfl, n=5) #LGALS3, GDF15, TMEM158, RAMP1, MME
+dim(osteo.orth) #828 genes total
+dim(osteo.orfl) #823 genes total
+
+#Visualize marker expression in more detail
+
+FeaturePlot(h.orth.c.orth.sppo, features=c("B2M","FLNA","SLC25A6","CTSF","MEIOB","RPS4Y2")) #markers distinguishing humans and chimps across all cell types
+FeaturePlot(h.orfl.c.orfl.spof, features=c("B2M","FLNA","SLC25A6","CTSF","MEIOB","RPS4Y2")) #markers distinguishing humans and chimps across all cell types
+#B2M (beta-2-microglobulin) - serum protein found in association with MHC class I heavy chain on surface of nucleated cells
+#FLNA (filamin A) - actin-binding protein that crosslinks actin filaments and links actin filaments to membrane glycoproteins; involved in remodeling the cytoskeleton to effect changes in cell shape and migration
+#SLC25A6 (solute carrier family 25 member 6) - mitochondrial carrier subfamily of solute carrier protein genes; functions as gated pore that translocates ADP from cytoplasm into mitochondrial matrix and ATP from mitochondrial matrix into cytoplasm; implicated in function of PTPC which is involed in apoptosis
+#CTSF (cathepsin F) - major component of the lysosomal proteolytic system
+#MEIOB (meiosis specific with OB-fold) - chromatin binding and single-stranded DNA 3'-5' exodeoxyribonuclease activity
+#RPS4Y2 (ribosomal protein S4 Y-linked 2) - ribosomal protein located in the male-specific region of the Y chromosome
+
+FeaturePlot(h.orth.c.orth.sppo, features=c("ESRG","GAL","NNAT","PLA2G16","RAB17")) #markers uniquely distinguishing humans and chimps in iPSCs
+FeaturePlot(h.orth.c.orth.sppo, features=c("RGS4","CRIP2","WNT5B","ERRFI1","PODXL")) #markers uniquely distinguishing humans and chimps in MSCs
+FeaturePlot(h.orth.c.orth.sppo, features=c("COL8A2","DPT","ELAVL2","GPX1","EN1")) #markers uniquely distinguishing humans and chimps in chondrocytes
+FeaturePlot(h.orth.c.orth.sppo, features=c("CSPG4","DSTN","PRSS12","HSPB7","MMP16")) #markers uniquely distinguishing humans and chimps in osteoblasts
+FeaturePlot(h.orfl.c.orfl.spof, features=c("GAL","NNAT","PLA2G16","RAB17","SPP1")) #markers uniquely distinguishing humans and chimps in iPSCs
+FeaturePlot(h.orfl.c.orfl.spof, features=c("RGS4","CRIP2","WNT5B","ERRFI1","PODXL")) #markers uniquely distinguishing humans and chimps in MSCs
+FeaturePlot(h.orfl.c.orfl.spof, features=c("COL8A2","DPT","ELAVL2","GPX1","EN1")) #markers uniquely distinguishing humans and chimps in chondrocyte
+FeaturePlot(h.orfl.c.orfl.spof, features=c("BCSPG4","DSTN","PRSS12","HSPB7","EEF1A1")) #markers uniquely distinguishing humans and chimps in osteoblasts
+
+FeaturePlot(h.orth.c.orth.sppo, features=c("L1TD1","SFRP1","SEPHS1","APOE","EPCAM")) #markers distinguishing iPSC clusters from other cell types
+FeaturePlot(h.orth.c.orth.sppo, features=c("MMP1","CRYAB","RGS4","TAGLN2","SERPINE1")) #markers distinguishing MSC clusters from other cell types
+FeaturePlot(h.orth.c.orth.sppo, features=c("LUM","POSTN","COL3A1","CTSK","PTGDS")) #markers distinguishing chondrocytes from clusters other cell types
+FeaturePlot(h.orth.c.orth.sppo, features=c("LGALS3","GDF15","TMEM158","RAMP1","FBLN5")) #markers distinguishing osteoblasts from clusters other cell types
+FeaturePlot(h.orfl.c.orfl.spof, features=c("L1TD1","SFRP1","SEPHS1","APOE","EPCAM")) #markers distinguishing iPSC clusters from other cell types
+FeaturePlot(h.orfl.c.orfl.spof, features=c("MMP1","CRYAB","RGS4","TAGLN2","CYTL1")) #markers distinguishing MSC clusters from other cell types
+FeaturePlot(h.orfl.c.orfl.spof, features=c("LUM","POSTN","COL3A1","CTSK","PTGDS")) #markers distinguishing chondrocytes clusters from other cell types
+FeaturePlot(h.orfl.c.orfl.spof, features=c("LGALS3","GDF15","TMEM158","RAMP1","FBLN5")) #markers distinguishing osteoblasts clusters from other cell types
+
+#Assess overlap of cell type markers across data sets
+compare.i = intersect(rownames(compare.i.sppo),rownames(compare.i.spof)) # 596 genes total
+compare.m = intersect(rownames(compare.m.sppo),rownames(compare.m.spof)) # 893 genes total
+compare.c = intersect(rownames(compare.c.sppo),rownames(compare.c.spof)) # 731 genes total
+compare.o = intersect(rownames(compare.o.sppo),rownames(compare.o.spof)) #1225 genes total
+
+ipsc = intersect(rownames(ipsc.orth),rownames(ipsc.orfl)) #1818 genes
+msc = intersect(rownames(msc.orth),rownames(msc.orfl)) #668 genes
+chondro = intersect(rownames(chondro.orth),rownames(chondro.orfl)) #1363 genes
+osteo = intersect(rownames(osteo.orth),rownames(osteo.orfl)) #809 genes
+
+#Plot numbers of DE genes identified
+library(reshape2)
+DE.h.c <- data.frame(cell=(c("iPSCs","MSCs","Chondrocytes","Osteoblasts")),
+                     totalDEgenes=c(641,934,761,1281),
+                     other=c(251,577,453,709),
+                     common=c(96,96,96,96),
+                     unique=c(294,261,212,476))
+DE.h.c$cell <- factor(DE.h.c$cell, levels=c("iPSCs","MSCs","Chondrocytes","Osteoblasts"))
+DE.h.c <- melt(DE.h.c, id.var="cell")
+ggplot(DE.h.c, aes(x=cell, y=totalDEgenes)) +
+  geom_bar(stat="identity") +
+  labs(x="",y="Number of DE Genes")
+ggplot(DE.h.c[5:16,], aes(x=cell, y=value, fill=variable)) +
+  geom_bar(stat="identity") +
+  labs(x="",y="Number of DE Genes") +
+  theme(legend.title = element_blank()) +
+  scale_fill_manual(values=c("lightgrey","darkgrey","black")) +
+  theme_classic()
+
+DE.cell <- data.frame(cell=(c("iPSCs","MSCs","Chondrocytes","Osteoblasts")),
+                      total=c(1859,682,828,1391))
+DE.cell$cell <- factor(DE.cell$cell, levels=c("iPSCs","MSCs","Chondrocytes","Osteoblasts"))
+ggplot(DE.cell, aes(x=cell, y=total)) +
+  geom_bar(stat="identity") +
+  labs(x="",y="Number of DE Genes") +
+  theme_classic()
+
+#Save data for GO enrichment analysis
+dir <- "/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA"
+write.table(rownames(h.orth.c.orth.sppo@assays$RNA@counts), file=paste0(dir,"/data/cellranger-data-full/xx-h.orth.c.orth.genes.txt"))
+write.table(rownames(compare.i.sppo), file=paste0(dir,"/data/cellranger-data-full/xx-h.orth.c.orth.compare.i.txt"))
+write.table(rownames(compare.m.sppo), file=paste0(dir,"/data/cellranger-data-full/xx-h.orth.c.orth.compare.m.txt"))
+write.table(rownames(compare.c.sppo), file=paste0(dir,"/data/cellranger-data-full/xx-h.orth.c.orth.compare.c.txt"))
+write.table(rownames(compare.o.sppo), file=paste0(dir,"/data/cellranger-data-full/xx-h.orth.c.orth.compare.o.txt"))
+write.table(compare.i.tot.sppo, file=paste0(dir,"/data/cellranger-data-full/xx-h.orth.c.orth.compare.i.unique.txt"))
+write.table(compare.m.tot.sppo, file=paste0(dir,"/data/cellranger-data-full/xx-h.orth.c.orth.compare.m.unique.txt"))
+write.table(compare.c.tot.sppo, file=paste0(dir,"/data/cellranger-data-full/xx-h.orth.c.orth.compare.c.unique.txt"))
+write.table(compare.o.tot.sppo, file=paste0(dir,"/data/cellranger-data-full/xx-h.orth.c.orth.compare.o.unique.txt"))
+write.table(compare.tot.sppo, file=paste0(dir,"/data/cellranger-data-full/xx-h.orth.c.orth.compare.common.txt"))
+write.table(rownames(ipsc.orth), file=paste0(dir,"/data/cellranger-data-full/xx-h.orth.c.orth.ipsc.unique.txt"))
+write.table(rownames(msc.orth), file=paste0(dir,"/data/cellranger-data-full/xx-h.orth.c.orth.msc.unique.txt"))
+write.table(rownames(chondro.orth), file=paste0(dir,"/data/cellranger-data-full/xx-h.orth.c.orth.chondro.unique.txt"))
+write.table(rownames(osteo.orth), file=paste0(dir,"/data/cellranger-data-full/xx-h.orth.c.orth.osteo.unique.txt"))
+
+```
+
+```{r cell atlas assignment}
+
+###SCRIPTS GOTTEN FROM BINGQING XIE###
+
+###compute correlation matrix between sample and cell lines in cellAtlas
+###object: Seurat object
+###cell.line: cell Atlas expression matrix
+###CorMethod: correlation method to use
+ComputeCorMat=function(object,cell.line,CorMethod = "pearson"){
+
+	data=GetAssayData(object)
+    data_norm <- apply(data, 2, function(x) x/sum(x))
+    data_libsize <- apply(data_norm, 2, function(x) x * 1e+06)
+
+    Data.use <- data_libsize
+
+    gene.id <- rownames(Data.use)
+    gene.ref <- rownames(cell.line)
+    common <- intersect(gene.id, gene.ref)
+    logxx <- apply(Data.use[common, ], 2, function(x) {
+        log(x + 0.1)
+    })
+    selected.cell.line <- apply(cell.line[common, ], 2, function(x) {
+        x - mean(x)
+    })
+    n <- ncol(logxx)
+    m <- ncol(cell.line)
+    cor.mat <- matrix(0, nrow = n, ncol = m)
+    for (j in 1:m) {
+        for (i in 1:n) {
+            cor.mat[i, j] <- cor(logxx[, i], selected.cell.line[, 
+                j], method = CorMethod)
+        }
+    }
+    rownames(cor.mat) <- colnames(Data.use)
+    colnames(cor.mat) <- colnames(cell.line)
+	return(cor.mat)
+}
+
+###Assign clustered cell atlas as cell type to all cells in the sample
+###object: seurat object
+###cor.mat: correlation matrix
+###K: number of clusters generated from cell atlas
+###topCorrelation: number of highest correlated cell lines in cell atlas to be assigned, set to 1 to extract only the top correlated cell line
+AssignClusteredLabel=function (object,cor.mat,K=10,topCorrelation=1, dist.method="euclidean", hclust.method="ward.D"){
+	
+	dist_mat <- dist(t(cor.mat), method = dist.method)
+	hclust_avg_cellline <- hclust(dist_mat, method = hclust.method)
+	#plot(hclust_avg_cellline)
+
+	cut_cellline <- cutree(hclust_avg_cellline, k = K)
+	cellline_abstract=sapply(strsplit(as.character(colnames(cor.mat)), "\\_"), "[[", 2)
+	clusteredCellline=rbind(cut_cellline,cellline_abstract)
+	nametable=rep('n',K)
+	for(i in 1:K){
+		indexy=as.character(i)
+		nametable[i]=paste0(names( sort(table(clusteredCellline[2,clusteredCellline[1,]==indexy]),decreasing=TRUE)),collapse='_' )
+	}
+	assignm=apply(cor.mat,1,function(x){
+		indexy=names(which.max(table(clusteredCellline[1,names(sort(x,decreasing=T)[1:topCorrelation])])))
+		y=paste0(names( sort(table(clusteredCellline[2,clusteredCellline[1,]==indexy]),decreasing=TRUE)),collapse='_' )
+		return(y)
+	})
+	object$clusteredCellAtlas=assignm
+	return(object)
+}
+
+#load seurat data
+dir <- "/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA"
+h.orth.c.orth.sppo <- readRDS(paste0(dir,"/data/cellranger-data-full/xx-h.orth.c.orth.sppo.rds"))
+h.orfl.c.orfl.spof <- readRDS(paste0(dir,"/data/cellranger-data-full/xx-h.orfl.c.orfl.spof.rds"))
+
+#load cell atlas data matrix (currated in Mengjie's lab)
+#references: Mabbott et al. BMC Genomics 2013; Wu C et al. Nucleic acids research 2016
+load("/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA/data/cell_atlas_ref_panel")
+
+#Compute the correlation matrix use a seurat object and cell line matrix as input
+cor.mat.orth=ComputeCorMat(h.orth.c.orth.sppo,cell.line)
+cor.mat.orfl=ComputeCorMat(h.orfl.c.orfl.spof,cell.line)
+
+#Add a metadata column "clusteredCellAtlas" to the object
+h.orth.c.orth.sppo <- AssignClusteredLabel(h.orth.c.orth.sppo,cor.mat.orth)
+h.orfl.c.orfl.spof <- AssignClusteredLabel(h.orfl.c.orfl.spof,cor.mat.orfl)
+
+#Visualize assigned clusters
+DimPlot(h.orth.c.orth.sppo, reduction="umap", group.by="clusteredCellAtlas", pt.size=0.5)
+DimPlot(h.orfl.c.orfl.spof, reduction="umap", group.by="clusteredCellAtlas")
+
+#Check out average correlations with each cell line
+#cor.mat.orth[grep("iPSC", rownames(cor.mat.orth)),]
+#cor.mat.orth[grep("MSC", rownames(cor.mat.orth)),]
+#cor.mat.orth[grep("osteo", rownames(cor.mat.orth)),]
+#cor.mat.orth[grep("chondro", rownames(cor.mat.orth)),]
+z <- c("hotpink","hotpink","hotpink","hotpink","hotpink","hotpink","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","pink","pink","pink","pink","mediumorchid","mediumorchid","mediumorchid","mediumorchid","mediumorchid","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","gold","gold","dodgerblue","dodgerblue","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","mediumorchid","mediumorchid","mediumorchid","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey")
+
+
+x <- as.data.frame(colSums(cor.mat.orth[grep("iPSC", rownames(cor.mat.orth)),])/length(grep("iPSC", rownames(cor.mat.orth))))
+colnames(x) <- "avg"
+x$cell <- rownames(x)
+x$label <- z
+x <- x[order(x$avg, decreasing=TRUE),]
+x$cell <- factor(x$cell, levels=x$cell)
+ggplot(x, aes(x=cell, y=avg)) + geom_bar(stat="identity", fill=x$label) + labs(title="iPSC-orth-avg-cor") + ylim(0,0.5) +
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
+
+x <- as.data.frame(colSums(cor.mat.orth[grep("MSC", rownames(cor.mat.orth)),])/length(grep("MSC", rownames(cor.mat.orth))))
+colnames(x) <- "avg"
+x$cell <- rownames(x)
+x$label <- z
+x <- x[order(x$avg, decreasing=TRUE),]
+x$cell <- factor(x$cell, levels=x$cell)
+ggplot(x, aes(x=cell, y=avg)) + geom_bar(stat="identity", fill=x$label) + labs(title="MSC-orth-avg-cor") + ylim(0,0.5) +
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
+
+x <- as.data.frame(colSums(cor.mat.orth[grep("osteo", rownames(cor.mat.orth)),])/length(grep("osteo", rownames(cor.mat.orth))))
+colnames(x) <- "avg"
+x$cell <- rownames(x)
+x$label <- z
+x <- x[order(x$avg, decreasing=TRUE),]
+x$cell <- factor(x$cell, levels=x$cell)
+ggplot(x, aes(x=cell, y=avg)) + geom_bar(stat="identity", fill=x$label) + labs(title="osteo-orth-avg-cor") + ylim(0,0.5) +
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
+
+x <- as.data.frame(colSums(cor.mat.orth[grep("chondro", rownames(cor.mat.orth)),])/length(grep("chondro", rownames(cor.mat.orth))))
+colnames(x) <- "avg"
+x$cell <- rownames(x)
+x$label <- z
+x <- x[order(x$avg, decreasing=TRUE),]
+x$cell <- factor(x$cell, levels=x$cell)
+ggplot(x, aes(x=cell, y=avg)) + geom_bar(stat="identity", fill=x$label[1:94]) + labs(title="chondro-orth-avg-cor") + ylim(0,0.5) +
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
+
+
+```
+
+```{r extra plotting}
+
+#col4=c("pink","mediumorchid","gold","dodgerblue") #colors for cell types
+
+dir <- "/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA"
+h.orth.c.orth.sppo <- readRDS(paste0(dir,"/data/cellranger-data-full/xx-h.orth.c.orth.sppo.rds"))
+h.orfl.c.orfl.spof <- readRDS(paste0(dir,"/data/cellranger-data-full/xx-h.orfl.c.orfl.spof.rds"))
+
+#ipsc
+FeaturePlot(h.orth.c.orth.sppo, features="NANOG", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap")
+FeaturePlot(h.orth.c.orth.sppo, features="POU5F1", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap")
+FeaturePlot(h.orth.c.orth.sppo, features="TDGF1", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap")
+VlnPlot(h.orth.c.orth.sppo, features=c("NANOG","POU5F1","TDGF1"), group.by="orig.ident", cols=c("pink","mediumorchid","gold","dodgerblue"), pt.size=0.1)
+#msc
+FeaturePlot(h.orth.c.orth.sppo, features="THY1", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap") #CD90 - positive in iPSC+MSC
+FeaturePlot(h.orth.c.orth.sppo, features="ENG", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap") #CD105 - positive in MSC
+FeaturePlot(h.orth.c.orth.sppo, features="NT5E", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap") #CD73 - positive in MSC
+FeaturePlot(h.orth.c.orth.sppo, features="CD44", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap") #CD44 - can be positive
+VlnPlot(h.orth.c.orth.sppo, features=c("THY1","ENG","NT5E","CD44"), group.by="orig.ident", cols=c("pink","mediumorchid","gold","dodgerblue"), pt.size=0)
+#chondrocyte
+FeaturePlot(h.orth.c.orth.sppo, features="COL2A1", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap")
+FeaturePlot(h.orth.c.orth.sppo, features="COL10A1", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap")
+FeaturePlot(h.orth.c.orth.sppo, features="COL11A1", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap")
+FeaturePlot(h.orth.c.orth.sppo, features="SOX5", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap")
+VlnPlot(h.orth.c.orth.sppo, features=c("COL2A1","COL10A1","COL11A1","SOX5"), group.by="orig.ident",
+        cols=c("pink","mediumorchid","gold","dodgerblue"), pt.size=0)
+#osteoblast
+FeaturePlot(h.orth.c.orth.sppo, features="COL1A1", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap")
+FeaturePlot(h.orth.c.orth.sppo, features="RUNX2", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap")
+FeaturePlot(h.orth.c.orth.sppo, features="ALPL", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap")
+FeaturePlot(h.orth.c.orth.sppo, features="BGLAP", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap")
+VlnPlot(h.orth.c.orth.sppo, features=c("COL1A1","RUNX2","ALPL","BGLAP"), group.by="orig.ident", cols=c("pink","mediumorchid","gold","dodgerblue"), pt.size=0)
+
+VlnPlot(c.full.sppo, features="COL1A1", group.by="orig.ident", cols=c("pink","mediumorchid","gold","dodgerblue"), pt.size=0) +
+  labs(x="") + theme(axis.text.x=element_text(angle=0, hjust=0.5))
+
+```
+
+```{r compare gene counts between h.full and h.sppo}
+
+
+```

@@ -1,0 +1,499 @@
+
+R version 3.4.3 (2017-11-30) -- "Kite-Eating Tree"
+Copyright (C) 2017 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> #Load libraries
+> library(Seurat)
+> library(dplyr)
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+> library(stringi)
+> library(stringr)
+> library(ggplot2)
+> library(grid)
+> library(gbm)
+Loaded gbm 2.1.5
+> library(colorspace)
+> library(RColorBrewer)
+> library(edgeR)
+Loading required package: limma
+> 
+> #Define main directory
+> dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+> dir2 <- paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full")
+> 
+> #Load data
+> data <- readRDS(paste0(dir2,"/data.filterMT.merge.l-TEMP.rds"))
+> data@meta.data$Collection <- as.factor(data@meta.data$Collection)
+> 
+> #Find differentially expressed genes between humans and chimpanzees
+> Idents(data) <- factor(data@meta.data$species, levels=c("Chimp","Human"))
+> 
+> #Isolate ribosomal genes
+> genes <- rownames(data@assays$RNA@counts)
+> genes.ribo <- grep('^RP',genes,value=T)
+> genes.no.ribo <- genes[which(!(genes %in% genes.ribo))]
+> 
+> #Define LIMMA Function
+> library(limma)
+> runLIMMA <- function(dataSub, genes.no.ribo) {
++   
++   #count matrix
++   counts <- as.matrix(GetAssayData(dataSub, assay="RNA", slot="counts"))
++   counts <- counts[which(rownames(counts) %in% genes.no.ribo),] #remove ribosomal genes
++   
++   #metadata
++   metadata <- dataSub@meta.data[,c("species","Collection","nCount_RNA","Phase")]
++   metadata <- metadata[colnames(counts),]
++   
++   #make edgeR object
++   dge <- DGEList(counts)
++   meta_dge <- dge$samples[,c("lib.size","norm.factors")]
++   meta_dge <- cbind(meta_dge, metadata)
++   dge$samples <- meta_dge
++   
++   #filter genes
++   keep <- filterByExpr(dge, group=dge$samples$species, min.count=1, min.total.count=15)
++   table(keep)
++   dge <- dge[keep, , keep.lib.sizes=FALSE]
++   
++   #normalize data
++   dge <- calcNormFactors(dge, method="TMM")
++   summary(dge$samples$norm.factors)
++   
++   #lcpm
++   y <- new("EList")
++   y$E <- edgeR::cpm(dge, log=TRUE, prior.count=3)
++   
++   #design matrix
++   dge$samples$Collection <- as.factor(as.numeric(dge$samples$Collection))
++   dge$samples$Phase <- as.factor(as.numeric(dge$samples$Phase))
++   dge$samples$species <- as.factor(as.character(dge$samples$species))
++   design <- model.matrix(~Collection+nCount_RNA+Phase+species, data=dge$samples)
++   
++   #linear model
++   fit <- lmFit(y, design=design)
++ 
++   #differential expression
++   contr <- contrasts.fit(fit, coefficients=dim(design)[2])
++   lmf <- eBayes(contr, trend=TRUE, robust=TRUE)
++   tr <- treat(contr, lfc=log2(1.2), trend=TRUE, robust=TRUE)
++   
++   #assess output
++   tt <- topTable(lmf, n=Inf, adjust.method="BH", p.value=1)
++   print("All DE Genes")
++   print(dim(tt))
++   print(table(tt$adj.P.Val<0.05))
++   print(summary(decideTests(lmf, adjust.method="BH", p.value=0.05)))
++ 
++   tt <- topTable(tr, n=Inf, adjust.method="BH", sort.by="p", p.value=1)
++   print("DE Genes with log2(1.2) Fold Change")
++   print(dim(tt))
++   print(table(tt$adj.P.Val<0.05))
++   print(summary(decideTests(tr, adjust.method="BH", p.value=0.05)))
++ 
++   return(tt)
++ 
++ }
+> 
+> #Find differentially expressed genes using differentiation stage at collection
+> lmma <- runLIMMA(subset(data,subset=Cell.Type=="iPSC"), genes.no.ribo)
+[1] "All DE Genes"
+[1] 2715    6
+
+FALSE  TRUE 
+  176  2539 
+       speciesHuman
+Down           1626
+NotSig          176
+Up              913
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 2715    5
+
+FALSE  TRUE 
+ 2428   287 
+       speciesHuman
+Down            161
+NotSig         2428
+Up              126
+> saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.ips.rds"))
+> lmma <- runLIMMA(subset(data,subset=Cell.Type=="MSC"), genes.no.ribo)
+[1] "All DE Genes"
+[1] 2738    6
+
+FALSE  TRUE 
+  127  2611 
+       speciesHuman
+Down           1333
+NotSig          127
+Up             1278
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 2738    5
+
+FALSE  TRUE 
+ 2235   503 
+       speciesHuman
+Down            244
+NotSig         2235
+Up              259
+> saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.msc.rds"))
+> lmma <- runLIMMA(subset(data,subset=Cell.Type=="Osteoblast"), genes.no.ribo)
+[1] "All DE Genes"
+[1] 1590    6
+
+FALSE  TRUE 
+   99  1491 
+       speciesHuman
+Down            922
+NotSig           99
+Up              569
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 1590    5
+
+FALSE  TRUE 
+ 1272   318 
+       speciesHuman
+Down            188
+NotSig         1272
+Up              130
+> saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.ost.rds"))
+> 
+> #Find differentially expressed genes using cluster definitions
+> lmma <- runLIMMA(subset(data,subset=(seurat_clusters==1|seurat_clusters==4|seurat_clusters==6)), genes.no.ribo)
+[1] "All DE Genes"
+[1] 2715    6
+
+FALSE  TRUE 
+  181  2534 
+       speciesHuman
+Down           1583
+NotSig          181
+Up              951
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 2715    5
+
+FALSE  TRUE 
+ 2428   287 
+       speciesHuman
+Down            156
+NotSig         2428
+Up              131
+> saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.i.rds"))
+> lmma <- runLIMMA(subset(data,subset=seurat_clusters==0), genes.no.ribo)
+[1] "All DE Genes"
+[1] 2949    6
+
+FALSE  TRUE 
+  160  2789 
+       speciesHuman
+Down           1370
+NotSig          160
+Up             1419
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 2949    5
+
+FALSE  TRUE 
+ 2415   534 
+       speciesHuman
+Down            254
+NotSig         2415
+Up              280
+> saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.m.rds"))
+> lmma <- runLIMMA(subset(data,subset=(seurat_clusters==2|seurat_clusters==3|seurat_clusters==5)), genes.no.ribo)
+[1] "All DE Genes"
+[1] 1337    6
+
+FALSE  TRUE 
+   96  1241 
+       speciesHuman
+Down            786
+NotSig           96
+Up              455
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 1337    5
+
+FALSE  TRUE 
+ 1071   266 
+       speciesHuman
+Down            160
+NotSig         1071
+Up              106
+> saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.o.rds"))
+> lmma <- runLIMMA(subset(data,subset=seurat_clusters==1), genes.no.ribo)
+[1] "All DE Genes"
+[1] 3254    6
+
+FALSE  TRUE 
+  235  3019 
+       speciesHuman
+Down           1848
+NotSig          235
+Up             1171
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 3254    5
+
+FALSE  TRUE 
+ 2892   362 
+       speciesHuman
+Down            195
+NotSig         2892
+Up              167
+> saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.i1.rds"))
+> lmma <- runLIMMA(subset(data,subset=seurat_clusters==4), genes.no.ribo)
+[1] "All DE Genes"
+[1] 610   6
+
+FALSE  TRUE 
+  169   441 
+       speciesHuman
+Down            211
+NotSig          169
+Up              230
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 610   5
+
+FALSE  TRUE 
+  581    29 
+       speciesHuman
+Down             18
+NotSig          581
+Up               11
+> saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.i2.rds"))
+> lmma <- runLIMMA(subset(data,subset=seurat_clusters==6), genes.no.ribo)
+[1] "All DE Genes"
+[1] 2157    6
+
+FALSE  TRUE 
+ 1821   336 
+       speciesHuman
+Down            101
+NotSig         1821
+Up              235
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 2157    5
+
+FALSE  TRUE 
+ 2131    26 
+       speciesHuman
+Down              9
+NotSig         2131
+Up               17
+> saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.i3.rds"))
+> lmma <- runLIMMA(subset(data,subset=seurat_clusters==2), genes.no.ribo)
+[1] "All DE Genes"
+[1] 2232    6
+
+FALSE  TRUE 
+  251  1981 
+       speciesHuman
+Down            841
+NotSig          251
+Up             1140
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 2232    5
+
+FALSE  TRUE 
+ 1750   482 
+       speciesHuman
+Down            221
+NotSig         1750
+Up              261
+> saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.o1.rds"))
+> lmma <- runLIMMA(subset(data,subset=seurat_clusters==3), genes.no.ribo)
+[1] "All DE Genes"
+[1] 483   6
+
+FALSE  TRUE 
+   69   414 
+       speciesHuman
+Down            159
+NotSig           69
+Up              255
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 483   5
+
+FALSE  TRUE 
+  400    83 
+       speciesHuman
+Down             30
+NotSig          400
+Up               53
+> saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.o2.rds"))
+> lmma <- runLIMMA(subset(data,subset=seurat_clusters==5), genes.no.ribo)
+[1] "All DE Genes"
+[1] 7855    6
+
+FALSE  TRUE 
+ 6531  1324 
+       speciesHuman
+Down           1057
+NotSig         6531
+Up              267
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 7855    5
+
+FALSE  TRUE 
+ 7718   137 
+       speciesHuman
+Down            122
+NotSig         7718
+Up               15
+> saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.o3.rds"))
+> 
+> #Find differentially expressed genes using osteogenic ad hoc definitions
+> lmma <- runLIMMA(subset(data,subset=OstAdHoc.Assign=="preosteoblast"), genes.no.ribo)
+[1] "All DE Genes"
+[1] 4323    6
+
+FALSE  TRUE 
+ 2666  1657 
+       speciesHuman
+Down           1189
+NotSig         2666
+Up              468
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 4323    5
+
+FALSE  TRUE 
+ 4161   162 
+       speciesHuman
+Down            116
+NotSig         4161
+Up               46
+> saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.pre.rds"))
+> lmma <- runLIMMA(subset(data,subset=OstAdHoc.Assign=="osteoblast"), genes.no.ribo)
+[1] "All DE Genes"
+[1] 4937    6
+
+FALSE  TRUE 
+ 3194  1743 
+       speciesHuman
+Down           1309
+NotSig         3194
+Up              434
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 4937    5
+
+FALSE  TRUE 
+ 4790   147 
+       speciesHuman
+Down             78
+NotSig         4790
+Up               69
+> saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.obl.rds"))
+> lmma <- runLIMMA(subset(data,subset=OstAdHoc.Assign=="embedding osteoblast"), genes.no.ribo)
+[1] "All DE Genes"
+[1] 1785    6
+
+FALSE  TRUE 
+  155  1630 
+       speciesHuman
+Down           1076
+NotSig          155
+Up              554
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 1785    5
+
+FALSE  TRUE 
+ 1453   332 
+       speciesHuman
+Down            209
+NotSig         1453
+Up              123
+> saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.emb.rds"))
+> #lmma <- runLIMMA(subset(data,subset=OstAdHoc.Assign=="mineralizing osteocyte"), genes.no.ribo)
+> #saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.min.rds"))
+> #lmma <- runLIMMA(subset(data,subset=OstAdHoc.Assign=="mature osteocyte"), genes.no.ribo)
+> #saveRDS(lmma.mat, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.mat.rds"))
+> 
+> #Find differentially expressed genes using grade of membership definitions
+> lmma <- runLIMMA(subset(data,subset=GoM.Assign=="iPSC"), genes.no.ribo)
+[1] "All DE Genes"
+[1] 2750    6
+
+FALSE  TRUE 
+  181  2569 
+       speciesHuman
+Down           1632
+NotSig          181
+Up              937
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 2750    5
+
+FALSE  TRUE 
+ 2463   287 
+       speciesHuman
+Down            156
+NotSig         2463
+Up              131
+> saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.gomi.rds"))
+> lmma <- runLIMMA(subset(data,subset=GoM.Assign=="MSC"), genes.no.ribo)
+[1] "All DE Genes"
+[1] 7558    6
+
+FALSE  TRUE 
+ 1510  6048 
+       speciesHuman
+Down           2041
+NotSig         1510
+Up             4007
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 7558    5
+
+FALSE  TRUE 
+ 7122   436 
+       speciesHuman
+Down            140
+NotSig         7122
+Up              296
+> saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.gomm.rds"))
+> lmma <- runLIMMA(subset(data,subset=GoM.Assign=="Osteoblast"), genes.no.ribo)
+[1] "All DE Genes"
+[1] 12526     6
+
+FALSE  TRUE 
+10544  1982 
+       speciesHuman
+Down           1062
+NotSig        10544
+Up              920
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 12526     5
+
+FALSE  TRUE 
+12255   271 
+       speciesHuman
+Down            211
+NotSig        12255
+Up               60
+> saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.gomo.rds"))
+> 
+> 
+> 
+> proc.time()
+    user   system  elapsed 
+1537.959  255.034 1798.027 

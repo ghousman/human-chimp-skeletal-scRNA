@@ -1,0 +1,90 @@
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+###SCRIPTS GOTTEN FROM BINGQING XIE - AND EDITED BY GAH###
+
+###compute correlation matrix between sample and cell lines in cellAtlas
+###object: Seurat object
+###cell.line: cell Atlas expression matrix
+###CorMethod: correlation method to use
+ComputeCorMat <- function(object, refs, CorMethod="pearson"){
+	data <- GetAssayData(object, slot="data", assay="RNA") #additions - added slot and assay info because SCT assay can cause issues
+  #data <- apply(data, 2, function(x) x/sum(x)) #normalize
+  #data <- apply(data, 2, function(x) x * 1e+06) #library size
+  gene.id <- rownames(data)
+  gene.ref <- rownames(refs)
+  common <- intersect(gene.id, gene.ref)
+  #data <- apply(data[common, ], 2, function(x) { log(x + 0.1) }) #log-scale
+  #refs <- apply(refs[common, ], 2, function(x) { x - mean(x) }) #adjust
+  data <- data[common, ]
+  refs <- refs[common, ]
+  n <- ncol(data)
+  m <- ncol(refs)
+  cor.mat <- matrix(0, nrow=n, ncol=m)
+  for (j in 1:m) {
+    for (i in 1:n) {
+      cor.mat[i,j] <- cor(data[,i], refs[,j], method=CorMethod)
+      }
+    }
+  rownames(cor.mat) <- colnames(data)
+  colnames(cor.mat) <- colnames(refs)
+	return(cor.mat)
+}
+
+###Assign clustered cell atlas as cell type to all cells in the sample
+###object: seurat object
+###cor.mat: correlation matrix
+###K: number of clusters generated from cell atlas
+###topCorrelation: number of highest correlated cell lines in cell atlas to be assigned, set to 1 to extract only the top correlated cell line
+AssignClusteredLabel <- function (object, cor.mat, K, topCorrelation, dist.method="euclidean", hclust.method="ward.D"){
+  dist_mat <- dist(t(cor.mat), method=dist.method)
+	hclust_avg_cellline <- hclust(dist_mat, method=hclust.method)
+	#plot(hclust_avg_cellline)
+	cut_cellline <- cutree(hclust_avg_cellline, k = K)
+	cellline_abstract=sapply(strsplit(as.character(colnames(cor.mat)), "\\_"), "[[", 2)
+	clusteredCellline=rbind(cut_cellline,cellline_abstract)
+	nametable=rep('n',K)
+	for(i in 1:K){
+		indexy=as.character(i)
+		nametable[i]=paste0(names(sort(table(clusteredCellline[2,clusteredCellline[1,]==indexy]),decreasing=TRUE)),collapse='_' )
+	}
+	assignm=apply(cor.mat,1,function(x){
+		indexy=names(which.max(table(clusteredCellline[1,names(sort(x,decreasing=T)[1:topCorrelation])])))
+		y=paste0(names( sort(table(clusteredCellline[2,clusteredCellline[1,]==indexy]),decreasing=TRUE)),collapse='_' )
+		return(y)
+	})
+	object$clusteredCellAtlas=assignm
+	return(object)
+}
+
+#Load cell atlas data matrix (curated by GAH)
+hpca <- read.table("/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA/data/HumanPrimaryCellAtlasData-SingleR")
+hpca.names <- read.csv("/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA/data/HumanPrimaryCellAtlasLabels-SingleR.csv", row.names=1)
+hpca.names$label <- paste0(hpca.names$geo.curated,"_",hpca.names$label.curated)
+i=1
+while(i <= length(colnames(hpca))) {
+  colnames(hpca)[i] <- hpca.names$label[rownames(hpca.names)==colnames(hpca)[i]]
+  i=i+1
+}
+
+#Subset cell atlas data matrix to only include certain cells
+hpca.sub <- hpca[,c(239:261,416:419,470:474,496,499:515,548:551,592:599,608:616,651:665)] #iPSCs, MSCs, Osteoblasts
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load data
+indv <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv.log.10k.int.rds")) #integrate across individuals - total
+
+#Compute the correlation matrix use a seurat object and cell line matrix as input
+cor.mat.hpca=ComputeCorMat(indv, refs=hpca.sub)
+
+#Save data
+save(cor.mat.hpca, file=paste0(dir,"human-chimp-skeletal-scRNA/data/cellranger-data-full/corrmatrix3.rds"))
+

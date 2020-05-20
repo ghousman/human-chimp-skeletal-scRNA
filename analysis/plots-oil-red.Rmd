@@ -1,0 +1,80 @@
+---
+title: "plots-oil-red"
+author: "Genevieve Housman"
+date: "March 3, 2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load libraries}
+
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+library(reshape2)
+library(Seurat)
+
+```
+
+```{r cars}
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA/data/'
+
+#Load batch info
+oil <- read.csv(file=paste0(dir,'oil-red-quant-total.csv'), header=TRUE, sep=",")
+
+#Fix data to make plotting easier
+oil$Species_Details <- factor(oil$Species_Details,
+                              levels=c("Human MSC","Chimpanzee MSC","Human Adipocyte","Chimpanzee Adipocyte"),
+                              labels=c("Human MSC","Chimpanzee MSC","Human Adipocyte","Chimpanzee Adipocyte"))
+oil$Abbr_Details <- factor(oil$Abbr_Details,
+                           levels=c("H1 MSC","H1 Adipocyte",
+                                    "H2 MSC","H2 Adipocyte",
+                                    "H3 MSC","H3 Adipocyte",
+                                    "H4 MSC","H4 Adipocyte",
+                                    "H5 MSC","H5 Adipocyte",
+                                    "H6 MSC","H6 Adipocyte",
+                                    "H1-r2 MSC","H1-r2 Adipocyte",
+                                    "C1 MSC","C1 Adipocyte",
+                                    "C2 MSC","C2 Adipocyte",
+                                    "C3 MSC","C3 Adipocyte",
+                                    "C4 MSC","C4 Adipocyte",
+                                    "C5 MSC","C5 Adipocyte",
+                                    "C6 MSC","C6 Adipocyte",
+                                    "C1-r2 MSC","C1-r2 Adipocyte"),
+                           labels=c("H1 MSC","H1 Adipocyte",
+                                    "H2 MSC","H2 Adipocyte",
+                                    "H3 MSC","H3 Adipocyte",
+                                    "H4 MSC","H4 Adipocyte",
+                                    "H5 MSC","H5 Adipocyte",
+                                    "H6 MSC","H6 Adipocyte",
+                                    "H1-r2 MSC","H1-r2 Adipocyte",
+                                    "C1 MSC","C1 Adipocyte",
+                                    "C2 MSC","C2 Adipocyte",
+                                    "C3 MSC","C3 Adipocyte",
+                                    "C4 MSC","C4 Adipocyte",
+                                    "C5 MSC","C5 Adipocyte",
+                                    "C6 MSC","C6 Adipocyte",
+                                    "C1-r2 MSC","C1-r2 Adipocyte"))
+
+#oil.sub1 <- oil.sub[c(1:8,10:11,14:18,20:23,25:124),] #remove suspicious data points
+oil.sub <- oil[c(17:112),] #remove H1 and C1
+
+#Make basic plots
+ggplot(oil, aes(x=Abbr_Details, y=Absorbance_Value)) + 
+  geom_boxplot() +
+  labs(x="", y="Absorbance") +
+  theme(axis.text.x=element_text(angle=90, hjust=1))
+
+ggplot(oil.sub, aes(x=Species_Details, y=Absorbance_Value)) + 
+  geom_boxplot() +
+  labs(x="", y="Absorbance") +
+  theme(axis.text.x=element_text(angle=90, hjust=1))
+
+```

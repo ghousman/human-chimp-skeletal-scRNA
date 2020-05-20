@@ -1,0 +1,113 @@
+
+R version 3.5.1 (2018-07-02) -- "Feather Spray"
+Copyright (C) 2018 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> #Load libraries
+> library(Seurat)
+> library(dplyr)
+
+Attaching package: 'dplyr'
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+> library(stringi)
+> library(stringr)
+> library(ggplot2)
+> library(colorspace)
+> library(RColorBrewer)
+> 
+> #Define main directory
+> dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+> 
+> #Load batch info
+> batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+> 
+> #Define head directory containing scRNA data
+> dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')
+> 
+> #Load objects
+> objects <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.spps.sct.rds"))
+> 
+> #Select features for downstream integration (keeping at 1000 for now)
+> #Calculate all necessary Pearson residuals
+> #Identify anchors (used references + RPCA reduction method) #ALL OTHER METHODS CRASH
+> objects.features <- SelectIntegrationFeatures(object.list=objects, nfeatures=1000)
+> objects <- PrepSCTIntegration(object.list=objects, anchor.features=objects.features)
+> reference_dataset <- 1 #make humans the reference
+> objects <- lapply(X=objects, FUN=RunPCA, verbose=FALSE, features=objects.features)
+> objects.anchors <- FindIntegrationAnchors(object.list=objects, normalization.method="SCT", anchor.features=objects.features, reference=reference_dataset, reduction="rpca")
+Computing within dataset neighborhoods
+Finding anchors between all query and reference datasets
+Finding neighborhoods
+Finding anchors
+	Found 9324 anchors
+Extracting within-dataset neighbors
+> 
+> #Integrate datasets
+> integrate <- IntegrateData(anchorset=objects.anchors, normalization.method="SCT")
+Integrating dataset 2 with reference dataset
+Finding integration vectors
+Finding integration vector weights
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Integrating data
+Warning: Adding a command log without an assay associated with it
+> 
+> #Reduce dimensionality
+> integrate <- RunPCA(object=integrate, npcs=100, verbose=FALSE)
+> pva <- integrate@reductions$pca@stdev^2/integrate@reductions$pca@misc$total.variance
+> ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+> print(ndim)
+[1] 100
+> integrate <- RunUMAP(integrate, dims=1:100)
+Warning: The default method for RunUMAP has changed from calling Python UMAP via reticulate to the R-native UWOT using the cosine metric
+To use Python UMAP via reticulate, set umap.method to 'umap-learn' and metric to 'correlation'
+This message will be shown once per session
+13:33:08 UMAP embedding parameters a = 0.9922 b = 1.112
+13:33:08 Read 102180 rows and found 100 numeric columns
+13:33:08 Using Annoy for neighbor search, n_neighbors = 30
+13:33:08 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+13:33:36 Writing NN index file to temp file /tmp/jobs/65525986/RtmpWSSl93/filea7575247e79b
+13:33:36 Searching Annoy index using 1 thread, search_k = 3000
+13:34:33 Annoy recall = 100%
+13:34:34 Commencing smooth kNN distance calibration using 1 thread
+13:34:40 Initializing from normalized Laplacian + noise
+13:34:50 Commencing optimization for 200 epochs, with 4562262 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+13:37:21 Optimization finished
+> 
+> #Save data
+> saveRDS(integrate, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.spps.sct.int.rds"))
+> rm(obj,integrate)
+Warning message:
+In rm(obj, integrate) : object 'obj' not found
+> 
+> 
+> proc.time()
+    user   system  elapsed 
+2629.957  200.557 2849.800 

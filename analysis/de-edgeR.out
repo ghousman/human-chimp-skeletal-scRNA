@@ -1,0 +1,577 @@
+
+R version 3.4.3 (2017-11-30) -- "Kite-Eating Tree"
+Copyright (C) 2017 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> #Load libraries
+> library(Seurat)
+> library(dplyr)
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+> library(stringi)
+> library(stringr)
+> library(ggplot2)
+> library(grid)
+> library(gbm)
+Loaded gbm 2.1.5
+> library(colorspace)
+> library(RColorBrewer)
+> library(edgeR)
+Loading required package: limma
+> 
+> #Define main directory
+> dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+> dir2 <- paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full")
+> 
+> #Load data
+> data <- readRDS(paste0(dir2,"/data.filterMT.merge.l-TEMP.rds"))
+> data@meta.data$Collection <- as.factor(data@meta.data$Collection)
+> 
+> #Find differentially expressed genes between humans and chimpanzees
+> Idents(data) <- factor(data@meta.data$species, levels=c("Chimp","Human"))
+> 
+> #Isolate ribosomal genes
+> genes <- rownames(data@assays$RNA@counts)
+> genes.ribo <- grep('^RP',genes,value=T)
+> genes.no.ribo <- genes[which(!(genes %in% genes.ribo))]
+> 
+> #Define EDGER Function
+> library(scran)
+Loading required package: BiocParallel
+Loading required package: SingleCellExperiment
+Loading required package: SummarizedExperiment
+Loading required package: GenomicRanges
+Loading required package: stats4
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following object is masked from ‘package:limma’:
+
+    plotMA
+
+The following objects are masked from ‘package:dplyr’:
+
+    combine, intersect, setdiff, union
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colMeans, colnames,
+    colSums, do.call, duplicated, eval, evalq, Filter, Find, get, grep,
+    grepl, intersect, is.unsorted, lapply, lengths, Map, mapply, match,
+    mget, order, paste, pmax, pmax.int, pmin, pmin.int, Position, rank,
+    rbind, Reduce, rowMeans, rownames, rowSums, sapply, setdiff, sort,
+    table, tapply, union, unique, unsplit, which, which.max, which.min
+
+Loading required package: S4Vectors
+
+Attaching package: ‘S4Vectors’
+
+The following objects are masked from ‘package:dplyr’:
+
+    first, rename
+
+The following object is masked from ‘package:base’:
+
+    expand.grid
+
+Loading required package: IRanges
+
+Attaching package: ‘IRanges’
+
+The following objects are masked from ‘package:dplyr’:
+
+    collapse, desc, slice
+
+Loading required package: GenomeInfoDb
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+Loading required package: DelayedArray
+Loading required package: matrixStats
+
+Attaching package: ‘matrixStats’
+
+The following objects are masked from ‘package:Biobase’:
+
+    anyMissing, rowMedians
+
+The following object is masked from ‘package:dplyr’:
+
+    count
+
+
+Attaching package: ‘DelayedArray’
+
+The following objects are masked from ‘package:matrixStats’:
+
+    colMaxs, colMins, colRanges, rowMaxs, rowMins, rowRanges
+
+The following object is masked from ‘package:base’:
+
+    apply
+
+
+Attaching package: ‘SummarizedExperiment’
+
+The following object is masked from ‘package:Seurat’:
+
+    Assays
+
+
+Attaching package: ‘SingleCellExperiment’
+
+The following object is masked from ‘package:edgeR’:
+
+    cpm
+
+> library(SingleCellExperiment)
+> runEDGER <- function(dataSub, genes.no.ribo) {
++   
++   library(edgeR)
++ 
++   #count matrix
++   counts <- as.matrix(GetAssayData(dataSub, assay="RNA", slot="counts"))
++   counts <- counts[which(rownames(counts) %in% genes.no.ribo),] #remove ribosomal genes
++   
++   #metadata
++   metadata <- dataSub@meta.data[,c("species","Collection","nCount_RNA","Phase")]
++   metadata <- metadata[colnames(counts),]
++   
++   #make edgeR object
++   dge <- DGEList(counts)
++   meta_dge <- dge$samples[,c("lib.size","norm.factors")]
++   meta_dge <- cbind(meta_dge, metadata)
++   dge$samples <- meta_dge
++   
++   #filter genes
++   keep <- filterByExpr(dge, group=dge$samples$species, min.count=1, min.total.count=15)
++   table(keep)
++   dge <- dge[keep, , keep.lib.sizes=FALSE]
++   
++   #normalize data
++   dge <- calcNormFactors(dge, method="TMM")
++   summary(dge$samples$norm.factors)
++   
++   #calculate cellular detection rate
++   cdr <- scale(colMeans(dge$count > 0))
++   
++   #design matrix
++   dge$samples$Collection <- as.factor(as.numeric(dge$samples$Collection))
++   dge$samples$Phase <- as.factor(as.numeric(dge$samples$Phase))
++   dge$samples$species <- as.factor(as.character(dge$samples$species))
++   design <- model.matrix(~Collection+cdr+nCount_RNA+Phase+species, data=dge$samples)
++   dge <- estimateDisp(dge, design=design)
++   print(paste0("common dispersion: ",dge$common.dispersion))
++ 
++   #QLF model fit (quasi-likelihood ratio test) - reflects uncertainty in estimating dispersion for each gene
++   fit <- glmQLFit(dge, design=design, robust=TRUE)
++   head(fit$coefficients)
++ 
++   #differential expression
++   qlf <- glmQLFTest(fit, coef=dim(design)[2]) #detect DE genes between species
++   tr <- glmTreat(fit, coef=dim(design)[2], lfc=log2(1.2)) #narrow list of DE genes to those with at least a fold-change of 1.2
++   
++   #assess output
++   tt <- topTags(qlf, n=Inf, adjust.method="BH", p.value=1)
++   print("All DE Genes")
++   print(dim(tt$table))
++   print(table(tt$table$FDR<0.05))
++   print(summary(decideTests(qlf, adjust.method="BH", p.value=0.05)))
++ 
++   tt <- topTags(tr, n=Inf, adjust.method="BH", sort.by="PValue", p.value=1)
++   print("DE Genes with log2(1.2) Fold Change")
++   print(dim(tt$table))
++   print(table(tt$table$FDR<0.05))
++   print(summary(decideTests(tr, adjust.method="BH", p.value=0.05)))
++ 
++   return(tt)
++ 
++ }
+> 
+> #Find differentially expressed genes using differentiation stage at collection
+> edgr <- runEDGER(subset(data,subset=Cell.Type=="iPSC"), genes.no.ribo)
+[1] "common dispersion: 0.0684668581506151"
+[1] "All DE Genes"
+[1] 2715    5
+
+FALSE  TRUE 
+  182  2533 
+       speciesHuman
+Down           1261
+NotSig          182
+Up             1272
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 2715    5
+
+FALSE  TRUE 
+ 1465  1250 
+       speciesHuman
+Down            636
+NotSig         1465
+Up              614
+> saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.ips.rds"))
+> edgr <- runEDGER(subset(data,subset=Cell.Type=="MSC"), genes.no.ribo)
+[1] "common dispersion: 0.174671867391068"
+[1] "All DE Genes"
+[1] 2738    5
+
+FALSE  TRUE 
+  126  2612 
+       speciesHuman
+Down           1354
+NotSig          126
+Up             1258
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 2738    5
+
+FALSE  TRUE 
+ 1249  1489 
+       speciesHuman
+Down            774
+NotSig         1249
+Up              715
+> saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.msc.rds"))
+> edgr <- runEDGER(subset(data,subset=Cell.Type=="Osteoblast"), genes.no.ribo)
+[1] "common dispersion: 0.279649549866482"
+[1] "All DE Genes"
+[1] 1590    5
+
+FALSE  TRUE 
+  132  1458 
+       speciesHuman
+Down            712
+NotSig          132
+Up              746
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 1590    5
+
+FALSE  TRUE 
+  731   859 
+       speciesHuman
+Down            414
+NotSig          731
+Up              445
+> saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.ost.rds"))
+> 
+> #Find differentially expressed genes using cluster definitions
+> edgr <- runEDGER(subset(data,subset=(seurat_clusters==1|seurat_clusters==4|seurat_clusters==6)), genes.no.ribo)
+[1] "common dispersion: 0.0685480055758942"
+[1] "All DE Genes"
+[1] 2715    5
+
+FALSE  TRUE 
+  183  2532 
+       speciesHuman
+Down           1227
+NotSig          183
+Up             1305
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 2715    5
+
+FALSE  TRUE 
+ 1467  1248 
+       speciesHuman
+Down            614
+NotSig         1467
+Up              634
+> saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.i.rds"))
+> edgr <- runEDGER(subset(data,subset=seurat_clusters==0), genes.no.ribo)
+[1] "common dispersion: 0.170280007218464"
+[1] "All DE Genes"
+[1] 2949    5
+
+FALSE  TRUE 
+  152  2797 
+       speciesHuman
+Down           1460
+NotSig          152
+Up             1337
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 2949    5
+
+FALSE  TRUE 
+ 1365  1584 
+       speciesHuman
+Down            833
+NotSig         1365
+Up              751
+> saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.m.rds"))
+> edgr <- runEDGER(subset(data,subset=(seurat_clusters==2|seurat_clusters==3|seurat_clusters==5)), genes.no.ribo)
+[1] "common dispersion: 0.284680305138738"
+[1] "All DE Genes"
+[1] 1337    5
+
+FALSE  TRUE 
+  109  1228 
+       speciesHuman
+Down            636
+NotSig          109
+Up              592
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 1337    5
+
+FALSE  TRUE 
+  610   727 
+       speciesHuman
+Down            361
+NotSig          610
+Up              366
+> saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.o.rds"))
+> edgr <- runEDGER(subset(data,subset=seurat_clusters==1), genes.no.ribo)
+[1] "common dispersion: 0.0609410098020559"
+[1] "All DE Genes"
+[1] 3254    5
+
+FALSE  TRUE 
+  240  3014 
+       speciesHuman
+Down           1535
+NotSig          240
+Up             1479
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 3254    5
+
+FALSE  TRUE 
+ 1739  1515 
+       speciesHuman
+Down            782
+NotSig         1739
+Up              733
+> saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.i1.rds"))
+> edgr <- runEDGER(subset(data,subset=seurat_clusters==4), genes.no.ribo)
+[1] "common dispersion: 0.108227713546543"
+[1] "All DE Genes"
+[1] 610   5
+
+FALSE  TRUE 
+  159   451 
+       speciesHuman
+Down            227
+NotSig          159
+Up              224
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 610   5
+
+FALSE  TRUE 
+  436   174 
+       speciesHuman
+Down             84
+NotSig          436
+Up               90
+> saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.i2.rds"))
+> edgr <- runEDGER(subset(data,subset=seurat_clusters==6), genes.no.ribo)
+[1] "common dispersion: 0.103953057539457"
+[1] "All DE Genes"
+[1] 2157    5
+
+FALSE  TRUE 
+ 1766   391 
+       speciesHuman
+Down            203
+NotSig         1766
+Up              188
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 2157    5
+
+FALSE  TRUE 
+ 1943   214 
+       speciesHuman
+Down            103
+NotSig         1943
+Up              111
+> saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.i3.rds"))
+> edgr <- runEDGER(subset(data,subset=seurat_clusters==2), genes.no.ribo)
+[1] "common dispersion: 0.23768835741425"
+[1] "All DE Genes"
+[1] 2232    5
+
+FALSE  TRUE 
+  239  1993 
+       speciesHuman
+Down            956
+NotSig          239
+Up             1037
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 2232    5
+
+FALSE  TRUE 
+ 1013  1219 
+       speciesHuman
+Down            585
+NotSig         1013
+Up              634
+> saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.o1.rds"))
+> edgr <- runEDGER(subset(data,subset=seurat_clusters==3), genes.no.ribo)
+[1] "common dispersion: 0.387872058572852"
+[1] "All DE Genes"
+[1] 483   5
+
+FALSE  TRUE 
+   76   407 
+       speciesHuman
+Down            211
+NotSig           76
+Up              196
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 483   5
+
+FALSE  TRUE 
+  233   250 
+       speciesHuman
+Down            134
+NotSig          233
+Up              116
+> saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.o2.rds"))
+> edgr <- runEDGER(subset(data,subset=seurat_clusters==5), genes.no.ribo)
+[1] "common dispersion: 0.170354069029081"
+[1] "All DE Genes"
+[1] 7855    5
+
+FALSE  TRUE 
+ 5709  2146 
+       speciesHuman
+Down           1649
+NotSig         5709
+Up              497
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 7855    5
+
+FALSE  TRUE 
+ 5856  1999 
+       speciesHuman
+Down           1552
+NotSig         5856
+Up              447
+> saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.o3.rds"))
+> 
+> #Find differentially expressed genes using osteogenic ad hoc definitions
+> edgr <- runEDGER(subset(data,subset=OstAdHoc.Assign=="preosteoblast"), genes.no.ribo)
+[1] "common dispersion: 0.312907783564601"
+[1] "All DE Genes"
+[1] 4323    5
+
+FALSE  TRUE 
+ 2812  1511 
+       speciesHuman
+Down            740
+NotSig         2812
+Up              771
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 4323    5
+
+FALSE  TRUE 
+ 3026  1297 
+       speciesHuman
+Down            649
+NotSig         3026
+Up              648
+> saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.pre.rds"))
+> edgr <- runEDGER(subset(data,subset=OstAdHoc.Assign=="osteoblast"), genes.no.ribo)
+[1] "common dispersion: 0.285424767309889"
+[1] "All DE Genes"
+[1] 4937    5
+
+FALSE  TRUE 
+ 3508  1429 
+       speciesHuman
+Down            737
+NotSig         3508
+Up              692
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 4937    5
+
+FALSE  TRUE 
+ 3715  1222 
+       speciesHuman
+Down            633
+NotSig         3715
+Up              589
+> saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.obl.rds"))
+> edgr <- runEDGER(subset(data,subset=OstAdHoc.Assign=="embedding osteoblast"), genes.no.ribo)
+[1] "common dispersion: 0.25857635627854"
+[1] "All DE Genes"
+[1] 1785    5
+
+FALSE  TRUE 
+  192  1593 
+       speciesHuman
+Down            852
+NotSig          192
+Up              741
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 1785    5
+
+FALSE  TRUE 
+  871   914 
+       speciesHuman
+Down            485
+NotSig          871
+Up              429
+> saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.emb.rds"))
+> #edgr <- runEDGER(subset(data,subset=OstAdHoc.Assign=="mineralizing osteocyte"), genes.no.ribo)
+> #saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.min.rds"))
+> #edgr <- runEDGER(subset(data,subset=OstAdHoc.Assign=="mature osteocyte"), genes.no.ribo)
+> #saveRDS(edgr.mat, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.mat.rds"))
+> 
+> #Find differentially expressed genes using grade of membership definitions
+> edgr <- runEDGER(subset(data,subset=GoM.Assign=="iPSC"), genes.no.ribo)
+[1] "common dispersion: 0.065715755167552"
+[1] "All DE Genes"
+[1] 2750    5
+
+FALSE  TRUE 
+  183  2567 
+       speciesHuman
+Down           1271
+NotSig          183
+Up             1296
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 2750    5
+
+FALSE  TRUE 
+ 1483  1267 
+       speciesHuman
+Down            642
+NotSig         1483
+Up              625
+> saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.gomi.rds"))
+> edgr <- runEDGER(subset(data,subset=GoM.Assign=="MSC"), genes.no.ribo)

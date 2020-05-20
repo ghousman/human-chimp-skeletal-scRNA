@@ -1,0 +1,376 @@
+---
+title: "10x-view-data-metrics"
+author: "Genevieve Housman"
+date: "2/1/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## View 10X Data Cellranger Metrics
+
+Data being examined comes from 6 humans and 6 chimpanzees.
+- GHO-1:  H1-I + C1-I (iPSCs from H23555 and C8861)
+- GHO-2:  H1-M + C1-M (iPSC-derived MSCs from H23555 and C8861)
+- GHO-4:  H1-O + C1-O (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+- HOU-10: H1-I-r2 + C1-I-r2 (iPSCs from H23555 and C8861)
+- HOU-12: H1-M-r2 + C1-M-r2 (iPSC-derived MSCs from H23555 and C8861)
+- HOU-16: H1-O-r2 + C1-O-r2 (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+- HOU-1:  H2-I + C2-I (iPSCs from H20157 and C3647)
+- HOU-2:  H2-M + C2-M (iPSC-derived MSCs from H20157 and C3647)
+- HOU-4:  H2-O + C2-O (iPSC-MSC-derived osteoblasts from H20157 and C3647)
+- HOU-9:  H3-I + C3-I (iPSCs from H28126 and C3649)
+- HOU-11: H3-M + C3-M (iPSC-derived MSCs from H28126 and C3649)
+- HOU-15: H3-O + C3-O (iPSC-MSC-derived osteoblasts from H28126 and C3649)
+- HOU-5:  H4-I + C4-I (iPSCs from H28834 and C40210)
+- HOU-6:  H4-M + C4-M (iPSC-derived MSCs from H28834 and C40210)
+- HOU-8:  H4-O + C4-O (iPSC-MSC-derived osteoblasts from H28834 and C40210)
+- HOU-17:	H5-I + C5-I (iPSCs from H21792 and C40280)
+- HOU-19:	H5-M + C5-M (iPSC-derived MSCs from H21792 and C40280)
+- HOU-21:	H5-O + C5-O (iPSC-MSC-derived osteoblasts from H21792 and C40280)
+- HOU-18:	H6-I + C6-I (iPSCs from H20961 and C3624)
+- HOU-20:	H6-M + C6-M (iPSC-derived MSCs from H20961 and C3624)
+- HOU-22:	H6-O + C6-O (iPSC-MSC-derived osteoblasts from H20961 and C3624)
+
+```{r load libraries}
+
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+```
+
+```{r compile summary metrics}
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Define methods of alignment
+align <- c("ortho-hg38","ortho-panTro6")
+
+#Create empty dataframe for metrics data
+metrics <- data.frame()
+
+#Load metrics data from full data
+dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')
+for (j in align) {
+  i <- 1
+  while (i <= length(batch$Sample_Name_at_Core)) {
+    print(i)
+    #Define directory containing data from one collection
+    dir_data <- paste0(dir_scrna,'/cellranger-',j,'/',batch$Sample_Name_at_Core[i],'/outs')
+    #Load summary metrics
+    temp <- read.csv(file=paste0(dir_data,'/metrics_summary.csv'))
+    #Process metrics
+    temp[,c(1:4,19:20)] <- lapply(temp[,c(1:4,19:20)], function(x) as.numeric(gsub(",","",as.character(x))))
+    temp[,c(5:18)] <- lapply(temp[,c(5:18)], function(x) as.numeric(gsub("%","",as.character(x)))/100)
+    temp$Collection.Name <- batch$Sample_Name_at_Core[i]
+    temp$Alignment.Type <- j
+    #Add data to dataframe
+    metrics <- rbind(metrics,temp)
+    i <- i+1
+  }
+}
+
+#Fix metrics details so that plotting is easier
+metrics$Collection.Name <- factor(metrics$Collection.Name,
+                                  levels=c("GHO-1","GHO-2","GHO-4",
+                                           "HOU-10","HOU-12","HOU-16",
+                                           "HOU-1","HOU-2","HOU-4",
+                                           "HOU-9","HOU-11","HOU-15",
+                                           "HOU-5","HOU-6","HOU-8",
+                                           "HOU-17","HOU-19","HOU-21",
+                                           "HOU-18","HOU-20","HOU-22"))
+metrics$reads_prop <- metrics$Number.of.Reads / metrics$Number.of.Reads
+metrics$reads_mapped_to_genome <- metrics$Number.of.Reads * metrics$Reads.Mapped.to.Genome
+metrics$reads_mapped_confidently_to_genome <- metrics$Number.of.Reads * metrics$Reads.Mapped.Confidently.to.Genome
+metrics$reads_mapped_confidently_to_exonic_regions <- metrics$Number.of.Reads * metrics$Reads.Mapped.Confidently.to.Exonic.Regions
+metrics$reads_mapped_confidently_to_transcriptome <- metrics$Number.of.Reads * metrics$Reads.Mapped.Confidently.to.Transcriptome
+
+#Define directory for saving plots
+dir_out <- paste0(dir,'human-chimp-skeletal-scRNA/output')
+
+#Summarize metrics
+
+#total number of reads
+p <- ggplot(subset(metrics,Alignment.Type=='ortho-hg38'), aes(x=Collection.Name, y=Number.of.Reads)) +
+      geom_col(position="dodge") +
+      theme(axis.text.x=element_text(size=6)) +
+      labs(title="Number of Reads Sequenced",y="Number of Reads",x="Collection") +
+      ylim(0,300000000)
+ggsave("qc-readcount.png", plot=p, path=dir_out, width=20, heigh=5)
+
+#percent sequence saturation
+p <- ggplot(subset(metrics,Alignment.Type=='ortho-hg38'), aes(x=Collection.Name, y=Sequencing.Saturation)) +
+      geom_col(position="dodge") +
+      theme(axis.text.x=element_text(size=6)) +
+      labs(title="Sequencing Saturation",y="Sequencing Saturation",x="Collection") +
+      ylim(0,1)
+ggsave("qc-saturation.png", plot=p, path=dir_out, width=20, heigh=5)
+
+#mean reads per cell
+p <- CombinePlots(plots=list((ggplot(subset(metrics,Alignment.Type=='ortho-hg38'), aes(x=Collection.Name, y=Mean.Reads.per.Cell)) +
+                               geom_col(position="dodge") +
+                               theme(axis.text.x=element_text(size=6)) +
+                               labs(title="Reads per Cell (hg38 v98)",y="Mean Reads per Cell",x="Collection") +
+                               ylim(0,110000)),
+                             (ggplot(subset(metrics,Alignment.Type=='ortho-panTro6'), aes(x=Collection.Name, y=Mean.Reads.per.Cell)) +
+                               geom_col(position="dodge") +
+                               theme(axis.text.x=element_text(size=6)) +
+                               labs(title="Reads per Cell (panTro6)",y="Mean Reads per Cell",x="Collection") +
+                               ylim(0,110000))), ncol=1)
+ggsave("qc-readspercell.png", plot=p, path=dir_out, width=20, heigh=10)
+
+#median genes per cell
+p <- CombinePlots(plots=list((ggplot(subset(metrics,Alignment.Type=='ortho-hg38'), aes(x=Collection.Name, y=Median.Genes.per.Cell)) +
+                               geom_col(position="dodge") +
+                               theme(axis.text.x=element_text(size=6)) +
+                               labs(title="Reads per Cell (ortho-exon hg38 v98)",y="Median Genes per Cell",x="Collection") +
+                               ylim(0,6000)),
+                             (ggplot(subset(metrics,Alignment.Type=='ortho-panTro6'), aes(x=Collection.Name, y=Median.Genes.per.Cell)) +
+                               geom_col(position="dodge") +
+                               theme(axis.text.x=element_text(size=6)) +
+                               labs(title="Reads per Cell (ortho-exon panTro6)",y="Median Genes per Cell",x="Collection") +
+                               ylim(0,6000))), ncol=1)
+ggsave("qc-genespercell.png", plot=p, path=dir_out, width=20, heigh=10)
+
+#median UMI per cell
+p <- CombinePlots(plots=list((ggplot(subset(metrics,Alignment.Type=='ortho-hg38'), aes(x=Collection.Name, y=Median.UMI.Counts.per.Cell)) +
+                               geom_col(position="dodge") +
+                               theme(axis.text.x=element_text(size=6)) +
+                               labs(title="Reads per Cell (ortho-exon hg38 v98)",y="Median UMI Counts per Cell",x="Collection") +
+                               ylim(0,29000)),
+                             (ggplot(subset(metrics,Alignment.Type=='ortho-panTro6'), aes(x=Collection.Name, y=Median.UMI.Counts.per.Cell)) +
+                               geom_col(position="dodge") +
+                               theme(axis.text.x=element_text(size=6)) +
+                               labs(title="Reads per Cell (ortho-exon panTro6)",y="Median UMI Counts per Cell",x="Collection") +
+                               ylim(0,29000))), ncol=1)
+ggsave("qc-umipercell.png", plot=p, path=dir_out, width=20, heigh=10)
+
+#proportion of Q30 bases in barcode, rna read, and umi
+p <- CombinePlots(plots=list((ggplot(subset(metrics,Alignment.Type=='ortho-hg38'), aes(x=Collection.Name, y=Q30.Bases.in.Barcode)) +
+                                geom_col(position="dodge") +
+                                theme(axis.text.x=element_text(size=6)) +
+                                labs(title="Proportion Q30: Barcode (ortho-exon hg38 v98)",y="Q30 Bases in Barcode",x="Collection") +
+                                ylim(0,1)),
+                             (ggplot(subset(metrics,Alignment.Type=='ortho-hg38'), aes(x=Collection.Name, y=Q30.Bases.in.UMI)) +
+                                geom_col(position="dodge") +
+                                theme(axis.text.x=element_text(size=6)) +
+                                labs(title="Proportion Q30: UMI (ortho-exon hg38 v98)",y="Q30 Bases in UMI",x="Collection") +
+                                ylim(0,1)),
+                             (ggplot(subset(metrics,Alignment.Type=='ortho-hg38'), aes(x=Collection.Name, y=Q30.Bases.in.RNA.Read)) +
+                                geom_col(position="dodge") +
+                                theme(axis.text.x=element_text(size=6)) +
+                                labs(title="Proportion Q30: RNA (ortho-exon hg38 v98)",y="Q30 Bases in RNA Read",x="Collection") +
+                                ylim(0,1)),
+                             (ggplot(subset(metrics,Alignment.Type=='ortho-panTro6'), aes(x=Collection.Name, y=Q30.Bases.in.Barcode)) +
+                                geom_col(position="dodge") +
+                                theme(axis.text.x=element_text(size=6)) +
+                                labs(title="Proportion Q30: Barcode (ortho-exon panTro6)",y="Q30 Bases in Barcode",x="Collection") +
+                                ylim(0,1)),
+                             (ggplot(subset(metrics,Alignment.Type=='ortho-panTro6'), aes(x=Collection.Name, y=Q30.Bases.in.UMI)) +
+                                geom_col(position="dodge") +
+                                theme(axis.text.x=element_text(size=6)) +
+                                labs(title="Proportion Q30: UMI (ortho-exon panTro6)",y="Q30 Bases in UMI",x="Collection") +
+                                ylim(0,1)),
+                             (ggplot(subset(metrics,Alignment.Type=='ortho-panTro6'), aes(x=Collection.Name, y=Q30.Bases.in.RNA.Read)) +
+                                geom_col(position="dodge") +
+                                theme(axis.text.x=element_text(size=6)) +
+                                labs(title="Proportion Q30: RNA (ortho-exon panTro6)",y="Q30 Bases in RNA Read",x="Collection") +
+                                ylim(0,1))), ncol=3)
+ggsave("qc-q30bases.png", plot=p, path=dir_out, width=60, heigh=10, limitsize=FALSE)
+
+#reads mapped to genome, confidently mapped to genome, confidently mapped to exons, and confidently mapped to transcriptome
+p <- CombinePlots(plots=list((ggplot(subset(metrics,Alignment.Type=='ortho-hg38')) +
+                                geom_col(aes(x=Collection.Name, y=reads_prop), position="dodge", alpha=0.2) +
+                                geom_col(aes(x=Collection.Name, y=Reads.Mapped.to.Genome), position="dodge", alpha=0.3) +
+                                geom_col(aes(x=Collection.Name, y=Reads.Mapped.Confidently.to.Genome), position="dodge", alpha=0.4) +
+                                geom_col(aes(x=Collection.Name, y=Reads.Mapped.Confidently.to.Exonic.Regions), position="dodge", alpha=0.6) +
+                                geom_col(aes(x=Collection.Name, y=Reads.Mapped.Confidently.to.Transcriptome), position="dodge", alpha=1) +
+                                theme(axis.text.x=element_text(size=6)) +
+                                labs(title="Proportion of Mapped Reads (ortho-exon hg38 v98)",y="Mapped Reads",x="Collection") +
+                                ylim(0,1)),
+                             (ggplot(subset(metrics,Alignment.Type=='ortho-panTro6')) +
+                                geom_col(aes(x=Collection.Name, y=reads_prop), position="dodge", alpha=0.2) +
+                                geom_col(aes(x=Collection.Name, y=Reads.Mapped.to.Genome), position="dodge", alpha=0.3) +
+                                geom_col(aes(x=Collection.Name, y=Reads.Mapped.Confidently.to.Genome), position="dodge", alpha=0.4) +
+                                geom_col(aes(x=Collection.Name, y=Reads.Mapped.Confidently.to.Exonic.Regions), position="dodge", alpha=0.6) +
+                                geom_col(aes(x=Collection.Name, y=Reads.Mapped.Confidently.to.Transcriptome), position="dodge", alpha=1) +
+                                theme(axis.text.x=element_text(size=6)) +
+                                labs(title="Proportion of Mapped Reads (ortho-exon panTro6)",y="Mapped Reads",x="Collection") +
+                                ylim(0,1))), ncol=1)
+ggsave("qc-mapping-proportion.png", plot=p, path=dir_out, width=20, heigh=10)
+p <- CombinePlots(plots=list((ggplot(subset(metrics,Alignment.Type=='ortho-hg38')) +
+                                geom_col(aes(x=Collection.Name, y=Number.of.Reads), position="dodge", alpha=0.2) +
+                                geom_col(aes(x=Collection.Name, y=reads_mapped_to_genome), position="dodge", alpha=0.3) +
+                                geom_col(aes(x=Collection.Name, y=reads_mapped_confidently_to_genome), position="dodge", alpha=0.4) +
+                                geom_col(aes(x=Collection.Name, y=reads_mapped_confidently_to_exonic_regions), position="dodge", alpha=0.6) +
+                                geom_col(aes(x=Collection.Name, y=reads_mapped_confidently_to_transcriptome), position="dodge", alpha=1) +
+                                theme(axis.text.x=element_text(size=6)) +
+                                labs(title="Numbers of Mapped Reads (ortho-exon hg38 v98)",y="Mapped Reads",x="Collection") +
+                                ylim(0,300000000)),
+                             (ggplot(subset(metrics,Alignment.Type=='ortho-panTro6')) +
+                                geom_col(aes(x=Collection.Name, y=Number.of.Reads), position="dodge", alpha=0.2) +
+                                geom_col(aes(x=Collection.Name, y=reads_mapped_to_genome), position="dodge", alpha=0.3) +
+                                geom_col(aes(x=Collection.Name, y=reads_mapped_confidently_to_genome), position="dodge", alpha=0.4) +
+                                geom_col(aes(x=Collection.Name, y=reads_mapped_confidently_to_exonic_regions), position="dodge", alpha=0.6) +
+                                geom_col(aes(x=Collection.Name, y=reads_mapped_confidently_to_transcriptome), position="dodge", alpha=1) +
+                                theme(axis.text.x=element_text(size=6)) +
+                                labs(title="Numbers of Mapped Reads (ortho-exon panTro6)",y="Mapped Reads",x="Collection") +
+                                ylim(0,300000000))), ncol=1)
+ggsave("qc-mapping-number.png", plot=p, path=dir_out, width=20, heigh=10)
+
+#reads mapped to intergenic regions, intronic regions, and antisense to gene
+p <- CombinePlots(plots=list((ggplot(subset(metrics,Alignment.Type=='ortho-hg38'),
+                                     aes(x=Collection.Name, y=Reads.Mapped.Confidently.to.Intergenic.Regions)) +
+                                geom_col(position="dodge") +
+                                theme(axis.text.x=element_text(size=6)) +
+                                labs(title="Reads Mapped to Intergenic Regions (ortho-exon hg38 v98)",y="Reads Mapped to Intergenic Regions",x="Collection") +
+                                ylim(0,1)),
+                             (ggplot(subset(metrics,Alignment.Type=='ortho-hg38'),
+                                     aes(x=Collection.Name, y=Reads.Mapped.Confidently.to.Intronic.Regions)) +
+                                geom_col(position="dodge") +
+                                theme(axis.text.x=element_text(size=6)) +
+                                labs(title="Reads Mapped to Intronic Regions (ortho-exon hg38 v98)",y="Reads Mapped to Intronic Regions",x="Collection") +
+                                ylim(0,1)),
+                             (ggplot(subset(metrics,Alignment.Type=='ortho-hg38'),
+                                     aes(x=Collection.Name, y=Reads.Mapped.Antisense.to.Gene)) +
+                                geom_col(position="dodge") +
+                                theme(axis.text.x=element_text(size=6)) +
+                                labs(title="Reads Mapped to Intergenic Regions (ortho-exon hg38 v98)",y="Reads Mapped to Intergenic Regions",x="Collection") +
+                                ylim(0,1)),
+                             (ggplot(subset(metrics,Alignment.Type=='ortho-panTro6'),
+                                     aes(x=Collection.Name, y=Reads.Mapped.Confidently.to.Intergenic.Regions)) +
+                                geom_col(position="dodge") +
+                                theme(axis.text.x=element_text(size=6)) +
+                                labs(title="Reads Mapped to Intergenic Regions (ortho-exon panTro6)",y="Reads Mapped to Intergenic Regions",x="Collection") +
+                                ylim(0,1)),
+                             (ggplot(subset(metrics,Alignment.Type=='ortho-panTro6'),
+                                     aes(x=Collection.Name, y=Reads.Mapped.Confidently.to.Intronic.Regions)) +
+                                geom_col(position="dodge") +
+                                theme(axis.text.x=element_text(size=6)) +
+                                labs(title="Reads Mapped to Intronic Regions (ortho-exon panTro6)",y="Reads Mapped to Intronic Regions",x="Collection") +
+                                ylim(0,1)),
+                             (ggplot(subset(metrics,Alignment.Type=='ortho-panTro6'),
+                                     aes(x=Collection.Name, y=Reads.Mapped.Antisense.to.Gene)) +
+                                geom_col(position="dodge") +
+                                theme(axis.text.x=element_text(size=6)) +
+                                labs(title="Reads Mapped to Intergenic Regions (ortho-exon panTro6)",y="Reads Mapped to Intergenic Regions",x="Collection") +
+                                ylim(0,1))),
+                  ncol=3)
+ggsave("qc-mapping-extra.png", plot=p, path=dir_out, width=60, heigh=10, limitsize=FALSE)
+
+#fraction of reads in cells
+p <- CombinePlots(plots=list((ggplot(subset(metrics,Alignment.Type=='ortho-hg38'), aes(x=Collection.Name, y=Fraction.Reads.in.Cells)) +
+                               geom_col(position="dodge") +
+                               theme(axis.text.x=element_text(size=6)) +
+                               labs(title="Fraction of Reads in Cells (ortho-exon hg38 v98)",y="Fraction of Reads in Cells",x="Collection") +
+                               ylim(0,1)),
+                             (ggplot(subset(metrics,Alignment.Type=='ortho-panTro6'), aes(x=Collection.Name, y=Fraction.Reads.in.Cells)) +
+                               geom_col(position="dodge") +
+                               theme(axis.text.x=element_text(size=6)) +
+                               labs(title="Fraction of Reads in Cells (ortho-exon panTro6)",y="Fraction of Reads in Cells",x="Collection") +
+                               ylim(0,1))), ncol=1)
+ggsave("qc-readsincells.png", plot=p, path=dir_out, width=10, heigh=10)
+
+#Compare alignment proportions
+mean(subset(metrics,Alignment.Type=='ortho-hg38')$Reads.Mapped.Confidently.to.Transcriptome)    #60.97%
+mean(subset(metrics,Alignment.Type=='ortho-panTro6')$Reads.Mapped.Confidently.to.Transcriptome) #58.46%
+
+#Summarize metrics in plots for figures
+metrics.o.hg38 <- subset(metrics,Alignment.Type=='ortho-hg38')
+metrics.o.hg38$Collection <- c("H1-I/C1-I","H1-M/C1-M","H1-O/C1-O","H1-r2-I/C1-r2-I","H1-r2-M/C1-r2-M","H1-r2-O/C1-r2-O",
+                               "H2-I/C2-I","H2-M/C2-M","H2-O/C2-O","H3-I/C3-I","H3-M/C3-M","H3-O/C3-O","H4-I/C4-I","H4-M/C4-M","H4-O/C4-O",
+                               "H5-I/C5-I","H5-M/C5-M","H5-O/C5-O","H6-I/C6-I","H6-M/C6-M","H6-O/C6-O")
+metrics.o.hg38$Collection <- factor(metrics.o.hg38$Collection,
+                                    levels=c("H1-I/C1-I","H1-M/C1-M","H1-O/C1-O","H1-r2-I/C1-r2-I","H1-r2-M/C1-r2-M","H1-r2-O/C1-r2-O",
+                                             "H2-I/C2-I","H2-M/C2-M","H2-O/C2-O","H3-I/C3-I","H3-M/C3-M","H3-O/C3-O","H4-I/C4-I","H4-M/C4-M","H4-O/C4-O",
+                                             "H5-I/C5-I","H5-M/C5-M","H5-O/C5-O","H6-I/C6-I","H6-M/C6-M","H6-O/C6-O"))
+metrics.o.pTr6 <- subset(metrics,Alignment.Type=='ortho-panTro6')
+metrics.o.pTr6$Collection <- c("H1-I/C1-I","H1-M/C1-M","H1-O/C1-O","H1-r2-I/C1-r2-I","H1-r2-M/C1-r2-M","H1-r2-O/C1-r2-O",
+                               "H2-I/C2-I","H2-M/C2-M","H2-O/C2-O","H3-I/C3-I","H3-M/C3-M","H3-O/C3-O","H4-I/C4-I","H4-M/C4-M","H4-O/C4-O",
+                               "H5-I/C5-I","H5-M/C5-M","H5-O/C5-O","H6-I/C6-I","H6-M/C6-M","H6-O/C6-O")
+metrics.o.pTr6$Collection <- factor(metrics.o.pTr6$Collection,
+                                    levels=c("H1-I/C1-I","H1-M/C1-M","H1-O/C1-O","H1-r2-I/C1-r2-I","H1-r2-M/C1-r2-M","H1-r2-O/C1-r2-O",
+                                             "H2-I/C2-I","H2-M/C2-M","H2-O/C2-O","H3-I/C3-I","H3-M/C3-M","H3-O/C3-O","H4-I/C4-I","H4-M/C4-M","H4-O/C4-O",
+                                             "H5-I/C5-I","H5-M/C5-M","H5-O/C5-O","H6-I/C6-I","H6-M/C6-M","H6-O/C6-O"))
+
+p <- ggplot(metrics.o.hg38) +
+      geom_col(aes(x=Collection.Name, y=Number.of.Reads), position="dodge", alpha=0.2) +
+      geom_col(aes(x=Collection.Name, y=reads_mapped_to_genome), position="dodge", alpha=0.3) +
+      geom_col(aes(x=Collection.Name, y=reads_mapped_confidently_to_genome), position="dodge", alpha=0.4) +
+      geom_col(aes(x=Collection.Name, y=reads_mapped_confidently_to_exonic_regions), position="dodge", alpha=0.5) +
+      geom_col(aes(x=Collection.Name, y=reads_mapped_confidently_to_transcriptome), position="dodge", alpha=1) +
+      theme_classic() +
+      theme(axis.text.x=element_text(size=12), axis.text.y=element_text(size=12)) +
+      labs(title="Numbers of Mapped Reads (Genome: hg38, Annotation: ortho-exon)",y="Mapped Reads",x="Collection") +
+      ylim(0,300000000) +
+      scale_x_discrete(labels=c("GHO-1"="H1+C1\niPSCs", "GHO-2"="H1+C1\nMSCs", "GHO-4"="H1+C1\nOsteoblasts",
+                                "HOU-10"="H1r2+C1r2\niPSCs", "HOU-12"="H1r2+C1r2\nMSCs", "HOU-16"="H1r2+C1r2\nOsteoblasts",
+                                "HOU-1"="H2+C2\niPSCs", "HOU-2"="H2+C2\nMSCs", "HOU-4"="H2+C2\nOsteoblasts",
+                                "HOU-9"="H3+C3\niPSCs", "HOU-11"="H3+C3\nMSCs", "HOU-15"="H3+C3\nOsteoblasts",
+                                "HOU-5"="H4+C4\niPSCs", "HOU-6"="H4+C4\nMSCs", "HOU-8"="H4+C4\nOsteoblasts",
+                                "HOU-17"="H5+C5\niPSCs", "HOU-19"="H5+C5\nMSCs", "HOU-21"="H5+C5\nOsteoblasts",
+                                "HOU-18"="H6+C6\niPSCs", "HOU-20"="H6+C6\nMSCs", "HOU-22"="H6+C6\nOsteoblasts"))
+ggsave("qc-mapping-number-ortho-hg38.png", plot=p, path=dir_out, width=20, height=5)
+p <- ggplot(metrics.o.pTr6) +
+      geom_col(aes(x=Collection.Name, y=Number.of.Reads), position="dodge", alpha=0.2) +
+      geom_col(aes(x=Collection.Name, y=reads_mapped_to_genome), position="dodge", alpha=0.3) +
+      geom_col(aes(x=Collection.Name, y=reads_mapped_confidently_to_genome), position="dodge", alpha=0.4) +
+      geom_col(aes(x=Collection.Name, y=reads_mapped_confidently_to_exonic_regions), position="dodge", alpha=0.5) +
+      geom_col(aes(x=Collection.Name, y=reads_mapped_confidently_to_transcriptome), position="dodge", alpha=1) +
+      theme_classic() +
+      theme(axis.text.x=element_text(size=12), axis.text.y=element_text(size=12)) +
+      labs(title="Numbers of Mapped Reads (Genome: panTro6, Annotation: ortho-exon)",y="Mapped Reads",x="Collection") +
+      ylim(0,300000000) +
+      scale_x_discrete(labels=c("GHO-1"="H1+C1\niPSCs", "GHO-2"="H1+C1\nMSCs", "GHO-4"="H1+C1\nOsteoblasts",
+                                "HOU-10"="H1r2+C1r2\niPSCs", "HOU-12"="H1r2+C1r2\nMSCs", "HOU-16"="H1r2+C1r2\nOsteoblasts",
+                                "HOU-1"="H2+C2\niPSCs", "HOU-2"="H2+C2\nMSCs", "HOU-4"="H2+C2\nOsteoblasts",
+                                "HOU-9"="H3+C3\niPSCs", "HOU-11"="H3+C3\nMSCs", "HOU-15"="H3+C3\nOsteoblasts",
+                                "HOU-5"="H4+C4\niPSCs", "HOU-6"="H4+C4\nMSCs", "HOU-8"="H4+C4\nOsteoblasts",
+                                "HOU-17"="H5+C5\niPSCs", "HOU-19"="H5+C5\nMSCs", "HOU-21"="H5+C5\nOsteoblasts",
+                                "HOU-18"="H6+C6\niPSCs", "HOU-20"="H6+C6\nMSCs", "HOU-22"="H6+C6\nOsteoblasts"))
+ggsave("qc-mapping-number-ortho-pTr6.png", plot=p, path=dir_out, width=20, height=5)
+
+
+ggplot(metrics.o.hg38) +
+ geom_col(aes(x=Collection.Name, y=Number.of.Reads), position="dodge", alpha=0.2) +
+ geom_col(aes(x=Collection.Name, y=reads_mapped_to_genome), position="dodge", alpha=0.3) +
+ geom_col(aes(x=Collection.Name, y=reads_mapped_confidently_to_exonic_regions), position="dodge", alpha=0.4) +
+ geom_col(aes(x=Collection.Name, y=reads_mapped_confidently_to_transcriptome), position="dodge", alpha=1) +
+ theme_classic() +
+ theme(axis.text.x=element_text(size=12), axis.text.y=element_text(size=12)) +
+ labs(title="Numbers of Mapped Reads (Genome: hg38, Annotation: ortho-exon)",y="Mapped Reads",x="Collection") +
+ ylim(0,300000000) +
+ scale_x_discrete(labels=c("GHO-1"="H1+C1\niPSCs", "GHO-2"="H1+C1\nMSCs", "GHO-4"="H1+C1\nOsteoblasts",
+                           "HOU-10"="H1r2+C1r2\niPSCs", "HOU-12"="H1r2+C1r2\nMSCs", "HOU-16"="H1r2+C1r2\nOsteoblasts",
+                           "HOU-1"="H2+C2\niPSCs", "HOU-2"="H2+C2\nMSCs", "HOU-4"="H2+C2\nOsteoblasts",
+                           "HOU-9"="H3+C3\niPSCs", "HOU-11"="H3+C3\nMSCs", "HOU-15"="H3+C3\nOsteoblasts",
+                           "HOU-5"="H4+C4\niPSCs", "HOU-6"="H4+C4\nMSCs", "HOU-8"="H4+C4\nOsteoblasts",
+                           "HOU-17"="H5+C5\niPSCs", "HOU-19"="H5+C5\nMSCs", "HOU-21"="H5+C5\nOsteoblasts",
+                           "HOU-18"="H6+C6\niPSCs", "HOU-20"="H6+C6\nMSCs", "HOU-22"="H6+C6\nOsteoblasts"))
+
+
+metrics$Cell.Type <- factor(rep(c("iPSCs","MSCs","Osteoblasts"),7),
+                                  levels=c("iPSCs","MSCs","Osteoblasts"))
+
+ggplot(subset(metrics,Alignment.Type=='ortho-hg38')) +
+                                geom_col(aes(x=Cell.Type, y=Number.of.Reads), position="dodge", alpha=0.2) +
+                                geom_col(aes(x=Cell.Type, y=reads_mapped_to_genome), position="dodge", alpha=0.3) +
+                                geom_col(aes(x=Cell.Type, y=reads_mapped_confidently_to_exonic_regions), position="dodge", alpha=0.6) +
+                                geom_col(aes(x=Cell.Type, y=reads_mapped_confidently_to_transcriptome), position="dodge", alpha=1) +
+                                theme(axis.text.x=element_text(size=6)) +
+                                labs(title="Numbers of Mapped Reads (ortho-exon hg38 v98)",y="Mapped Reads",x="Collection")
+
+```

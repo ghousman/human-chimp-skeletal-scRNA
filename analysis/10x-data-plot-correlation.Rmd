@@ -1,0 +1,230 @@
+---
+title: "10x-data-plot-correlation"
+author: "Genevieve Housman"
+date: "2/1/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 10X Data Cellranger Analysis - Data Plotting
+
+Plot aspects of 10X data.
+
+Data being examined comes from 6 humans and 6 chimpanzees.
+- GHO-1:  H1-I + C1-I (iPSCs from H23555 and C8861)
+- GHO-2:  H1-M + C1-M (iPSC-derived MSCs from H23555 and C8861)
+- GHO-4:  H1-O + C1-O (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+- HOU-10: H1-I-r2 + C1-I-r2 (iPSCs from H23555 and C8861)
+- HOU-12: H1-M-r2 + C1-M-r2 (iPSC-derived MSCs from H23555 and C8861)
+- HOU-16: H1-O-r2 + C1-O-r2 (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+- HOU-1:  H2-I + C2-I (iPSCs from H20157 and C3647)
+- HOU-2:  H2-M + C2-M (iPSC-derived MSCs from H20157 and C3647)
+- HOU-4:  H2-O + C2-O (iPSC-MSC-derived osteoblasts from H20157 and C3647)
+- HOU-9:  H3-I + C3-I (iPSCs from H28126 and C3649)
+- HOU-11: H3-M + C3-M (iPSC-derived MSCs from H28126 and C3649)
+- HOU-15: H3-O + C3-O (iPSC-MSC-derived osteoblasts from H28126 and C3649)
+- HOU-5:  H4-I + C4-I (iPSCs from H28834 and C40210)
+- HOU-6:  H4-M + C4-M (iPSC-derived MSCs from H28834 and C40210)
+- HOU-8:  H4-O + C4-O (iPSC-MSC-derived osteoblasts from H28834 and C40210)
+- HOU-17:	H5-I + C5-I (iPSCs from H21792 and C40280)
+- HOU-19:	H5-M + C5-M (iPSC-derived MSCs from H21792 and C40280)
+- HOU-21:	H5-O + C5-O (iPSC-MSC-derived osteoblasts from H21792 and C40280)
+- HOU-18:	H6-I + C6-I (iPSCs from H20961 and C3624)
+- HOU-20:	H6-M + C6-M (iPSC-derived MSCs from H20961 and C3624)
+- HOU-22:	H6-O + C6-O (iPSC-MSC-derived osteoblasts from H20961 and C3624)
+
+Each dataset being evaluated comprises gene count data that were seperately calculated using both the hg38 human genome and the panTro6 chimpanzee genome, as well as the corresponding ortho-exon annotation in cellranger.Species-specific assignments were determined using human-chimpanzee genome combination with ortho-exon annotation.
+
+
+```{r gene expression correlation across replicates}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+
+#Load data
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+#integrated individuals - log normalize
+#indv.ipsc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.ipsc.rds"))
+#indv.msc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.msc.rds"))
+#indv.osteo <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.osteo.rds"))
+indv.ipsc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.filterMT.regMT.indv-cell.log.10k.int.ipsc.rds"))
+indv.msc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.filterMT.regMT.indv-cell.log.10k.int.ipsc.rds"))
+indv.osteo <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.filterMT.regMT.indv-cell.log.10k.int.ipsc.rds"))
+
+#Subset Datasets by Cell Type to Test Correlations
+library(ggplot2)
+library(cowplot)
+theme_set(theme_cowplot())
+
+
+ipsc <- subset(indv.ipsc, subset=Pair=="H1+C1")
+ipsc1 <- subset(ipsc, Replicate=="1")
+Idents(ipsc1) <- "rep1"
+avg.ipsc1 <- log1p(AverageExpression(ipsc1, verbose=FALSE)$RNA)
+avg.ipsc1$gene <- rownames(avg.ipsc1)
+ipsc2 <- subset(ipsc, Replicate=="2")
+Idents(ipsc2) <- "rep2"
+avg.ipsc2 <- log1p(AverageExpression(ipsc2, verbose=FALSE)$RNA)
+avg.ipsc2$gene <- rownames(avg.ipsc2)
+ipsc.avg <- merge(avg.ipsc1, avg.ipsc2, by="gene")
+cor(ipsc.avg$rep1, ipsc.avg$rep2, method="pearson") #pearson correlation = 0.99
+ggplot(ipsc.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="pink", size=2) +
+  labs(x="Average Gene Expression in Replicate 1",y="Average Gene Expression in Replicate 2")
+rm(avg.ipsc1,avg.ipsc2,ipsc.avg)
+
+ipsc1h <- subset(ipsc1, species=="Human")
+Idents(ipsc1h) <- "rep1"
+avg.ipsc1h <- log1p(AverageExpression(ipsc1h, verbose=FALSE)$RNA)
+avg.ipsc1h$gene <- rownames(avg.ipsc1h)
+ipsc2h <- subset(ipsc2, species=="Human")
+Idents(ipsc2h) <- "rep2"
+avg.ipsc2h <- log1p(AverageExpression(ipsc2h, verbose=FALSE)$RNA)
+avg.ipsc2h$gene <- rownames(avg.ipsc2h)
+ipsc.h.avg <- merge(avg.ipsc1h, avg.ipsc2h, by="gene")
+cor(ipsc.h.avg$rep1, ipsc.h.avg$rep2, method="pearson") #pearson correlation = 0.98
+ggplot(ipsc.h.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="pink", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Human)",y="Average Gene Expression in Replicate 2 (Human)")
+rm(avg.ipsc1h,avg.ipsc2h,ipsc.h.avg)
+
+ipsc1c <- subset(ipsc1, species=="Chimp")
+Idents(ipsc1c) <- "rep1"
+avg.ipsc1c <- log1p(AverageExpression(ipsc1c, verbose=FALSE)$RNA)
+avg.ipsc1c$gene <- rownames(avg.ipsc1c)
+ipsc2c <- subset(ipsc2, species=="Chimp")
+Idents(ipsc2c) <- "rep2"
+avg.ipsc2c <- log1p(AverageExpression(ipsc2c, verbose=FALSE)$RNA)
+avg.ipsc2c$gene <- rownames(avg.ipsc2c)
+ipsc.c.avg <- merge(avg.ipsc1c, avg.ipsc2c, by="gene")
+cor(ipsc.c.avg$rep1, ipsc.c.avg$rep2, method="pearson") #pearson correlation = 0.99
+ggplot(ipsc.c.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="pink", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)")
+rm(avg.ipsc1c,avg.ipsc2c,ipsc.c.avg)
+
+rm(ipsc,ipsc1,ipsc2,ipsc1h,ipsc2h,ipsc1c,ipsc2c)
+
+
+msc <- subset(indv.msc, subset=Pair=="H1+C1")
+msc1 <- subset(msc, Replicate=="1")
+Idents(msc1) <- "rep1"
+avg.msc1 <- log1p(AverageExpression(msc1, verbose=FALSE)$RNA)
+avg.msc1$gene <- rownames(avg.msc1)
+msc2 <- subset(msc, Replicate=="2")
+Idents(msc2) <- "rep2"
+avg.msc2 <- log1p(AverageExpression(msc2, verbose=FALSE)$RNA)
+avg.msc2$gene <- rownames(avg.msc2)
+msc.avg <- merge(avg.msc1, avg.msc2, by="gene")
+cor(msc.avg$rep1, msc.avg$rep2, method="pearson") #pearson correlation = 0.97
+ggplot(msc.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="mediumorchid", size=2) +
+  labs(x="Average Gene Expression in Replicate 1",y="Average Gene Expression in Replicate 2")
+rm(avg.msc1,avg.msc2,msc.avg)
+
+msc1h <- subset(msc1, species=="Human")
+Idents(msc1h) <- "rep1"
+avg.msc1h <- log1p(AverageExpression(msc1h, verbose=FALSE)$RNA)
+avg.msc1h$gene <- rownames(avg.msc1h)
+msc2h <- subset(msc2, species=="Human")
+Idents(msc2h) <- "rep2"
+avg.msc2h <- log1p(AverageExpression(msc2h, verbose=FALSE)$RNA)
+avg.msc2h$gene <- rownames(avg.msc2h)
+msc.h.avg <- merge(avg.msc1h, avg.msc2h, by="gene")
+cor(msc.h.avg$rep1, msc.h.avg$rep2, method="pearson") #pearson correlation = 0.98
+ggplot(msc.h.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="mediumorchid", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Human)",y="Average Gene Expression in Replicate 2 (Human)")
+rm(avg.msc1h,avg.msc2h,msc.h.avg)
+
+msc1c <- subset(msc1, species=="Chimp")
+Idents(msc1c) <- "rep1"
+avg.msc1c <- log1p(AverageExpression(msc1c, verbose=FALSE)$RNA)
+avg.msc1c$gene <- rownames(avg.msc1c)
+msc2c <- subset(msc2, species=="Chimp")
+Idents(msc2c) <- "rep2"
+avg.msc2c <- log1p(AverageExpression(msc2c, verbose=FALSE)$RNA)
+avg.msc2c$gene <- rownames(avg.msc2c)
+msc.c.avg <- merge(avg.msc1c, avg.msc2c, by="gene")
+cor(msc.c.avg$rep1, msc.c.avg$rep2, method="pearson") #pearson correlation = 0.92
+ggplot(msc.c.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="mediumorchid", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)")
+rm(avg.msc1c,avg.msc2c,msc.c.avg)
+
+rm(msc,msc1,msc2,msc1h,msc2h,msc1c,msc2c)
+
+
+osteo <- subset(indv.osteo, subset=Pair=="H1+C1")
+osteo1 <- subset(osteo, Replicate=="1")
+Idents(osteo1) <- "rep1"
+avg.osteo1 <- log1p(AverageExpression(osteo1, verbose=FALSE)$RNA)
+avg.osteo1$gene <- rownames(avg.osteo1)
+osteo2 <- subset(osteo, Replicate=="2")
+Idents(osteo2) <- "rep2"
+avg.osteo2 <- log1p(AverageExpression(osteo2, verbose=FALSE)$RNA)
+avg.osteo2$gene <- rownames(avg.osteo2)
+osteo.avg <- merge(avg.osteo1, avg.osteo2, by="gene")
+cor(osteo.avg$rep1, osteo.avg$rep2, method="pearson") #pearson correlation = 0.95
+ggplot(osteo.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="dodgerblue", size=2) +
+  labs(x="Average Gene Expression in Replicate 1",y="Average Gene Expression in Replicate 2")
+rm(avg.osteo1,avg.osteo2,osteo.avg)
+
+osteo1h <- subset(osteo1, species=="Human")
+Idents(osteo1h) <- "rep1"
+avg.osteo1h <- log1p(AverageExpression(osteo1h, verbose=FALSE)$RNA)
+avg.osteo1h$gene <- rownames(avg.osteo1h)
+osteo2h <- subset(osteo2, species=="Human")
+Idents(osteo2h) <- "rep2"
+avg.osteo2h <- log1p(AverageExpression(osteo2h, verbose=FALSE)$RNA)
+avg.osteo2h$gene <- rownames(avg.osteo2h)
+osteo.h.avg <- merge(avg.osteo1h, avg.osteo2h, by="gene")
+cor(osteo.h.avg$rep1, osteo.h.avg$rep2, method="pearson") #pearson correlation = 0.98
+ggplot(osteo.h.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="dodgerblue", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Human)",y="Average Gene Expression in Replicate 2 (Human)")
+rm(avg.osteo1h,avg.osteo2h,osteo.h.avg)
+
+osteo1c <- subset(osteo1, species=="Chimp")
+Idents(osteo1c) <- "rep1"
+avg.osteo1c <- log1p(AverageExpression(osteo1c, verbose=FALSE)$RNA)
+avg.osteo1c$gene <- rownames(avg.osteo1c)
+osteo2c <- subset(osteo2, species=="Chimp")
+Idents(osteo2c) <- "rep2"
+avg.osteo2c <- log1p(AverageExpression(osteo2c, verbose=FALSE)$RNA)
+avg.osteo2c$gene <- rownames(avg.osteo2c)
+osteo.c.avg <- merge(avg.osteo1c, avg.osteo2c, by="gene")
+cor(osteo.c.avg$rep1, osteo.c.avg$rep2, method="pearson") #pearson correlation = 0.86
+ggplot(osteo.c.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="dodgerblue", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)")
+rm(avg.osteo1c,avg.osteo2c,osteo.c.avg)
+
+rm(osteo,osteo1,osteo2,osteo1h,osteo2h,osteo1c,osteo2c)
+
+
+rm(indv.ipsc,indv.msc,indv.osteo)
+
+```

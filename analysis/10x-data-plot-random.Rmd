@@ -1,0 +1,677 @@
+---
+title: "10x-data-plot-random"
+author: "Genevieve Housman"
+date: "2/1/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 10X Data Cellranger Analysis - Data Plotting
+
+Plot aspects of 10X data.
+
+Data being examined comes from 6 humans and 6 chimpanzees.
+- GHO-1:  H1-I + C1-I (iPSCs from H23555 and C8861)
+- GHO-2:  H1-M + C1-M (iPSC-derived MSCs from H23555 and C8861)
+- GHO-4:  H1-O + C1-O (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+- HOU-10: H1-I-r2 + C1-I-r2 (iPSCs from H23555 and C8861)
+- HOU-12: H1-M-r2 + C1-M-r2 (iPSC-derived MSCs from H23555 and C8861)
+- HOU-16: H1-O-r2 + C1-O-r2 (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+- HOU-1:  H2-I + C2-I (iPSCs from H20157 and C3647)
+- HOU-2:  H2-M + C2-M (iPSC-derived MSCs from H20157 and C3647)
+- HOU-4:  H2-O + C2-O (iPSC-MSC-derived osteoblasts from H20157 and C3647)
+- HOU-9:  H3-I + C3-I (iPSCs from H28126 and C3649)
+- HOU-11: H3-M + C3-M (iPSC-derived MSCs from H28126 and C3649)
+- HOU-15: H3-O + C3-O (iPSC-MSC-derived osteoblasts from H28126 and C3649)
+- HOU-5:  H4-I + C4-I (iPSCs from H28834 and C40210)
+- HOU-6:  H4-M + C4-M (iPSC-derived MSCs from H28834 and C40210)
+- HOU-8:  H4-O + C4-O (iPSC-MSC-derived osteoblasts from H28834 and C40210)
+- HOU-17:	H5-I + C5-I (iPSCs from H21792 and C40280)
+- HOU-19:	H5-M + C5-M (iPSC-derived MSCs from H21792 and C40280)
+- HOU-21:	H5-O + C5-O (iPSC-MSC-derived osteoblasts from H21792 and C40280)
+- HOU-18:	H6-I + C6-I (iPSCs from H20961 and C3624)
+- HOU-20:	H6-M + C6-M (iPSC-derived MSCs from H20961 and C3624)
+- HOU-22:	H6-O + C6-O (iPSC-MSC-derived osteoblasts from H20961 and C3624)
+
+Each dataset being evaluated comprises gene count data that were seperately calculated using both the hg38 human genome and the panTro6 chimpanzee genome, as well as the corresponding ortho-exon annotation in cellranger.Species-specific assignments were determined using human-chimpanzee genome combination with ortho-exon annotation.
+
+```{r random plots for poster/talk}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Load data
+indv <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv.sct.int.rds")) #integrate across individuals
+indv <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv.log.int.rds")) #integrate across individuals
+
+#Identify Clusters
+indv <- FindNeighbors(indv, dims=1:50)
+indv <- FindClusters(indv, resolution=1)
+
+DimPlot(indv, group.by="seurat_clusters", reduction="umap") +
+  labs(x="UMAP1",y="UMAP2")
+
+#Gene Violin Plots
+CombinePlots(plots=list((VlnPlot(subset(indv,subset=species=="Human"),'nFeature_RNA',group.by='Cell.Type',
+                                 pt.size=0, cols=c("pink","mediumorchid","dodgerblue")) +
+                           theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+                           labs(x="",y="Number of Genes")),
+                        (VlnPlot(subset(indv,subset=species=="Chimp"),'nFeature_RNA',group.by='Cell.Type',
+                                 pt.size=0, cols=c("pink","mediumorchid","dodgerblue")) +
+                           theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+                           labs(x=""))),
+                        ncol=2)
+             
+CombinePlots(plots=list((VlnPlot(subset(indv,subset=species=="Human"),'nFeature_RNA',group.by='Collection',
+                                 pt.size=0, cols=rep(c("pink","mediumorchid","dodgerblue"),7)) +
+                           theme(axis.text.x=element_text(angle=0, hjust=0.5), legend.position="none") +
+                           labs(x="",y="Number of Genes") +
+                           scale_x_discrete(labels=c("1"="H1\niPSCs","2"="H1\nMSCs","3"="H1\nOsteoblasts",
+                                                     "4"="H1r2\niPSCs","5"="H1r2\nMSCs","6"="H1r2\nOsteoblasts",
+                                                     "7"="H2\niPSCs","8"="H2\nMSCs","9"="H2\nOsteoblasts",
+                                                     "10"="H3\niPSCs","11"="H3\nMSCs","12"="H3\nOsteoblasts",
+                                                     "13"="H4\niPSCs","14"="H4\nMSCs","15"="H4\nOsteoblasts",
+                                                     "16"="H5\niPSCs","17"="H5\nMSCs","18"="H5\nOsteoblasts",
+                                                     "19"="H6\niPSCs","20"="H6\nMSCs","21"="H6\nOsteoblasts"))),
+                        (VlnPlot(subset(indv,subset=species=="Chimp"),'nFeature_RNA',group.by='Collection',
+                                 pt.size=0, cols=rep(c("pink","mediumorchid","dodgerblue"),7)) +
+                           theme(axis.text.x=element_text(angle=0, hjust=0.5), legend.position="none") +
+                           labs(x="",y="Number of Genes") +
+                           scale_x_discrete(labels=c("1"="C1\niPSCs","2"="C1\nMSCs","3"="C1\nOsteoblasts",
+                                                     "4"="C1r2\niPSCs","5"="C1r2\nMSCs","6"="C1r2\nOsteoblasts",
+                                                     "7"="C2\niPSCs","8"="C2\nMSCs","9"="C2\nOsteoblasts",
+                                                     "10"="C3\niPSCs","11"="C3\nMSCs","12"="C3\nOsteoblasts",
+                                                     "13"="C4\niPSCs","14"="C4\nMSCs","15"="C4\nOsteoblasts",
+                                                     "16"="C5\niPSCs","17"="C5\nMSCs","18"="C5\nOsteoblasts",
+                                                     "19"="C6\niPSCs","20"="C6\nMSCs","21"="C6\nOsteoblasts")))),
+             ncol=1)
+
+VlnPlot(indv,'nFeature_RNA',group.by='Collection', split.by='species', pt.size=0, cols=c("grey70","grey30")) +
+  theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+  labs(x="",y="Number of Genes") +
+  scale_x_discrete(labels=c("1"="H1+C1\niPSCs","2"="H1+C1\nMSCs","3"="H1+C1\nOsteoblasts",
+                            "4"="H1r2+C1r2\niPSCs","5"="H1r2+C1r2\nMSCs","6"="H1r2+C1r2\nOsteoblasts",
+                            "7"="H2+C2\niPSCs","8"="H2+C2\nMSCs","9"="H2+C2\nOsteoblasts",
+                            "10"="H3+C3\niPSCs","11"="H3+C3\nMSCs","12"="H3+C3\nOsteoblasts",
+                            "13"="H4+C4\niPSCs","14"="H4+C4\nMSCs","15"="H4+C4\nOsteoblasts",
+                            "16"="H5+C5\niPSCs","17"="H5+C5\nMSCs","18"="H5+C5\nOsteoblasts",
+                            "19"="H6+C6\niPSCs","20"="H6+C6\nMSCs","21"="H6+C6\nOsteoblasts"))
+VlnPlot(indv,'nCount_RNA',group.by='Collection', split.by='species', pt.size=0, cols=c("grey70","grey30")) +
+  theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+  labs(x="",y="Number of UMI") +
+  scale_x_discrete(labels=c("1"="H1+C1\niPSCs","2"="H1+C1\nMSCs","3"="H1+C1\nOsteoblasts",
+                            "4"="H1r2+C1r2\niPSCs","5"="H1r2+C1r2\nMSCs","6"="H1r2+C1r2\nOsteoblasts",
+                            "7"="H2+C2\niPSCs","8"="H2+C2\nMSCs","9"="H2+C2\nOsteoblasts",
+                            "10"="H3+C3\niPSCs","11"="H3+C3\nMSCs","12"="H3+C3\nOsteoblasts",
+                            "13"="H4+C4\niPSCs","14"="H4+C4\nMSCs","15"="H4+C4\nOsteoblasts",
+                            "16"="H5+C5\niPSCs","17"="H5+C5\nMSCs","18"="H5+C5\nOsteoblasts",
+                            "19"="H6+C6\niPSCs","20"="H6+C6\nMSCs","21"="H6+C6\nOsteoblasts"))
+
+mean(indv@meta.data$nFeature_RNA[which(indv[['species']]=="Human")])        #3448.74
+mean(indv@meta.data$nFeature_RNA[which(indv[['species']]=="Chimp")])        #3259.42
+mean(indv@meta.data$nFeature_RNA[which(indv[['Cell.Type']]=="iPSC")])       #3454.82
+mean(indv@meta.data$nFeature_RNA[which(indv[['Cell.Type']]=="MSC")])        #3769.14
+mean(indv@meta.data$nFeature_RNA[which(indv[['Cell.Type']]=="Osteoblast")]) #2591.47
+
+mean(indv@meta.data$nCount_RNA[which(indv[['species']]=="Human")])        #15444.44
+mean(indv@meta.data$nCount_RNA[which(indv[['species']]=="Chimp")])        #12416.17
+mean(indv@meta.data$nCount_RNA[which(indv[['Cell.Type']]=="iPSC")])       #13708.55
+mean(indv@meta.data$nCount_RNA[which(indv[['Cell.Type']]=="MSC")])        #17142.95
+mean(indv@meta.data$nCount_RNA[which(indv[['Cell.Type']]=="Osteoblast")]) # 9439.64
+
+
+DimPlot(subset(indv,subset=species=="Human"), group.by="species", reduction="umap", pt.size=0.01, cols="grey30") +
+  theme(legend.position="none") +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(subset(indv,subset=species=="Chimp"), group.by="species", reduction="umap", pt.size=0.01, cols="grey70") +
+  theme(legend.position="none") +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(indv, group.by="species", reduction="umap", pt.size=0.01, cols=c("grey70","grey30")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(subset(indv,subset=species=="Human"), group.by="Individual", reduction="umap", pt.size=0.01) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(subset(indv,subset=species=="Chimp"), group.by="Individual", reduction="umap", pt.size=0.01) +
+  labs(x="UMAP1",y="UMAP2")
+
+
+DimPlot(indv, group.by="Cell.Type", reduction="umap", pt.size=0.01, cols=c("pink","mediumorchid","dodgerblue")) +
+  labs(x="UMAP1",y="UMAP2")
+
+#ipsc
+FeaturePlot(indv, features="POU5F1", reduction="umap", cols=c("white","black"), pt.size=0.5, order=TRUE) + labs(x="UMAP1",y="UMAP2")
+FeaturePlot(indv, features="TDGF1", reduction="umap", cols=c("grey90","black"), pt.size=0.5, order=TRUE)
+VlnPlot(indv, features=c("POU5F1","TDGF1"), group.by="Cell.Type", cols=c("pink","mediumorchid","dodgerblue"), pt.size=0)
+VlnPlot(indv, features="POU5F1", group.by="Cell.Type", cols=c("pink","mediumorchid","dodgerblue"), pt.size=0) +
+  theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+  labs(x="",y="Expression Level") +
+  ylim(0,7)
+VlnPlot(indv, features="POU5F1", group.by="Cell.Type", split.by="species", cols=c("grey70","grey30"), pt.size=0) +
+  theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+  labs(x="",y="Expression Level") +
+  ylim(0,7)
+#msc
+FeaturePlot(indv, features="NT5E", reduction="umap", cols=c("grey90","black"), pt.size=0.5, order=TRUE) #CD73 - positive in MSC
+FeaturePlot(indv, features="CD44", reduction="umap", cols=c("white","black"), pt.size=0.5, order=TRUE) + labs(x="UMAP1",y="UMAP2") #CD44 - can be positive
+VlnPlot(indv, features=c("NT5E","CD44"), group.by="Cell.Type", cols=c("pink","mediumorchid","dodgerblue"), pt.size=0)
+VlnPlot(indv, features="CD44", group.by="Cell.Type", cols=c("pink","mediumorchid","dodgerblue"), pt.size=0) +
+  theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+  labs(x="",y="Expression Level") +
+  ylim(0,6)
+VlnPlot(indv, features="CD44", group.by="Cell.Type", split.by="species", cols=c("grey70","grey30"), pt.size=0) +
+  theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+  labs(x="",y="Expression Level") +
+  ylim(0,6)
+#osteoblast
+FeaturePlot(indv, features="COL1A1", cols=c("white","black"), pt.size=0.5, order=TRUE, reduction="umap") + labs(x="UMAP1",y="UMAP2")
+FeaturePlot(indv, features="ALPL", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap")
+VlnPlot(indv, features=c("COL1A1","ALPL"), group.by="Cell.Type", cols=c("pink","mediumorchid","dodgerblue"), pt.size=0)
+VlnPlot(indv, features="COL1A1", group.by="Cell.Type", cols=c("pink","mediumorchid","dodgerblue"), pt.size=0) +
+  theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+  labs(x="",y="Expression Level") +
+  ylim(0,8)
+VlnPlot(indv, features="COL1A1", group.by="Cell.Type", split.by="species", cols=c("grey70","grey30"), pt.size=0) +
+  theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+  labs(x="",y="Expression Level") +
+  ylim(0,8)
+
+```
+
+```{r cell atlas assignment}
+
+
+##### NEED TO FIX
+##### GET AN ERROR AT: indexy=names(which.max(table(clusteredCellline[1,names(sort(x,decreasing=T)[1:topCorrelation])])))
+
+
+#sinteractive --mem=24g --time=12:00:00 --partition=broadwl
+#module load R/3.5.1
+#R
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+###SCRIPTS GOTTEN FROM BINGQING XIE###
+
+###compute correlation matrix between sample and cell lines in cellAtlas
+###object: Seurat object
+###cell.line: cell Atlas expression matrix
+###CorMethod: correlation method to use
+ComputeCorMat <- function(object, cell.line, CorMethod="pearson"){
+
+	data=GetAssayData(object, slot="data", assay="RNA") #additions - added slot and assay info because SCT assay 
+    data_norm <- apply(data, 2, function(x) x/sum(x))
+    data_libsize <- apply(data_norm, 2, function(x) x * 1e+06)
+
+    Data.use <- data_libsize
+
+    gene.id <- rownames(Data.use)
+    gene.ref <- rownames(cell.line)
+    common <- intersect(gene.id, gene.ref)
+    logxx <- apply(Data.use[common, ], 2, function(x) {
+        log(x + 0.1)
+    })
+    selected.cell.line <- apply(cell.line[common, ], 2, function(x) {
+        x - mean(x)
+    })
+    n <- ncol(logxx)
+    m <- ncol(cell.line)
+    cor.mat <- matrix(0, nrow = n, ncol = m)
+    for (j in 1:m) {
+        for (i in 1:n) {
+            cor.mat[i,j] <- cor(logxx[,i], selected.cell.line[,j], method=CorMethod)
+        }
+    }
+    rownames(cor.mat) <- colnames(Data.use)
+    colnames(cor.mat) <- colnames(cell.line)
+	return(cor.mat)
+}
+
+###Assign clustered cell atlas as cell type to all cells in the sample
+###object: seurat object
+###cor.mat: correlation matrix
+###K: number of clusters generated from cell atlas
+###topCorrelation: number of highest correlated cell lines in cell atlas to be assigned, set to 1 to extract only the top correlated cell line
+AssignClusteredLabel <- function (object, cor.mat, K, topCorrelation, dist.method="euclidean", hclust.method="ward.D"){
+	
+	dist_mat <- dist(t(cor.mat), method=dist.method)
+	hclust_avg_cellline <- hclust(dist_mat, method=hclust.method)
+	#plot(hclust_avg_cellline)
+
+	cut_cellline <- cutree(hclust_avg_cellline, k = K)
+	cellline_abstract=sapply(strsplit(as.character(colnames(cor.mat)), "\\_"), "[[", 2)
+	clusteredCellline=rbind(cut_cellline,cellline_abstract)
+	nametable=rep('n',K)
+	for(i in 1:K){
+		indexy=as.character(i)
+		nametable[i]=paste0(names(sort(table(clusteredCellline[2,clusteredCellline[1,]==indexy]),decreasing=TRUE)),collapse='_' )
+	}
+	assignm=apply(cor.mat,1,function(x){
+		indexy=names(which.max(table(clusteredCellline[1,names(sort(x,decreasing=T)[1:topCorrelation])])))
+		y=paste0(names( sort(table(clusteredCellline[2,clusteredCellline[1,]==indexy]),decreasing=TRUE)),collapse='_' )
+		return(y)
+	})
+	object$clusteredCellAtlas=assignm
+	return(object)
+}
+
+#load seurat data
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+indv <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv.sct.int.rds")) #integrate across individuals - sctransform
+indv.ipsc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.sct.int.ipsc.rds")) #integrate individuals - sctransform - ipsc only
+indv.msc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.sct.int.msc.rds")) #integrate individuals - sctransform - ipsc only
+indv.osteo <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.sct.int.osteo.rds")) #integrate individuals - sctransform - ipsc only
+
+indv <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv.log.int.rds")) #integrate across individuals - log normalize
+indv.ipsc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.ipsc.rds")) #integrate individuals - log normalize - ipsc only
+indv.msc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.msc.rds")) #integrate individuals - log normalize - ipsc only
+indv.osteo <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.osteo.rds")) #integrate individuals - log normalize - ipsc only
+
+#load cell atlas data matrix (currated in Mengjie's lab)
+#references: Mabbott et al. BMC Genomics 2013; Wu C et al. Nucleic acids research 2016
+load("/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA/data/cell_atlas_ref_panel")
+
+#Compute the correlation matrix use a seurat object and cell line matrix as input
+cor.mat=ComputeCorMat(indv.ipsc,cell.line)
+
+#Add a metadata column "clusteredCellAtlas" to the object
+indv.ipsc <- AssignClusteredLabel(indv.ipsc, cor.mat, K=10, topCorrelation=5)
+
+#Visualize assigned clusters
+DimPlot(indv.ipsc, reduction="umap", group.by="clusteredCellAtlas", pt.size=0.5)
+
+#Check out average correlations with each cell line
+#cor.mat.orth[grep("iPSC", rownames(cor.mat.orth)),]
+#cor.mat.orth[grep("MSC", rownames(cor.mat.orth)),]
+#cor.mat.orth[grep("osteo", rownames(cor.mat.orth)),]
+#cor.mat.orth[grep("chondro", rownames(cor.mat.orth)),]
+z <- c("hotpink","hotpink","hotpink","hotpink","hotpink","hotpink","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","pink","pink","pink","pink","mediumorchid","mediumorchid","mediumorchid","mediumorchid","mediumorchid","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","gold","gold","dodgerblue","dodgerblue","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","mediumorchid","mediumorchid","mediumorchid","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey","lightgrey")
+
+
+x <- as.data.frame(colSums(cor.mat.orth[grep("iPSC", rownames(cor.mat.orth)),])/length(grep("iPSC", rownames(cor.mat.orth))))
+colnames(x) <- "avg"
+x$cell <- rownames(x)
+x$label <- z
+x <- x[order(x$avg, decreasing=TRUE),]
+x$cell <- factor(x$cell, levels=x$cell)
+ggplot(x, aes(x=cell, y=avg)) + geom_bar(stat="identity", fill=x$label) + labs(title="iPSC-orth-avg-cor") + ylim(0,0.5) +
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
+
+x <- as.data.frame(colSums(cor.mat.orth[grep("MSC", rownames(cor.mat.orth)),])/length(grep("MSC", rownames(cor.mat.orth))))
+colnames(x) <- "avg"
+x$cell <- rownames(x)
+x$label <- z
+x <- x[order(x$avg, decreasing=TRUE),]
+x$cell <- factor(x$cell, levels=x$cell)
+ggplot(x, aes(x=cell, y=avg)) + geom_bar(stat="identity", fill=x$label) + labs(title="MSC-orth-avg-cor") + ylim(0,0.5) +
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
+
+x <- as.data.frame(colSums(cor.mat.orth[grep("osteo", rownames(cor.mat.orth)),])/length(grep("osteo", rownames(cor.mat.orth))))
+colnames(x) <- "avg"
+x$cell <- rownames(x)
+x$label <- z
+x <- x[order(x$avg, decreasing=TRUE),]
+x$cell <- factor(x$cell, levels=x$cell)
+ggplot(x, aes(x=cell, y=avg)) + geom_bar(stat="identity", fill=x$label) + labs(title="osteo-orth-avg-cor") + ylim(0,0.5) +
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
+
+x <- as.data.frame(colSums(cor.mat.orth[grep("chondro", rownames(cor.mat.orth)),])/length(grep("chondro", rownames(cor.mat.orth))))
+colnames(x) <- "avg"
+x$cell <- rownames(x)
+x$label <- z
+x <- x[order(x$avg, decreasing=TRUE),]
+x$cell <- factor(x$cell, levels=x$cell)
+ggplot(x, aes(x=cell, y=avg)) + geom_bar(stat="identity", fill=x$label[1:94]) + labs(title="chondro-orth-avg-cor") + ylim(0,0.5) +
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=0.5))
+
+```
+
+```{r examine clusters}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Load data
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+#integrate individuals - sctransform
+#indv.ipsc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.sct.int.ipsc.rds"))
+#indv.msc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.sct.int.msc.rds"))
+#indv.osteo <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.sct.int.osteo.rds"))
+#integrate individuals - log normalize
+indv.ipsc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.ipsc.rds"))
+indv.msc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.msc.rds"))
+indv.osteo <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.osteo.rds"))
+
+#Identify Clusters
+indv.ipsc <- FindNeighbors(indv.ipsc, dims=1:50)
+indv.ipsc <- FindClusters(indv.ipsc, resolution=1)
+DimPlot(indv.ipsc, group.by="seurat_clusters", reduction="umap") + labs(x="UMAP1",y="UMAP2") #15 clusters
+DimPlot(indv.ipsc, group.by="species", reduction="umap") + labs(x="UMAP1",y="UMAP2")
+
+indv.msc <- FindNeighbors(indv.msc, dims=1:50)
+indv.msc <- FindClusters(indv.msc, resolution=1)
+DimPlot(indv.msc, group.by="seurat_clusters", reduction="umap") + labs(x="UMAP1",y="UMAP2") #15 clusters
+DimPlot(indv.msc, group.by="species", reduction="umap") + labs(x="UMAP1",y="UMAP2")
+
+indv.osteo <- FindNeighbors(indv.osteo, dims=1:50)
+indv.osteo <- FindClusters(indv.osteo, resolution=1)
+DimPlot(indv.osteo, group.by="seurat_clusters", reduction="umap") + labs(x="UMAP1",y="UMAP2") #16 clusters
+DimPlot(indv.osteo, group.by="species", reduction="umap") + labs(x="UMAP1",y="UMAP2")
+
+```
+
+```{r gene expression correlation across replicates}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Load data
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+#integrate individuals - sctransform
+#indv.ipsc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.sct.int.ipsc.rds"))
+#indv.msc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.sct.int.msc.rds"))
+#indv.osteo <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.sct.int.osteo.rds"))
+#integrate individuals - log normalize
+indv.ipsc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.ipsc.rds"))
+indv.msc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.msc.rds"))
+indv.osteo <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.osteo.rds"))
+
+#Subset Datasets to Test Correlations
+library(ggplot2)
+library(cowplot)
+theme_set(theme_cowplot())
+
+ipsc <- subset(indv.ipsc, subset=Pair=="H1+C1")
+#avg.ipsc <- log1p(AverageExpression(ipsc, verbose=FALSE)$RNA) #averages within clusters
+#avg.ipsc$gene <- rownames(avg.ipsc)
+ipsc1 <- subset(ipsc, Replicate=="1")
+Idents(ipsc1) <- "rep1"
+avg.ipsc1 <- log1p(AverageExpression(ipsc1, verbose=FALSE)$RNA)
+avg.ipsc1$gene <- rownames(avg.ipsc1)
+ipsc2 <- subset(ipsc, Replicate=="2")
+Idents(ipsc2) <- "rep2"
+avg.ipsc2 <- log1p(AverageExpression(ipsc2, verbose=FALSE)$RNA)
+avg.ipsc2$gene <- rownames(avg.ipsc2)
+ipsc.avg <- merge(avg.ipsc1, avg.ipsc2, by="gene")
+rm(ipsc,ipsc1,ipsc2,avg.ipsc1,avg.ipsc2)
+cor(ipsc.avg$rep1, ipsc.avg$rep2, method="pearson") #pearson correlation = 0.99
+
+ggplot(ipsc.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="pink", size=2) +
+  labs(x="Average Gene Expression in Replicate 1",y="Average Gene Expression in Replicate 2")
+
+msc <- subset(indv.msc, subset=Pair=="H1+C1")
+#avg.msc <- log1p(AverageExpression(msc, verbose=FALSE)$RNA) #averages within clusters
+#avg.msc$gene <- rownames(avg.msc)
+msc1 <- subset(msc, Replicate=="1")
+Idents(msc1) <- "rep1"
+avg.msc1 <- log1p(AverageExpression(msc1, verbose=FALSE)$RNA)
+avg.msc1$gene <- rownames(avg.msc1)
+msc2 <- subset(msc, Replicate=="2")
+Idents(msc2) <- "rep2"
+avg.msc2 <- log1p(AverageExpression(msc2, verbose=FALSE)$RNA)
+avg.msc2$gene <- rownames(avg.msc2)
+msc.avg <- merge(avg.msc1, avg.msc2, by="gene")
+rm(msc,msc1,msc2,avg.msc1,avg.msc2)
+cor(msc.avg$rep1, msc.avg$rep2, method="pearson") #pearson correlation = 0.97
+
+ggplot(msc.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="mediumorchid", size=2) +
+  labs(x="Average Gene Expression in Replicate 1",y="Average Gene Expression in Replicate 2")
+
+osteo <- subset(indv.osteo, subset=Pair=="H1+C1")
+#avg.osteo <- log1p(AverageExpression(osteo, verbose=FALSE)$RNA) #averages within clusters
+#avg.osteo$gene <- rownames(avg.osteo)
+osteo1 <- subset(osteo, Replicate=="1")
+Idents(osteo1) <- "rep1"
+avg.osteo1 <- log1p(AverageExpression(osteo1, verbose=FALSE)$RNA)
+avg.osteo1$gene <- rownames(avg.osteo1)
+osteo2 <- subset(osteo, Replicate=="2")
+Idents(osteo2) <- "rep2"
+avg.osteo2 <- log1p(AverageExpression(osteo2, verbose=FALSE)$RNA)
+avg.osteo2$gene <- rownames(avg.osteo2)
+osteo.avg <- merge(avg.osteo1, avg.osteo2, by="gene")
+rm(osteo,osteo1,osteo2,avg.osteo1,avg.osteo2)
+cor(osteo.avg$rep1, osteo.avg$rep2, method="pearson") #pearson correlation = 0.95
+
+ggplot(osteo.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="dodgerblue", size=2) +
+  labs(x="Average Gene Expression in Replicate 1",y="Average Gene Expression in Replicate 2")
+
+rm(ipsc.avg, msc.avg, osteo.avg)
+
+
+
+####################### COMPARE HUMAN AND CHIMP GENE EXPRESSION
+
+#Load data
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+indv.ipsc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.ipsc.rds"))
+
+ipsc.human <- subset(indv.ipsc, subset=species=="Human")
+Idents(ipsc.human) <- "human"
+avg.human <- log1p(AverageExpression(ipsc.human, verbose=FALSE)$RNA)
+avg.human$gene <- rownames(avg.human)
+
+ipsc.chimp <- subset(indv.ipsc, subset=species=="Chimp")
+Idents(ipsc.chimp) <- "chimp"
+avg.chimp <- log1p(AverageExpression(ipsc.chimp, verbose=FALSE)$RNA)
+avg.chimp$gene <- rownames(avg.chimp)
+
+ipsc.avg <- merge(avg.human, avg.chimp, by="gene")
+rm(ipsc.human,ipsc.chimp,avg.human,avg.chimp)
+cor(ipsc.avg$human, ipsc.avg$chimp, method="pearson") #pearson correlation = 0.99
+
+ggplot(ipsc.avg, aes(human, chimp)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, size=2) +
+  labs(x="Average Gene Expression in Humans",y="Average Gene Expression in Chimpanzees")
+
+
+```
+
+```{r differential gene expression}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Load data
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+#integrate individuals - sctransform
+#indv.ipsc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.sct.int.ipsc.rds"))
+#indv.msc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.sct.int.msc.rds"))
+#indv.osteo <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.sct.int.osteo.rds"))
+#integrate individuals - log normalize
+indv.ipsc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.ipsc.rds"))
+indv.msc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.msc.rds"))
+indv.osteo <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.osteo.rds"))
+pair.ipsc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.pair-cell.log.int.ipsc.rds"))
+pair.msc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.pair-cell.log.int.msc.rds"))
+pair.osteo <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.pair-cell.log.int.osteo.rds"))
+
+
+#Find differentially expressed features that define clusters (cluster biomarkers)
+
+#notes: Seurat identifes positive and negative markers of a single cluster compared to all other cells by default
+#notes: you can designate which groups of clusters vs. each other, or against all cells
+#notes: FindAllMarkers automates this process (identifying positive and negative markers) for all clusters
+
+#notes: min.pct argument requires a feature to be detected at a minimum percentage in either of the two groups of cells
+#notes: thresh.test argument requires a feature to be differentially expressed (on average) by some amount between the two groups
+#notes: max.cells.per.ident can be set to downsample each identity class to have no more cells than whatever this is set to (option to speed up computations)
+#notes: test.use parameter can designate which of several tests for differential expression to use
+
+#find all markers distinguishing iPSC clusters between humans and chimps
+#integrate across individuals
+Idents(indv.ipsc) <- factor(indv.ipsc@meta.data$species, levels=c("Chimp","Human"))
+compare.i <- FindMarkers(indv.ipsc, ident.1="Human", ident.2="Chimp", logfc.threshold=0.25, test.use="wilcox", min.pct=0.25)
+head(compare.i, n=5) #MTRNR2L8
+dim(compare.i) #1 gene total
+#integrate across human-chimp pairs
+Idents(pair.ipsc) <- factor(pair.ipsc@meta.data$species, levels=c("Chimp","Human"))
+compare.i <- FindMarkers(pair.ipsc, ident.1="Human", ident.2="Chimp", logfc.threshold=0.25, test.use="wilcox", min.pct=0.25)
+head(compare.i, n=5) #RPS18, RPS21, RPL21, RPL9, RPL12
+dim(compare.i) #221 genes total
+
+#find all markers distinguishing MSC clusters between humans and chimps
+#integrate across individuals
+Idents(indv.msc) <- factor(indv.msc@meta.data$species, levels=c("Chimp","Human"))
+compare.m <- FindMarkers(indv.msc, ident.1="Human", ident.2="Chimp", logfc.threshold=0.25, test.use="wilcox", min.pct=0.25)
+head(compare.m, n=5) #MTRNR2L8, PF4V1, ACTG2, FDCSP, OCIAD2, CXCL1, DLK1, KISS1
+dim(compare.m) #8 genes total
+#integrate across human-chimp pairs
+Idents(pair.msc) <- factor(pair.msc@meta.data$species, levels=c("Chimp","Human"))
+compare.m <- FindMarkers(pair.msc, ident.1="Human", ident.2="Chimp", logfc.threshold=0.25, test.use="wilcox", min.pct=0.25)
+head(compare.m, n=5) #IGFBP2, RPS18, TSPO, RPS21, RPL21
+dim(compare.m) #398 genes total
+
+#find all markers distinguishing osteoblast clusters between humans and chimps
+#integrate across individuals
+Idents(indv.osteo) <- factor(indv.osteo@meta.data$species, levels=c("Chimp","Human"))
+compare.o <- FindMarkers(indv.osteo, ident.1="Human", ident.2="Chimp", logfc.threshold=0.25, test.use="wilcox", min.pct=0.25)
+head(compare.o, n=5) #DKK2, CTHRC1, EMP2, RASL11A, PLAT
+dim(compare.o) #25 genes total
+#DKK2, CTHRC1, EMP2, RASL11A, PLAT, IGF2, ACTG2, CFH, INHBA, S100A4,PCDH10, COL8A1, CDKN1C, GREM1, RARRES2, TIMP1, CK8, SERPINF1, PLPP3, POSTN, THBS2, UACA, DCN, THBS1, SLC7A5
+#integrate across human-chimp pairs
+Idents(pair.osteo) <- factor(pair.osteo@meta.data$species, levels=c("Chimp","Human"))
+compare.o <- FindMarkers(pair.osteo, ident.1="Human", ident.2="Chimp", logfc.threshold=0.25, test.use="wilcox", min.pct=0.25)
+head(compare.o, n=5) #IGFBP2, IGFBP7, TAGLN, RPS18, TSPO
+dim(compare.o) #450 genes total
+
+#find all markers distinguishing humans and chimps across all cell types
+#integrate across human-chimp pairs
+compare.tot <- intersect(rownames(compare.i),intersect(rownames(compare.m),rownames(compare.o)))
+#32 genes total
+
+#find markers distinguishing humans and chimps that are specific to each cell type
+compare.i.tot <- setdiff(rownames(compare.i),c(rownames(compare.m),rownames(compare.o))) #143 genes total
+compare.m.tot <- setdiff(rownames(compare.m),c(rownames(compare.i),rownames(compare.o))) #146 genes total
+compare.o.tot <- setdiff(rownames(compare.o),c(rownames(compare.i),rownames(compare.m))) #212 genes total
+head(compare.i[which(rownames(compare.i)%in%compare.i.tot),]) #RPS4X, RAB13, RPL13A, RPS27, NNAT, TDGF1
+head(compare.m[which(rownames(compare.m)%in%compare.m.tot),]) #AKAP12, MMP1, KISS1, RHOC, MYL12A, PRDX2
+head(compare.o[which(rownames(compare.o)%in%compare.o.tot),]) #TPM2, PSAT1, NUPR1, COL1A1, TNFRSF12A, ATP1B1
+
+
+#Assess functional enrichment of differentially expressed genes
+library(topGO)
+library("org.Hs.eg.db")
+
+genes.i <- structure(rep(1, length(rownames(pair.ipsc@assays$RNA@data))), names=rownames(pair.ipsc@assays$RNA@data))
+x=1
+while (x <= length(rownames(compare.i))) {
+  #print(which(names(genes.i)==rownames(compare.i)[x]))
+  genes.i[which(names(genes.i)==rownames(compare.i)[x])] <- compare.i$p_val_adj[x]
+  x=x+1
+}
+go_data <- new("topGOdata", ontology="BP", allGenes=genes.i, geneSel=function(allScore){return(allScore < 0.01)},
+               nodeSize=5, annotationFun=annFUN.org, mapping="org.Hs.eg.db", ID="symbol")
+go_test <- runTest(go_data, algorithm="weight01", statistic="fisher")
+go_table.i <- GenTable(go_data, weightFisher=go_test, orderBy="weightFisher", ranksOf="weightFisher", topNodes=sum(score(go_test) < .01))
+go_table.i
+#41 enriched functions
+
+genes.m <- structure(rep(1, length(rownames(pair.msc@assays$RNA@data))), names=rownames(pair.msc@assays$RNA@data))
+x=1
+while (x <= length(rownames(compare.m))) {
+  #print(which(names(genes.m)==rownames(compare.m)[x]))
+  genes.m[which(names(genes.m)==rownames(compare.m)[x])] <- compare.m$p_val_adj[x]
+  x=x+1
+}
+go_data <- new("topGOdata", ontology="BP", allGenes=genes.m, geneSel=function(allScore){return(allScore < 0.01)},
+               nodeSize=5, annotationFun=annFUN.org, mapping="org.Hs.eg.db", ID="symbol")
+go_test <- runTest(go_data, algorithm="weight01", statistic="fisher")
+go_table.m <- GenTable(go_data, weightFisher=go_test, orderBy="weightFisher", ranksOf="weightFisher", topNodes=sum(score(go_test) < .01))
+go_table.m
+#195 enriched functions - collagen fibril organization, extracellular matrix organization, etc.
+
+genes.o <- structure(rep(1, length(rownames(pair.osteo@assays$RNA@data))), names=rownames(pair.osteo@assays$RNA@data))
+x=1
+while (x <= length(rownames(compare.o))) {
+  #print(which(names(genes.o)==rownames(compare.o)[x]))
+  genes.o[which(names(genes.o)==rownames(compare.o)[x])] <- compare.o$p_val_adj[x]
+  x=x+1
+}
+go_data <- new("topGOdata", ontology="BP", allGenes=genes.o, geneSel=function(allScore){return(allScore < 0.01)},
+               nodeSize=5, annotationFun=annFUN.org, mapping="org.Hs.eg.db", ID="symbol")
+go_test <- runTest(go_data, algorithm="weight01", statistic="fisher")
+go_table.o <- GenTable(go_data, weightFisher=go_test, orderBy="weightFisher", ranksOf="weightFisher", topNodes=sum(score(go_test) < .01))
+go_table.o
+#227 enriched functions - extracellular matrix organization, collagen fibril organization, etc.
+
+#Plot numbers of DE genes identified
+library(reshape2)
+DE.h.c <- data.frame(cell=(c("iPSCs","MSCs","Osteoblasts")),
+                     totalDEgenes=c(221,398,450),
+                     other=c(46,220,206),
+                     common=c(32,32,32),
+                     unique=c(143,146,212))
+DE.h.c$cell <- factor(DE.h.c$cell, levels=c("iPSCs","MSCs","Osteoblasts"))
+ggplot(DE.h.c, aes(x=cell, y=totalDEgenes)) +
+  geom_bar(stat="identity") +
+  labs(x="",y="Number of DE Genes")
+DE.h.c <- melt(DE.h.c, id.var="cell")
+ggplot(DE.h.c[4:12,], aes(x=cell, y=value, fill=variable)) +
+  geom_bar(stat="identity") +
+  labs(x="",y="Number of DE Genes") +
+  theme(legend.title = element_blank()) +
+  scale_fill_manual(values=c("lightgrey","darkgrey","black")) +
+  theme_classic()
+
+DE.cell <- data.frame(cell=(c("iPSCs","MSCs","Chondrocytes","Osteoblasts")),
+                      total=c(1859,682,828,1391))
+DE.cell$cell <- factor(DE.cell$cell, levels=c("iPSCs","MSCs","Chondrocytes","Osteoblasts"))
+ggplot(DE.cell, aes(x=cell, y=total)) +
+  geom_bar(stat="identity") +
+  labs(x="",y="Number of DE Genes") +
+  theme_classic()
+
+```

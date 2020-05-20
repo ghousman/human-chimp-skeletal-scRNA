@@ -1,0 +1,2178 @@
+---
+title: "10x-test-data-ortho-compile"
+author: "Genevieve Housman"
+date: "1/29/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 10X Data Cellranger Analysis (ortho-exon files only)
+
+Compile 10X data using seurat.
+
+Data being examined comes from 6 humans and 6 chimpanzees.
+- GHO-1:  H1-I + C1-I (iPSCs from H23555 and C8861)
+- GHO-2:  H1-M + C1-M (iPSC-derived MSCs from H23555 and C8861)
+- GHO-4:  H1-O + C1-O (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+- HOU-10: H1-I-r2 + C1-I-r2 (iPSCs from H23555 and C8861)
+- HOU-12: H1-M-r2 + C1-M-r2 (iPSC-derived MSCs from H23555 and C8861)
+- HOU-16: H1-O-r2 + C1-O-r2 (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+- HOU-1:  H2-I + C2-I (iPSCs from H20157 and C3647)
+- HOU-2:  H2-M + C2-M (iPSC-derived MSCs from H20157 and C3647)
+- HOU-4:  H2-O + C2-O (iPSC-MSC-derived osteoblasts from H20157 and C3647)
+- HOU-9:  H3-I + C3-I (iPSCs from H28126 and C3649)
+- HOU-11: H3-M + C3-M (iPSC-derived MSCs from H28126 and C3649)
+- HOU-15: H3-O + C3-O (iPSC-MSC-derived osteoblasts from H28126 and C3649)
+- HOU-5:  H4-I + C4-I (iPSCs from H28834 and C40210)
+- HOU-6:  H4-M + C4-M (iPSC-derived MSCs from H28834 and C40210)
+- HOU-8:  H4-O + C4-O (iPSC-MSC-derived osteoblasts from H28834 and C40210)
+- HOU-17:	H5-I + C5-I (iPSCs from H21792 and C40280)
+- HOU-19:	H5-M + C5-M (iPSC-derived MSCs from H21792 and C40280)
+- HOU-21:	H5-O + C5-O (iPSC-MSC-derived osteoblasts from H21792 and C40280)
+- HOU-18:	H6-I + C6-I (iPSCs from H20961 and C3624)
+- HOU-20:	H6-M + C6-M (iPSC-derived MSCs from H20961 and C3624)
+- HOU-22:	H6-O + C6-O (iPSC-MSC-derived osteoblasts from H20961 and C3624)
+
+The dataset being evaluated is:
+- [h.orth.c.orth.sppo]: comprises gene count data that were seperately processed using both the hg38 human genome (h) and the panTro6 chimpanzee genome (c), as well as the ortho-exon annotation (orth); species-specific assignments were determined using human-chimpanzee genome combination with ortho-exon annotation (sppo).
+
+```{r load libraries}
+
+#run on cluster
+#sinteractive --mem=12g --time=12:00:00 --partition=broadwl
+#module load R/3.5.1
+#R
+
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+```
+
+```{r define data location}
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Define head directory containing scRNA data
+#dir_scrna <- paste0(dir,'scRNA/cellranger-data-subset') #data from prelim seq
+dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')  #data from total seq
+
+```
+
+```{r assess species assignments}
+
+#Load species assignments
+#eventually add HOU-17/18/19/20/21/22 by replacing i <= 15 with i <= length(batch$Sample_Name_at_Core)
+spp <- data.frame()
+i <- 1
+while (i <= 15) {
+  print(i)
+  #Define directory containing data from one collection
+  dir_data <- paste0(dir_scrna,'/cellranger-ortho-hg38-and-ortho-panTro6/',batch$Sample_Name_at_Core[i],'/outs/analysis/')
+  #Load summary metrics
+  temp <- read.csv(file=paste0(dir_data,'gem_classification.csv'))
+  #Process metrics
+  temp$barcode <- sapply(temp$barcode, gsub, pattern="-1", replacement="")
+  temp$call <- sapply(temp$call, gsub, pattern="ortho.panTro6", replacement="Chimp")
+  temp$call <- sapply(temp$call, gsub, pattern="ortho.hg38", replacement="Human")
+  temp$Collection.Name <- batch$Sample_Name_at_Core[i]
+  #Add data to dataframe
+  spp <- rbind(spp,temp)
+  i <- i+1
+}
+#temporarily save species info
+#saveRDS(spp, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/spp.rds"))
+
+```
+
+```{r prepare scRNA data - isolate human and chimp cells}
+
+#Isolate human and chimp cells for each collection
+#eventually add HOU-17/18/19/20/21/22 by replacing i <= 15 with i <= length(batch$Sample_Name_at_Core)
+i <- 1
+while (i <= 15) {
+
+  #(0)define directory
+    dir_h.data <- paste0(dir_scrna,'/cellranger-ortho-hg38/',batch$Sample_Name_at_Core[i],'/outs')
+    dir_c.data <- paste0(dir_scrna,'/cellranger-ortho-panTro6/',batch$Sample_Name_at_Core[i],'/outs')
+    
+  #(1)load data
+    h.data <- Read10X(data=paste0(dir_h.data,"/raw_feature_bc_matrix"))
+    c.data <- Read10X(data=paste0(dir_c.data,"/raw_feature_bc_matrix"))
+    
+  #(2)create seurat objects
+    h.dat <- CreateSeuratObject(counts=h.data) #CHECK IF I NEED TO READD PROJECT=IPSC/MSC/OSTEO
+    c.dat <- CreateSeuratObject(counts=c.data) #CHECK IF I NEED TO READD PROJECT=IPSC/MSC/OSTEO
+    
+  #(3)view details of seurat objects
+    h.dat                       #19399 features, 6794880 samples
+    c.dat                       #19399 features, 6794880 samples
+    
+  #(4)clear raw data from workspace
+    rm(h.data,c.data)
+  
+  #(5)add species assignments to data
+    dir_data <- paste0(dir_scrna,'/cellranger-ortho-hg38-and-ortho-panTro6/',batch$Sample_Name_at_Core[i],'/outs/analysis/')
+    #Load summary metrics
+    temp <- read.csv(file=paste0(dir_data,'gem_classification.csv'))
+    #Process metrics
+    temp$barcode <- sapply(temp$barcode, gsub, pattern="-1", replacement="")
+    temp$call <- sapply(temp$call, gsub, pattern="ortho.panTro6", replacement="Chimp")
+    temp$call <- sapply(temp$call, gsub, pattern="ortho.hg38", replacement="Human")
+    temp$Collection.Name <- batch$Sample_Name_at_Core[i]
+      
+    m <- match(rownames(h.dat@meta.data),temp$barcode)
+    if(any(is.na(m))) cat("Not all barcodes are in data.\n")
+    h.dat <- AddMetaData(h.dat, temp[m,]$call, col.name="species")
+  
+    m <- match(rownames(c.dat@meta.data),temp$barcode)
+    if(any(is.na(m))) cat("Not all barcodes are in data.\n")
+    c.dat <- AddMetaData(c.dat, temp[m,]$call, col.name="species")
+
+  #(6)view details of species assignments - sppo
+    table(h.dat@meta.data$species, useNA="always")
+    table(c.dat@meta.data$species, useNA="always")
+  
+  #(7)subset data to only include human and chimp cells/genes - sppo
+    h.dat.spp <- subset(h.dat, subset=species=="Human")
+    c.dat.spp <- subset(c.dat, subset=species=="Chimp")
+ 
+  #(8)create merged object
+    h.c.dat.spp <- merge(h.dat.spp,c.dat.spp)
+    saveRDS(h.c.dat.spp, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/h.c.dat.spp.",batch$Sample_Name_at_Core[i],".rds"))
+
+  #(9)remove unnecessary variables
+    rm(h.dat,c.dat,h.dat.spp,c.dat.spp)
+    rm(dir_h.data,dir_c.data)
+
+  i <- i+1
+  
+}
+
+
+```
+
+```{r prepare scRNA data - qc and filter data}
+
+
+
+```
+
+```{r prepare scRNA data - prepare data for merging and integration - keep humans and chimps within collections together}
+
+#CRASHED AT INTERACTIVE
+#sinteractive --mem=24g --time=12:00:00 --partition=broadwl
+
+#BASHSCRIPT: prep.sh
+##!/bin/bash
+##SBATCH --job-name=prep
+##SBATCH --output=prep.out
+##SBATCH --error=prep.err
+##SBATCH --time=12:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#R CMD BATCH --no-save --no-restore integrate.R integrate.out
+
+#RSCRIPT: prep.R
+
+#Setup datasets before merging/integrating
+#(1) CreateSeuratObject - COMPLETE
+#(2) FilterCells - SKIP FOR NOW (look at distributions of number of genes per cell before and after FilterCells)
+#(3) SCTransform ...or... NormalizeData/FindVariableGenes/ScaleData
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Define head directory containing scRNA data
+dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')  #data from total seq
+
+#Read in files
+#eventually add HOU-17/18/19/20/21/22 by replacing i <= 15 with i <= length(batch$Sample_Name_at_Core)
+file.list <- list()
+for (i in 1:15) {
+  print(i)
+  file.list[[i]] <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/h.c.dat.spp.",batch$Sample_Name_at_Core[i],".rds"))
+}
+
+#Add additional details to list
+for (i in 1:length(file.list)) { file.list[[i]]$Collection <- i }
+for (i in c(1,4,7,10,13)) { file.list[[i]]$Cell.Type <- "iPSC" }
+for (i in c(2,5,8,11,14)) { file.list[[i]]$Cell.Type <- "MSC" }
+for (i in c(3,6,9,12,15)) { file.list[[i]]$Cell.Type <- "Osteoblast" }
+for (i in 1:6) { file.list[[i]]$Samples <- "H1+C1" }
+for (i in 7:9) { file.list[[i]]$Samples <- "H2+C2" }
+for (i in 10:12) { file.list[[i]]$Samples <- "H3+C3" }
+for (i in 13:15) { file.list[[i]]$Samples <- "H4+C4" }
+for (i in c(1:3,7:15)) { file.list[[i]]$Replicate <- "1" }
+for (i in 4:6) { file.list[[i]]$Replicate <- "2" }
+
+#Perform SCTransform normalization on each collection
+for (i in 1:length(file.list)) {
+  print(i)
+  file.list[[i]] <- SCTransform(file.list[[i]], conserve.memory=TRUE)
+}
+
+#Save data
+saveRDS(file.list, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/sctrans.rds"))
+
+```
+
+```{r prepare scRNA data - prepare data for merging and integration - separate humans and chimps within each collection}
+
+#BASHSCRIPT: prep_hc.sh
+##!/bin/bash
+##SBATCH --job-name=prep_hc
+##SBATCH --output=prep_hc.out
+##SBATCH --error=prep_hc.err
+##SBATCH --time=12:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#R CMD BATCH --no-save --no-restore prep_hc.R prep_hc.out
+
+#RSCRIPT: prep_hc.R
+
+#Setup datasets before merging/integrating
+#(1) CreateSeuratObject - COMPLETE
+#(2) FilterCells - SKIP FOR NOW (look at distributions of number of genes per cell before and after FilterCells)
+#(3) SCTransform ...or... NormalizeData/FindVariableGenes/ScaleData
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Define head directory containing scRNA data
+dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')  #data from total seq
+
+#Read in files
+#eventually add HOU-17/18/19/20/21/22 by replacing i <= 15 with i <= length(batch$Sample_Name_at_Core)
+file.list <- list()
+for (i in 1:15) {
+  print(i)
+  file.list[[i]] <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/h.c.dat.spp.",batch$Sample_Name_at_Core[i],".rds"))
+}
+
+#Add additional details to list
+for (i in 1:length(file.list)) { file.list[[i]]$Collection <- i }
+for (i in c(1,4,7,10,13)) { file.list[[i]]$Cell.Type <- "iPSC" }
+for (i in c(2,5,8,11,14)) { file.list[[i]]$Cell.Type <- "MSC" }
+for (i in c(3,6,9,12,15)) { file.list[[i]]$Cell.Type <- "Osteoblast" }
+for (i in 1:6) { file.list[[i]]$Samples <- "H1+C1" }
+for (i in 7:9) { file.list[[i]]$Samples <- "H2+C2" }
+for (i in 10:12) { file.list[[i]]$Samples <- "H3+C3" }
+for (i in 13:15) { file.list[[i]]$Samples <- "H4+C4" }
+for (i in c(1:3,7:15)) { file.list[[i]]$Replicate <- "1" }
+for (i in 4:6) { file.list[[i]]$Replicate <- "2" }
+
+#Separate human and chimp data within each collection into separate objects
+objects <- list()
+idx <- 1
+for (i in 1:15)
+{
+  obj <- subset(file.list[[i]], species=='Human')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
+  obj <- subset(file.list[[i]], species=='Chimp')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
+}
+rm(file.list)
+rm(obj)
+
+#Perform SCTransform normalization on each collection
+for (i in 1:length(objects)) {
+  print(i)
+  objects[[i]] <- SCTransform(objects[[i]], conserve.memory=TRUE)
+}
+
+#Save data
+saveRDS(objects, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.rds"))
+
+```
+
+```{r prepare scRNA data - prepare data for merging and integration - separate all cell types in humans and all cell types in chimps}
+
+#BASHSCRIPT: prep_cell.sh
+##!/bin/bash
+##SBATCH --job-name=prep_cell
+##SBATCH --output=prep_cell.out
+##SBATCH --error=prep_cell.err
+##SBATCH --time=03:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#R CMD BATCH --no-save --no-restore prep_hc.R prep_hc.out
+
+#RSCRIPT: prep_cell.R
+
+#Setup datasets before merging/integrating
+#(1) CreateSeuratObject - COMPLETE
+#(2) FilterCells - SKIP FOR NOW (look at distributions of number of genes per cell before and after FilterCells)
+#(3) SCTransform ...or... NormalizeData/FindVariableGenes/ScaleData
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Define head directory containing scRNA data
+dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')  #data from total seq
+
+#Read in files
+#eventually add HOU-17/18/19/20/21/22 by replacing i <= 15 with i <= length(batch$Sample_Name_at_Core)
+file.list <- list()
+for (i in 1:15) {
+  print(i)
+  file.list[[i]] <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/h.c.dat.spp.",batch$Sample_Name_at_Core[i],".rds"))
+}
+
+#Add additional details to list
+for (i in 1:length(file.list)) { file.list[[i]]$Collection <- i }
+for (i in c(1,4,7,10,13)) { file.list[[i]]$Cell.Type <- "iPSC" }
+for (i in c(2,5,8,11,14)) { file.list[[i]]$Cell.Type <- "MSC" }
+for (i in c(3,6,9,12,15)) { file.list[[i]]$Cell.Type <- "Osteoblast" }
+for (i in 1:6) { file.list[[i]]$Samples <- "H1+C1" }
+for (i in 7:9) { file.list[[i]]$Samples <- "H2+C2" }
+for (i in 10:12) { file.list[[i]]$Samples <- "H3+C3" }
+for (i in 13:15) { file.list[[i]]$Samples <- "H4+C4" }
+for (i in c(1:3,7:15)) { file.list[[i]]$Replicate <- "1" }
+for (i in 4:6) { file.list[[i]]$Replicate <- "2" }
+
+#Separate human and chimp data within each collection into separate objects
+objects <- list()
+idx <- 1
+for (i in 1:15)
+{
+  obj <- subset(file.list[[i]], species=='Human')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
+  obj <- subset(file.list[[i]], species=='Chimp')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
+}
+rm(file.list)
+rm(obj)
+
+#Merge all cell types in humans and all cell types in chimps
+human <- merge(objects[[1]], y=c(objects[[3]],objects[[5]],objects[[7]],objects[[9]],objects[[11]],objects[[13]],objects[[15]],
+                                 objects[[17]],objects[[19]],objects[[21]],objects[[23]],objects[[25]],objects[[27]],objects[[29]]),
+               add.cell.ids=c("H1.I","H1.M","H1.O","H1r.I","H1r.M","H1r.O","H2.I","H2.M","H2.O","H3.I","H3.M","H3.O","H4.I","H4.M","H4.O"))
+chimp <- merge(objects[[2]], y=c(objects[[4]],objects[[6]],objects[[8]],objects[[10]],objects[[12]],objects[[14]],objects[[16]],
+                                 objects[[18]],objects[[20]],objects[[22]],objects[[24]],objects[[26]],objects[[28]],objects[[30]]),
+               add.cell.ids=c("C1.I","C1.M","C1.O","C1r.I","C1r.M","C1r.O","C2.I","C2.M","C2.O","C3.I","C3.M","C3.O","C4.I","C4.M","C4.O"))
+objects <- list(human,chimp)
+
+#Perform SCTransform normalization on each collection
+for (i in 1:length(objects)) {
+  print(i)
+  objects[[i]] <- SCTransform(objects[[i]], conserve.memory=TRUE)
+}
+
+#Save data
+saveRDS(objects, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/cell.sctrans.rds"))
+
+```
+
+```{r prepare scRNA data - prepare data for merging and integration - separate all cell types in each individual}
+
+#BASHSCRIPT: prep_ind.sh
+##!/bin/bash
+##SBATCH --job-name=prep_ind
+##SBATCH --output=prep_ind.out
+##SBATCH --error=prep_ind.err
+##SBATCH --time=03:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#R CMD BATCH --no-save --no-restore prep_ind.R prep_ind.out
+
+#RSCRIPT: prep_ind.R
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Define head directory containing scRNA data
+dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')  #data from total seq
+
+#Read in files
+#eventually add HOU-17/18/19/20/21/22 by replacing i <= 15 with i <= length(batch$Sample_Name_at_Core)
+file.list <- list()
+for (i in 1:15) {
+  print(i)
+  file.list[[i]] <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/h.c.dat.spp.",batch$Sample_Name_at_Core[i],".rds"))
+}
+
+#Add additional details to list
+for (i in 1:length(file.list)) { file.list[[i]]$Collection <- i }
+for (i in c(1,4,7,10,13)) { file.list[[i]]$Cell.Type <- "iPSC" }
+for (i in c(2,5,8,11,14)) { file.list[[i]]$Cell.Type <- "MSC" }
+for (i in c(3,6,9,12,15)) { file.list[[i]]$Cell.Type <- "Osteoblast" }
+for (i in 1:6) { file.list[[i]]$Samples <- "H1+C1" }
+for (i in 7:9) { file.list[[i]]$Samples <- "H2+C2" }
+for (i in 10:12) { file.list[[i]]$Samples <- "H3+C3" }
+for (i in 13:15) { file.list[[i]]$Samples <- "H4+C4" }
+for (i in c(1:3,7:15)) { file.list[[i]]$Replicate <- "1" }
+for (i in 4:6) { file.list[[i]]$Replicate <- "2" }
+
+#Separate human and chimp data within each collection into separate objects
+objects <- list()
+idx <- 1
+for (i in 1:15)
+{
+  obj <- subset(file.list[[i]], species=='Human')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
+  obj <- subset(file.list[[i]], species=='Chimp')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
+}
+rm(file.list)
+rm(obj)
+
+#Merge all cell types in each individual
+h1 <- merge(objects[[1]], y=c(objects[[3]],objects[[5]]),add.cell.ids=c("H1.I","H1.M","H1.O"))
+h1r2 <- merge(objects[[7]], y=c(objects[[9]],objects[[11]]),add.cell.ids=c("H1r2.I","H1r2.M","H1r2.O"))
+h2 <- merge(objects[[13]], y=c(objects[[15]],objects[[17]]),add.cell.ids=c("H2.I","H2.M","H2.O"))
+h3 <- merge(objects[[19]], y=c(objects[[21]],objects[[23]]),add.cell.ids=c("H3.I","H3.M","H3.O"))
+h4 <- merge(objects[[25]], y=c(objects[[27]],objects[[29]]),add.cell.ids=c("H4.I","H4.M","H4.O"))
+c1 <- merge(objects[[2]], y=c(objects[[5]],objects[[6]]),add.cell.ids=c("C1.I","C1.M","C1.O"))
+c1r2 <- merge(objects[[8]], y=c(objects[[10]],objects[[12]]),add.cell.ids=c("C1r2.I","C1r2.M","C1r2.O"))
+c2 <- merge(objects[[14]], y=c(objects[[16]],objects[[18]]),add.cell.ids=c("C2.I","C2.M","C2.O"))
+c3 <- merge(objects[[20]], y=c(objects[[22]],objects[[24]]),add.cell.ids=c("C3.I","C3.M","C3.O"))
+c4 <- merge(objects[[26]], y=c(objects[[28]],objects[[30]]),add.cell.ids=c("C4.I","C4.M","C4.O"))
+
+objects <- list(h1,h1r2,h2,h3,h4,c1,c1r2,c2,c3,c4)
+
+#Perform SCTransform normalization on each collection
+for (i in 1:length(objects)) {
+  print(i)
+  objects[[i]] <- SCTransform(objects[[i]], conserve.memory=TRUE)
+}
+
+#Save data
+saveRDS(objects, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/ind.sctrans.rds"))
+
+```
+
+```{r prepare scRNA data - prepare data for merging and integration - separate all cell types in each human-chimp pair}
+
+#BASHSCRIPT: prep_pair.sh
+##!/bin/bash
+##SBATCH --job-name=prep_pair
+##SBATCH --output=prep_pair.out
+##SBATCH --error=prep_pair.err
+##SBATCH --time=03:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#R CMD BATCH --no-save --no-restore prep_pair.R prep_pair.out
+
+#RSCRIPT: prep_pair.R
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Define head directory containing scRNA data
+dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')  #data from total seq
+
+#Read in files
+#eventually add HOU-17/18/19/20/21/22 by replacing i <= 15 with i <= length(batch$Sample_Name_at_Core)
+file.list <- list()
+for (i in 1:15) {
+  print(i)
+  file.list[[i]] <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/h.c.dat.spp.",batch$Sample_Name_at_Core[i],".rds"))
+}
+
+#Add additional details to list
+for (i in 1:length(file.list)) { file.list[[i]]$Collection <- i }
+for (i in c(1,4,7,10,13)) { file.list[[i]]$Cell.Type <- "iPSC" }
+for (i in c(2,5,8,11,14)) { file.list[[i]]$Cell.Type <- "MSC" }
+for (i in c(3,6,9,12,15)) { file.list[[i]]$Cell.Type <- "Osteoblast" }
+for (i in 1:6) { file.list[[i]]$Samples <- "H1+C1" }
+for (i in 7:9) { file.list[[i]]$Samples <- "H2+C2" }
+for (i in 10:12) { file.list[[i]]$Samples <- "H3+C3" }
+for (i in 13:15) { file.list[[i]]$Samples <- "H4+C4" }
+for (i in c(1:3,7:15)) { file.list[[i]]$Replicate <- "1" }
+for (i in 4:6) { file.list[[i]]$Replicate <- "2" }
+
+#Merge all cell types in each human-chimp pair
+h1c1 <- merge(file.list[[1]], y=c(file.list[[2]],file.list[[3]]), add.cell.ids=c("H1C1.I","H1C1.M","H1C1.O"))
+h1c1r2 <- merge(file.list[[4]], y=c(file.list[[5]],file.list[[6]]), add.cell.ids=c("H1C1r2.I","H1C1r2.M","H1C1r2.O"))
+h2c2 <- merge(file.list[[7]], y=c(file.list[[8]],file.list[[9]]), add.cell.ids=c("H2C2.I","H2C2.M","H2C2.O"))
+h3c3 <- merge(file.list[[10]], y=c(file.list[[11]],file.list[[12]]), add.cell.ids=c("H3C3.I","H3C3.M","H3C3.O"))
+h4c4 <- merge(file.list[[13]], y=c(file.list[[14]],file.list[[15]]), add.cell.ids=c("H4C4.I","H4C4.M","H4C4.O"))
+
+objects <- list(h1c1,h1c1r2,h2c2,h3c3,h4c4)
+
+#Perform SCTransform normalization on each collection
+for (i in 1:length(objects)) {
+  print(i)
+  objects[[i]] <- SCTransform(objects[[i]], conserve.memory=TRUE)
+}
+
+#Save data
+saveRDS(objects, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/pair.sctrans.rds"))
+
+```
+
+```{r prepare scRNA data - merge data - keep humans and chimps with collections together}
+
+#sinteractive --mem=24g --time=12:00:00 --partition=broadwl
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R
+
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Define head directory containing scRNA data
+dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')
+
+#Load objects
+file.list <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/sctrans.rds"))
+
+#Merge datasets
+#Perform SCTransform normalization
+#Reduce dimensionality
+#Remove excess files
+#Save merged datasets
+
+#combine all cell types from one sample
+combo.sample <- merge(file.list[[4]], y=c(file.list[[5]],file.list[[6]]), add.cell.ids=c("H1C1.I","H1C1.M","H1C1.O"))
+combo.sample <- SCTransform(combo.sample)
+combo.sample <- RunPCA(object=combo.sample, npcs=100, verbose=FALSE)
+pva <- combo.sample@reductions$pca@stdev^2/combo.sample@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+ndim #56
+combo.sample <- RunUMAP(combo.sample, dims=1:56)
+saveRDS(combo.sample, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/combo.sample.rds"))
+rm(combo.sample)
+
+#combine ipscs from all samples
+combo.ipsc   <- merge(file.list[[4]], y=c(file.list[[10]],file.list[[13]]), add.cell.ids=c("H1C1.I","H3C3.I","H4C4.I"))
+combo.ipsc <- SCTransform(combo.ipsc)
+combo.ipsc <- RunPCA(object=combo.ipsc, npcs=100, verbose=FALSE)
+pva <- combo.ipsc@reductions$pca@stdev^2/combo.ipsc@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+ndim #35
+combo.ipsc <- RunUMAP(combo.ipsc, dims=1:35)
+saveRDS(combo.ipsc, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/combo.ipsc.rds"))
+rm(combo.ipsc)
+
+#combine mscs from all samples
+combo.msc    <- merge(file.list[[5]], y=c(file.list[[11]],file.list[[14]]), add.cell.ids=c("H1C1.M","H3C3.M","H4C4.M"))
+combo.msc <- SCTransform(combo.msc)
+combo.msc <- RunPCA(object=combo.msc, npcs=100, verbose=FALSE)
+pva <- combo.msc@reductions$pca@stdev^2/combo.msc@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+ndim #68
+combo.msc <- RunUMAP(combo.msc, dims=1:68)
+saveRDS(combo.msc, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/combo.msc.rds"))
+rm(combo.msc)
+
+#combine osteoblasts from all samples
+combo.osteo  <- merge(file.list[[6]], y=c(file.list[[12]],file.list[[15]]), add.cell.ids=c("H1C1.O","H3C3.O","H4C4.O"))
+combo.osteo <- SCTransform(combo.osteo)
+combo.osteo <- RunPCA(object=combo.osteo, npcs=100, verbose=FALSE)
+pva <- combo.osteo@reductions$pca@stdev^2/combo.osteo@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+ndim #78
+combo.osteo <- RunUMAP(combo.osteo, dims=1:78)
+saveRDS(combo.osteo, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/combo.osteo.rds"))
+rm(combo.osteo)
+
+#combine all collections
+combo.total  <- merge(file.list[[4]], y=c(file.list[[5]],file.list[[6]],file.list[[10]],file.list[[11]],file.list[[12]],file.list[[13]],file.list[[14]],file.list[[15]]),
+                      add.cell.ids=c("H1C1.I","H1C1.M","H1C1.O","H3C3.I","H3C3.M","H3C3.O","H4C4.I","H4C4.M","H4C4.O"))
+combo.total <- SCTransform(combo.total, variable.features.n=1000, conserve.memory=TRUE)
+combo.total <- RunPCA(object=combo.total, npcs=100, verbose=FALSE)
+pva <- combo.total@reductions$pca@stdev^2/combo.total@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+ndim #91
+combo.total <- RunUMAP(combo.total, dims=1:91)
+saveRDS(combo.total, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/combo.total.rds"))
+rm(combo.total)
+
+```
+
+```{r prepare scRNA data - merge data - separate humans and chimps within each collection}
+
+#BASHSCRIPT: merge_hc.sh
+
+##!/bin/bash
+##SBATCH --job-name=merge_hc
+##SBATCH --output=merge_hc.out
+##SBATCH --error=merge_hc.err
+##SBATCH --time=12:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#R CMD BATCH --no-save --no-restore merge_hc.R merge_hc.out
+
+#RSCRIPT: merge_hc.sh
+
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Define head directory containing scRNA data
+dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')
+
+#Load objects
+objects <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.rds"))
+
+#Merge datasets
+#Perform SCTransform normalization
+#Reduce dimensionality
+#Save merged datasets
+#Remove excess files
+
+#combine all cell types from one sample
+hc.combo.sample <- merge(objects[[7]], y=c(objects[[8]],objects[[9]],objects[[10]],objects[[11]],objects[[12]]),
+                         add.cell.ids=c("H1.1","C1.I","H1.M","C1.M","H1.O","C1.O"))
+hc.combo.sample <- SCTransform(hc.combo.sample)
+hc.combo.sample <- RunPCA(object=hc.combo.sample, npcs=100, verbose=FALSE)
+pva <- hc.combo.sample@reductions$pca@stdev^2/hc.combo.sample@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+saveRDS(hc.combo.sample, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.combo.sample.rds"))
+rm(hc.combo.sample)
+
+#combine ipscs from all samples
+hc.combo.ipsc   <- merge(objects[[7]], y=c(objects[[8]],objects[[19]],objects[[20]],objects[[25]],objects[[26]]),
+                         add.cell.ids=c("H1.I","C1.I","H3.I","C3.I","H4.I","C4.I"))
+hc.combo.ipsc <- SCTransform(hc.combo.ipsc)
+hc.combo.ipsc <- RunPCA(object=hc.combo.ipsc, npcs=100, verbose=FALSE)
+pva <- hc.combo.ipsc@reductions$pca@stdev^2/hc.combo.ipsc@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+saveRDS(hc.combo.ipsc, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.combo.ipsc.rds"))
+rm(hc.combo.ipsc)
+
+#combine mscs from all samples
+hc.combo.msc    <- merge(objects[[9]], y=c(objects[[10]],objects[[21]],objects[[22]],objects[[27]],objects[[28]]),
+                         add.cell.ids=c("H1.M","C1.M","H3.M","C3.M","H4.M","C4.M"))
+hc.combo.msc <- SCTransform(hc.combo.msc)
+hc.combo.msc <- RunPCA(object=hc.combo.msc, npcs=100, verbose=FALSE)
+pva <- hc.combo.msc@reductions$pca@stdev^2/hc.combo.msc@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+saveRDS(hc.combo.msc, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.combo.msc.rds"))
+rm(hc.combo.msc)
+
+#combine osteoblasts from all samples
+hc.combo.osteo  <- merge(objects[[11]], y=c(objects[[12]],objects[[23]],objects[[24]],objects[[29]],objects[[30]]),
+                         add.cell.ids=c("H1.O","C1.O","H3.O","C3.O","H4.O","C4.O"))
+hc.combo.osteo <- SCTransform(hc.combo.osteo)
+hc.combo.osteo <- RunPCA(object=hc.combo.osteo, npcs=100, verbose=FALSE)
+pva <- hc.combo.osteo@reductions$pca@stdev^2/hc.combo.osteo@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+saveRDS(hc.combo.osteo, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.combo.osteo.rds"))
+rm(hc.combo.osteo)
+
+#combine all collections
+hc.combo.total  <- merge(objects[[7]], y=c(objects[[8]],objects[[9]],objects[[10]],objects[[11]],objects[[12]],
+                                           objects[[19]],objects[[20]],objects[[21]],objects[[22]],objects[[23]],objects[[24]],
+                                           objects[[25]],objects[[26]],objects[[27]],objects[[28]],objects[[29]],objects[[30]]),
+                         add.cell.ids=c("H1.1","C1.I","H1.M","C1.M","H1.O","C1.O","H3.1","C3.I","H3.M",
+                                        "C3.M","H3.O","C3.O","H4.1","C4.I","H4.M","C4.M","H4.O","C4.O"))
+hc.combo.total <- SCTransform(hc.combo.total, variable.features.n=1000, conserve.memory=TRUE)
+hc.combo.total <- RunPCA(object=hc.combo.total, npcs=100, verbose=FALSE)
+pva <- hc.combo.total@reductions$pca@stdev^2/hc.combo.total@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+saveRDS(hc.combo.total, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.combo.total.rds"))
+rm(hc.combo.total)
+
+#sinteractive --mem=24g --time=12:00:00 --partition=broadwl
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R
+
+hc.combo.sample <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.combo.sample.rds"))
+hc.combo.sample <- RunUMAP(hc.combo.sample, dims=1:56)
+saveRDS(hc.combo.sample, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.combo.sample.rds"))
+rm(hc.combo.sample)
+
+hc.combo.ipsc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.combo.ipsc.rds"))
+hc.combo.ipsc <- RunUMAP(hc.combo.ipsc, dims=1:35)
+saveRDS(hc.combo.ipsc, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.combo.ipsc.rds"))
+rm(hc.combo.ipsc)
+
+hc.combo.msc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.combo.msc.rds"))
+hc.combo.msc <- RunUMAP(hc.combo.msc, dims=1:68)
+saveRDS(hc.combo.msc, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.combo.msc.rds"))
+rm(hc.combo.msc)
+
+hc.combo.osteo <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.combo.osteo.rds"))
+hc.combo.osteo <- RunUMAP(hc.combo.osteo, dims=1:78)
+saveRDS(hc.combo.osteo, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.combo.osteo.rds"))
+rm(hc.combo.osteo)
+
+hc.combo.total <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.combo.total.rds"))
+hc.combo.total <- RunUMAP(hc.combo.total, dims=1:91)
+saveRDS(hc.combo.total, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.combo.total.rds"))
+rm(hc.combo.total)
+
+```
+
+```{r prepare scRNA data - integrate data - keep humans and chimps within collections together}
+
+#BASHSCRIPT: rpca.sh
+##!/bin/bash
+##SBATCH --job-name=rpca
+##SBATCH --output=rpca.out
+##SBATCH --error=rpca.err
+##SBATCH --time=12:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R CMD BATCH --no-save --no-restore rpca.R rpca.out
+
+#RSCRIPT: rpca.R
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Define head directory containing scRNA data
+dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')
+
+#Load objects
+file.list <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/sctrans.rds"))
+
+#Define list subset
+#Select features for downstream integration (keeping at 1000 for now)
+#Calculate all necessary Pearson residuals
+#Identify anchors (used references + RPCA reduction method) #ALL OTHER METHODS CRASH
+#Integrate datasets
+#Reduce dimensionality
+#Save data
+
+#combine all cell types from one sample
+obj.sample <- list(file.list[[4]],file.list[[5]],file.list[[6]])
+obj.sample.features <- SelectIntegrationFeatures(object.list=obj.sample, nfeatures=1000)
+obj.sample <- PrepSCTIntegration(object.list=obj.sample, anchor.features=obj.sample.features)
+reference_dataset <- 1 #H1C1.I is the starting cell type
+obj.sample <- lapply(X=obj.sample, FUN=RunPCA, verbose=FALSE, features=obj.sample.features)
+obj.sample.anchors <- FindIntegrationAnchors(object.list=obj.sample, normalization.method="SCT", anchor.features=obj.sample.features,
+                                           reference=reference_dataset, reduction="rpca")
+int.sample <- IntegrateData(anchorset=obj.sample.anchors, normalization.method="SCT")
+int.sample <- RunPCA(object=int.sample, npcs=100, verbose=FALSE)
+pva <- int.sample@reductions$pca@stdev^2/int.sample@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+int.sample <- RunUMAP(int.sample, dims=1:100)
+saveRDS(int.sample, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/sctrans.int.sample.rds"))
+rm(obj.sample,int.sample)
+
+#combine ipscs from all samples
+obj.ipsc   <- list(file.list[[4]],file.list[[10]],file.list[[13]])
+obj.ipsc.features <- SelectIntegrationFeatures(object.list=obj.ipsc, nfeatures=1000)
+obj.ipsc <- PrepSCTIntegration(object.list=obj.ipsc, anchor.features=obj.ipsc.features)
+reference_dataset <- 1 #H1C1.I differentiated the best
+obj.ipsc <- lapply(X=obj.ipsc, FUN=RunPCA, verbose=FALSE, features=obj.ipsc.features)
+obj.ipsc.anchors <- FindIntegrationAnchors(object.list=obj.ipsc, normalization.method="SCT", anchor.features=obj.ipsc.features,
+                                           reference=reference_dataset, reduction="rpca")
+int.ipsc <- IntegrateData(anchorset=obj.ipsc.anchors, normalization.method="SCT")
+int.ipsc <- RunPCA(object=int.ipsc, npcs=100, verbose=FALSE)
+pva <- int.ipsc@reductions$pca@stdev^2/int.ipsc@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+int.ipsc <- RunUMAP(int.ipsc, dims=1:100)
+saveRDS(int.ipsc, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/sctrans.int.ipsc.rds"))
+rm(obj.ipsc,int.ipsc)
+
+#combine mscs from all samples
+obj.msc    <- list(file.list[[5]],file.list[[11]],file.list[[14]])
+obj.msc.features <- SelectIntegrationFeatures(object.list=obj.msc, nfeatures=1000)
+obj.msc <- PrepSCTIntegration(object.list=obj.msc, anchor.features=obj.msc.features)
+reference_dataset <- 1 #H1C1.M differentiated the best
+obj.msc <- lapply(X=obj.msc, FUN=RunPCA, verbose=FALSE, features=obj.msc.features)
+obj.msc.anchors <- FindIntegrationAnchors(object.list=obj.msc, normalization.method="SCT", anchor.features=obj.msc.features,
+                                           reference=reference_dataset, reduction="rpca")
+int.msc <- IntegrateData(anchorset=obj.msc.anchors, normalization.method="SCT")
+int.msc <- RunPCA(object=int.msc, npcs=100, verbose=FALSE)
+pva <- int.msc@reductions$pca@stdev^2/int.msc@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+int.msc <- RunUMAP(int.msc, dims=1:100)
+saveRDS(int.msc, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/sctrans.int.msc.rds"))
+rm(obj.msc,int.msc)
+
+#combine osteoblasts from all samples
+obj.osteo  <- list(file.list[[6]],file.list[[12]],file.list[[15]])
+obj.osteo.features <- SelectIntegrationFeatures(object.list=obj.osteo, nfeatures=1000)
+obj.osteo <- PrepSCTIntegration(object.list=obj.osteo, anchor.features=obj.osteo.features)
+reference_dataset <- 1 #H1C1.O differentiated the best
+obj.osteo <- lapply(X=obj.osteo, FUN=RunPCA, verbose=FALSE, features=obj.osteo.features)
+obj.osteo.anchors <- FindIntegrationAnchors(object.list=obj.osteo, normalization.method="SCT", anchor.features=obj.osteo.features,
+                                           reference=reference_dataset, reduction="rpca")
+int.osteo <- IntegrateData(anchorset=obj.osteo.anchors, normalization.method="SCT")
+int.osteo <- RunPCA(object=int.osteo, npcs=100, verbose=FALSE)
+pva <- int.osteo@reductions$pca@stdev^2/int.osteo@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+int.osteo <- RunUMAP(int.osteo, dims=1:100)
+saveRDS(int.osteo, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/sctrans.int.osteo.rds"))
+rm(obj.osteo,int.osteo)
+
+
+
+#BASHSCRIPT: rpca_total.sh
+
+##!/bin/bash
+##SBATCH --job-name=rpca_total
+##SBATCH --output=rpca_total.out
+##SBATCH --error=rpca_total.err
+##SBATCH --time=12:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R CMD BATCH --no-save --no-restore rpca_total.R rpca_total.out
+
+#RSCRIPT: rpca_total.R
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Define head directory containing scRNA data
+dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')
+
+#Load objects
+file.list <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/sctrans.rds"))
+
+#combine all collections
+obj.total  <- list(file.list[[4]],file.list[[5]],file.list[[6]],file.list[[10]],file.list[[11]],file.list[[12]],file.list[[13]],file.list[[14]],file.list[[15]])
+rm(file.list)
+obj.total.features <- SelectIntegrationFeatures(object.list=obj.total, nfeatures=1000)
+obj.total <- PrepSCTIntegration(object.list=obj.total, anchor.features=obj.total.features)
+reference_dataset <- c(1:3) #H1C1 differentiated the best
+obj.total <- lapply(X=obj.total, FUN=RunPCA, verbose=FALSE, features=obj.total.features)
+obj.total.anchors <- FindIntegrationAnchors(object.list=obj.total, normalization.method="SCT", anchor.features=obj.total.features,
+                                           reference=reference_dataset, reduction="rpca")
+int.total <- IntegrateData(anchorset=obj.total.anchors, normalization.method="SCT")
+int.total <- RunPCA(object=int.total, npcs=100, verbose=FALSE)
+pva <- int.total@reductions$pca@stdev^2/int.total@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+int.total <- RunUMAP(int.total, dims=1:100)
+saveRDS(int.total, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/sctrans.int.total.rds"))
+rm(obj.total,int.total)
+
+```
+
+```{r prepare scRNA data - integrate data - separate human and chimps within each collection}
+
+#BASHSCRIPT: rpca_hc.sh
+##!/bin/bash
+##SBATCH --job-name=rpca_hc
+##SBATCH --output=rpca_hc.out
+##SBATCH --error=rpca_hc.err
+##SBATCH --time=12:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R CMD BATCH --no-save --no-restore rpca_hc.R rpca_hc.out
+
+#RSCRIPT: rpca_hc.R
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Define head directory containing scRNA data
+dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')
+
+#Load objects
+objects <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.rds"))
+
+#Define list subset
+#Select features for downstream integration (keeping at 1000 for now)
+#Calculate all necessary Pearson residuals
+#Identify anchors (used references + RPCA reduction method) #ALL OTHER METHODS CRASH
+#Integrate datasets
+#Reduce dimensionality
+#Save data
+
+#combine all cell types from one sample
+obj.sample <- list(objects[[7]],objects[[8]],objects[[9]],objects[[10]],objects[[11]],objects[[12]])
+obj.sample.features <- SelectIntegrationFeatures(object.list=obj.sample, nfeatures=1000)
+obj.sample <- PrepSCTIntegration(object.list=obj.sample, anchor.features=obj.sample.features)
+reference_dataset <- c(1:2) #H1C1.I is the starting cell type
+obj.sample <- lapply(X=obj.sample, FUN=RunPCA, verbose=FALSE, features=obj.sample.features)
+obj.sample.anchors <- FindIntegrationAnchors(object.list=obj.sample, normalization.method="SCT", anchor.features=obj.sample.features,
+                                           reference=reference_dataset, reduction="rpca")
+int.sample <- IntegrateData(anchorset=obj.sample.anchors, normalization.method="SCT")
+int.sample <- RunPCA(object=int.sample, npcs=100, verbose=FALSE)
+pva <- int.sample@reductions$pca@stdev^2/int.sample@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+int.sample <- RunUMAP(int.sample, dims=1:100)
+saveRDS(int.sample, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.int.sample.rds"))
+rm(obj.sample,int.sample)
+
+#combine ipscs from all samples
+obj.ipsc   <- list(objects[[7]],objects[[8]],objects[[19]],objects[[20]],objects[[25]],objects[[26]])
+obj.ipsc.features <- SelectIntegrationFeatures(object.list=obj.ipsc, nfeatures=1000)
+obj.ipsc <- PrepSCTIntegration(object.list=obj.ipsc, anchor.features=obj.ipsc.features)
+reference_dataset <- c(1:2) #H1C1.I differentiated the best
+obj.ipsc <- lapply(X=obj.ipsc, FUN=RunPCA, verbose=FALSE, features=obj.ipsc.features)
+obj.ipsc.anchors <- FindIntegrationAnchors(object.list=obj.ipsc, normalization.method="SCT", anchor.features=obj.ipsc.features,
+                                           reference=reference_dataset, reduction="rpca")
+int.ipsc <- IntegrateData(anchorset=obj.ipsc.anchors, normalization.method="SCT")
+int.ipsc <- RunPCA(object=int.ipsc, npcs=100, verbose=FALSE)
+pva <- int.ipsc@reductions$pca@stdev^2/int.ipsc@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+int.ipsc <- RunUMAP(int.ipsc, dims=1:100)
+saveRDS(int.ipsc, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.int.ipsc.rds"))
+rm(obj.ipsc,int.ipsc)
+
+#combine mscs from all samples
+obj.msc    <- list(objects[[9]],objects[[10]],objects[[21]],objects[[22]],objects[[27]],objects[[28]])
+obj.msc.features <- SelectIntegrationFeatures(object.list=obj.msc, nfeatures=1000)
+obj.msc <- PrepSCTIntegration(object.list=obj.msc, anchor.features=obj.msc.features)
+reference_dataset <- c(1:2) #H1C1.M differentiated the best
+obj.msc <- lapply(X=obj.msc, FUN=RunPCA, verbose=FALSE, features=obj.msc.features)
+obj.msc.anchors <- FindIntegrationAnchors(object.list=obj.msc, normalization.method="SCT", anchor.features=obj.msc.features,
+                                           reference=reference_dataset, reduction="rpca")
+int.msc <- IntegrateData(anchorset=obj.msc.anchors, normalization.method="SCT")
+int.msc <- RunPCA(object=int.msc, npcs=100, verbose=FALSE)
+pva <- int.msc@reductions$pca@stdev^2/int.msc@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+int.msc <- RunUMAP(int.msc, dims=1:100)
+saveRDS(int.msc, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.int.msc.rds"))
+rm(obj.msc,int.msc)
+
+#combine osteoblasts from all samples
+obj.osteo  <- list(objects[[11]],objects[[12]],objects[[23]],objects[[24]],objects[[29]],objects[[30]])
+obj.osteo.features <- SelectIntegrationFeatures(object.list=obj.osteo, nfeatures=1000)
+obj.osteo <- PrepSCTIntegration(object.list=obj.osteo, anchor.features=obj.osteo.features)
+reference_dataset <- c(1:2) #H1C1.O differentiated the best
+obj.osteo <- lapply(X=obj.osteo, FUN=RunPCA, verbose=FALSE, features=obj.osteo.features)
+obj.osteo.anchors <- FindIntegrationAnchors(object.list=obj.osteo, normalization.method="SCT", anchor.features=obj.osteo.features,
+                                           reference=reference_dataset, reduction="rpca")
+int.osteo <- IntegrateData(anchorset=obj.osteo.anchors, normalization.method="SCT")
+int.osteo <- RunPCA(object=int.osteo, npcs=100, verbose=FALSE)
+pva <- int.osteo@reductions$pca@stdev^2/int.osteo@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+int.osteo <- RunUMAP(int.osteo, dims=1:100)
+saveRDS(int.osteo, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.int.osteo.rds"))
+rm(obj.osteo,int.osteo)
+
+
+
+#BASHSCRIPT: rpca_hc_total.sh
+##!/bin/bash
+##SBATCH --job-name=rpca_hc_total
+##SBATCH --output=rpca_hc_total.out
+##SBATCH --error=rpca_hc_total.err
+##SBATCH --time=03:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R CMD BATCH --no-save --no-restore rpca_hc_total.R rpca_hc_total.out
+
+#RSCRIPT: rpca_hc_total.R
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Define head directory containing scRNA data
+dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')
+
+#Load objects
+objects <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.rds"))
+
+#combine all collections
+obj.total  <- list(objects[[7]],objects[[8]],objects[[9]],objects[[10]],objects[[11]],objects[[12]],
+                   objects[[19]],objects[[20]],objects[[21]],objects[[22]],objects[[23]],objects[[24]],
+                   objects[[25]],objects[[26]],objects[[27]],objects[[28]],objects[[29]],objects[[30]])
+rm(objects)
+obj.total.features <- SelectIntegrationFeatures(object.list=obj.total, nfeatures=1000)
+obj.total <- PrepSCTIntegration(object.list=obj.total, anchor.features=obj.total.features)
+reference_dataset <- c(1:6) #H1C1 differentiated the best
+obj.total <- lapply(X=obj.total, FUN=RunPCA, verbose=FALSE, features=obj.total.features)
+obj.total.anchors <- FindIntegrationAnchors(object.list=obj.total, normalization.method="SCT", anchor.features=obj.total.features,
+                                           reference=reference_dataset, reduction="rpca")
+int.total <- IntegrateData(anchorset=obj.total.anchors, normalization.method="SCT")
+int.total <- RunPCA(object=int.total, npcs=100, verbose=FALSE)
+pva <- int.total@reductions$pca@stdev^2/int.total@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+int.total <- RunUMAP(int.total, dims=1:100)
+saveRDS(int.total, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.int.total.rds"))
+rm(obj.total,int.total)
+
+```
+
+```{r prepare scRNA data - integrate data - separate all cell types in humans and all cell types in chimps}
+
+#BASHSCRIPT: rpca_cell.sh
+##!/bin/bash
+##SBATCH --job-name=rpca_cell
+##SBATCH --output=rpca_cell.out
+##SBATCH --error=rpca_cell.err
+##SBATCH --time=03:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R CMD BATCH --no-save --no-restore rpca_cell.R rpca_cell.out
+
+#RSCRIPT: rpca_cell.R
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Define head directory containing scRNA data
+dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')
+
+#Load objects
+obj <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/cell.sctrans.rds"))
+
+#Select features for downstream integration (keeping at 1000 for now)
+#Calculate all necessary Pearson residuals
+#Identify anchors (used references + RPCA reduction method) #ALL OTHER METHODS CRASH
+#Integrate datasets
+#Reduce dimensionality
+#Save data
+
+obj.features <- SelectIntegrationFeatures(object.list=obj, nfeatures=1000)
+obj <- PrepSCTIntegration(object.list=obj, anchor.features=obj.features)
+reference_dataset <- 1 #make humans the reference
+obj <- lapply(X=obj, FUN=RunPCA, verbose=FALSE, features=obj.features)
+obj.anchors <- FindIntegrationAnchors(object.list=obj, normalization.method="SCT", anchor.features=obj.features, reference=reference_dataset, reduction="rpca")
+int.cell <- IntegrateData(anchorset=obj.anchors, normalization.method="SCT")
+int.cell <- RunPCA(object=int.cell, npcs=100, verbose=FALSE)
+pva <- int.cell@reductions$pca@stdev^2/int.cell@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+int.cell <- RunUMAP(int.cell, dims=1:100)
+saveRDS(int.cell, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/cell.sctrans.int.rds"))
+rm(obj,int.cell)
+
+```
+
+```{r prepare scRNA data - integrate data - separate all cell types in each individual}
+
+#BASHSCRIPT: rpca_ind.sh
+##!/bin/bash
+##SBATCH --job-name=rpca_ind
+##SBATCH --output=rpca_ind.out
+##SBATCH --error=rpca_ind.err
+##SBATCH --time=03:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R CMD BATCH --no-save --no-restore rpca_ind.R rpca_ind.out
+
+#RSCRIPT: rpca_ind.R
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Define head directory containing scRNA data
+dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')
+
+#Load objects
+obj <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/ind.sctrans.rds"))
+
+#Select features for downstream integration (keeping at 1000 for now)
+#Calculate all necessary Pearson residuals
+#Identify anchors (used references + RPCA reduction method) #ALL OTHER METHODS CRASH
+#Integrate datasets
+#Reduce dimensionality
+#Save data
+
+obj.features <- SelectIntegrationFeatures(object.list=obj, nfeatures=1000)
+obj <- PrepSCTIntegration(object.list=obj, anchor.features=obj.features)
+reference_dataset <- c(2,7) #make H1-r2 and C1-r2 the references
+obj <- lapply(X=obj, FUN=RunPCA, verbose=FALSE, features=obj.features)
+obj.anchors <- FindIntegrationAnchors(object.list=obj, normalization.method="SCT", anchor.features=obj.features, reference=reference_dataset, reduction="rpca")
+int.ind <- IntegrateData(anchorset=obj.anchors, normalization.method="SCT")
+int.ind <- RunPCA(object=int.ind, npcs=100, verbose=FALSE)
+pva <- int.ind@reductions$pca@stdev^2/int.ind@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+int.ind <- RunUMAP(int.ind, dims=1:100)
+saveRDS(int.ind, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/ind.sctrans.int.rds"))
+rm(obj,int.ind)
+
+```
+
+```{r prepare scRNA data - integrate data - separate all cell types in each human-chimp pair}
+
+#BASHSCRIPT: rpca_pair.sh
+##!/bin/bash
+##SBATCH --job-name=rpca_pair
+##SBATCH --output=rpca_pair.out
+##SBATCH --error=rpca_pair.err
+##SBATCH --time=03:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R CMD BATCH --no-save --no-restore rpca_pair.R rpca_pair.out
+
+#RSCRIPT: rpca_pair.R
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Define head directory containing scRNA data
+dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')
+
+#Load objects
+obj <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/pair.sctrans.rds"))
+
+#Select features for downstream integration (keeping at 1000 for now)
+#Calculate all necessary Pearson residuals
+#Identify anchors (used references + RPCA reduction method) #ALL OTHER METHODS CRASH
+#Integrate datasets
+#Reduce dimensionality
+#Save data
+
+obj.features <- SelectIntegrationFeatures(object.list=obj, nfeatures=1000)
+obj <- PrepSCTIntegration(object.list=obj, anchor.features=obj.features)
+reference_dataset <- 2 #make H1C1r2 the references
+obj <- lapply(X=obj, FUN=RunPCA, verbose=FALSE, features=obj.features)
+obj.anchors <- FindIntegrationAnchors(object.list=obj, normalization.method="SCT", anchor.features=obj.features, reference=reference_dataset, reduction="rpca")
+int.pair <- IntegrateData(anchorset=obj.anchors, normalization.method="SCT")
+int.pair <- RunPCA(object=int.pair, npcs=100, verbose=FALSE)
+pva <- int.pair@reductions$pca@stdev^2/int.pair@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+int.pair <- RunUMAP(int.pair, dims=1:100)
+saveRDS(int.pair, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/pair.sctrans.int.rds"))
+rm(obj,int.pair)
+
+```
+
+```{r examine batch effects - merged data vs. integrated data}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Define head directory containing scRNA data
+dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')
+
+#Read data
+#Visualize data (batch of interest: species, Collection, Cell.Type, Samples, Replicate)
+
+#combine all cell types from one sample
+combo.sample <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/combo.sample.rds"))           #merge
+hc.combo.sample <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.combo.sample.rds"))     #hc.merge
+int.sample <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/sctrans.int.sample.rds"))       #integrate
+hc.int.sample <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.int.sample.rds")) #hc.integrate
+
+CombinePlots(plots=list(DimPlot(combo.sample,group.by="species"),
+                        DimPlot(combo.sample,group.by="Collection"),
+                        DimPlot(combo.sample,group.by="Cell.Type"),
+                        DimPlot(combo.sample,group.by="Samples"),
+                        DimPlot(combo.sample,group.by="Replicate"),
+                        
+                        DimPlot(hc.combo.sample,group.by="species"),
+                        DimPlot(hc.combo.sample,group.by="Collection"),
+                        DimPlot(hc.combo.sample,group.by="Cell.Type"),
+                        DimPlot(hc.combo.sample,group.by="Samples"),
+                        DimPlot(hc.combo.sample,group.by="Replicate"),
+                        
+                        DimPlot(int.sample,group.by="species"),
+                        DimPlot(int.sample,group.by="Collection"),
+                        DimPlot(int.sample,group.by="Cell.Type"),
+                        DimPlot(int.sample,group.by="Samples"),
+                        DimPlot(int.sample,group.by="Replicate"),
+                        
+                        DimPlot(hc.int.sample,group.by="species"),
+                        DimPlot(hc.int.sample,group.by="Collection"),
+                        DimPlot(hc.int.sample,group.by="Cell.Type"),
+                        DimPlot(hc.int.sample,group.by="Samples"),
+                        DimPlot(hc.int.sample,group.by="Replicate")), ncol=5)
+
+CombinePlots(plots=list(DimPlot(combo.sample,group.by="species",reduction='pca'),
+                        DimPlot(combo.sample,group.by="Collection",reduction='pca'),
+                        DimPlot(combo.sample,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(combo.sample,group.by="Samples",reduction='pca'),
+                        DimPlot(combo.sample,group.by="Replicate",reduction='pca'),
+                        
+                        DimPlot(hc.combo.sample,group.by="species",reduction='pca'),
+                        DimPlot(hc.combo.sample,group.by="Collection",reduction='pca'),
+                        DimPlot(hc.combo.sample,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(hc.combo.sample,group.by="Samples",reduction='pca'),
+                        DimPlot(hc.combo.sample,group.by="Replicate",reduction='pca'),
+                        
+                        DimPlot(int.sample,group.by="species",reduction='pca'),
+                        DimPlot(int.sample,group.by="Collection",reduction='pca'),
+                        DimPlot(int.sample,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(int.sample,group.by="Samples",reduction='pca'),
+                        DimPlot(int.sample,group.by="Replicate",reduction='pca'),
+                        
+                        DimPlot(hc.int.sample,group.by="species",reduction='pca'),
+                        DimPlot(hc.int.sample,group.by="Collection",reduction='pca'),
+                        DimPlot(hc.int.sample,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(hc.int.sample,group.by="Samples",reduction='pca'),
+                        DimPlot(hc.int.sample,group.by="Replicate",reduction='pca')), ncol=5)
+
+CombinePlots(plots=list(VlnPlot(combo.sample,'nCount_RNA',group.by='species'),
+                        VlnPlot(hc.combo.sample,'nCount_RNA',group.by='species'),
+                        VlnPlot(int.sample,'nCount_RNA',group.by='species'),
+                        VlnPlot(hc.int.sample,'nCount_RNA',group.by='species'),
+                        
+                        VlnPlot(combo.sample,'nFeature_RNA',group.by='species'),
+                        VlnPlot(hc.combo.sample,'nFeature_RNA',group.by='species'),
+                        VlnPlot(int.sample,'nFeature_RNA',group.by='species'),
+                        VlnPlot(hc.int.sample,'nFeature_RNA',group.by='species')), ncol=4)
+
+rm(combo.sample, hc.combo.sample, int.sample, hc.int.sample)
+
+#combo.sample:    species and batches completely separated  (PC1+2/UMAP1+2 separates species, PC2/UMAP1+2 separates collection/cell.type)
+#hc.combo.sample: species and batches completely separated  (PC1+2/UMAP1+2 separates species, PC2/UMAP1+2 separates collection/cell.type)
+#int.sample:      species separated / batches integrated    (PC1/UMAP1+2 separates species)
+#hc.int.sample:   species and batches integrated (NOT USEFUL!)
+#NOTES:           UMI and gene counts are higher in humans than chimps
+
+
+#combine ipscs from all samples
+combo.ipsc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/combo.ipsc.rds"))           #merge
+hc.combo.ipsc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.combo.ipsc.rds"))     #hc.merge
+int.ipsc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/sctrans.int.ipsc.rds"))       #integrate
+hc.int.ipsc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.int.ipsc.rds")) #hc.integrate
+
+CombinePlots(plots=list(DimPlot(combo.ipsc,group.by="species"),
+                        DimPlot(combo.ipsc,group.by="Collection"),
+                        DimPlot(combo.ipsc,group.by="Cell.Type"),
+                        DimPlot(combo.ipsc,group.by="Samples"),
+                        DimPlot(combo.ipsc,group.by="Replicate"),
+                        
+                        DimPlot(hc.combo.ipsc,group.by="species"),
+                        DimPlot(hc.combo.ipsc,group.by="Collection"),
+                        DimPlot(hc.combo.ipsc,group.by="Cell.Type"),
+                        DimPlot(hc.combo.ipsc,group.by="Samples"),
+                        DimPlot(hc.combo.ipsc,group.by="Replicate"),
+                        
+                        DimPlot(int.ipsc,group.by="species"),
+                        DimPlot(int.ipsc,group.by="Collection"),
+                        DimPlot(int.ipsc,group.by="Cell.Type"),
+                        DimPlot(int.ipsc,group.by="Samples"),
+                        DimPlot(int.ipsc,group.by="Replicate"),
+                        
+                        DimPlot(hc.int.ipsc,group.by="species"),
+                        DimPlot(hc.int.ipsc,group.by="Collection"),
+                        DimPlot(hc.int.ipsc,group.by="Cell.Type"),
+                        DimPlot(hc.int.ipsc,group.by="Samples"),
+                        DimPlot(hc.int.ipsc,group.by="Replicate")), ncol=5)
+
+CombinePlots(plots=list(DimPlot(combo.ipsc,group.by="species",reduction='pca'),
+                        DimPlot(combo.ipsc,group.by="Collection",reduction='pca'),
+                        DimPlot(combo.ipsc,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(combo.ipsc,group.by="Samples",reduction='pca'),
+                        DimPlot(combo.ipsc,group.by="Replicate",reduction='pca'),
+                        
+                        DimPlot(hc.combo.ipsc,group.by="species",reduction='pca'),
+                        DimPlot(hc.combo.ipsc,group.by="Collection",reduction='pca'),
+                        DimPlot(hc.combo.ipsc,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(hc.combo.ipsc,group.by="Samples",reduction='pca'),
+                        DimPlot(hc.combo.ipsc,group.by="Replicate",reduction='pca'),
+                        
+                        DimPlot(int.ipsc,group.by="species",reduction='pca'),
+                        DimPlot(int.ipsc,group.by="Collection",reduction='pca'),
+                        DimPlot(int.ipsc,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(int.ipsc,group.by="Samples",reduction='pca'),
+                        DimPlot(int.ipsc,group.by="Replicate",reduction='pca'),
+                        
+                        DimPlot(hc.int.ipsc,group.by="species",reduction='pca'),
+                        DimPlot(hc.int.ipsc,group.by="Collection",reduction='pca'),
+                        DimPlot(hc.int.ipsc,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(hc.int.ipsc,group.by="Samples",reduction='pca'),
+                        DimPlot(hc.int.ipsc,group.by="Replicate",reduction='pca')), ncol=5)
+
+CombinePlots(plots=list(VlnPlot(combo.ipsc,'nCount_RNA',group.by='species'),
+                        VlnPlot(hc.combo.ipsc,'nCount_RNA',group.by='species'),
+                        VlnPlot(int.ipsc,'nCount_RNA',group.by='species'),
+                        VlnPlot(hc.int.ipsc,'nCount_RNA',group.by='species'),
+                        
+                        VlnPlot(combo.ipsc,'nFeature_RNA',group.by='species'),
+                        VlnPlot(hc.combo.ipsc,'nFeature_RNA',group.by='species'),
+                        VlnPlot(int.ipsc,'nFeature_RNA',group.by='species'),
+                        VlnPlot(hc.int.ipsc,'nFeature_RNA',group.by='species')), ncol=4)
+
+rm(combo.ipsc, hc.combo.ipsc, int.ipsc, hc.int.ipsc)
+
+#combo.ipsc:    species and batches completely separated  (PC1/UMAP1 separates species, PC1+2/UMAP2 separates collection/sample)
+#hc.combo.ipsc: species and batches completely separated  (PC1/UMAP1 separates species, PC1+2/UMAP2 separates collection/sample)
+#int.ipsc:      species separated / batches integrated    (PC1/UMAP1 separates species)
+#hc.int.ipsc:   species and batches integrated
+#NOTES:         UMI and gene counts are higher in humans than chimps
+
+
+#combine mscs from all samples
+combo.msc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/combo.msc.rds"))           #merge
+hc.combo.msc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.combo.msc.rds"))     #hc.merge
+int.msc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/sctrans.int.msc.rds"))       #integrate
+hc.int.msc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.int.msc.rds")) #hc.integrate
+
+CombinePlots(plots=list(DimPlot(combo.msc,group.by="species"),
+                        DimPlot(combo.msc,group.by="Collection"),
+                        DimPlot(combo.msc,group.by="Cell.Type"),
+                        DimPlot(combo.msc,group.by="Samples"),
+                        DimPlot(combo.msc,group.by="Replicate"),
+                        
+                        DimPlot(hc.combo.msc,group.by="species"),
+                        DimPlot(hc.combo.msc,group.by="Collection"),
+                        DimPlot(hc.combo.msc,group.by="Cell.Type"),
+                        DimPlot(hc.combo.msc,group.by="Samples"),
+                        DimPlot(hc.combo.msc,group.by="Replicate"),
+                        
+                        DimPlot(int.msc,group.by="species"),
+                        DimPlot(int.msc,group.by="Collection"),
+                        DimPlot(int.msc,group.by="Cell.Type"),
+                        DimPlot(int.msc,group.by="Samples"),
+                        DimPlot(int.msc,group.by="Replicate"),
+                        
+                        DimPlot(hc.int.msc,group.by="species"),
+                        DimPlot(hc.int.msc,group.by="Collection"),
+                        DimPlot(hc.int.msc,group.by="Cell.Type"),
+                        DimPlot(hc.int.msc,group.by="Samples"),
+                        DimPlot(hc.int.msc,group.by="Replicate")), ncol=5)
+
+CombinePlots(plots=list(DimPlot(combo.msc,group.by="species",reduction='pca'),
+                        DimPlot(combo.msc,group.by="Collection",reduction='pca'),
+                        DimPlot(combo.msc,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(combo.msc,group.by="Samples",reduction='pca'),
+                        DimPlot(combo.msc,group.by="Replicate",reduction='pca'),
+                        
+                        DimPlot(hc.combo.msc,group.by="species",reduction='pca'),
+                        DimPlot(hc.combo.msc,group.by="Collection",reduction='pca'),
+                        DimPlot(hc.combo.msc,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(hc.combo.msc,group.by="Samples",reduction='pca'),
+                        DimPlot(hc.combo.msc,group.by="Replicate",reduction='pca'),
+                        
+                        DimPlot(int.msc,group.by="species",reduction='pca'),
+                        DimPlot(int.msc,group.by="Collection",reduction='pca'),
+                        DimPlot(int.msc,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(int.msc,group.by="Samples",reduction='pca'),
+                        DimPlot(int.msc,group.by="Replicate",reduction='pca'),
+                        
+                        DimPlot(hc.int.msc,group.by="species",reduction='pca'),
+                        DimPlot(hc.int.msc,group.by="Collection",reduction='pca'),
+                        DimPlot(hc.int.msc,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(hc.int.msc,group.by="Samples",reduction='pca'),
+                        DimPlot(hc.int.msc,group.by="Replicate",reduction='pca')), ncol=5)
+
+CombinePlots(plots=list(VlnPlot(combo.msc,'nCount_RNA',group.by='species'),
+                        VlnPlot(hc.combo.msc,'nCount_RNA',group.by='species'),
+                        VlnPlot(int.msc,'nCount_RNA',group.by='species'),
+                        VlnPlot(hc.int.msc,'nCount_RNA',group.by='species'),
+                        
+                        VlnPlot(combo.msc,'nFeature_RNA',group.by='species'),
+                        VlnPlot(hc.combo.msc,'nFeature_RNA',group.by='species'),
+                        VlnPlot(int.msc,'nFeature_RNA',group.by='species'),
+                        VlnPlot(hc.int.msc,'nFeature_RNA',group.by='species')), ncol=4)
+
+rm(combo.msc, hc.combo.msc, int.msc, hc.int.msc)
+
+#combo.msc:    species and batches completely separated (PC1/UMAP1 separates species, PC2/UMAP1+2 separates collection/sample)
+#hc.combo.msc: species and batches completely separated (PC1/UMAP1 separates species, PC2/UMAP1+2 separates collection/sample)
+#int.msc:      species separated / batches integrated   (PC1/UMAP1 separates species)
+#hc.int.msc:   species and batches integrated
+#NOTES:        UMI and gene counts are higher in humans than chimps
+
+
+#combine osteoblasts from all samples
+combo.osteo <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/combo.osteo.rds"))           #merge
+hc.combo.osteo <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.combo.osteo.rds"))     #hc.merge
+int.osteo <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/sctrans.int.osteo.rds"))       #integrate
+hc.int.osteo <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.int.osteo.rds")) #hc.integrate
+
+CombinePlots(plots=list(DimPlot(combo.osteo,group.by="species"),
+                        DimPlot(combo.osteo,group.by="Collection"),
+                        DimPlot(combo.osteo,group.by="Cell.Type"),
+                        DimPlot(combo.osteo,group.by="Samples"),
+                        DimPlot(combo.osteo,group.by="Replicate"),
+                        
+                        DimPlot(hc.combo.osteo,group.by="species"),
+                        DimPlot(hc.combo.osteo,group.by="Collection"),
+                        DimPlot(hc.combo.osteo,group.by="Cell.Type"),
+                        DimPlot(hc.combo.osteo,group.by="Samples"),
+                        DimPlot(hc.combo.osteo,group.by="Replicate"),
+                        
+                        DimPlot(int.osteo,group.by="species"),
+                        DimPlot(int.osteo,group.by="Collection"),
+                        DimPlot(int.osteo,group.by="Cell.Type"),
+                        DimPlot(int.osteo,group.by="Samples"),
+                        DimPlot(int.osteo,group.by="Replicate"),
+                        
+                        DimPlot(hc.int.osteo,group.by="species"),
+                        DimPlot(hc.int.osteo,group.by="Collection"),
+                        DimPlot(hc.int.osteo,group.by="Cell.Type"),
+                        DimPlot(hc.int.osteo,group.by="Samples"),
+                        DimPlot(hc.int.osteo,group.by="Replicate")), ncol=5)
+
+CombinePlots(plots=list(DimPlot(combo.osteo,group.by="species",reduction='pca'),
+                        DimPlot(combo.osteo,group.by="Collection",reduction='pca'),
+                        DimPlot(combo.osteo,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(combo.osteo,group.by="Samples",reduction='pca'),
+                        DimPlot(combo.osteo,group.by="Replicate",reduction='pca'),
+                        
+                        DimPlot(hc.combo.osteo,group.by="species",reduction='pca'),
+                        DimPlot(hc.combo.osteo,group.by="Collection",reduction='pca'),
+                        DimPlot(hc.combo.osteo,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(hc.combo.osteo,group.by="Samples",reduction='pca'),
+                        DimPlot(hc.combo.osteo,group.by="Replicate",reduction='pca'),
+                        
+                        DimPlot(int.osteo,group.by="species",reduction='pca'),
+                        DimPlot(int.osteo,group.by="Collection",reduction='pca'),
+                        DimPlot(int.osteo,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(int.osteo,group.by="Samples",reduction='pca'),
+                        DimPlot(int.osteo,group.by="Replicate",reduction='pca'),
+                        
+                        DimPlot(hc.int.osteo,group.by="species",reduction='pca'),
+                        DimPlot(hc.int.osteo,group.by="Collection",reduction='pca'),
+                        DimPlot(hc.int.osteo,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(hc.int.osteo,group.by="Samples",reduction='pca'),
+                        DimPlot(hc.int.osteo,group.by="Replicate",reduction='pca')), ncol=5)
+
+CombinePlots(plots=list(VlnPlot(combo.osteo,'nCount_RNA',group.by='species'),
+                        VlnPlot(hc.combo.osteo,'nCount_RNA',group.by='species'),
+                        VlnPlot(int.osteo,'nCount_RNA',group.by='species'),
+                        VlnPlot(hc.int.osteo,'nCount_RNA',group.by='species'),
+                        
+                        VlnPlot(combo.osteo,'nFeature_RNA',group.by='species'),
+                        VlnPlot(hc.combo.osteo,'nFeature_RNA',group.by='species'),
+                        VlnPlot(int.osteo,'nFeature_RNA',group.by='species'),
+                        VlnPlot(hc.int.osteo,'nFeature_RNA',group.by='species')), ncol=4)
+
+rm(combo.osteo, hc.combo.osteo, int.osteo, hc.int.osteo)
+
+#combo.osteo:    species and batches completely separated  (PC1/UMAP1 separates species, PC1+2/UMAP1+2 separates collection/sample)
+#hc.combo.osteo: species and batches completely separated  (PC1/UMAP1 separates species, PC1+2/UMAP1+2 separates collection/sample)
+#int.osteo:      species separated / batches integrated (PC1/UMAP1 separates species)
+#hc.int.osteo:   species and batches integrated
+#NOTES:          UMI and gene counts are higher in humans than chimps
+
+
+#combine all collections
+combo.total <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/combo.total.rds"))           #merge
+hc.combo.total <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.combo.total.rds"))     #hc.merge
+int.total <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/sctrans.int.total.rds"))       #integrate
+hc.int.total <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.int.total.rds")) #hc.integrate
+
+cell.int <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/cell.sctrans.int.rds"))         #cell.integrate
+ind.int <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/ind.sctrans.int.rds"))           #ind.integrate
+pair.int <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/pair.sctrans.int.rds"))         #pair.integrate
+
+CombinePlots(plots=list(DimPlot(combo.total,group.by="species"),
+                        DimPlot(combo.total,group.by="Collection"),
+                        DimPlot(combo.total,group.by="Cell.Type"),
+                        DimPlot(combo.total,group.by="Samples"),
+                        DimPlot(combo.total,group.by="Replicate"),
+                        
+                        DimPlot(hc.combo.total,group.by="species"),
+                        DimPlot(hc.combo.total,group.by="Collection"),
+                        DimPlot(hc.combo.total,group.by="Cell.Type"),
+                        DimPlot(hc.combo.total,group.by="Samples"),
+                        DimPlot(hc.combo.total,group.by="Replicate"),
+                        
+                        DimPlot(int.total,group.by="species"),
+                        DimPlot(int.total,group.by="Collection"),
+                        DimPlot(int.total,group.by="Cell.Type"),
+                        DimPlot(int.total,group.by="Samples"),
+                        DimPlot(int.total,group.by="Replicate"),
+                        
+                        DimPlot(hc.int.total,group.by="species"),
+                        DimPlot(hc.int.total,group.by="Collection"),
+                        DimPlot(hc.int.total,group.by="Cell.Type"),
+                        DimPlot(hc.int.total,group.by="Samples"),
+                        DimPlot(hc.int.total,group.by="Replicate"),
+                        
+                        DimPlot(cell.int,group.by="species"),
+                        DimPlot(cell.int,group.by="Collection"),
+                        DimPlot(cell.int,group.by="Cell.Type"),
+                        DimPlot(cell.int,group.by="Samples"),
+                        DimPlot(cell.int,group.by="Replicate"),
+                        
+                        DimPlot(ind.int,group.by="species"),
+                        DimPlot(ind.int,group.by="Collection"),
+                        DimPlot(ind.int,group.by="Cell.Type"),
+                        DimPlot(ind.int,group.by="Samples"),
+                        DimPlot(ind.int,group.by="Replicate"),
+                        
+                        DimPlot(pair.int,group.by="species"),
+                        DimPlot(pair.int,group.by="Collection"),
+                        DimPlot(pair.int,group.by="Cell.Type"),
+                        DimPlot(pair.int,group.by="Samples"),
+                        DimPlot(pair.int,group.by="Replicate")), ncol=5)
+
+CombinePlots(plots=list(DimPlot(combo.total,group.by="species",reduction='pca'),
+                        DimPlot(combo.total,group.by="Collection",reduction='pca'),
+                        DimPlot(combo.total,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(combo.total,group.by="Samples",reduction='pca'),
+                        DimPlot(combo.total,group.by="Replicate",reduction='pca'),
+                        
+                        DimPlot(hc.combo.total,group.by="species",reduction='pca'),
+                        DimPlot(hc.combo.total,group.by="Collection",reduction='pca'),
+                        DimPlot(hc.combo.total,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(hc.combo.total,group.by="Samples",reduction='pca'),
+                        DimPlot(hc.combo.total,group.by="Replicate",reduction='pca'),
+                        
+                        DimPlot(int.total,group.by="species",reduction='pca'),
+                        DimPlot(int.total,group.by="Collection",reduction='pca'),
+                        DimPlot(int.total,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(int.total,group.by="Samples",reduction='pca'),
+                        DimPlot(int.total,group.by="Replicate",reduction='pca'),
+                        
+                        DimPlot(hc.int.total,group.by="species",reduction='pca'),
+                        DimPlot(hc.int.total,group.by="Collection",reduction='pca'),
+                        DimPlot(hc.int.total,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(hc.int.total,group.by="Samples",reduction='pca'),
+                        DimPlot(hc.int.total,group.by="Replicate",reduction='pca'),
+                        
+                        DimPlot(cell.int,group.by="species",reduction='pca'),
+                        DimPlot(cell.int,group.by="Collection",reduction='pca'),
+                        DimPlot(cell.int,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(cell.int,group.by="Samples",reduction='pca'),
+                        DimPlot(cell.int,group.by="Replicate",reduction='pca'),
+                        
+                        DimPlot(ind.int,group.by="species",reduction='pca'),
+                        DimPlot(ind.int,group.by="Collection",reduction='pca'),
+                        DimPlot(ind.int,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(ind.int,group.by="Samples",reduction='pca'),
+                        DimPlot(ind.int,group.by="Replicate",reduction='pca'),
+                        
+                        DimPlot(pair.int,group.by="species",reduction='pca'),
+                        DimPlot(pair.int,group.by="Collection",reduction='pca'),
+                        DimPlot(pair.int,group.by="Cell.Type",reduction='pca'),
+                        DimPlot(pair.int,group.by="Samples",reduction='pca'),
+                        DimPlot(pair.int,group.by="Replicate",reduction='pca')), ncol=5)
+
+CombinePlots(plots=list(VlnPlot(combo.total,'nCount_RNA',group.by='species'),
+                        VlnPlot(hc.combo.total,'nCount_RNA',group.by='species'),
+                        VlnPlot(int.total,'nCount_RNA',group.by='species'),
+                        VlnPlot(hc.int.total,'nCount_RNA',group.by='species'),
+                        VlnPlot(cell.int,'nCount_RNA',group.by='species'),
+                        VlnPlot(ind.int,'nCount_RNA',group.by='species'),
+                        VlnPlot(pair.int,'nCount_RNA',group.by='species'),
+                        
+                        VlnPlot(combo.total,'nFeature_RNA',group.by='species'),
+                        VlnPlot(hc.combo.total,'nFeature_RNA',group.by='species'),
+                        VlnPlot(int.total,'nFeature_RNA',group.by='species'),
+                        VlnPlot(hc.int.total,'nFeature_RNA',group.by='species'),
+                        VlnPlot(cell.int,'nFeature_RNA',group.by='species'),
+                        VlnPlot(ind.int,'nFeature_RNA',group.by='species'),
+                        VlnPlot(pair.int,'nFeature_RNA',group.by='species')), ncol=5)
+
+rm(combo.total, hc.combo.total, int.total, hc.int.total, cell.int, ind.int, pair.int)
+
+#combo.total:    species and batches completely separated (PC1/UMAP1 separates species, PC2/UMAP2 separates cell.type, PC1+2/UMAP1+2 separates collection/sample)
+#hc.combo.total: species and batches completely separated (PC1/UMAP1 separates species, PC2/UMAP2 separates cell.type, PC1+2/UMAP1+2 separates collection/sample)
+#int.total:      species separated / batches integrated   (PC1/UMAP1 separates species)
+#hc.int.total:   species and batches integrated
+#cell.int:       species integrated / batches slightly separated / cell.type completely separated (UMAP1+2 separates cell.type)
+#ind.int:        species and batches integrated / cell.type separated (UMAP1+2 separates cell.type)
+#pair.int:       batches integrated / cell.type and species separated (UMAP1 separates cell.type, UMAP2 separates spcies)
+
+#NOTES:          UMI and gene counts are higher in humans than chimps
+
+```
+
+```{r prepare scRNA data - combine hc.integrated data}
+
+#sinteractive --mem=24g --time=12:00:00 --partition=broadwl
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Define head directory containing scRNA data
+dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')
+
+#MERGE INTEGRATED DATA
+#Read data
+#Merge datasets
+#Perform SCTransform normalization
+#Reduce dimensionality
+#Remove excess files
+#Save data
+
+hc.int.ipsc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.int.ipsc.rds"))
+hc.int.msc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.int.msc.rds"))
+hc.int.osteo <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.int.osteo.rds"))
+
+hc.int.merge <- merge(hc.int.ipsc, y=c(hc.int.msc,hc.int.osteo), add.cell.ids=c("iPSC","MSC","Osteoblast"))
+rm(hc.int.ipsc,hc.int.msc,hc.int.osteo)
+saveRDS(hc.int.merge, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.int.merge.rds"))
+
+hc.int.merge <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.int.merge.rds"))
+hc.int.merge <- SCTransform(hc.int.merge, conserve.memory=TRUE, variable.features.n=3000)
+hc.int.merge <- RunPCA(object=hc.int.merge, npcs=100, verbose=FALSE)
+pva <- hc.int.merge@reductions$pca@stdev^2/hc.int.merge@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+ndim #74
+hc.int.merge <- RunUMAP(hc.int.merge, dims=1:74)
+saveRDS(hc.int.merge, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.int.merge.rds"))
+rm(hc.int.merge)
+
+hc.int.merge <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.int.merge.rds"))
+DimPlot(hc.int.merge,group.by="species")
+DimPlot(hc.int.merge,group.by="species", reduction='pca')
+DimPlot(hc.int.merge,group.by="Collection")
+DimPlot(hc.int.merge,group.by="Collection", reduction='pca')
+DimPlot(hc.int.merge,group.by="Cell.Type")
+DimPlot(hc.int.merge,group.by="Cell.Type", reduction='pca')
+DimPlot(hc.int.merge,group.by="Samples")
+DimPlot(hc.int.merge,group.by="Samples", reduction='pca')
+DimPlot(hc.int.merge,group.by="Replicate")
+DimPlot(hc.int.merge,group.by="Replicate", reduction='pca')
+VlnPlot(hc.int.merge, 'nCount_RNA', group.by='species')
+#PC1 (UMAP2) separates species
+#PC2 (UMAP1) separates collection/cell type
+#LOOKS SIMILAR TO COMBO.TOTAL
+
+
+#INTEGRATE INTEGRATED DATA --- DOES NOT WORK!!!
+#Read data
+#Merge datasets
+#Perform SCTransform normalization
+#Reduce dimensionality
+#Remove excess files
+#Save datas
+
+hc.int.ipsc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.int.ipsc.rds"))
+hc.int.msc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.int.msc.rds"))
+hc.int.osteo <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.int.osteo.rds"))
+
+hc.int.int <- list(hc.int.ipsc,hc.int.msc,hc.int.osteo)
+rm(hc.int.ipsc,hc.int.msc,hc.int.osteo)
+hc.int.int.features <- SelectIntegrationFeatures(object.list=hc.int.int, nfeatures=1000)
+hc.int.int <- PrepSCTIntegration(object.list=hc.int.int, anchor.features=hc.int.int.features)
+reference_dataset <- 1 #H1C1 differentiated the best
+hc.int.int <- lapply(X=hc.int.int, FUN=RunPCA, verbose=FALSE, features=hc.int.int.features)
+hc.int.int.anchors <- FindIntegrationAnchors(object.list=hc.int.int, normalization.method="SCT", anchor.features=hc.int.int.features,
+                                           reference=reference_dataset, reduction="rpca")
+###ERROR
+hc.int.int <- IntegrateData(anchorset=hc.int.int.anchors, normalization.method="SCT")
+hc.int.int <- RunPCA(object=int.sample, npcs=100, verbose=FALSE)
+pva <- hc.int.int@reductions$pca@stdev^2/hc.int.int@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+hc.int.int <- RunUMAP(hc.int.int, dims=1:100)
+saveRDS(hc.int.int, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/hc.sctrans.int.int.rds"))
+rm(hc.int.int)
+
+
+```
+
+```{r prepare scRNA data - double integrate data - integrate cell types within species and integrate species}
+
+#BASHSCRIPT: rpca_2int.sh
+##!/bin/bash
+##SBATCH --job-name=rpca_2int
+##SBATCH --output=rpca_2int.out
+##SBATCH --error=rpca_2int.err
+##SBATCH --time=03:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R CMD BATCH --no-save --no-restore rpca_2int.R rpca_2int.out
+
+#RSCRIPT: rpca_2int.R
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Define head directory containing scRNA data
+dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')  #data from total seq
+
+#Read in files
+#eventually add HOU-17/18/19/20/21/22 by replacing i <= 15 with i <= length(batch$Sample_Name_at_Core)
+file.list <- list()
+for (i in 1:15) {
+  print(i)
+  file.list[[i]] <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/h.c.dat.spp.",batch$Sample_Name_at_Core[i],".rds"))
+}
+
+#Add additional details to list
+for (i in 1:length(file.list)) { file.list[[i]]$Collection <- i }
+for (i in c(1,4,7,10,13)) { file.list[[i]]$Cell.Type <- "iPSC" }
+for (i in c(2,5,8,11,14)) { file.list[[i]]$Cell.Type <- "MSC" }
+for (i in c(3,6,9,12,15)) { file.list[[i]]$Cell.Type <- "Osteoblast" }
+for (i in 1:6) { file.list[[i]]$Samples <- "H1+C1" }
+for (i in 7:9) { file.list[[i]]$Samples <- "H2+C2" }
+for (i in 10:12) { file.list[[i]]$Samples <- "H3+C3" }
+for (i in 13:15) { file.list[[i]]$Samples <- "H4+C4" }
+for (i in c(1:3,7:15)) { file.list[[i]]$Replicate <- "1" }
+for (i in 4:6) { file.list[[i]]$Replicate <- "2" }
+
+#Separate human and chimp data within each collection into separate objects
+objects <- list()
+idx <- 1
+for (i in 1:15)
+{
+  obj <- subset(file.list[[i]], species=='Human')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
+  obj <- subset(file.list[[i]], species=='Chimp')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
+}
+rm(file.list)
+rm(obj)
+
+#Perform SCTransform normalization on each collection
+for (i in 1:length(objects)) {
+  print(i)
+  objects[[i]] <- SCTransform(objects[[i]], conserve.memory=TRUE)
+}
+
+#INTEGRATE CELL TYPES WITHIN SPECIES
+#Select features for downstream integration (keeping at 1000 for now)
+#Calculate all necessary Pearson residuals
+#Identify anchors (used references + RPCA reduction method) #ALL OTHER METHODS CRASH
+#Integrate datasets
+#Reduce dimensionality
+#Save data
+
+human <- list(objects[[1]],objects[[3]],objects[[5]],objects[[7]],objects[[9]],objects[[11]],objects[[13]],objects[[15]],objects[[17]],
+              objects[[19]],objects[[21]],objects[[23]],objects[[25]],objects[[27]],objects[[29]])
+
+chimp <- list(objects[[2]],objects[[4]],objects[[6]],objects[[8]],objects[[10]],objects[[12]],objects[[14]],objects[[16]],objects[[18]],
+              objects[[20]],objects[[22]],objects[[24]],objects[[26]],objects[[28]],objects[[30]])
+
+rm(objects)
+
+human.features <- SelectIntegrationFeatures(object.list=human, nfeatures=1000)
+human <- PrepSCTIntegration(object.list=human, anchor.features=human.features)
+reference_dataset <- c(4:6) #make H1-r2 the reference
+human <- lapply(X=human, FUN=RunPCA, verbose=FALSE, features=human.features)
+human.anchors <- FindIntegrationAnchors(object.list=human, normalization.method="SCT", anchor.features=human.features, reference=reference_dataset, reduction="rpca")
+int.human <- IntegrateData(anchorset=human.anchors, normalization.method="SCT")
+int.human <- RunPCA(object=int.human, npcs=100, verbose=FALSE)
+pva <- int.human@reductions$pca@stdev^2/int.human@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+int.human <- RunUMAP(int.human, dims=1:100)
+saveRDS(int.human, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/human.int.rds"))
+rm(human)
+
+chimp.features <- SelectIntegrationFeatures(object.list=chimp, nfeatures=1000)
+chimp <- PrepSCTIntegration(object.list=chimp, anchor.features=chimp.features)
+reference_dataset <- c(4:6) #make C1-r2 the reference
+chimp <- lapply(X=chimp, FUN=RunPCA, verbose=FALSE, features=chimp.features)
+chimp.anchors <- FindIntegrationAnchors(object.list=chimp, normalization.method="SCT", anchor.features=chimp.features, reference=reference_dataset, reduction="rpca")
+int.chimp <- IntegrateData(anchorset=chimp.anchors, normalization.method="SCT")
+int.chimp <- RunPCA(object=int.chimp, npcs=100, verbose=FALSE)
+pva <- int.chimp@reductions$pca@stdev^2/int.chimp@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+int.chimp <- RunUMAP(int.chimp, dims=1:100)
+saveRDS(int.chimp, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/chimp.int.rds"))
+rm(chimp)
+
+
+
+#BASHSCRIPT: rpca_2int_big.sh
+##!/bin/bash
+##SBATCH --job-name=rpca_2int_big
+##SBATCH --output=rpca_2int_big.out
+##SBATCH --error=rpca_2int_big.err
+##SBATCH --time=03:00:00
+##SBATCH --partition=bigmem2
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=12800
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R CMD BATCH --no-save --no-restore rpca_2int_big.R rpca_2int_big.out
+
+#RSCRIPT: rpca_2int_big.R
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Define head directory containing scRNA data
+dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')  #data from total seq
+
+#Read in files
+int.human <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/human.int.rds"))
+int.chimp <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/chimp.int.rds"))
+
+#SCTransform - SECOND INTEGRATION DOES NOT WORK IF THIS IS NOT DONE
+for (i in 1:length(cell)) {
+  print(i)
+  cell[[i]] <- SCTransform(cell[[i]], conserve.memory=TRUE)
+}
+
+#INTEGRATE SPECIES
+#Select features for downstream integration (keeping at 1000 for now)
+#Calculate all necessary Pearson residuals
+#Identify anchors (used references + RPCA reduction method) #ALL OTHER METHODS CRASH
+#Integrate datasets
+#Reduce dimensionality
+#Save data
+
+cell <- list(int.human,int.chimp)
+
+rm(int.human,int.chimp)
+
+cell.features <- SelectIntegrationFeatures(object.list=cell, nfeatures=1000)
+cell <- PrepSCTIntegration(object.list=cell, anchor.features=cell.features)
+reference_dataset <- 1 #make H1-r2 the reference
+cell <- lapply(X=cell, FUN=RunPCA, verbose=FALSE, features=cell.features)
+cell.anchors <- FindIntegrationAnchors(object.list=cell, normalization.method="SCT", anchor.features=cell.features, reference=reference_dataset, reduction="rpca")
+int.cell <- IntegrateData(anchorset=cell.anchors, normalization.method="SCT")
+int.cell <- RunPCA(object=int.cell, npcs=100, verbose=FALSE)
+pva <- int.cell@reductions$pca@stdev^2/int.cell@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+int.cell <- RunUMAP(int.cell, dims=1:100)
+saveRDS(int.cell, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/cell.2int.rds"))
+rm(cell)
+
+
+
+#RSTUDIO CLOUD
+
+human.int <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/human.int.rds"))       #human.integrate
+chimp.int <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/chimp.int.rds"))       #chimp.integrate
+hc.cell.int <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/cell.2int.rds"))     #cell.integrate
+
+DimPlot(human.int,group.by="species")
+DimPlot(human.int,group.by="Collection")
+DimPlot(human.int,group.by="Cell.Type")
+DimPlot(human.int,group.by="Samples")
+DimPlot(human.int,group.by="Replicate")
+
+DimPlot(chimp.int,group.by="species")
+DimPlot(chimp.int,group.by="Collection")
+DimPlot(chimp.int,group.by="Cell.Type")
+DimPlot(chimp.int,group.by="Samples")
+DimPlot(chimp.int,group.by="Replicate")
+
+DimPlot(hc.cell.int,group.by="species")
+DimPlot(hc.cell.int,group.by="Collection")
+DimPlot(hc.cell.int,group.by="Cell.Type")
+DimPlot(hc.cell.int,group.by="Samples")
+DimPlot(hc.cell.int,group.by="Replicate")
+
+#HUMAN AND CHIMP INTEGRATIONS ARE NOT MEANINGFUL
+#DOUBLE INTEGRATION OF HUMAN AND CHIMP INTEGRATIONS LOOKS JUST LIKE CELL.INT
+
+```
+
+```{r random plots for poster}
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Define head directory containing scRNA data
+dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')
+
+# Load data
+ind.int <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/ind.sctrans.int.rds"))           #ind.integrate
+#pair.int <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/pair.sctrans.int.rds"))         #pair.integrate
+
+#Gene Violin Plots
+CombinePlots(plots=list((VlnPlot(subset(ind.int,subset=species=="Human"),'nFeature_RNA',group.by='Cell.Type',
+                                 pt.size=0, cols=c("pink","mediumorchid","dodgerblue")) +
+                           theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+                           labs(x="",y="Number of Genes")),
+                        (VlnPlot(subset(ind.int,subset=species=="Chimp"),'nFeature_RNA',group.by='Cell.Type',
+                                 pt.size=0, cols=c("pink","mediumorchid","dodgerblue")) +
+                           theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+                           labs(x=""))),
+                        ncol=2)
+             
+CombinePlots(plots=list((VlnPlot(subset(ind.int,subset=species=="Human"),'nFeature_RNA',group.by='Collection',
+                                 pt.size=0, cols=rep(c("pink","mediumorchid","dodgerblue"),5)) +
+                           theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+                           labs(x="",y="Number of Genes")),
+                        (VlnPlot(subset(ind.int,subset=species=="Chimp"),'nFeature_RNA',group.by='Collection',
+                                 pt.size=0, cols=rep(c("pink","mediumorchid","dodgerblue"),5)) +
+                           theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+                           labs(x=""))),
+                        ncol=2)
+
+#VlnPlot(ind.int,'nFeature_RNA', group.by='Collection', split.by='species', pt.size=0)
+
+#ipsc
+FeaturePlot(ind.int, features="POU5F1", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap")
+FeaturePlot(ind.int, features="TDGF1", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap")
+VlnPlot(ind.int, features=c("POU5F1","TDGF1"), group.by="Cell.Type", cols=c("pink","mediumorchid","dodgerblue"), pt.size=0)
+#msc
+FeaturePlot(ind.int, features="NT5E", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap") #CD73 - positive in MSC
+FeaturePlot(ind.int, features="CD44", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap") #CD44 - can be positive
+VlnPlot(ind.int, features=c("NT5E","CD44"), group.by="Cell.Type", cols=c("pink","mediumorchid","dodgerblue"), pt.size=0)
+#osteoblast
+FeaturePlot(ind.int, features="COL1A1", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap")
+FeaturePlot(ind.int, features="ALPL", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap")
+VlnPlot(ind.int, features=c("COL1A1","ALPL"), group.by="orig.ident", cols=c("pink","mediumorchid","dodgerblue"), pt.size=0)
+
+
+
+```

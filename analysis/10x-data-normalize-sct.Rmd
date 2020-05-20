@@ -1,0 +1,445 @@
+---
+title: "10x-data-normalization-sct"
+author: "Genevieve Housman"
+date: "2/2/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 10X Data Cellranger Analysis - Data Normalization
+
+Compile 10X data using seurat.
+
+Data being examined comes from 6 humans and 6 chimpanzees.
+- GHO-1:  H1-I + C1-I (iPSCs from H23555 and C8861)
+- GHO-2:  H1-M + C1-M (iPSC-derived MSCs from H23555 and C8861)
+- GHO-4:  H1-O + C1-O (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+- HOU-10: H1-I-r2 + C1-I-r2 (iPSCs from H23555 and C8861)
+- HOU-12: H1-M-r2 + C1-M-r2 (iPSC-derived MSCs from H23555 and C8861)
+- HOU-16: H1-O-r2 + C1-O-r2 (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+- HOU-1:  H2-I + C2-I (iPSCs from H20157 and C3647)
+- HOU-2:  H2-M + C2-M (iPSC-derived MSCs from H20157 and C3647)
+- HOU-4:  H2-O + C2-O (iPSC-MSC-derived osteoblasts from H20157 and C3647)
+- HOU-9:  H3-I + C3-I (iPSCs from H28126 and C3649)
+- HOU-11: H3-M + C3-M (iPSC-derived MSCs from H28126 and C3649)
+- HOU-15: H3-O + C3-O (iPSC-MSC-derived osteoblasts from H28126 and C3649)
+- HOU-5:  H4-I + C4-I (iPSCs from H28834 and C40210)
+- HOU-6:  H4-M + C4-M (iPSC-derived MSCs from H28834 and C40210)
+- HOU-8:  H4-O + C4-O (iPSC-MSC-derived osteoblasts from H28834 and C40210)
+- HOU-17:	H5-I + C5-I (iPSCs from H21792 and C40280)
+- HOU-19:	H5-M + C5-M (iPSC-derived MSCs from H21792 and C40280)
+- HOU-21:	H5-O + C5-O (iPSC-MSC-derived osteoblasts from H21792 and C40280)
+- HOU-18:	H6-I + C6-I (iPSCs from H20961 and C3624)
+- HOU-20:	H6-M + C6-M (iPSC-derived MSCs from H20961 and C3624)
+- HOU-22:	H6-O + C6-O (iPSC-MSC-derived osteoblasts from H20961 and C3624)
+
+Each dataset being evaluated comprises gene count data that were seperately calculated using both the hg38 human genome and the panTro6 chimpanzee genome, as well as the corresponding ortho-exon annotation in cellranger.Species-specific assignments were determined using human-chimpanzee genome combination with ortho-exon annotation.
+
+```{r prepare scRNA data for merging/integration - separate species and cell types}
+
+#BASHSCRIPT: prep_spps-cell.sh
+
+##!/bin/bash
+##SBATCH --job-name=prep_spps-cell
+##SBATCH --output=prep_spps-cell.out
+##SBATCH --error=prep_spps-cell.err
+##SBATCH --time=03:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R CMD BATCH --no-save --no-restore prep_spps-cell.R prep_spps-cell.out
+
+#RSCRIPT: prep_spps-cell.R
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Read in files
+data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.rds"))
+
+#Separate human and chimp data within each collection into separate objects
+objects <- list()
+idx <- 1
+for (i in 1:length(batch$Sample_Name_at_Core))
+{
+  obj <- subset(data[[i]], species=='Human')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
+  obj <- subset(data[[i]], species=='Chimp')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
+}
+rm(data,obj)
+
+#Merge all cell types in humans and all cell types in chimps
+h.ipsc  <- merge(objects[[1]], y=c(objects[[7]],objects[[13]],objects[[19]],objects[[25]],objects[[31]],objects[[37]]),
+               add.cell.ids=c("H1.I","H1r.I","H2.I","H3.I","H4.I","H5.I","H6.I"))
+h.msc   <- merge(objects[[3]], y=c(objects[[9]],objects[[15]],objects[[21]],objects[[27]],objects[[33]],objects[[39]]),
+               add.cell.ids=c("H1.M","H1r.M","H2.M","H3.M","H4.M","H5.M","H6.M"))
+h.osteo <- merge(objects[[5]], y=c(objects[[11]],objects[[17]],objects[[23]],objects[[29]],objects[[35]],objects[[41]]),
+               add.cell.ids=c("H1.O","H1r.O","H2.O","H3.O","H4.O","H5.O","H6.O"))
+c.ipsc  <- merge(objects[[2]], y=c(objects[[8]],objects[[14]],objects[[20]],objects[[26]],objects[[32]],objects[[38]]),
+               add.cell.ids=c("C1.I","C1r.I","C2.I","C3.I","C4.I","C5.I","C6.I"))
+c.msc   <- merge(objects[[4]], y=c(objects[[10]],objects[[16]],objects[[22]],objects[[28]],objects[[34]],objects[[40]]),
+               add.cell.ids=c("C1.M","C1r.M","C2.M","C3.M","C4.M","C5.M","C6.M"))
+c.osteo <- merge(objects[[6]], y=c(objects[[12]],objects[[18]],objects[[24]],objects[[30]],objects[[36]],objects[[42]]),
+               add.cell.ids=c("C1.O","C1r.O","C2.O","C3.O","C4.O","C5.O","C6.O"))
+
+objects <- list(h.ipsc,h.msc,h.osteo,c.ipsc,c.msc,c.osteo)
+
+#Perform SCTransform normalization on each collection
+for (i in 1:length(objects)) {
+  print(i)
+  objects[[i]] <- SCTransform(objects[[i]], conserve.memory=TRUE)
+}
+
+#Save data
+saveRDS(objects, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.spps-cell.sct.rds"))
+
+```
+
+```{r prepare scRNA data for merging/integration - separate human-chimp pairs and cell types}
+
+#BASHSCRIPT: prep_pair-cell.sh
+
+##!/bin/bash
+##SBATCH --job-name=prep_pair-cell
+##SBATCH --output=prep_pair-cell.out
+##SBATCH --error=prep_pair-cell.err
+##SBATCH --time=03:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R CMD BATCH --no-save --no-restore prep_pair-cell.R prep_pair-cell.out
+
+#RSCRIPT: prep_pair-cell.R
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Read in files
+data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.rds"))
+
+#Perform SCTransform normalization on each collection
+for (i in 1:length(data)) {
+  print(i)
+  data[[i]] <- SCTransform(data[[i]], conserve.memory=TRUE)
+}
+
+#Save data
+saveRDS(data, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.pair-cell.sct.rds"))
+
+```
+
+```{r prepare scRNA data for merging/integration - separate individuals and cell types}
+
+### OBJECT[[34]] PRODUCES "ERROR: FEATURE NAMES OF COUNTS MATRIX CANNOT BE EMPTY" DURING SCTRANSFORM - NEED TO FIX ###
+
+#BASHSCRIPT: prep_indv-cell.sh
+
+##!/bin/bash
+##SBATCH --job-name=prep_indv-cell
+##SBATCH --output=prep_indv-cell.out
+##SBATCH --error=prep_indv-cell.err
+##SBATCH --time=03:00:00
+##SBATCH --partition=bigmem2
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=25600
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R CMD BATCH --no-save --no-restore prep_indv-cell.R prep_indv-cell.out
+
+#RSCRIPT: prep_indv-cell.R
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Read in files
+data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.rds"))
+
+#Separate human and chimp data within each collection into separate objects
+objects <- list()
+idx <- 1
+for (i in 1:length(batch$Sample_Name_at_Core))
+{
+  obj <- subset(data[[i]], species=='Human')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
+  obj <- subset(data[[i]], species=='Chimp')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
+}
+rm(data,obj)
+
+#Perform SCTransform normalization on each individual and cell type
+for (i in 1:length(objects)) {
+  print(i)
+  objects[[i]] <- SCTransform(objects[[i]], conserve.memory=TRUE)
+}
+
+#Save data
+saveRDS(objects, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.sct.rds"))
+
+```
+
+```{r prepare scRNA data for merging/integration - separate species but keep all cell types together}
+
+#BASHSCRIPT: prep_spps.sh
+
+##!/bin/bash
+##SBATCH --job-name=prep_spps
+##SBATCH --output=prep_spps.out
+##SBATCH --error=prep_spps.err
+##SBATCH --time=03:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R CMD BATCH --no-save --no-restore prep_spps.R prep_spps.out
+
+#RSCRIPT: prep_spps.R
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Read in files
+data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.rds"))
+
+#Separate human and chimp data within each collection into separate objects
+objects <- list()
+idx <- 1
+for (i in 1:length(batch$Sample_Name_at_Core))
+{
+  obj <- subset(data[[i]], species=='Human')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
+  obj <- subset(data[[i]], species=='Chimp')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
+}
+rm(data,obj)
+
+#Merge all cell types in humans and all cell types in chimps
+human <- merge(objects[[1]], y=c(objects[[3]],objects[[5]],objects[[7]],objects[[9]],objects[[11]],objects[[13]],objects[[15]],
+                                 objects[[17]],objects[[19]],objects[[21]],objects[[23]],objects[[25]],objects[[27]],objects[[29]],
+                                 objects[[31]],objects[[33]],objects[[35]],objects[[37]],objects[[39]],objects[[41]]),
+               add.cell.ids=c("H1.I","H1.M","H1.O","H1r.I","H1r.M","H1r.O","H2.I","H2.M","H2.O","H3.I","H3.M","H3.O",
+                              "H4.I","H4.M","H4.O","H5.I","H5.M","H5.O","H6.I","H6.M","H6.O"))
+chimp <- merge(objects[[2]], y=c(objects[[4]],objects[[6]],objects[[8]],objects[[10]],objects[[12]],objects[[14]],objects[[16]],
+                                 objects[[18]],objects[[20]],objects[[22]],objects[[24]],objects[[26]],objects[[28]],objects[[30]],
+                                 objects[[32]],objects[[34]],objects[[36]],objects[[38]],objects[[40]],objects[[42]]),
+               add.cell.ids=c("C1.I","C1.M","C1.O","C1r.I","C1r.M","C1r.O","C2.I","C2.M","C2.O","C3.I","C3.M","C3.O",
+                              "C4.I","C4.M","C4.O","C5.I","C5.M","C5.O","C5.I","C5.M","C5.O"))
+objects <- list(human,chimp)
+
+#Perform SCTransform normalization on each collection
+for (i in 1:length(objects)) {
+  print(i)
+  objects[[i]] <- SCTransform(objects[[i]], conserve.memory=TRUE)
+}
+
+#Save data
+saveRDS(objects, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.spps.sct.rds"))
+
+```
+
+```{r prepare scRNA data for merging/integration - separate human-chimp pairs but keep all cell types together}
+
+#BASHSCRIPT: prep_pair.sh
+
+##!/bin/bash
+##SBATCH --job-name=prep_pair
+##SBATCH --output=prep_pair.out
+##SBATCH --error=prep_pair.err
+##SBATCH --time=03:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=2
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R CMD BATCH --no-save --no-restore prep_pair.R prep_pair.out
+
+#RSCRIPT: prep_pair.R
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Read in files
+data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.rds"))
+
+#Merge all cell types in each human-chimp pair
+h1c1 <- merge(data[[1]], y=c(data[[2]],data[[3]]), add.cell.ids=c("H1C1.I","H1C1.M","H1C1.O"))
+h1c1r2 <- merge(data[[4]], y=c(data[[5]],data[[6]]), add.cell.ids=c("H1C1r2.I","H1C1r2.M","H1C1r2.O"))
+h2c2 <- merge(data[[7]], y=c(data[[8]],data[[9]]), add.cell.ids=c("H2C2.I","H2C2.M","H2C2.O"))
+h3c3 <- merge(data[[10]], y=c(data[[11]],data[[12]]), add.cell.ids=c("H3C3.I","H3C3.M","H3C3.O"))
+h4c4 <- merge(data[[13]], y=c(data[[14]],data[[15]]), add.cell.ids=c("H4C4.I","H4C4.M","H4C4.O"))
+h5c5 <- merge(data[[16]], y=c(data[[17]],data[[18]]), add.cell.ids=c("H5C5.I","H5C5.M","H5C5.O"))
+h6c6 <- merge(data[[19]], y=c(data[[20]],data[[21]]), add.cell.ids=c("H6C6.I","H6C6.M","H6C6.O"))
+
+objects <- list(h1c1,h1c1r2,h2c2,h3c3,h4c4,h5c5,h6c6)
+
+#Perform SCTransform normalization on each collection
+for (i in 1:length(objects)) {
+  print(i)
+  objects[[i]] <- SCTransform(objects[[i]], conserve.memory=TRUE)
+}
+
+#Save data
+saveRDS(objects, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.pair.sct.rds"))
+
+```
+
+```{r prepare scRNA data for merging/integration - separate individuals but keep all cell types together}
+
+#BASHSCRIPT: prep_indv.sh
+
+##!/bin/bash
+##SBATCH --job-name=prep_indv
+##SBATCH --output=prep_indv.out
+##SBATCH --error=prep_indv.err
+##SBATCH --time=03:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R CMD BATCH --no-save --no-restore prep_indv.R prep_indv.out
+
+#RSCRIPT: prep_indv.R
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Read in files
+data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.rds"))
+
+#Separate human and chimp data within each collection into separate objects
+objects <- list()
+idx <- 1
+for (i in 1:length(batch$Sample_Name_at_Core))
+{
+  obj <- subset(data[[i]], species=='Human')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
+  obj <- subset(data[[i]], species=='Chimp')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
+}
+rm(data,obj)
+
+#Merge all cell types in each individual
+h1 <- merge(objects[[1]], y=c(objects[[3]],objects[[5]]),add.cell.ids=c("H1.I","H1.M","H1.O"))
+h1r2 <- merge(objects[[7]], y=c(objects[[9]],objects[[11]]),add.cell.ids=c("H1r2.I","H1r2.M","H1r2.O"))
+h2 <- merge(objects[[13]], y=c(objects[[15]],objects[[17]]),add.cell.ids=c("H2.I","H2.M","H2.O"))
+h3 <- merge(objects[[19]], y=c(objects[[21]],objects[[23]]),add.cell.ids=c("H3.I","H3.M","H3.O"))
+h4 <- merge(objects[[25]], y=c(objects[[27]],objects[[29]]),add.cell.ids=c("H4.I","H4.M","H4.O"))
+h5 <- merge(objects[[31]], y=c(objects[[33]],objects[[35]]),add.cell.ids=c("H5.I","H5.M","H5.O"))
+h6 <- merge(objects[[37]], y=c(objects[[39]],objects[[41]]),add.cell.ids=c("H6.I","H6.M","H6.O"))
+c1 <- merge(objects[[2]], y=c(objects[[4]],objects[[6]]),add.cell.ids=c("C1.I","C1.M","C1.O"))
+c1r2 <- merge(objects[[8]], y=c(objects[[10]],objects[[12]]),add.cell.ids=c("C1r2.I","C1r2.M","C1r2.O"))
+c2 <- merge(objects[[14]], y=c(objects[[16]],objects[[18]]),add.cell.ids=c("C2.I","C2.M","C2.O"))
+c3 <- merge(objects[[20]], y=c(objects[[22]],objects[[24]]),add.cell.ids=c("C3.I","C3.M","C3.O"))
+c4 <- merge(objects[[26]], y=c(objects[[28]],objects[[30]]),add.cell.ids=c("C4.I","C4.M","C4.O"))
+c5 <- merge(objects[[32]], y=c(objects[[34]],objects[[36]]),add.cell.ids=c("C5.I","C5.M","C5.O"))
+c6 <- merge(objects[[38]], y=c(objects[[40]],objects[[42]]),add.cell.ids=c("C6.I","C6.M","C6.O"))
+
+objects <- list(h1,h1r2,h2,h3,h4,h5,h6,c1,c1r2,c2,c3,c4,c5,c6)
+
+#Perform SCTransform normalization on each collection
+for (i in 1:length(objects)) {
+  print(i)
+  objects[[i]] <- SCTransform(objects[[i]], conserve.memory=TRUE)
+}
+
+#Save data
+saveRDS(objects, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv.sct.rds"))
+
+```

@@ -1,0 +1,511 @@
+
+R version 3.4.3 (2017-11-30) -- "Kite-Eating Tree"
+Copyright (C) 2017 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> #Load libraries
+> library(Seurat)
+> library(dplyr)
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+> library(stringi)
+> library(stringr)
+> library(ggplot2)
+> library(grid)
+> library(gbm)
+Loaded gbm 2.1.5
+> library(colorspace)
+> library(RColorBrewer)
+> library(edgeR)
+Loading required package: limma
+> 
+> #Define main directory
+> dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+> dir2 <- paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full")
+> 
+> #Load data
+> data <- readRDS(paste0(dir2,"/data.filterMT.merge.l-TEMP.rds"))
+> data@meta.data$Collection <- as.factor(data@meta.data$Collection)
+> 
+> #Find differentially expressed genes between humans and chimpanzees
+> Idents(data) <- factor(data@meta.data$species, levels=c("Chimp","Human"))
+> 
+> #Isolate ribosomal genes
+> genes <- rownames(data@assays$RNA@counts)
+> genes.ribo <- grep('^RP',genes,value=T)
+> genes.no.ribo <- genes[which(!(genes %in% genes.ribo))]
+> 
+> #Define MAST Function
+> library(MAST)
+Loading required package: SummarizedExperiment
+Loading required package: GenomicRanges
+Loading required package: stats4
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following object is masked from ‘package:limma’:
+
+    plotMA
+
+The following objects are masked from ‘package:dplyr’:
+
+    combine, intersect, setdiff, union
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    anyDuplicated, append, as.data.frame, cbind, colMeans, colnames,
+    colSums, do.call, duplicated, eval, evalq, Filter, Find, get, grep,
+    grepl, intersect, is.unsorted, lapply, lengths, Map, mapply, match,
+    mget, order, paste, pmax, pmax.int, pmin, pmin.int, Position, rank,
+    rbind, Reduce, rowMeans, rownames, rowSums, sapply, setdiff, sort,
+    table, tapply, union, unique, unsplit, which, which.max, which.min
+
+Loading required package: S4Vectors
+
+Attaching package: ‘S4Vectors’
+
+The following objects are masked from ‘package:dplyr’:
+
+    first, rename
+
+The following object is masked from ‘package:base’:
+
+    expand.grid
+
+Loading required package: IRanges
+
+Attaching package: ‘IRanges’
+
+The following objects are masked from ‘package:dplyr’:
+
+    collapse, desc, slice
+
+Loading required package: GenomeInfoDb
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+Loading required package: DelayedArray
+Loading required package: matrixStats
+
+Attaching package: ‘matrixStats’
+
+The following objects are masked from ‘package:Biobase’:
+
+    anyMissing, rowMedians
+
+The following object is masked from ‘package:dplyr’:
+
+    count
+
+
+Attaching package: ‘DelayedArray’
+
+The following objects are masked from ‘package:matrixStats’:
+
+    colMaxs, colMins, colRanges, rowMaxs, rowMins, rowRanges
+
+The following object is masked from ‘package:base’:
+
+    apply
+
+
+Attaching package: ‘SummarizedExperiment’
+
+The following object is masked from ‘package:Seurat’:
+
+    Assays
+
+
+Attaching package: ‘MAST’
+
+The following object is masked from ‘package:dplyr’:
+
+    filter
+
+The following object is masked from ‘package:stats’:
+
+    filter
+
+> runMAST <- function(dataSub, genes.no.ribo) {
++   
++   #count matrix
++   counts <- as.matrix(GetAssayData(dataSub, assay="RNA", slot="counts"))
++   counts <- counts[which(rownames(counts) %in% genes.no.ribo),] #remove ribosomal genes
++   
++   #metadata
++   metadata <- dataSub@meta.data[,c("species","Collection","nCount_RNA","Phase")]
++   metadata <- metadata[colnames(counts),]
++   
++   #make edgeR object
++   dge <- DGEList(counts)
++   meta_dge <- dge$samples[,c("lib.size","norm.factors")]
++   meta_dge <- cbind(meta_dge, metadata)
++   dge$samples <- meta_dge
++   
++   #filter genes
++   keep <- filterByExpr(dge, group=dge$samples$species, min.count=1, min.total.count=15)
++   table(keep)
++   dge <- dge[keep, , keep.lib.sizes=FALSE]
++   
++   #normalize data
++   dge <- edgeR::calcNormFactors(dge, method="TMM")
++   summary(dge$samples$norm.factors)
++   cpms <- edgeR::cpm(dge)
++   
++   #calculate cellular detection rate
++   cdr <- scale(colMeans(dge$count > 0))
++   
++   #design matrix
++   dge$samples$Collection <- as.factor(as.numeric(dge$samples$Collection))
++   dge$samples$Phase <- as.factor(as.numeric(dge$samples$Phase))
++   dge$samples$species <- as.factor(as.character(dge$samples$species))
++   sca <- FromMatrix(exprsArray=log2(cpms+1),
++                     cData=data.frame(wellKey=rownames(dge$samples),
++                                      species=dge$samples$species,
++                                      Collection=dge$samples$Collection,
++                                      nCount_RNA=dge$samples$nCount_RNA,
++                                      Phase=dge$samples$Phase,
++                                      cdr=cdr))
++   
++   #hurdle model fit
++   zlmdata <- zlm(~Collection+cdr+nCount_RNA+Phase+species, sca)
++   show(zlmdata)
++ 
++   #differential expression
++   mast <- lrTest(zlmdata, "species")
++   
++   #assess output
++   print(length(mast[, "hurdle", "Pr(>Chisq)"]))
++   print(table(mast[, "hurdle", "Pr(>Chisq)"]<0.05))
++ 
++   return(mast)
++ 
++ }
+> 
+> 
+> #Find differentially expressed genes using differentiation stage at collection
+> mast <- runMAST(subset(data,subset=Cell.Type=="iPSC"), genes.no.ribo)
+.......................................................................................................................................
+Done!
+Fitted zlm on 2715 genes and 31557 cells.
+ Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
+Refitting on reduced model...
+.......................................................................................................................................
+Done!
+[1] 2715
+
+FALSE  TRUE 
+  123  2592 
+There were 24 warnings (use warnings() to see them)
+> saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.ips.rds"))
+> mast <- runMAST(subset(data,subset=Cell.Type=="MSC"), genes.no.ribo)
+........................................................................................................................................
+Done!
+Fitted zlm on 2738 genes and 36738 cells.
+ Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
+Refitting on reduced model...
+........................................................................................................................................
+Done!
+[1] 2738
+
+FALSE  TRUE 
+   54  2684 
+There were 50 or more warnings (use warnings() to see the first 50)
+> saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.msc.rds"))
+> mast <- runMAST(subset(data,subset=Cell.Type=="Osteoblast"), genes.no.ribo)
+...............................................................................
+Done!
+Fitted zlm on 1590 genes and 20746 cells.
+ Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
+Refitting on reduced model...
+...............................................................................
+Done!
+[1] 1590
+
+FALSE  TRUE 
+   53  1537 
+> saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.ost.rds"))
+> 
+> #Find differentially expressed genes using cluster definitions
+> mast <- runMAST(subset(data,subset=(seurat_clusters==1|seurat_clusters==4|seurat_clusters==6)), genes.no.ribo)
+.......................................................................................................................................
+Done!
+Fitted zlm on 2715 genes and 31554 cells.
+ Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
+Refitting on reduced model...
+.......................................................................................................................................
+Done!
+[1] 2715
+
+FALSE  TRUE 
+  135  2580 
+There were 20 warnings (use warnings() to see them)
+> saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.i.rds"))
+> mast <- runMAST(subset(data,subset=seurat_clusters==0), genes.no.ribo)
+...................................................................................................................................................
+Done!
+Fitted zlm on 2949 genes and 36218 cells.
+ Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
+Refitting on reduced model...
+...................................................................................................................................................
+Done!
+[1] 2949
+
+FALSE  TRUE 
+   53  2896 
+There were 50 or more warnings (use warnings() to see the first 50)
+> saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.m.rds"))
+> mast <- runMAST(subset(data,subset=(seurat_clusters==2|seurat_clusters==3|seurat_clusters==5)), genes.no.ribo)
+..................................................................
+Done!
+Fitted zlm on 1337 genes and 21269 cells.
+ Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
+Refitting on reduced model...
+..................................................................
+Done!
+[1] 1337
+
+FALSE  TRUE 
+   43  1294 
+> saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.o.rds"))
+> mast <- runMAST(subset(data,subset=seurat_clusters==1), genes.no.ribo)
+..................................................................................................................................................................
+Done!
+Fitted zlm on 3254 genes and 26002 cells.
+ Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
+Refitting on reduced model...
+..................................................................................................................................................................
+Done!
+[1] 3254
+
+FALSE  TRUE 
+  193  3061 
+Warning message:
+In .bayesglm.fit.loop.printWarnings(Warning, state, family) :
+  fitted probabilities numerically 0 or 1 occurred
+> saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.i1.rds"))
+> mast <- runMAST(subset(data,subset=seurat_clusters==4), genes.no.ribo)
+..............................
+Done!
+Fitted zlm on 610 genes and 5050 cells.
+ Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
+Refitting on reduced model...
+..............................
+Done!
+[1] 610
+
+FALSE  TRUE 
+  148   462 
+There were 16 warnings (use warnings() to see them)
+> saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.i2.rds"))
+> mast <- runMAST(subset(data,subset=seurat_clusters==6), genes.no.ribo)
+...........................................................................................................
+Done!
+Fitted zlm on 2157 genes and 502 cells.
+ Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
+Refitting on reduced model...
+...........................................................................................................
+Done!
+[1] 2157
+
+FALSE  TRUE 
+ 1690   467 
+> saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.i3.rds"))
+> mast <- runMAST(subset(data,subset=seurat_clusters==2), genes.no.ribo)
+...............................................................................................................
+Done!
+Fitted zlm on 2232 genes and 13295 cells.
+ Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
+Refitting on reduced model...
+...............................................................................................................
+Done!
+[1] 2232
+
+FALSE  TRUE 
+  152  2080 
+> saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.o1.rds"))
+> mast <- runMAST(subset(data,subset=seurat_clusters==3), genes.no.ribo)
+........................
+Done!
+Fitted zlm on 483 genes and 6007 cells.
+ Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
+Refitting on reduced model...
+........................
+Done!
+[1] 483
+
+FALSE  TRUE 
+   64   419 
+Warning messages:
+1: In .bayesglm.fit.loop.printWarnings(Warning, state, family) :
+  fitted probabilities numerically 0 or 1 occurred
+2: In .bayesglm.fit.loop.printWarnings(Warning, state, family) :
+  fitted probabilities numerically 0 or 1 occurred
+> saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.o2.rds"))
+> mast <- runMAST(subset(data,subset=seurat_clusters==5), genes.no.ribo)
+........................................................................................................................................................................................................................................................................................................................................................................................................
+Done!
+Fitted zlm on 7855 genes and 1967 cells.
+ Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
+Refitting on reduced model...
+........................................................................................................................................................................................................................................................................................................................................................................................................
+Done!
+[1] 7855
+
+FALSE  TRUE 
+ 5682  2173 
+Warning messages:
+1: In .bayesglm.fit.loop.printWarnings(Warning, state, family) :
+  fitted probabilities numerically 0 or 1 occurred
+2: In .bayesglm.fit.loop.printWarnings(Warning, state, family) :
+  fitted probabilities numerically 0 or 1 occurred
+> saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.o3.rds"))
+> 
+> #Find differentially expressed genes using osteogenic ad hoc definitions
+> mast <- runMAST(subset(data,subset=OstAdHoc.Assign=="preosteoblast"), genes.no.ribo)
+........................................................................................................................................................................................................................
+Done!
+Fitted zlm on 4323 genes and 628 cells.
+ Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
+Refitting on reduced model...
+........................................................................................................................................................................................................................
+Done!
+[1] 4323
+
+FALSE  TRUE 
+ 2634  1689 
+> saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.pre.rds"))
+> mast <- runMAST(subset(data,subset=OstAdHoc.Assign=="osteoblast"), genes.no.ribo)
+......................................................................................................................................................................................................................................................
+Done!
+Fitted zlm on 4937 genes and 578 cells.
+ Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
+Refitting on reduced model...
+......................................................................................................................................................................................................................................................
+Done!
+[1] 4937
+
+FALSE  TRUE 
+ 3270  1667 
+> saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.obl.rds"))
+> mast <- runMAST(subset(data,subset=OstAdHoc.Assign=="embedding osteoblast"), genes.no.ribo)
+.........................................................................................
+Done!
+Fitted zlm on 1785 genes and 13599 cells.
+ Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
+Refitting on reduced model...
+.........................................................................................
+Done!
+[1] 1785
+
+FALSE  TRUE 
+  140  1645 
+Warning messages:
+1: In .bayesglm.fit.loop.printWarnings(Warning, state, family) :
+  fitted probabilities numerically 0 or 1 occurred
+2: In .bayesglm.fit.loop.printWarnings(Warning, state, family) :
+  fitted probabilities numerically 0 or 1 occurred
+3: In .bayesglm.fit.loop.printWarnings(Warning, state, family) :
+  fitted probabilities numerically 0 or 1 occurred
+4: In .bayesglm.fit.loop.printWarnings(Warning, state, family) :
+  fitted probabilities numerically 0 or 1 occurred
+5: In .bayesglm.fit.loop.printWarnings(Warning, state, family) :
+  fitted probabilities numerically 0 or 1 occurred
+6: In .bayesglm.fit.loop.printWarnings(Warning, state, family) :
+  fitted probabilities numerically 0 or 1 occurred
+7: In .bayesglm.fit.loop.printWarnings(Warning, state, family) :
+  fitted probabilities numerically 0 or 1 occurred
+> saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.emb.rds"))
+> #mast <- runMAST(subset(data,subset=OstAdHoc.Assign=="mineralizing osteocyte"), genes.no.ribo)
+> #saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.min.rds"))
+> #mast <- runMAST(subset(data,subset=OstAdHoc.Assign=="mature osteocyte"), genes.no.ribo)
+> #saveRDS(mast.mat, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.mat.rds"))
+> 
+> #Find differentially expressed genes using grade of membership definitions
+> mast <- runMAST(subset(data,subset=GoM.Assign=="iPSC"), genes.no.ribo)
+.........................................................................................................................................
+Done!
+Fitted zlm on 2750 genes and 31270 cells.
+ Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
+Refitting on reduced model...
+.........................................................................................................................................
+Done!
+[1] 2750
+
+FALSE  TRUE 
+  121  2629 
+There were 38 warnings (use warnings() to see them)
+> saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.gomi.rds"))
+> mast <- runMAST(subset(data,subset=GoM.Assign=="MSC"), genes.no.ribo)
+.........................................................................................................................................................................................................................................................................................................................................................................................
+Done!
+Fitted zlm on 7558 genes and 21903 cells.
+ Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
+Refitting on reduced model...
+.........................................................................................................................................................................................................................................................................................................................................................................................
+Done!
+[1] 7558
+
+FALSE  TRUE 
+ 1424  6134 
+There were 50 or more warnings (use warnings() to see the first 50)
+> saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.gomm.rds"))
+> mast <- runMAST(subset(data,subset=GoM.Assign=="Osteoblast"), genes.no.ribo)
+..................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+Done!
+Fitted zlm on 12526 genes and 16180 cells.
+ Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
+Refitting on reduced model...
+..................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+Done!
+[1] 12526
+
+FALSE  TRUE 
+ 9684  2842 
+There were 50 or more warnings (use warnings() to see the first 50)
+> saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.gomo.rds"))
+> 
+> 
+> 
+> proc.time()
+     user    system   elapsed 
+23689.264  1667.062 25423.125 

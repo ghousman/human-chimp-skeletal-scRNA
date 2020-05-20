@@ -1,0 +1,92 @@
+---
+title: "ortho-exon-modify"
+author: "Genevieve Housman"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Modify the Ortho-Exon File
+
+```{r data gene annotation adjustments}
+
+### SHOULD ORTHO-EXON FILE BE FILTERED BEFORE MAKING CELLRANGER REFERENCES? ###
+
+### WOULD WANT TO FILTER SO THAT ONLY THE FOLLOWING ATTRIBUTES REMAIN (n=231,116):
+### protein_coding, lincRNA, antisense, IG_LV_gene, IG_V_gene, IG_V_pseudogene, IG_D_gene, IG_J_gene, IG_J_pseudogene, IG_C_gene, IG_C_pseudogene, TR_V_gene, TR_V_pseudogene, TR_D_gene, TR_J_gene, TR_J_pseudogene, TR_C_gene
+
+### CURRENTLY, THE FOLLOWING EXTRA ATTRIBUTES ARE INCLUDED:
+### 3prime_overlapping_ncRNA (n=23), bidirectional_promoter_lncRNA (n=35), macro_lncRNA (n=1), miRNA (n=1198), misc_RNA (n=1501), non_coding (n=4), polymorphic_pseudogene (n=121), processed_pseudogene (n=7243), processed_transcript (n=2354), pseudogene (n=3), ribozyme (n=6), rRNA (n=403), scaRNA (n=30), sense_intronic (n=1390), sense_overlapping (n=373), snoRNA (n=552), snRNA (n=1160), sRNA (n=3), TEC (n=965), transcribed_processed_pseudogene (n=576), transcribed_unitary_pseudogene (n=907), transcribed_unprocessed_pseudogene (n=1676), unitary_pseudogene (n=297), unprocessed_pseudogene (n=2234), vaultRNA (n=1)
+
+### TO DO THIS I NEED TO MERGE 2017_July_ortho_*.gtf FILES WITH *_orthoexon_extended_info.txt AND THEN REBUILD REFERENCES IN CELL RANGER
+
+h.gtf <- read.delim(file="../../../references/human-chimp-ortho-exons/2017_July_ortho_human.gtf",header=FALSE)
+c.gtf <- read.delim(file="../../../references/human-chimp-ortho-exons/2017_July_ortho_chimp_edit.gtf",header=FALSE)
+h.gtf.extra <- read.delim(file="../../../references/human-chimp-ortho-exons/Human_orthoexon_extended_info.txt")
+c.gtf.extra <- read.delim(file="../../../references/human-chimp-ortho-exons/Chimp_orthoexon_extended_info_edit.txt")
+
+h.gene.id = c()
+c.gene.id = c()
+for (i in h.gtf.extra$ensg) { h.gene.id=c(h.gene.id,paste0('gene_id ',i)) }
+for (i in c.gtf.extra$ensg) { c.gene.id=c(c.gene.id,paste0('gene_id ',i)) }
+
+h.transcript.id = c()
+c.transcript.id = c()
+for (i in h.gtf.extra$ense) { h.transcript.id=c(h.transcript.id,paste0('; transcript_id ',i)) }
+for (i in c.gtf.extra$ense) { c.transcript.id=c(c.transcript.id,paste0('; transcript_id ',i)) }
+
+h.gene.name = c()
+c.gene.name = c()
+for (i in h.gtf.extra$gene_name) { h.gene.name=c(h.gene.name,paste0('; gene_name ',i)) }
+for (i in c.gtf.extra$gene_name) { c.gene.name=c(c.gene.name,paste0('; gene_name ',i)) }
+
+h.gene.biotype = c()
+c.gene.biotype = c()
+for (i in h.gtf.extra$gene_type) { h.gene.biotype=c(h.gene.biotype,paste0('; gene_biotype ',i)) }
+for (i in c.gtf.extra$gene_type) { c.gene.biotype=c(c.gene.biotype,paste0('; gene_biotype ',i)) }
+
+x=1
+h.anno = c()
+for (i in h.gene.id) {
+  h.anno=c(h.anno,paste0(h.gene.id[x],h.transcript.id[x],h.gene.name[x],h.gene.biotype[x]))
+  x=x+1
+}
+x=1
+c.anno = c()
+for (i in c.gene.id) {
+  c.anno=c(c.anno,paste0(c.gene.id[x],c.transcript.id[x],c.gene.name[x],c.gene.biotype[x]))
+  x=x+1
+}
+
+h.compare1=c()
+h.compare2=c()
+for (i in h.transcript.id) { h.compare1=c(h.compare1,strsplit(i,"; transcript_id ")[[1]][2]) }
+for (i in h.gtf$V9) { h.compare2=c(h.compare2,strsplit(i,"; transcript_id ")[[1]][2]) }
+h.m <- match(h.compare2,h.compare1)
+if(any(is.na(h.m))) cat("Not all match.\n")
+
+c.compare1=c()
+c.compare2=c()
+for (i in c.transcript.id) { c.compare1=c(c.compare1,strsplit(i,"; transcript_id ")[[1]][2]) }
+for (i in c.gtf$V9) { c.compare2=c(c.compare2,strsplit(i,"; transcript_id ")[[1]][2]) }
+c.m <- match(c.compare2,c.compare1)
+if(any(is.na(c.m))) cat("Not all match.\n")
+
+h.gtf$V9 <- h.anno[h.m]
+c.gtf$V9 <- c.anno[c.m]
+
+write.table(h.gtf,file="../../../references/human-chimp-ortho-exons/2017_July_ortho_human_annoextra.gtf",
+            quote=FALSE,sep="\t",row.names=FALSE,col.names=FALSE)
+write.table(c.gtf,file="../../../references/human-chimp-ortho-exons/2017_July_ortho_chimp_edit_annoextra.gtf",
+            quote=FALSE,sep="\t",row.names=FALSE,col.names=FALSE)
+
+rm(h.gtf, h.gtf.extra, c.gtf, c.gtf.extra, i, x)
+rm(h.gene, h.gene.name, h.gene.biotype, h.anno, c.gene, c.gene.name, c.gene.biotype, c.anno)
+
+#manually add quote marks in resulting gtf
+
+```

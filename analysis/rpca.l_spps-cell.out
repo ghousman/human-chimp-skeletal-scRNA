@@ -1,0 +1,219 @@
+
+R version 3.5.1 (2018-07-02) -- "Feather Spray"
+Copyright (C) 2018 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> #Load libraries
+> library(Seurat)
+> library(dplyr)
+
+Attaching package: 'dplyr'
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+> library(stringi)
+> library(stringr)
+> library(ggplot2)
+> library(colorspace)
+> library(RColorBrewer)
+> 
+> #Define main directory
+> dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+> 
+> #Load batch info
+> batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+> 
+> #Load objects
+> objects <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.spps-cell.log.rds"))
+> 
+> #Define list subset
+> #Select features for downstream integration (keeping at 1000 for now)
+> #Identify anchors (used references + RPCA reduction method) #ALL OTHER METHODS CRASH
+> #Integrate datasets
+> #Reduce dimensionality
+> #Save data
+> 
+> #combine ipscs from all samples
+> obj.ipsc  <- list(objects[[1]],objects[[4]])
+> obj.ipsc.features <- SelectIntegrationFeatures(object.list=obj.ipsc, nfeatures=1000)
+> reference_dataset <- 1 #make humans the reference
+> obj.ipsc <- lapply(X=obj.ipsc, FUN=function(x) {
++     x <- ScaleData(x, features=obj.ipsc.features, verbose=FALSE)
++     x <- RunPCA(x, features=obj.ipsc.features, verbose=FALSE)
++ })
+> obj.ipsc.anchors <- FindIntegrationAnchors(object.list=obj.ipsc, normalization.method="LogNormalize", anchor.features=obj.ipsc.features,
++                                            reference=reference_dataset, reduction="rpca")
+Scaling features for provided objects
+Computing within dataset neighborhoods
+Finding anchors between all query and reference datasets
+Finding neighborhoods
+Finding anchors
+	Found 3635 anchors
+Extracting within-dataset neighbors
+> int.ipsc <- IntegrateData(anchorset=obj.ipsc.anchors, normalization.method="LogNormalize")
+Integrating dataset 2 with reference dataset
+Finding integration vectors
+Finding integration vector weights
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Integrating data
+Warning: Adding a command log without an assay associated with it
+> int.ipsc <- ScaleData(int.ipsc, verbose=FALSE)
+> int.ipsc <- RunPCA(object=int.ipsc, npcs=100, verbose=FALSE)
+> pva <- int.ipsc@reductions$pca@stdev^2/int.ipsc@reductions$pca@misc$total.variance
+> ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+> print(ndim)
+[1] 100
+> int.ipsc <- RunUMAP(int.ipsc, dims=1:100)
+Warning: The default method for RunUMAP has changed from calling Python UMAP via reticulate to the R-native UWOT using the cosine metric
+To use Python UMAP via reticulate, set umap.method to 'umap-learn' and metric to 'correlation'
+This message will be shown once per session
+16:21:07 UMAP embedding parameters a = 0.9922 b = 1.112
+16:21:07 Read 37509 rows and found 100 numeric columns
+16:21:07 Using Annoy for neighbor search, n_neighbors = 30
+16:21:07 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+16:21:16 Writing NN index file to temp file /tmp/jobs/65566802/RtmpJFrKiZ/fileb4d6163b6698
+16:21:16 Searching Annoy index using 1 thread, search_k = 3000
+16:21:35 Annoy recall = 100%
+16:21:35 Commencing smooth kNN distance calibration using 1 thread
+16:21:37 Initializing from normalized Laplacian + noise
+16:21:39 Commencing optimization for 200 epochs, with 1851262 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+16:22:28 Optimization finished
+> saveRDS(int.ipsc, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.spps-cell.log.int.ipsc.rds"))
+> rm(obj.ipsc,int.ipsc)
+> 
+> #combine mscs from all samples
+> obj.msc   <- list(objects[[2]],objects[[5]])
+> obj.msc.features <- SelectIntegrationFeatures(object.list=obj.msc, nfeatures=1000)
+> reference_dataset <- 1 #make humans the reference
+> obj.msc <- lapply(X=obj.msc, FUN=function(x) {
++     x <- ScaleData(x, features=obj.msc.features, verbose=FALSE)
++     x <- RunPCA(x, features=obj.msc.features, verbose=FALSE)
++ })
+> obj.msc.anchors <- FindIntegrationAnchors(object.list=obj.msc, normalization.method="LogNormalize", anchor.features=obj.msc.features,
++                                            reference=reference_dataset, reduction="rpca")
+Scaling features for provided objects
+Computing within dataset neighborhoods
+Finding anchors between all query and reference datasets
+Finding neighborhoods
+Finding anchors
+	Found 3363 anchors
+Extracting within-dataset neighbors
+> int.msc <- IntegrateData(anchorset=obj.msc.anchors, normalization.method="LogNormalize")
+Integrating dataset 2 with reference dataset
+Finding integration vectors
+Finding integration vector weights
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Integrating data
+Warning: Adding a command log without an assay associated with it
+> int.msc <- ScaleData(int.msc, verbose=FALSE)
+> int.msc <- RunPCA(object=int.msc, npcs=100, verbose=FALSE)
+> pva <- int.msc@reductions$pca@stdev^2/int.msc@reductions$pca@misc$total.variance
+> ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+> print(ndim)
+[1] 100
+> int.msc <- RunUMAP(int.msc, dims=1:100)
+16:29:18 UMAP embedding parameters a = 0.9922 b = 1.112
+16:29:18 Read 38594 rows and found 100 numeric columns
+16:29:18 Using Annoy for neighbor search, n_neighbors = 30
+16:29:18 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+16:29:27 Writing NN index file to temp file /tmp/jobs/65566802/RtmpJFrKiZ/fileb4d6482dda45
+16:29:27 Searching Annoy index using 1 thread, search_k = 3000
+16:29:44 Annoy recall = 100%
+16:29:44 Commencing smooth kNN distance calibration using 1 thread
+16:29:46 Initializing from normalized Laplacian + noise
+16:29:48 Commencing optimization for 200 epochs, with 1777502 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+16:30:37 Optimization finished
+> saveRDS(int.msc, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.spps-cell.log.int.msc.rds"))
+> rm(obj.msc,int.msc)
+> 
+> #combine osteoblasts from all samples
+> obj.osteo <- list(objects[[3]],objects[[6]])
+> obj.osteo.features <- SelectIntegrationFeatures(object.list=obj.osteo, nfeatures=1000)
+> reference_dataset <- 1 #make humans the reference
+> obj.osteo <- lapply(X=obj.osteo, FUN=function(x) {
++     x <- ScaleData(x, features=obj.osteo.features, verbose=FALSE)
++     x <- RunPCA(x, features=obj.osteo.features, verbose=FALSE)
++ })
+> obj.osteo.anchors <- FindIntegrationAnchors(object.list=obj.osteo, normalization.method="LogNormalize", anchor.features=obj.osteo.features,
++                                            reference=reference_dataset, reduction="rpca")
+Scaling features for provided objects
+Computing within dataset neighborhoods
+Finding anchors between all query and reference datasets
+Finding neighborhoods
+Finding anchors
+	Found 2231 anchors
+Extracting within-dataset neighbors
+> int.osteo <- IntegrateData(anchorset=obj.osteo.anchors, normalization.method="LogNormalize")
+Integrating dataset 2 with reference dataset
+Finding integration vectors
+Finding integration vector weights
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Integrating data
+Warning: Adding a command log without an assay associated with it
+> int.osteo <- ScaleData(int.osteo, verbose=FALSE)
+> int.osteo <- RunPCA(object=int.osteo, npcs=100, verbose=FALSE)
+> pva <- int.osteo@reductions$pca@stdev^2/int.osteo@reductions$pca@misc$total.variance
+> ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+> print(ndim)
+[1] 100
+> int.osteo <- RunUMAP(int.osteo, dims=1:100)
+16:35:48 UMAP embedding parameters a = 0.9922 b = 1.112
+16:35:49 Read 26077 rows and found 100 numeric columns
+16:35:49 Using Annoy for neighbor search, n_neighbors = 30
+16:35:49 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+16:35:54 Writing NN index file to temp file /tmp/jobs/65566802/RtmpJFrKiZ/fileb4d64857a4a4
+16:35:54 Searching Annoy index using 1 thread, search_k = 3000
+16:36:05 Annoy recall = 100%
+16:36:06 Commencing smooth kNN distance calibration using 1 thread
+16:36:07 Initializing from normalized Laplacian + noise
+16:36:08 Commencing optimization for 200 epochs, with 1196724 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+16:36:40 Optimization finished
+> saveRDS(int.osteo, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.spps-cell.log.int.osteo.rds"))
+> rm(obj.osteo,int.osteo)
+> 
+> 
+> proc.time()
+    user   system  elapsed 
+1259.804   74.071 1347.340 

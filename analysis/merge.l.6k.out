@@ -1,0 +1,183 @@
+
+R version 3.5.1 (2018-07-02) -- "Feather Spray"
+Copyright (C) 2018 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> #Load libraries
+> library(Seurat)
+> library(dplyr)
+
+Attaching package: 'dplyr'
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+> library(stringi)
+> library(stringr)
+> library(ggplot2)
+> library(colorspace)
+> library(RColorBrewer)
+> 
+> #Define main directory
+> dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+> 
+> #Load batch info
+> batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+> 
+> #Read in files
+> data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.rds"))
+> 
+> #Merge datasets
+> #Perform log normalization
+> #Reduce dimensionality
+> #Remove excess files
+> #Save merged datasets
+> 
+> #combine ipscs from all samples
+> combo.ipsc    <- merge(data[[1]], y=c(data[[4]],data[[7]],data[[10]],data[[13]],data[[16]],data[[19]]),
++                       add.cell.ids=c("H1C1.I","H1C1-r2.I","H2C2.I","H3C3.I","H4C4.I","H5C5.I","H6C6.I"))
+> combo.ipsc <- NormalizeData(combo.ipsc, verbose=FALSE)
+> combo.ipsc <- FindVariableFeatures(combo.ipsc, selection.method="vst", nfeatures=6000, verbose=FALSE)
+> combo.ipsc <- ScaleData(combo.ipsc, verbose=FALSE)
+> combo.ipsc <- RunPCA(object=combo.ipsc, npcs=100, verbose=FALSE)
+> pva <- combo.ipsc@reductions$pca@stdev^2/combo.ipsc@reductions$pca@misc$total.variance
+> ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+> combo.ipsc <- RunUMAP(combo.ipsc, dims=1:ndim)
+Warning: The default method for RunUMAP has changed from calling Python UMAP via reticulate to the R-native UWOT using the cosine metric
+To use Python UMAP via reticulate, set umap.method to 'umap-learn' and metric to 'correlation'
+This message will be shown once per session
+16:24:26 UMAP embedding parameters a = 0.9922 b = 1.112
+16:24:26 Read 37509 rows and found 22 numeric columns
+16:24:26 Using Annoy for neighbor search, n_neighbors = 30
+16:24:26 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+16:24:33 Writing NN index file to temp file /tmp/jobs/66294867/RtmpCzDL46/file6963dd3da76
+16:24:33 Searching Annoy index using 1 thread, search_k = 3000
+16:24:46 Annoy recall = 100%
+16:24:46 Commencing smooth kNN distance calibration using 1 thread
+16:24:48 Initializing from normalized Laplacian + noise
+16:24:51 Commencing optimization for 200 epochs, with 1608320 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+16:25:37 Optimization finished
+> saveRDS(combo.ipsc, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.merge.l.6k.ipsc.rds"))
+> rm(combo.ipsc)
+> 
+> #combine mscs from all samples
+> combo.msc    <- merge(data[[2]], y=c(data[[5]],data[[8]],data[[11]],data[[14]],data[[17]],data[[20]]),
++                       add.cell.ids=c("H1C1.M","H1C1-r2.M","H2C2.M","H3C3.M","H4C4.M","H5C5.M","H6C6.M"))
+> combo.msc <- NormalizeData(combo.msc, verbose=FALSE)
+> combo.msc <- FindVariableFeatures(combo.msc, selection.method="vst", nfeatures=6000, verbose=FALSE)
+> combo.msc <- ScaleData(combo.msc, verbose=FALSE)
+> combo.msc <- RunPCA(object=combo.msc, npcs=100, verbose=FALSE)
+> pva <- combo.msc@reductions$pca@stdev^2/combo.msc@reductions$pca@misc$total.variance
+> ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+> combo.msc <- RunUMAP(combo.msc, dims=1:ndim)
+16:32:28 UMAP embedding parameters a = 0.9922 b = 1.112
+16:32:28 Read 38594 rows and found 36 numeric columns
+16:32:28 Using Annoy for neighbor search, n_neighbors = 30
+16:32:28 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+16:32:35 Writing NN index file to temp file /tmp/jobs/66294867/RtmpCzDL46/file69632300ae94
+16:32:35 Searching Annoy index using 1 thread, search_k = 3000
+16:32:48 Annoy recall = 100%
+16:32:48 Commencing smooth kNN distance calibration using 1 thread
+16:32:50 Initializing from normalized Laplacian + noise
+16:32:54 Commencing optimization for 200 epochs, with 1633336 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+16:33:42 Optimization finished
+> saveRDS(combo.msc, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.merge.l.6k.msc.rds"))
+> rm(combo.msc)
+> 
+> #combine osteoblasts from all samples
+> combo.osteo    <- merge(data[[3]], y=c(data[[6]],data[[9]],data[[12]],data[[15]],data[[18]],data[[21]]),
++                       add.cell.ids=c("H1C1.O","H1C1-r2.O","H2C2.O","H3C3.O","H4C4.O","H5C5.O","H6C6.O"))
+> combo.osteo <- NormalizeData(combo.osteo, verbose=FALSE)
+> combo.osteo <- FindVariableFeatures(combo.osteo, selection.method="vst", nfeatures=6000, verbose=FALSE)
+> combo.osteo <- ScaleData(combo.osteo, verbose=FALSE)
+> combo.osteo <- RunPCA(object=combo.osteo, npcs=100, verbose=FALSE)
+> pva <- combo.osteo@reductions$pca@stdev^2/combo.osteo@reductions$pca@misc$total.variance
+> ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+> combo.osteo <- RunUMAP(combo.osteo, dims=1:ndim)
+16:39:53 UMAP embedding parameters a = 0.9922 b = 1.112
+16:39:53 Read 26077 rows and found 33 numeric columns
+16:39:53 Using Annoy for neighbor search, n_neighbors = 30
+16:39:53 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+16:39:59 Writing NN index file to temp file /tmp/jobs/66294867/RtmpCzDL46/file696317772de
+16:39:59 Searching Annoy index using 1 thread, search_k = 3000
+16:40:07 Annoy recall = 100%
+16:40:07 Commencing smooth kNN distance calibration using 1 thread
+16:40:09 Initializing from normalized Laplacian + noise
+16:40:11 Commencing optimization for 200 epochs, with 1095682 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+16:40:41 Optimization finished
+> saveRDS(combo.osteo, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.merge.l.6k.osteo.rds"))
+> rm(combo.osteoblasts)
+Warning message:
+In rm(combo.osteoblasts) : object 'combo.osteoblasts' not found
+> 
+> #combine all collections
+> combo.total  <- merge(data[[1]], y=c(data[[2]],data[[3]],data[[4]],data[[5]],data[[6]],data[[7]],data[[8]],data[[9]],data[[10]],data[[11]],
++                                      data[[12]],data[[13]],data[[14]],data[[15]],data[[16]],data[[17]],data[[18]],data[[19]],data[[20]],data[[21]]),
++                       add.cell.ids=c("H1C1.I","H1C1.M","H1C1.O","H1C1-r2.I","H1C1-r2.M","H1C1-r2.O","H2C2.I","H2C2.M","H2C2.O","H3C3.I","H3C3.M","H3C3.O",
++                                      "H4C4.I","H4C4.M","H4C4.O","H5C5.I","H5C5.M","H5C5.O","H6C6.I","H6C6.M","H6C6.O"))
+> combo.total <- NormalizeData(combo.total, verbose=FALSE)
+> combo.total <- FindVariableFeatures(combo.total, selection.method="vst", nfeatures=6000, verbose=FALSE)
+> combo.total <- ScaleData(combo.total, verbose=FALSE)
+> combo.total <- RunPCA(object=combo.total, npcs=100, verbose=FALSE)
+> pva <- combo.total@reductions$pca@stdev^2/combo.total@reductions$pca@misc$total.variance
+> ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+> combo.total <- RunUMAP(combo.total, dims=1:ndim)
+16:55:19 UMAP embedding parameters a = 0.9922 b = 1.112
+16:55:19 Read 102180 rows and found 41 numeric columns
+16:55:19 Using Annoy for neighbor search, n_neighbors = 30
+16:55:19 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+16:55:39 Writing NN index file to temp file /tmp/jobs/66294867/RtmpCzDL46/file69631d704fba
+16:55:40 Searching Annoy index using 1 thread, search_k = 3000
+16:56:19 Annoy recall = 100%
+16:56:20 Commencing smooth kNN distance calibration using 1 thread
+16:56:26 Initializing from normalized Laplacian + noise
+16:56:49 Commencing optimization for 200 epochs, with 4440006 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+16:59:15 Optimization finished
+> saveRDS(combo.total, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.merge.l.6k.rds"))
+> rm(combo.total)
+> 
+> 
+> proc.time()
+    user   system  elapsed 
+2853.592  327.938 3192.120 

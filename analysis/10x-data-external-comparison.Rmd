@@ -1,0 +1,91 @@
+---
+title: "10x-data-external-comparison"
+author: "Genevieve Housman"
+date: "1/14/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#ENCODE long RNA-seq experiments from human primary cells
+acronym	cell	sex	stage	Germ Layer	Body Location	Organ	Cell Type	Major Cell Type	promocell_marker	batchNo	labExpId
+
+hMSC-BM	mesenchymal stem cell of the bone marrow	male	adult	Mesoderm	Bone	Bone	Stem	Mesenchymal	NA	batch1	ENCLB555ANL
+hMSC-BM	mesenchymal stem cell of the bone marrow	female	adult	Mesoderm	Bone	Bone	Stem	Mesenchymal	NA	batch1	ENCLB555AVI
+hMSC-BM	mesenchymal stem cell of the bone marrow	male,female	adult	Mesoderm	Bone	Bone	Stem	Mesenchymal	NA	batch1	ENCLB555ANL,ENCLB555AVI
+hMSC-UC	mesenchymal stem cell of Wharton's jelly	male	newborn	Mesoderm	Plac-Umb-Uter	Umbilical cord	Stem	Mesenchymal	NA	batch1	ENCLB555ARK
+hMSC-UC	mesenchymal stem cell of Wharton's jelly	female	newborn	Mesoderm	Plac-Umb-Uter	Umbilical cord	Stem	Mesenchymal	NA	batch1	ENCLB555AUM
+hMSC-UC	mesenchymal stem cell of Wharton's jelly	male,female	newborn	Mesoderm	Plac-Umb-Uter	Umbilical cord	Stem	Mesenchymal	NA	batch1	ENCLB555ARK,ENCLB555AUM
+hMSC-AT	mesenchymal stem cell of adipose	female	adult	Mesoderm	Adipose	Adipose	Stem	Mesenchymal	NA	batch1	ENCLB555ALU
+hMSC-AT	mesenchymal stem cell of adipose	female	adult	Mesoderm	Adipose	Adipose	Stem	Mesenchymal	NA	batch1	ENCLB555ATX
+hMSC-AT	mesenchymal stem cell of adipose	female	adult	Mesoderm	Adipose	Adipose	Stem	Mesenchymal	NA	batch1	ENCLB555ALU,ENCLB555ATX
+
+HOB	osteoblast	female	adult	Mesoderm	Bone	Bone	Fibroblast	Mesenchymal	ALPL	batch1	ENCLB555ALS
+HOB	osteoblast	male	adult	Mesoderm	Bone	Bone	Fibroblast	Mesenchymal	ALPL	batch1	ENCLB555ATZ
+HOB	osteoblast	female,male	adult	Mesoderm	Bone	Bone	Fibroblast	Mesenchymal	ALPL	batch1	ENCLB555ALS,ENCLB555ATZ
+
+HCH	articular chondrocyte of knee joint	male	adult	Mesoderm	Bone	Bone	Fibroblast	Mesenchymal	Differentiation	batch1	ENCLB555ASX
+HCH	articular chondrocyte of knee joint	female	adult	Mesoderm	Bone	Bone	Fibroblast	Mesenchymal	Differentiation	batch1	ENCLB555AXA
+HCH	articular chondrocyte of knee joint	male,female	adult	Mesoderm	Bone	Bone	Fibroblast	Mesenchymal	Differentiation	batch1	ENCLB555ASX,ENCLB555AXA
+
+HWP	subcutaneous preadipocyte	male	adult	Mesoderm	Adipose	Adipose	Preadipocyte	Mesenchymal	Differentiation	batch1	ENCLB555AOS
+HWP	subcutaneous preadipocyte	female	adult	Mesoderm	Adipose	Adipose	Preadipocyte	Mesenchymal	Differentiation	batch1	ENCLB555ATJ
+HWP	subcutaneous preadipocyte	male,female	adult	Mesoderm	Adipose	Adipose	Preadipocyte	Mesenchymal	Differentiation	batch1	ENCLB555AOS,ENCLB555ATJ
+
+SkMC	skeletal muscle satellite cell	male	adult	Mesoderm	Muscle	Muscle	Skeletal_Muscle	Mesenchymal	MYH1	batch1	ENCLB555APQ
+SkMC	skeletal muscle satellite cell	female	adult	Mesoderm	Muscle	Muscle	Skeletal_Muscle	Mesenchymal	MYH1	batch1	ENCLB555ATT
+SkMC	skeletal muscle satellite cell	male,female	adult	Mesoderm	Muscle	Muscle	Skeletal_Muscle	Mesenchymal	MYH1	batch1	ENCLB555APQ,ENCLB555ATT
+
+HBEpC	bronchial epithelial cell	male	adult	Endoderm	Lung-Breathing	Bronchi	Epithelial	Epithelial	KRT17	batch2	ENCLB006ZZZ
+HBEpC	bronchial epithelial cell	female	adult	Endoderm	Lung-Breathing	Bronchi	Epithelial	Epithelial	KRT17	batch2	ENCLB007ZZZ
+HBEpC	bronchial epithelial cell	male,female	adult	Endoderm	Lung-Breathing	Bronchi	Epithelial	Epithelial	KRT17	batch2	ENCLB006ZZZ,ENCLB007ZZZ
+
+HCM	regular cardiac myocyte	female	adult	Mesoderm	Heart	Heart	Cardiomyocyte	Mesenchymal	ACTN2,MYH7	batch2	ENCLB014ZZZ
+HCM	regular cardiac myocyte	male	adult	Mesoderm	Heart	Heart	Cardiomyocyte	Mesenchymal	ACTN2,MYH7	batch2	ENCLB015ZZZ
+HCM	regular cardiac myocyte	female,male	adult	Mesoderm	Heart	Heart	Cardiomyocyte	Mesenchymal	ACTN2,MYH7	batch2	ENCLB014ZZZ,ENCLB015ZZZ
+
+HRCEpC	renal cortical epithelial cell	female	adult	Mesoderm	Kidney	Kidney	Epithelial	Epithelial	KRT17	batch2	ENCLB297ZZZ
+HRCEpC	renal cortical epithelial cell	male	adult	Mesoderm	Kidney	Kidney	Epithelial	Epithelial	KRT17	batch2	ENCLB298ZZZ
+HRCEpC	renal cortical epithelial cell	female,male	adult	Mesoderm	Kidney	Kidney	Epithelial	Epithelial	KRT17	batch2	ENCLB297ZZZ,ENCLB298ZZZ
+
+
+#ENCODE RAMPAGE experiments from human primary cells
+labExpId	ontology_id	cell	acronym	Description	Germ_layer	Body_location	Organ	Cell_type	Cell_type_collapsed	CellTypeClust	Sample_type	has_replicate	promocell_marker	positive_markers	Sample_SubType
+
+ENCLB107VGB	CL:0000515	skeletal muscle myoblast	HSMM	skeletal muscle myoblast	Unknown	Unknown	Unknown	Unknown	Skeletal_Muscle	Mixed	Cell	1	NA	NA	Primary
+
+ENCLB228JMH	CL:0002368	airway epithelial cell	HPSAEpiC	Pulmonary Small Airway Epithelial Cells	Endoderm	Lung-Breathing	Lung	Epithelial	Epithelial	Epithelial	Cell	1	NA	NA	Primary
+ENCLB353HTH	CL:0002368	airway epithelial cell	HPSAEpiC	Pulmonary Small Airway Epithelial Cells	Endoderm	Lung-Breathing	Lung	Epithelial	Epithelial	Epithelial	Cell	1	NA	NA	Primary
+
+ENCLB155ZRA	CL:2000066	cardiac ventricle fibroblast	HCF-av	Cardiac Fibroblasts-adult ventrical	Mesoderm	Heart	Heart	Fibroblast	Fibroblast	Mixed	Cell	1	NA	NA	Primary
+ENCLB164PDY	CL:2000066	cardiac ventricle fibroblast	HCF-av	Cardiac Fibroblasts-adult ventrical	Mesoderm	Heart	Heart	Fibroblast	Fibroblast	Mixed	Cell	1	NA	NA	Primary
+ENCLB558CTT	CL:2000067	cardiac atrium fibroblast	HCF-aa	Cardiac Fibroblasts-adult atrial	Mesoderm	Heart	Heart	Fibroblast	Fibroblast	Mixed	Cell	1	NA	NA	Primary
+ENCLB610UIW	CL:2000067	cardiac atrium fibroblast	HCF-aa	Cardiac Fibroblasts-adult atrial	Mesoderm	Heart	Heart	Fibroblast	Fibroblast	Mixed	Cell	1	NA	NA	Primary
+
+ENCLB274FMY	CL:0002518	kidney epithelial cell	HREpiC	Renal Epithelial Cells	Mesoderm	Kidney	Kidney	Epithelial	Epithelial	Epithelial	Cell	1	NA	NA	Primary
+ENCLB503LLE	CL:0002518	kidney epithelial cell	HREpiC	Renal Epithelial Cells	Mesoderm	Kidney	Kidney	Epithelial	Epithelial	Epithelial	Cell	1	NA	NA	Primary
+
+#ENCODE short RNA-seq experiments from human primary cells
+labExpId	cell	acronym	Cell_type_collapsed	CellTypeClust
+
+ENCLB555AKU	mesenchymal stem cell of Wharton's jelly	hMSC-UC	Stem	Mesenchymal
+ENCLB555AKV	mesenchymal stem cell of Wharton's jelly	hMSC-UC	Stem	Mesenchymal
+ENCLB555AMF	mesenchymal stem cell of the bone marrow	hMSC-BM	Stem	Mesenchymal
+ENCLB555AMG	mesenchymal stem cell of the bone marrow	hMSC-BM	Stem	Mesenchymal
+ENCLB555AMN	mesenchymal stem cell of adipose	hMSC-AT	Stem	Mesenchymal
+ENCLB555APM	mesenchymal stem cell of adipose	hMSC-AT	Stem	Mesenchymal
+
+ENCLB555ALF	osteoblast	HOB	Fibroblast	Mesenchymal
+ENCLB555ARH	osteoblast	HOB	Fibroblast	Mesenchymal
+
+ENCLB555ARV	articular chondrocyte of knee joint	HCH	Fibroblast	Mesenchymal
+ENCLB555AXS	articular chondrocyte of knee joint	HCH	Fibroblast	Mesenchymal
+
+ENCLB555ANI	subcutaneous preadipocyte	HWP	Preadipocyte	Mesenchymal
+
+ENCLB555AQK	skeletal muscle satellite cell	SkMC	Skeletal_Muscle	Mesenchymal
+ENCLB555AXM	skeletal muscle satellite cell	SkMC	Skeletal_Muscle	Mesenchymal

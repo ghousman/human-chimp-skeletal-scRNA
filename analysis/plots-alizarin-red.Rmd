@@ -1,0 +1,139 @@
+---
+title: "plots-alizarin-red"
+author: "Genevieve Housman"
+date: "March 3, 2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load libraries}
+
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+library(reshape2)
+library(Seurat)
+
+```
+
+```{r cars}
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA/data/'
+
+#Load batch info
+alizarin <- read.csv(file=paste0(dir,'alizarin-red-quant-total.csv'), header=TRUE, sep=",")
+
+#Fix data to make plotting easier
+alizarin$Species_Details <- factor(alizarin$Species_Details,
+                                   levels=c("Human MSC","Chimpanzee MSC","Human Osteoblast","Chimpanzee Osteoblast"),
+                                   labels=c("Human MSC","Chimpanzee MSC","Human Osteoblast","Chimpanzee Osteoblast"))
+alizarin$Abbr_Details <- factor(alizarin$Abbr_Details,
+                                levels=c("H1 MSC","H1 Osteoblast",
+                                         "H2 MSC","H2 Osteoblast",
+                                         "H3 MSC","H3 Osteoblast",
+                                         "H4 MSC","H4 Osteoblast",
+                                         "H5 MSC","H5 Osteoblast",
+                                         "H6 MSC","H6 Osteoblast",
+                                         "H1-r2 MSC","H1-r2 Osteoblast",
+                                         "C1 MSC","C1 Osteoblast",
+                                         "C2 MSC","C2 Osteoblast",
+                                         "C3 MSC","C3 Osteoblast",
+                                         "C4 MSC","C4 Osteoblast",
+                                         "C5 MSC","C5 Osteoblast",
+                                         "C6 MSC","C6 Osteoblast",
+                                         "C1-r2 MSC","C1-r2 Osteoblast"),
+                                labels=c("H1 MSC","H1 Osteoblast",
+                                         "H2 MSC","H2 Osteoblast",
+                                         "H3 MSC","H3 Osteoblast",
+                                         "H4 MSC","H4 Osteoblast",
+                                         "H5 MSC","H5 Osteoblast",
+                                         "H6 MSC","H6 Osteoblast",
+                                         "H1-r2 MSC","H1-r2 Osteoblast",
+                                         "C1 MSC","C1 Osteoblast",
+                                         "C2 MSC","C2 Osteoblast",
+                                         "C3 MSC","C3 Osteoblast",
+                                         "C4 MSC","C4 Osteoblast",
+                                         "C5 MSC","C5 Osteoblast",
+                                         "C6 MSC","C6 Osteoblast",
+                                         "C1-r2 MSC","C1-r2 Osteoblast"))
+
+alizarin.sub <- alizarin[c(1:8,13:20,25:60,65:72,77:140),] #remove extra 6W data points
+alizarin.sub1 <- alizarin.sub[c(1:8,10:11,14:18,20:23,25:124),] #remove suspicious data points
+alizarin.sub2 <- alizarin.sub[c(17:119),] #remove H1 and C1
+
+#Make basic plots
+ggplot(alizarin.sub1, aes(x=Abbr_Details, y=Absorbance_Value)) + 
+  geom_boxplot() +
+  labs(x="", y="Absorbance") +
+  theme(axis.text.x=element_text(angle=90, hjust=1))
+
+ggplot(alizarin.sub1, aes(x=Species_Details, y=Absorbance_Value)) + 
+  geom_boxplot() +
+  labs(x="", y="Absorbance") +
+  theme(axis.text.x=element_text(angle=90, hjust=1))
+
+
+
+#Make plots for potential figures
+CombinePlots(plots=list((ggplot(subset(alizarin.sub1,Species=="Human"), aes(x=Species_Details, y=Absorbance_Value, fill=Species_Details)) + 
+                           geom_boxplot() +
+                           labs(x="", y="Absorbance") +
+                           scale_fill_grey(start=0.3, end=0.7) +
+                           theme_classic() +
+                           theme(legend.position="none",axis.title.y=element_text(size=10)) +
+                           ylim(0,4) +
+                           scale_x_discrete(labels=c("Human\nMSC","Human\nOsteoblast"))),
+                        (ggplot(subset(alizarin.sub1,Species=="Chimpanzee"), aes(x=Species_Details, y=Absorbance_Value, fill=Species_Details)) + 
+                           geom_boxplot() +
+                           labs(x="", y="Absorbance") +
+                           scale_fill_grey(start=0.3, end=0.7) +
+                           theme_classic() +
+                           theme(legend.position="none",axis.title.y=element_text(size=10)) +
+                           ylim(0,4) +
+                           scale_x_discrete(labels=c("Chimp\nMSC","Chimp\nOsteoblast")))), ncol=2)
+
+alizarin.sub1$Abbr_Details <- factor(alizarin.sub1$Abbr_Details,
+                                     levels=c("H2 MSC","H2 Osteoblast",
+                                              "H6 MSC","H6 Osteoblast",
+                                              "H5 MSC","H5 Osteoblast",
+                                              "H1-r2 MSC","H1-r2 Osteoblast",
+                                              "H4 MSC","H4 Osteoblast",
+                                              "H3 MSC","H3 Osteoblast",
+                                              "H1 MSC","H1 Osteoblast",
+                                              "C4 MSC","C4 Osteoblast",
+                                              "C6 MSC","C6 Osteoblast",
+                                              "C1-r2 MSC","C1-r2 Osteoblast",
+                                              "C3 MSC","C3 Osteoblast",
+                                              "C2 MSC","C2 Osteoblast",
+                                              "C5 MSC","C5 Osteoblast",
+                                              "C1 MSC","C1 Osteoblast"),
+                                     labels=c("H2 MSC","H2 Osteoblast",
+                                              "H6 MSC","H6 Osteoblast",
+                                              "H5 MSC","H5 Osteoblast",
+                                              "H1-r2 MSC","H1-r2 Osteoblast",
+                                              "H4 MSC","H4 Osteoblast",
+                                              "H3 MSC","H3 Osteoblast",
+                                              "H1 MSC","H1 Osteoblast",
+                                              "C4 MSC","C4 Osteoblast",
+                                              "C6 MSC","C6 Osteoblast",
+                                              "C1-r2 MSC","C1-r2 Osteoblast",
+                                              "C3 MSC","C3 Osteoblast",
+                                              "C2 MSC","C2 Osteoblast",
+                                              "C5 MSC","C5 Osteoblast",
+                                              "C1 MSC","C1 Osteoblast"))
+
+ggplot(alizarin.sub1, aes(x=Abbr_Details, y=Absorbance_Value, fill=Cell_Type)) + 
+  geom_boxplot() +
+  labs(x="", y="Absorbance") +
+  scale_fill_grey(start=0.3, end=0.7) +
+  theme_classic() +
+  theme(legend.position="none",axis.text.x=element_text(angle=90, hjust=1),axis.title.y=element_text(size=10)) +
+  ylim(0,4)
+
+```

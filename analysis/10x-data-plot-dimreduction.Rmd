@@ -1,0 +1,627 @@
+---
+title: "10x-data-plot-dimreduction"
+author: "Genevieve Housman"
+date: "2/1/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 10X Data Cellranger Analysis - Data Plotting
+
+Plot aspects of 10X data.
+
+Data being examined comes from 6 humans and 6 chimpanzees.
+- GHO-1:  H1-I + C1-I (iPSCs from H23555 and C8861)
+- GHO-2:  H1-M + C1-M (iPSC-derived MSCs from H23555 and C8861)
+- GHO-4:  H1-O + C1-O (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+- HOU-10: H1-I-r2 + C1-I-r2 (iPSCs from H23555 and C8861)
+- HOU-12: H1-M-r2 + C1-M-r2 (iPSC-derived MSCs from H23555 and C8861)
+- HOU-16: H1-O-r2 + C1-O-r2 (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+- HOU-1:  H2-I + C2-I (iPSCs from H20157 and C3647)
+- HOU-2:  H2-M + C2-M (iPSC-derived MSCs from H20157 and C3647)
+- HOU-4:  H2-O + C2-O (iPSC-MSC-derived osteoblasts from H20157 and C3647)
+- HOU-9:  H3-I + C3-I (iPSCs from H28126 and C3649)
+- HOU-11: H3-M + C3-M (iPSC-derived MSCs from H28126 and C3649)
+- HOU-15: H3-O + C3-O (iPSC-MSC-derived osteoblasts from H28126 and C3649)
+- HOU-5:  H4-I + C4-I (iPSCs from H28834 and C40210)
+- HOU-6:  H4-M + C4-M (iPSC-derived MSCs from H28834 and C40210)
+- HOU-8:  H4-O + C4-O (iPSC-MSC-derived osteoblasts from H28834 and C40210)
+- HOU-17:	H5-I + C5-I (iPSCs from H21792 and C40280)
+- HOU-19:	H5-M + C5-M (iPSC-derived MSCs from H21792 and C40280)
+- HOU-21:	H5-O + C5-O (iPSC-MSC-derived osteoblasts from H21792 and C40280)
+- HOU-18:	H6-I + C6-I (iPSCs from H20961 and C3624)
+- HOU-20:	H6-M + C6-M (iPSC-derived MSCs from H20961 and C3624)
+- HOU-22:	H6-O + C6-O (iPSC-MSC-derived osteoblasts from H20961 and C3624)
+
+Each dataset being evaluated comprises gene count data that were seperately calculated using both the hg38 human genome and the panTro6 chimpanzee genome, as well as the corresponding ortho-exon annotation in cellranger.Species-specific assignments were determined using human-chimpanzee genome combination with ortho-exon annotation.
+
+```{r plots of different dimensional reductions}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Load data
+#data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.separate-indv.rds"))           #merge - total
+#data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.separate.rds"))                #merge - total
+#data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.merge.l.rds"))                 #merge - total
+#data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.merge.l.ipsc.rds"))            #merge - ipsc
+#data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.merge.l.msc.rds"))             #merge - msc
+#data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.merge.l.osteo.rds"))           #merge - osteo
+#data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.merge-6k.l.rds"))              #merge-6k - total
+#data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.merge-6k.l.ipsc.rds"))         #merge-6k - ipsc
+#data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.merge-6k.l.msc.rds"))          #merge-6k - msc
+#data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.merge-6k.l.osteo.rds"))        #merge-6k - osteo
+#spps <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.spps.log.int.rds"))            #integrate across species - total
+#spps <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.spps-cell.log.int.ipsc.rds"))  #integrate across species - ipsc
+#spps <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.spps-cell.log.int.msc.rds"))   #integrate across species - msc
+#spps <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.spps-cell.log.int.osteo.rds")) #integrate across species - osteo
+#pair <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.pair.log.int.rds"))            #integrate across human-chimp pairs - total
+#pair <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.pair-cell.log.int.ipsc.rds"))  #integrate across human-chimp pairs - ipsc
+#pair <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.pair-cell.log.int.msc.rds"))   #integrate across human-chimp pairs - msc
+#pair <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.pair-cell.log.int.osteo.rds")) #integrate across human-chimp pairs - osteo
+indv <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv.log.int.rds"))            #integrate across individuals - total
+#indv <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.ipsc.rds"))  #integrate across individuals - ipsc
+#indv <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.msc.rds"))   #integrate across individuals - msc
+#indv <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.osteo.rds")) #integrate across individuals - osteo
+
+#Identify Clusters (increased resolution identifies greater number of clusters)
+#for (i in 1:length(data)) {
+#  print(i)
+#  data[[i]] <- FindNeighbors(data[[i]], k.param=20, dims=1:100)
+#  data[[i]] <- FindClusters(data[[i]], resolution=0.4)
+#}
+#data <- FindNeighbors(data, k.param=20, dims=1:100)
+#data <- FindClusters(data, resolution=0.4)
+#spps <- FindNeighbors(spps, k.param=20, dims=1:100)
+#spps <- FindClusters(spps, resolution=0.4)
+#pair <- FindNeighbors(pair, k.param=20, dims=1:100)
+#pair <- FindClusters(pair, resolution=0.4)
+indv <- FindNeighbors(indv, k.param=20, dims=1:100)
+indv <- FindClusters(indv, resolution=0.4)
+
+#data.separate-indv:: res=0.4: H1I/H1M/H1O/H1I2/H1M2/H1O2/H2I/H2M/H2O/H3I/H3M/H3O/H4I/H4M/H4O/H5I/H5M/H5O/H6I/H6M/H6O/
+#                                 6/ 23/  5/   6/   6/   4/  7/ 33/  7/  4/  4/  2/  7/  4/ 10/  4/  5/  6/  7/ 10/  7/
+#                              C1I/C1M/C1O/C1I2/C1M2/C1O2/C2I/C2M/C2O/C3I/C3M/C3O/C4I/C4M/C4O/C5I/C5M/C5O/C6I/C6M/C6O/
+#                                5/  3/  3/   6/   8/   5/  6/  3/  4/  9/ 14/  6/  6/  3/  4/  7/ 33/  7/  6/  6/  5
+#data.separate-pair:: res=0.4: H1C1I/H1C1M/H1C1O/H1C1I2/H1C1M2/H1C1O2/H2C2I/H2C2M/H2C2O/H3C3I/H3C3M/H3C3O/H4C4I/H4C4M/H4C4O/H5C5I/H5C5M/H5C5O/HC66I/H6C6M/H6C6O/
+#                                 15/    9/    6/    15/     7/     6/    10/   7/   10/   10/    8/    5/   10/    8/    6/   11/    8/    5/   10/   10/   10
+#merge1k::            res=0.4: ipsc - 22 clusters / msc - 22 clusters / osteo - 18 clusters / total - 38 clusters
+#merge3k::            res=0.4: ipsc - 23 clusters / msc - 23 clusters / osteo - 24 clusters / total - 42 clusters
+#merge6k::            res=0.4: ipsc - 24 clusters / msc - 22 clusters / osteo - 25 clusters / total - 46 clusters
+#merge10k::           res=0.4: ipsc - 23 clusters / msc - 23 clusters / osteo - 27 clusters / total - 43 clusters
+#merge-6k(spp)::      res=0.4: ipsc - 21 clusters / msc - 23 clusters / osteo - 25 clusters / total - 43 clusters
+#spps1k::             res=0.4: ipsc - 15 clusters / msc - 20 clusters / osteo - 18 clusters / total - 33 clusters
+#spps3k::             res=0.4: ipsc - 21 clusters / msc - 22 clusters / osteo - 19 clusters / total - 39 clusters
+#spps6k::             res=0.4: ipsc - 22 clusters / msc - 24 clusters / osteo - 22 clusters / total - 39 clusters
+#pair1k::             res=0.4: ipsc - 12 clusters / msc - 10 clusters / osteo - 11 clusters / total - 22 clusters
+#pair3k::             res=0.4: ipsc - 20 clusters / msc - 17 clusters / osteo - 15 clusters / total - 26 clusters
+#pair6k::             res=0.4: ipsc - 31 clusters / msc - 18 clusters / osteo - 19 clusters / total - 26 clusters
+#indv1k::             res=0.4: ipsc - 13 clusters / msc -  8 clusters / osteo -  8 clusters / total - 15 clusters
+#indv3k::             res=0.4: ipsc - 16 clusters / msc - 13 clusters / osteo - 12 clusters / total - 23 clusters
+#indv6k::             res=0.4: ipsc - 24 clusters / msc - 17 clusters / osteo - 16 clusters / total - 20 clusters
+
+#Plot Dimensional Reductions
+for (i in 1:length(data)) {
+  print(CombinePlots(plots=list((DimPlot(data[[i]], group.by="Cell.Type", reduction="umap") + labs(x="UMAP1",y="UMAP2")),
+                                (DimPlot(data[[i]], group.by="Individual", reduction="umap") + labs(x="UMAP1",y="UMAP2")),
+                                (DimPlot(data[[i]], group.by="seurat_clusters", reduction="umap") + labs(x="UMAP1",y="UMAP2"))), ncol=3))
+}
+
+DimPlot(data, group.by="Cell.Type", reduction="pca") +
+  labs(x="PC1",y="PC2")
+DimPlot(data, group.by="species", reduction="pca") +
+  labs(x="PC1",y="PC2")
+DimPlot(data, group.by="Individual", reduction="pca") +
+  labs(x="PC1",y="PC2")
+DimPlot(data, group.by="Cell.Type", reduction="umap") +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(data, group.by="species", reduction="umap") +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(data, group.by="Individual", reduction="umap") +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(data, group.by="seurat_clusters", reduction="umap") +
+  labs(x="UMAP1",y="UMAP2")
+
+DimPlot(spps, group.by="Cell.Type", reduction="pca") +
+  labs(x="PC1",y="PC2")
+DimPlot(spps, group.by="species", reduction="pca") +
+  labs(x="PC1",y="PC2")
+DimPlot(spps, group.by="Individual", reduction="pca") +
+  labs(x="PC1",y="PC2")
+DimPlot(spps, group.by="Cell.Type", reduction="umap") +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(spps, group.by="species", reduction="umap") +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(spps, group.by="Individual", reduction="umap") +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(spps, group.by="seurat_clusters", reduction="umap") +
+  labs(x="UMAP1",y="UMAP2")
+
+DimPlot(pair, group.by="Cell.Type", reduction="pca") +
+  labs(x="PC1",y="PC2")
+DimPlot(pair, group.by="species", reduction="pca") +
+  labs(x="PC1",y="PC2")
+DimPlot(pair, group.by="Individual", reduction="pca") +
+  labs(x="PC1",y="PC2")
+DimPlot(pair, group.by="Cell.Type", reduction="umap") +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(pair, group.by="species", reduction="umap") +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(pair, group.by="Individual", reduction="umap") +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(pair, group.by="seurat_clusters", reduction="umap") +
+  labs(x="UMAP1",y="UMAP2")
+
+DimPlot(indv, group.by="Cell.Type", reduction="pca") +
+  labs(x="PC1",y="PC2")
+DimPlot(indv, group.by="species", reduction="pca") +
+  labs(x="PC1",y="PC2")
+DimPlot(indv, group.by="Individual", reduction="pca") +
+  labs(x="PC1",y="PC2")
+DimPlot(indv, group.by="Cell.Type", reduction="umap") +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(indv, group.by="species", reduction="umap") +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(indv, group.by="Individual", reduction="umap") +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(indv, group.by="seurat_clusters", reduction="umap") +
+  labs(x="UMAP1",y="UMAP2")
+
+```
+
+```{r plots of gene expression patterns - indv data only}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Load data
+tot <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv.log.int.rds"))            #integrate across individuals - total
+ips <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.ipsc.rds"))  #integrate across individuals - ipsc
+msc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.msc.rds"))   #integrate across individuals - msc
+ost <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.osteo.rds")) #integrate across individuals - osteo
+
+#Plot dimensional reductions
+DimPlot(ips, group.by="Cell.Type", reduction="umap", pt.size=0.01, cols="pink") +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(msc, group.by="Cell.Type", reduction="umap", pt.size=0.01, cols="mediumorchid") +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(ost, group.by="Cell.Type", reduction="umap", pt.size=0.01, cols="dodgerblue") +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(tot, group.by="Cell.Type", reduction="umap", pt.size=0.01, cols=c("pink","mediumorchid","dodgerblue")) +
+  labs(x="UMAP1",y="UMAP2")
+
+DimPlot(ips, group.by="species", reduction="umap", pt.size=0.01, cols=c("grey70","grey30")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(msc, group.by="species", reduction="umap", pt.size=0.01, cols=c("grey70","grey30")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(ost, group.by="species", reduction="umap", pt.size=0.01, cols=c("grey70","grey30")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(tot, group.by="species", reduction="umap", pt.size=0.01, cols=c("grey70","grey30")) +
+  labs(x="UMAP1",y="UMAP2")
+
+DimPlot(ips, group.by="Individual", reduction="umap", pt.size=0.01) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(msc, group.by="Individual", reduction="umap", pt.size=0.01) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(ost, group.by="Individual", reduction="umap", pt.size=0.01) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(tot, group.by="Individual", reduction="umap", pt.size=0.01) +
+  labs(x="UMAP1",y="UMAP2")
+
+#UMI and features counts
+VlnPlot(tot, 'nCount_RNA', group.by='Cell.Type', split.by='species', pt.size=0, cols=c("grey70","grey30")) +
+  theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+  labs(x="",y="Number of UMI")
+VlnPlot(tot, 'nFeature_RNA', group.by='Cell.Type', split.by='species', pt.size=0, cols=c("grey70","grey30")) +
+  theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+  labs(x="",y="Number of Genes")
+
+CombinePlots(plots=list((VlnPlot(subset(tot,subset=species=="Human"),'nCount_RNA',group.by='Collection',
+                                 pt.size=0, cols=rep(c("pink","mediumorchid","dodgerblue"),7)) +
+                           theme(axis.text.x=element_text(angle=0, hjust=0.5), legend.position="none") +
+                           labs(x="",y="Number of UMI") +
+                           scale_x_discrete(labels=c("1"="H1\niPSCs","2"="H1\nMSCs","3"="H1\nOsteoblasts",
+                                                     "4"="H1r2\niPSCs","5"="H1r2\nMSCs","6"="H1r2\nOsteoblasts",
+                                                     "7"="H2\niPSCs","8"="H2\nMSCs","9"="H2\nOsteoblasts",
+                                                     "10"="H3\niPSCs","11"="H3\nMSCs","12"="H3\nOsteoblasts",
+                                                     "13"="H4\niPSCs","14"="H4\nMSCs","15"="H4\nOsteoblasts",
+                                                     "16"="H5\niPSCs","17"="H5\nMSCs","18"="H5\nOsteoblasts",
+                                                     "19"="H6\niPSCs","20"="H6\nMSCs","21"="H6\nOsteoblasts"))),
+                        (VlnPlot(subset(tot,subset=species=="Chimp"),'nCount_RNA',group.by='Collection',
+                                 pt.size=0, cols=rep(c("pink","mediumorchid","dodgerblue"),7)) +
+                           theme(axis.text.x=element_text(angle=0, hjust=0.5), legend.position="none") +
+                           labs(x="",y="Number of UMI") +
+                           scale_x_discrete(labels=c("1"="C1\niPSCs","2"="C1\nMSCs","3"="C1\nOsteoblasts",
+                                                     "4"="C1r2\niPSCs","5"="C1r2\nMSCs","6"="C1r2\nOsteoblasts",
+                                                     "7"="C2\niPSCs","8"="C2\nMSCs","9"="C2\nOsteoblasts",
+                                                     "10"="C3\niPSCs","11"="C3\nMSCs","12"="C3\nOsteoblasts",
+                                                     "13"="C4\niPSCs","14"="C4\nMSCs","15"="C4\nOsteoblasts",
+                                                     "16"="C5\niPSCs","17"="C5\nMSCs","18"="C5\nOsteoblasts",
+                                                     "19"="C6\niPSCs","20"="C6\nMSCs","21"="C6\nOsteoblasts")))),
+             ncol=1)
+
+CombinePlots(plots=list((VlnPlot(subset(tot,subset=species=="Human"),'nFeature_RNA',group.by='Collection',
+                                 pt.size=0, cols=rep(c("pink","mediumorchid","dodgerblue"),7)) +
+                           theme(axis.text.x=element_text(angle=0, hjust=0.5), legend.position="none") +
+                           labs(x="",y="Number of Genes") +
+                           scale_x_discrete(labels=c("1"="H1\niPSCs","2"="H1\nMSCs","3"="H1\nOsteoblasts",
+                                                     "4"="H1r2\niPSCs","5"="H1r2\nMSCs","6"="H1r2\nOsteoblasts",
+                                                     "7"="H2\niPSCs","8"="H2\nMSCs","9"="H2\nOsteoblasts",
+                                                     "10"="H3\niPSCs","11"="H3\nMSCs","12"="H3\nOsteoblasts",
+                                                     "13"="H4\niPSCs","14"="H4\nMSCs","15"="H4\nOsteoblasts",
+                                                     "16"="H5\niPSCs","17"="H5\nMSCs","18"="H5\nOsteoblasts",
+                                                     "19"="H6\niPSCs","20"="H6\nMSCs","21"="H6\nOsteoblasts"))),
+                        (VlnPlot(subset(tot,subset=species=="Chimp"),'nFeature_RNA',group.by='Collection',
+                                 pt.size=0, cols=rep(c("pink","mediumorchid","dodgerblue"),7)) +
+                           theme(axis.text.x=element_text(angle=0, hjust=0.5), legend.position="none") +
+                           labs(x="",y="Number of Genes") +
+                           scale_x_discrete(labels=c("1"="C1\niPSCs","2"="C1\nMSCs","3"="C1\nOsteoblasts",
+                                                     "4"="C1r2\niPSCs","5"="C1r2\nMSCs","6"="C1r2\nOsteoblasts",
+                                                     "7"="C2\niPSCs","8"="C2\nMSCs","9"="C2\nOsteoblasts",
+                                                     "10"="C3\niPSCs","11"="C3\nMSCs","12"="C3\nOsteoblasts",
+                                                     "13"="C4\niPSCs","14"="C4\nMSCs","15"="C4\nOsteoblasts",
+                                                     "16"="C5\niPSCs","17"="C5\nMSCs","18"="C5\nOsteoblasts",
+                                                     "19"="C6\niPSCs","20"="C6\nMSCs","21"="C6\nOsteoblasts")))),
+             ncol=1)
+
+VlnPlot(tot,'nFeature_RNA',group.by='Collection', split.by='species', pt.size=0, cols=c("grey70","grey30")) +
+  theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+  labs(x="",y="Number of Genes") +
+  scale_x_discrete(labels=c("1"="H1+C1\niPSCs","2"="H1+C1\nMSCs","3"="H1+C1\nOsteoblasts",
+                            "4"="H1r2+C1r2\niPSCs","5"="H1r2+C1r2\nMSCs","6"="H1r2+C1r2\nOsteoblasts",
+                            "7"="H2+C2\niPSCs","8"="H2+C2\nMSCs","9"="H2+C2\nOsteoblasts",
+                            "10"="H3+C3\niPSCs","11"="H3+C3\nMSCs","12"="H3+C3\nOsteoblasts",
+                            "13"="H4+C4\niPSCs","14"="H4+C4\nMSCs","15"="H4+C4\nOsteoblasts",
+                            "16"="H5+C5\niPSCs","17"="H5+C5\nMSCs","18"="H5+C5\nOsteoblasts",
+                            "19"="H6+C6\niPSCs","20"="H6+C6\nMSCs","21"="H6+C6\nOsteoblasts"))
+VlnPlot(tot,'nCount_RNA',group.by='Collection', split.by='species', pt.size=0, cols=c("grey70","grey30")) +
+  theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+  labs(x="",y="Number of UMI") +
+  scale_x_discrete(labels=c("1"="H1+C1\niPSCs","2"="H1+C1\nMSCs","3"="H1+C1\nOsteoblasts",
+                            "4"="H1r2+C1r2\niPSCs","5"="H1r2+C1r2\nMSCs","6"="H1r2+C1r2\nOsteoblasts",
+                            "7"="H2+C2\niPSCs","8"="H2+C2\nMSCs","9"="H2+C2\nOsteoblasts",
+                            "10"="H3+C3\niPSCs","11"="H3+C3\nMSCs","12"="H3+C3\nOsteoblasts",
+                            "13"="H4+C4\niPSCs","14"="H4+C4\nMSCs","15"="H4+C4\nOsteoblasts",
+                            "16"="H5+C5\niPSCs","17"="H5+C5\nMSCs","18"="H5+C5\nOsteoblasts",
+                            "19"="H6+C6\niPSCs","20"="H6+C6\nMSCs","21"="H6+C6\nOsteoblasts"))
+
+mean(tot@meta.data$nFeature_RNA[which(tot[['species']]=="Human")])        #3448.74
+mean(tot@meta.data$nFeature_RNA[which(tot[['species']]=="Chimp")])        #3259.42
+mean(tot@meta.data$nFeature_RNA[which(tot[['Cell.Type']]=="iPSC")])       #3454.82
+mean(tot@meta.data$nFeature_RNA[which(tot[['Cell.Type']]=="MSC")])        #3769.14
+mean(tot@meta.data$nFeature_RNA[which(tot[['Cell.Type']]=="Osteoblast")]) #2591.47
+
+mean(tot@meta.data$nCount_RNA[which(tot[['species']]=="Human")])        #15444.44
+mean(tot@meta.data$nCount_RNA[which(tot[['species']]=="Chimp")])        #12416.17
+mean(tot@meta.data$nCount_RNA[which(tot[['Cell.Type']]=="iPSC")])       #13708.55
+mean(tot@meta.data$nCount_RNA[which(tot[['Cell.Type']]=="MSC")])        #17142.95
+mean(tot@meta.data$nCount_RNA[which(tot[['Cell.Type']]=="Osteoblast")]) # 9439.64
+
+CombinePlots(plots=list((VlnPlot(subset(tot,subset=species=="Human"),'nFeature_RNA',group.by='Cell.Type',
+                                 pt.size=0, cols=c("pink","mediumorchid","dodgerblue")) +
+                           theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+                           labs(x="",y="Number of Genes")),
+                        (VlnPlot(subset(tot,subset=species=="Chimp"),'nFeature_RNA',group.by='Cell.Type',
+                                 pt.size=0, cols=c("pink","mediumorchid","dodgerblue")) +
+                           theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+                           labs(x=""))),
+                        ncol=2)
+
+#pluripotency markers:  NANOG     (not in default search location)
+#                       POU5F1
+#                       TDGF1
+#mesoderm markers:      MIXL1     (not in default search location)
+#                       TBXT      (not in default search location)
+#endomesoderm marker:   EOMES     (not in default search location)
+#chondrocyte markers:   ACAN      (not in default search location)
+#                       COL2A1
+#                       SOX9      (not in default search location)
+#                       COL10A1   (not in default search location)
+#                       COL11A1
+#                       SOX5      (not in default search location)
+#                       SOX6      (not in default search location)
+#osteoblast markers:    COL1A1
+#                       BGLAP     (not in ortho-exon)
+#                       RUNX2     (not in default search location)
+#                       ALPL
+#                       IBSP      (not in default search location)
+#                       SP7       (not in default search location)
+#adipocyte markers:     FABP4     (not in default search location)
+#                       PPARG     (not in default search location)
+#endoderm marker:       SOX17     (not in default search location)
+#neuroectoderm marker:  SOX1      (not in default search location)
+#neuroepithelial:       SOX2
+#epithelial marker:     EPCAM
+#hepatocyte marker:     ALB       (not in default search location)
+#heart/NC marker:       HAND1     (not in default search location)
+#cardiomyocyte marker:  TNNT2
+#cariac muscle markers: MYL7
+#                       MYH6      (not in default search location)
+#neutral markers:       GAPDH     (not in default search location)
+#                       GUSB      (not in default search location)
+#                       YWHAZ     (not in default search location)
+
+#Should be positive in iPSC/MSC: THY1 (CD90)
+#Should be positive in MSC: ENG (CD105), NT5E (CD73)
+#Can also be positive in MSC: CD44, ITGB1 (CD29), CD200, ALCAM (CD166), MCAM (CD146), NGFR (CD271)
+#Should be negative in MSCs: CD34, PTPRC (CD45), ITGAM (CD11b), CD19, HLA-DRB1 (HLA-DR)
+#Should also be negative in MSCs: CD14, CD79A (CD79α)
+
+#Gene violin plots
+c("NANOG","TDGF1","POU5F1","EOMES","THY1","MIXL1","TBXT","ENG","NT5E","CD44","ITGB1","CD200","ALCAM","MCAM","NGFR",
+  "COL1A1","RUNX2","ALPL","IBSP","SP7","FABP4","PPARG","ACAN","COL2A1","SOX9","COL10A1","COL11A1","SOX5","SOX6",
+  "SOX17","SOX1","SOX2","EPCAM","ALB","HAND1","TNNT2","MYL7","MYH6",
+  "GAPDH","GUSB","YWHAZ","CD34","PTPRC","ITGAM","CD19","HLA-DRB1","CD14","CD79A")
+FeaturePlot(tot, features="COL1A1", reduction="umap", cols=c("white","black"), pt.size=0.5, order=TRUE) + labs(x="UMAP1",y="UMAP2")
+VlnPlot(tot, features="MYH6", group.by="Cell.Type", split.by="species", cols=c("grey70","grey30"), pt.size=0) +
+  theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+  labs(x="",y="Expression Level") +
+  ylim(0,7)
+
+#ipsc
+FeaturePlot(tot, features="POU5F1", reduction="umap", cols=c("white","black"), pt.size=0.5, order=TRUE) + labs(x="UMAP1",y="UMAP2")
+FeaturePlot(tot, features="TDGF1", reduction="umap", cols=c("white","black"), pt.size=0.5, order=TRUE) + labs(x="UMAP1",y="UMAP2")
+VlnPlot(tot, features=c("POU5F1","TDGF1"), group.by="Cell.Type", cols=c("pink","mediumorchid","dodgerblue"), pt.size=0)
+VlnPlot(tot, features="POU5F1", group.by="Cell.Type", cols=c("pink","mediumorchid","dodgerblue"), pt.size=0) +
+  theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+  labs(x="",y="Expression Level") +
+  ylim(0,7)
+VlnPlot(tot, features="POU5F1", group.by="Cell.Type", split.by="species", cols=c("grey70","grey30"), pt.size=0) +
+  theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+  labs(x="",y="Expression Level") +
+  ylim(0,7)
+VlnPlot(tot, features="TDGF1", group.by="Cell.Type", split.by="species", cols=c("grey70","grey30"), pt.size=0) +
+  theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+  labs(x="",y="Expression Level") +
+  ylim(0,7)
+#msc
+FeaturePlot(tot, features="NT5E", reduction="umap", cols=c("grey90","black"), pt.size=0.5, order=TRUE) #CD73 - positive in MSC
+FeaturePlot(tot, features="CD44", reduction="umap", cols=c("white","black"), pt.size=0.5, order=TRUE) + labs(x="UMAP1",y="UMAP2") #CD44 - can be positive
+VlnPlot(tot, features=c("NT5E","CD44"), group.by="Cell.Type", cols=c("pink","mediumorchid","dodgerblue"), pt.size=0)
+VlnPlot(tot, features="CD44", group.by="Cell.Type", cols=c("pink","mediumorchid","dodgerblue"), pt.size=0) +
+  theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+  labs(x="",y="Expression Level") +
+  ylim(0,6)
+VlnPlot(tot, features="CD44", group.by="Cell.Type", split.by="species", cols=c("grey70","grey30"), pt.size=0) +
+  theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+  labs(x="",y="Expression Level") +
+  ylim(0,6)
+#osteoblast
+FeaturePlot(tot, features="COL1A1", cols=c("white","black"), pt.size=0.5, order=TRUE, reduction="umap") + labs(x="UMAP1",y="UMAP2")
+FeaturePlot(tot, features="ALPL", cols=c("grey90","black"), pt.size=0.5, order=TRUE, reduction="umap")
+VlnPlot(tot, features=c("COL1A1","ALPL"), group.by="Cell.Type", cols=c("pink","mediumorchid","dodgerblue"), pt.size=0)
+VlnPlot(tot, features="COL1A1", group.by="Cell.Type", cols=c("pink","mediumorchid","dodgerblue"), pt.size=0) +
+  theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+  labs(x="",y="Expression Level") +
+  ylim(0,8)
+VlnPlot(tot, features="COL1A1", group.by="Cell.Type", split.by="species", cols=c("grey70","grey30"), pt.size=0) +
+  theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+  labs(x="",y="Expression Level") +
+  ylim(0,8)
+
+#Find differentially expressed genes
+#find all markers distinguishing osteoblast clusters between humans and chimps
+Idents(ost) <- factor(ost@meta.data$species, levels=c("Chimp","Human"))
+o.tot <- FindMarkers(ost, ident.1="Human", ident.2="Chimp", logfc.threshold=0.25, test.use="wilcox", min.pct=0.25)
+head(o.tot, n=5) #DKK2, CTHRC1, EMP2, RASL11A, PLAT
+dim(o.tot) #25 genes total
+
+
+
+#Identify Clusters (increased resolution identifies greater number of clusters)
+tot <- FindNeighbors(tot, k.param=20, dims=1:100)
+tot <- FindClusters(tot, resolution=0.4)          #15 clusters
+ips <- FindNeighbors(ips, k.param=20, dims=1:100)
+ips <- FindClusters(ips, resolution=0.4)          #13 clusters
+msc <- FindNeighbors(msc, k.param=20, dims=1:100)
+msc <- FindClusters(msc, resolution=0.4)          # 8 clusters
+ost <- FindNeighbors(ost, k.param=20, dims=1:100)
+ost <- FindClusters(ost, resolution=0.4)          # 8 clusters
+
+DimPlot(tot, group.by="seurat_clusters", reduction="umap") +
+  labs(x="UMAP1",y="UMAP2")
+
+#Gene violin plots
+c("NANOG","TDGF1","POU5F1","EOMES","THY1","MIXL1","TBXT","ENG","NT5E","CD44","ITGB1","CD200","ALCAM","MCAM","NGFR",
+  "COL1A1","RUNX2","ALPL","IBSP","SP7","FABP4","PPARG","ACAN","COL2A1","SOX9","COL10A1","COL11A1","SOX5","SOX6","SOX17","SOX1","SOX2",
+  "EPCAM","ALB","HAND1","TNNT2","MYL7","MYH6","GAPDH","GUSB","YWHAZ","CD34","PTPRC","ITGAM","CD19","HLA-DRB1","CD14","CD79A")
+FeaturePlot(ost, features="COL1A1", reduction="umap", cols=c("white","black"), pt.size=0.5, order=TRUE) + labs(x="UMAP1",y="UMAP2")
+VlnPlot(ost, features="COL1A1", group.by="seurat_clusters", split.by="species", cols=c("grey70","grey30"), pt.size=0) +
+  theme(axis.text.x=element_text(angle=0, hjust=0.5)) +
+  labs(x="",y="Expression Level")
+
+#Find markers of clusters
+ost.markers <- FindAllMarkers(ost, only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)
+head(ost.markers, n=5)
+top10 <- ost.markers %>% group_by(cluster) %>% top_n(n=10, wt=avg_logFC)
+DoHeatmap(ost, features=top10$gene) + NoLegend()
+
+FeaturePlot(ost, features=c("GDF15","TAGLN","PAPPA","TIMP1","ADAM33","COL3A1","RRM2"),
+            reduction="umap", cols=c("white","black"), pt.size=0.5, order=TRUE)
+VlnPlot(ost, features=c("GDF15","TAGLN","PAPPA","TIMP1","ADAM33","COL3A1","RRM2"),
+        group.by="seurat_clusters", split.by="species", cols=c("grey70","grey30"), pt.size=0)
+
+VlnPlot(ost, features=c("COL1A1","RUNX2","ALPL","IBSP","SP7"),
+        group.by="seurat_clusters", split.by="species", cols=c("grey70","grey30"), pt.size=0)
+VlnPlot(ost, features=c("FABP4","PPARG","ACAN","COL2A1","SOX9","COL10A1","COL11A1","SOX5","SOX6"),
+        group.by="seurat_clusters", split.by="species", cols=c("grey70","grey30"), pt.size=0)
+
+
+#Find differentially expressed genes - OSTEOBLASTS
+#find all markers distinguishing osteoblast clusters between humans and chimps
+
+ost0 <- subset(ost, seurat_clusters==0)
+Idents(ost0) <- factor(ost0@meta.data$species, levels=c("Chimp","Human"))
+o.0 <- FindMarkers(ost0, ident.1="Human", ident.2="Chimp", logfc.threshold=0.25, test.use="wilcox", min.pct=0.25)
+head(o.0, n=5) #COL8A1, GDF15, THBS2, POSTN, IGFBP7
+dim(o.0) #30 genes total
+
+ost1 <- subset(ost, seurat_clusters==1)
+Idents(ost1) <- factor(ost1@meta.data$species, levels=c("Chimp","Human"))
+o.1 <- FindMarkers(ost1, ident.1="Human", ident.2="Chimp", logfc.threshold=0.25, test.use="wilcox", min.pct=0.25)
+head(o.1, n=5) #EXPH5, PCDH10, EMP2, ITGA1, SERPINH1
+dim(o.1) #77 genes total
+
+ost2 <- subset(ost, seurat_clusters==2)
+Idents(ost2) <- factor(ost2@meta.data$species, levels=c("Chimp","Human"))
+o.2 <- FindMarkers(ost2, ident.1="Human", ident.2="Chimp", logfc.threshold=0.25, test.use="wilcox", min.pct=0.25)
+head(o.2, n=5) #THBS2, COL8A1, SLC7A5, INHBA, POSTN
+dim(o.2) #39 genes total
+
+ost3 <- subset(ost, seurat_clusters==3)
+Idents(ost3) <- factor(ost3@meta.data$species, levels=c("Chimp","Human"))
+o.3 <- FindMarkers(ost3, ident.1="Human", ident.2="Chimp", logfc.threshold=0.25, test.use="wilcox", min.pct=0.25)
+head(o.3, n=5) #DKK2, PMEPA1, SCG2, HIST2H2AC, COLEC12
+dim(o.3) #81 genes total
+
+ost4 <- subset(ost, seurat_clusters==4)
+Idents(ost4) <- factor(ost4@meta.data$species, levels=c("Chimp","Human"))
+o.4 <- FindMarkers(ost4, ident.1="Human", ident.2="Chimp", logfc.threshold=0.25, test.use="wilcox", min.pct=0.25)
+head(o.4, n=5) #PLAT, DUSP23, HES4, HAPLN1, ENC1
+dim(o.4) #137 genes total
+
+ost5 <- subset(ost, seurat_clusters==5)
+Idents(ost5) <- factor(ost5@meta.data$species, levels=c("Chimp","Human"))
+o.5 <- FindMarkers(ost5, ident.1="Human", ident.2="Chimp", logfc.threshold=0.25, test.use="wilcox", min.pct=0.25)
+head(o.5, n=5) #FGF2, FTH1, LGALS3, CDH11, CYSTM1
+dim(o.5) #192 genes total
+
+ost6 <- subset(ost, seurat_clusters==6)
+Idents(ost6) <- factor(ost6@meta.data$species, levels=c("Chimp","Human"))
+o.6 <- FindMarkers(ost6, ident.1="Human", ident.2="Chimp", logfc.threshold=0.25, test.use="wilcox", min.pct=0.25)
+head(o.6, n=5) #CENPF, TOP2A, SC5D, TPM2, CXCL6
+dim(o.6) #131 genes total
+
+ost7 <- subset(ost, seurat_clusters==7)
+Idents(ost7) <- factor(ost7@meta.data$species, levels=c("Chimp","Human"))
+o.7 <- FindMarkers(ost7, ident.1="Human", ident.2="Chimp", logfc.threshold=0.25, test.use="wilcox", min.pct=0.25)
+#no chimp cells in this cluster
+
+#find all markers distinguishing humans and chimps across all cell types
+o.tot <- intersect(rownames(o.0),
+                   intersect(rownames(o.1),
+                             intersect(rownames(o.2),
+                                       intersect(rownames(o.3),
+                                                 intersect(rownames(o.4),
+                                                           intersect(rownames(o.5),rownames(o.6)))))))
+library(VennDiagram)
+overlap <- calculate.overlap( x <- list("cluster0"=rownames(o.0),
+                                        "cluster1"=rownames(o.1),
+                                        "cluster2"=rownames(o.2),
+                                        "cluster3"=rownames(o.3),
+                                        "cluster4"=rownames(o.4),
+                                        "cluster5"=rownames(o.5),
+                                        "cluster6"=rownames(o.6)))
+
+rm(ost0,ost1,ost2,ost3,ost4,ost5,ost6,ost7)
+rm(ost.markers,o.0,o.1,o.2,o.3,o.4,o.5,o.6,o.7,o.tot,top10)
+
+#Find differentially expressed genes - IPSC
+length(table(Idents(ips)))
+x=0
+while(x <= 12) {
+  ipsX <- subset(ips, seurat_clusters==x)
+  Idents(ipsX) <- factor(ipsX@meta.data$species, levels=c("Chimp","Human"))
+  i.X <- FindMarkers(ipsX, ident.1="Human", ident.2="Chimp", logfc.threshold=0.25, test.use="wilcox", min.pct=0.25)
+  print(x)
+  print(head(i.X, n=5))
+  print(dim(i.X))
+  x=x+1
+}
+rm(x,ipsX,i.X)
+#cluster  0: No features pass logfc.threshold threshold
+#cluster  1: No features pass logfc.threshold threshold
+#cluster  2: No features pass logfc.threshold threshold
+#cluster  3:  13
+#cluster  4: 222
+#cluster  5:   8
+#cluster  6: 105
+#cluster  7:  25
+#cluster  8:  66
+#cluster  9: No features pass logfc.threshold threshold
+#cluster 10: No features pass logfc.threshold threshold
+#cluster 11: No features pass logfc.threshold threshold
+#cluster 12: No features pass logfc.threshold threshold
+
+#Find differentially expressed genes - MSC
+length(table(Idents(msc)))
+x=0
+while(x <= 8) {
+  mscX <- subset(msc, seurat_clusters==x)
+  Idents(mscX) <- factor(mscX@meta.data$species, levels=c("Chimp","Human"))
+  m.X <- FindMarkers(mscX, ident.1="Human", ident.2="Chimp", logfc.threshold=0.25, test.use="wilcox", min.pct=0.25)
+  print(x)
+  print(head(m.X, n=5))
+  print(dim(m.X))
+  x=x+1
+}
+rm(x,mscX,m.X)
+#cluster  0:   4
+#cluster  1:  22
+#cluster  2:  20
+#cluster  3:   4
+#cluster  4:   4
+#cluster  5:   2
+#cluster  6:  92
+#cluster  7: 265
+#cluster  8: No features pass logfc.threshold threshold
+
+#Find differentially expressed genes - TOTAL
+length(table(Idents(tot)))
+x=0
+while(x <= 14) {
+  totX <- subset(tot, seurat_clusters==x)
+  Idents(totX) <- factor(totX@meta.data$species, levels=c("Chimp","Human"))
+  t.X <- FindMarkers(totX, ident.1="Human", ident.2="Chimp", logfc.threshold=0.25, test.use="wilcox", min.pct=0.25)
+  print(x)
+  print(head(t.X, n=5))
+  print(dim(t.X))
+  x=x+1
+}
+rm(x,totX,t.X)
+#cluster  0: 35
+#cluster  1:  2
+#cluster  2: 79
+#cluster  3: 47
+#cluster  4: No features pass logfc.threshold threshold
+#cluster  5:  4
+#cluster  6:  3
+#cluster  7:  5
+#cluster  8: 197
+#cluster  9: 102
+#cluster 10: 109
+#cluster 11:  34
+#cluster 12:  85
+#cluster 13: 130
+#cluster 14: No features pass logfc.threshold threshold
+
+```

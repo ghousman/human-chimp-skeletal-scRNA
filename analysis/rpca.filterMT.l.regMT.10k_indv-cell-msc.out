@@ -1,0 +1,299 @@
+
+R version 3.5.1 (2018-07-02) -- "Feather Spray"
+Copyright (C) 2018 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> #Load libraries
+> library(Seurat)
+> library(dplyr)
+
+Attaching package: 'dplyr'
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+> library(stringi)
+> library(stringr)
+> library(ggplot2)
+> library(colorspace)
+> library(RColorBrewer)
+> 
+> #Define main directory
+> dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+> 
+> #Load batch info
+> batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+> 
+> #Load objects
+> objects <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.filterMT.indv-cell.log.rds"))
+> 
+> #Define list subset
+> #Select features for downstream integration (keeping at 10000 for now)
+> #Identify anchors (used references + RPCA reduction method) #ALL OTHER METHODS CRASH
+> #Integrate datasets
+> #Reduce dimensionality
+> #Save data
+> 
+> #combine mscs from all samples
+> obj.msc   <- list(objects[[3]],objects[[4]],objects[[9]],objects[[10]],objects[[15]],objects[[16]],objects[[21]],objects[[22]],
++                   objects[[27]],objects[[28]],objects[[33]],objects[[34]],objects[[39]],objects[[40]])
+> obj.msc.features <- SelectIntegrationFeatures(object.list=obj.msc, nfeatures=10000)
+> reference_dataset <- c(3:4) #H1C1-r2 differentiated the best
+> obj.msc <- lapply(X=obj.msc, FUN=function(x) {
++     x <- ScaleData(x, features=obj.msc.features, verbose=FALSE)
++     x <- RunPCA(x, features=obj.msc.features, verbose=FALSE)
++ })
+> obj.msc.anchors <- FindIntegrationAnchors(object.list=obj.msc, normalization.method="LogNormalize", anchor.features=obj.msc.features,
++                                            reference=reference_dataset, reduction="rpca")
+Scaling features for provided objects
+Computing within dataset neighborhoods
+Finding anchors between all query and reference datasets
+Finding neighborhoods
+Finding anchors
+	Found 1274 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 1054 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 528 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 737 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 628 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 1282 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 695 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 643 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 1378 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 1146 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 454 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 903 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 890 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 1148 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 554 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 771 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 1509 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 1026 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 810 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 747 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 1329 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 1333 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 514 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 807 anchors
+Extracting within-dataset neighbors
+Finding neighborhoods
+Finding anchors
+	Found 746 anchors
+Extracting within-dataset neighbors
+Warning message:
+In CheckDuplicateCellNames(object.list = object.list) :
+  Some cell names are duplicated across objects provided. Renaming to enforce unique cell names.
+> int.msc <- IntegrateData(anchorset=obj.msc.anchors, normalization.method="LogNormalize")
+Building integrated reference
+Merging dataset 4 into 3
+Extracting anchors for merged samples
+Finding integration vectors
+Finding integration vector weights
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Integrating data
+Warning: Adding a command log without an assay associated with it
+Integrating dataset 1 with reference dataset
+Finding integration vectors
+Finding integration vector weights
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Integrating data
+Integrating dataset 2 with reference dataset
+Finding integration vectors
+Finding integration vector weights
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Integrating data
+Integrating dataset 5 with reference dataset
+Finding integration vectors
+Finding integration vector weights
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Integrating data
+Integrating dataset 6 with reference dataset
+Finding integration vectors
+Finding integration vector weights
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Integrating data
+Integrating dataset 7 with reference dataset
+Finding integration vectors
+Finding integration vector weights
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Integrating data
+Integrating dataset 8 with reference dataset
+Finding integration vectors
+Finding integration vector weights
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Integrating data
+Integrating dataset 9 with reference dataset
+Finding integration vectors
+Finding integration vector weights
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Integrating data
+Integrating dataset 10 with reference dataset
+Finding integration vectors
+Finding integration vector weights
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Integrating data
+Integrating dataset 11 with reference dataset
+Finding integration vectors
+Finding integration vector weights
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Integrating data
+Integrating dataset 12 with reference dataset
+Finding integration vectors
+Finding integration vector weights
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Integrating data
+Integrating dataset 13 with reference dataset
+Finding integration vectors
+Finding integration vector weights
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Integrating data
+Integrating dataset 14 with reference dataset
+Finding integration vectors
+Finding integration vector weights
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Integrating data
+Warning: Adding a command log without an assay associated with it
+> int.msc <- ScaleData(int.msc, verbose=FALSE, vars.to.regress=c("nCount_RNA","nFeature_RNA","percent.mt"))
+> int.msc <- RunPCA(object=int.msc, npcs=100, verbose=FALSE)
+> pva <- int.msc@reductions$pca@stdev^2/int.msc@reductions$pca@misc$total.variance
+> ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+> print(ndim)
+[1] 13
+> int.msc <- RunUMAP(int.msc, dims=1:ndim)
+Warning: The default method for RunUMAP has changed from calling Python UMAP via reticulate to the R-native UWOT using the cosine metric
+To use Python UMAP via reticulate, set umap.method to 'umap-learn' and metric to 'correlation'
+This message will be shown once per session
+02:21:56 UMAP embedding parameters a = 0.9922 b = 1.112
+02:21:56 Read 36738 rows and found 13 numeric columns
+02:21:56 Using Annoy for neighbor search, n_neighbors = 30
+02:21:56 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+02:22:03 Writing NN index file to temp file /tmp/jobs/658289/Rtmpv6Hpn5/file86c54af97a43
+02:22:03 Searching Annoy index using 1 thread, search_k = 3000
+02:22:19 Annoy recall = 100%
+02:22:20 Commencing smooth kNN distance calibration using 1 thread
+02:22:22 Initializing from normalized Laplacian + noise
+02:22:23 Commencing optimization for 200 epochs, with 1534408 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+02:23:11 Optimization finished
+> saveRDS(int.msc, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.filterMT.regMT.indv-cell.log.10k.int.msc.rds"))
+> rm(obj.msc,int.msc)
+> 
+> proc.time()
+     user    system   elapsed 
+22061.078   626.486 22715.066 

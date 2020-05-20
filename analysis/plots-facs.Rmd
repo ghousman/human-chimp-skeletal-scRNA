@@ -1,0 +1,202 @@
+---
+title: "plots-facs"
+author: "Genevieve Housman"
+date: "January 23, 2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load libraries}
+
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+library(reshape2)
+library(Seurat)
+
+```
+
+```{r cars}
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA/data/'
+
+#Load batch info
+flow.tot <- read.csv(file=paste0(dir,'facs-MSC-collection-summary-total.csv'), header=TRUE, sep=",")
+#flow.sample <- read.csv(file=paste0(dir,'facs-MSC-collection-summary-sample-avg.csv'), header=TRUE, sep=",")
+#flow.specie <- read.csv(file=paste0(dir,'facs-MSC-collection-summary-species-avg.csv'), header=TRUE, sep=",")
+
+#Fix data to make plotting easier
+flow.tot$Sample_Details <- factor(flow.tot$Sample_Details,
+                                  levels=c("iPSC - control","iPSC - cocktail","MSC - cocktail"),
+                                  labels=c("iPSC - control","iPSC - cocktail","MSC - cocktail"))
+flow.tot$Species_Details <- factor(flow.tot$Species_Details,
+                                   levels=c("Human iPSC - control","Human iPSC - cocktail",
+                                            "Human MSC - cocktail","Chimpanzee iPSC - control",
+                                            "Chimpanzee iPSC - cocktail","Chimpanzee MSC - cocktail"),
+                                   labels=c("Human iPSC - control","Human iPSC - cocktail",
+                                            "Human MSC - cocktail","Chimpanzee iPSC - control",
+                                            "Chimpanzee iPSC - cocktail","Chimpanzee MSC - cocktail"))
+flow.tot$Abbr_Details <- factor(flow.tot$Abbr_Details,
+                                levels=c("H1 iPSC - control","H1 iPSC - cocktail","H1 MSC - cocktail",
+                                         "H2 iPSC - control","H2 iPSC - cocktail","H2 MSC - cocktail",
+                                         "H3 iPSC - control","H3 iPSC - cocktail","H3 MSC - cocktail",
+                                         "H4 iPSC - control","H4 iPSC - cocktail","H4 MSC - cocktail",
+                                         "H5 iPSC - control","H5 iPSC - cocktail","H5 MSC - cocktail",
+                                         "H6 iPSC - control","H6 iPSC - cocktail","H6 MSC - cocktail",
+                                         "H1-r2 iPSC - control","H1-r2 iPSC - cocktail","H1-r2 MSC - cocktail",
+                                         "C1 iPSC - control","C1 iPSC - cocktail","C1 MSC - cocktail",
+                                         "C2 iPSC - control","C2 iPSC - cocktail","C2 MSC - cocktail",
+                                         "C3 iPSC - control","C3 iPSC - cocktail","C3 MSC - cocktail",
+                                         "C4 iPSC - control","C4 iPSC - cocktail","C4 MSC - cocktail",
+                                         "C5 iPSC - control","C5 iPSC - cocktail","C5 MSC - cocktail",
+                                         "C6 iPSC - control","C6 iPSC - cocktail","C6 MSC - cocktail",
+                                         "C1-r2 iPSC - control","C1-r2 iPSC - cocktail","C1-r2 MSC - cocktail"),
+                                labels=c("H1 iPSC - control","H1 iPSC - cocktail","H1 MSC - cocktail",
+                                         "H2 iPSC - control","H2 iPSC - cocktail","H2 MSC - cocktail",
+                                         "H3 iPSC - control","H3 iPSC - cocktail","H3 MSC - cocktail",
+                                         "H4 iPSC - control","H4 iPSC - cocktail","H4 MSC - cocktail",
+                                         "H5 iPSC - control","H5 iPSC - cocktail","H5 MSC - cocktail",
+                                         "H6 iPSC - control","H6 iPSC - cocktail","H6 MSC - cocktail",
+                                         "H1-r2 iPSC - control","H1-r2 iPSC - cocktail","H1-r2 MSC - cocktail",
+                                         "C1 iPSC - control","C1 iPSC - cocktail","C1 MSC - cocktail",
+                                         "C2 iPSC - control","C2 iPSC - cocktail","C2 MSC - cocktail",
+                                         "C3 iPSC - control","C3 iPSC - cocktail","C3 MSC - cocktail",
+                                         "C4 iPSC - control","C4 iPSC - cocktail","C4 MSC - cocktail",
+                                         "C5 iPSC - control","C5 iPSC - cocktail","C5 MSC - cocktail",
+                                         "C6 iPSC - control","C6 iPSC - cocktail","C6 MSC - cocktail",
+                                         "C1-r2 iPSC - control","C1-r2 iPSC - cocktail","C1-r2 MSC - cocktail"))
+
+flow.tot$Abbr_Details2 <- factor(flow.tot$Abbr_Details,
+                                 levels=c("H2 iPSC - control","H2 iPSC - cocktail","H2 MSC - cocktail",
+                                          "H6 iPSC - control","H6 iPSC - cocktail","H6 MSC - cocktail",
+                                          "H5 iPSC - control","H5 iPSC - cocktail","H5 MSC - cocktail",
+                                          "H1-r2 iPSC - control","H1-r2 iPSC - cocktail","H1-r2 MSC - cocktail",
+                                          "H4 iPSC - control","H4 iPSC - cocktail","H4 MSC - cocktail",
+                                          "H3 iPSC - control","H3 iPSC - cocktail","H3 MSC - cocktail",
+                                          "H1 iPSC - control","H1 iPSC - cocktail","H1 MSC - cocktail",
+                                          "C4 iPSC - control","C4 iPSC - cocktail","C4 MSC - cocktail",
+                                          "C6 iPSC - control","C6 iPSC - cocktail","C6 MSC - cocktail",
+                                          "C1-r2 iPSC - control","C1-r2 iPSC - cocktail","C1-r2 MSC - cocktail",
+                                          "C3 iPSC - control","C3 iPSC - cocktail","C3 MSC - cocktail",
+                                          "C2 iPSC - control","C2 iPSC - cocktail","C2 MSC - cocktail",
+                                          "C5 iPSC - control","C5 iPSC - cocktail","C5 MSC - cocktail",
+                                          "C1 iPSC - control","C1 iPSC - cocktail","C1 MSC - cocktail"))
+
+flow.tot.melt <- melt(flow.tot[,c(2,4,6,8,29,31,33,35)],
+                      id=c("Sample_Details","Species_Details","Abbr_Details","Name_Details"))
+
+
+
+#Make basic plots
+ggplot(flow.tot, aes(x=Abbr_Details, y=CD90_Percentage)) + 
+  geom_boxplot() +
+  labs(x="", y="Proportion of Cells Expressing CD90") +
+  theme(axis.text.x=element_text(angle=90, hjust=1))
+  
+ggplot(flow.tot, aes(x=Species_Details, y=CD90_Percentage)) + 
+  geom_boxplot() +
+  labs(x="", y="Proportion of Cells Expressing CD90") +
+  theme(axis.text.x=element_text(angle=90, hjust=1))
+
+ggplot(flow.tot, aes(x=Sample_Details, y=CD90_Percentage)) + 
+  geom_boxplot() +
+  labs(x="", y="Proportion of Cells Expressing CD90") +
+  theme(axis.text.x=element_text(angle=90, hjust=1))
+
+
+
+#Make plots using melted data
+ggplot(flow.tot.melt, aes(x=Abbr_Details, y=value, fill=variable)) + 
+  geom_boxplot() +
+  labs(x="", y="Proportion of Cells Expressing Markers",fill="Markers") +
+  scale_fill_discrete(labels=c("CD90","CD105","CD73","CD45,CD34,\nCD11b,CD19,\nHLA-DR")) +
+  theme(axis.text.x=element_text(angle=90, hjust=1))
+
+ggplot(flow.tot.melt, aes(x=Species_Details, y=value, fill=variable)) + 
+  geom_boxplot() +
+  labs(x="", y="Proportion of Cells Expressing Markers",fill="Markers") +
+  scale_fill_discrete(labels=c("CD90","CD105","CD73","CD45,CD34,\nCD11b,CD19,\nHLA-DR")) +
+  theme(axis.text.x=element_text(angle=90, hjust=1))
+
+ggplot(flow.tot.melt, aes(x=Sample_Details, y=value, fill=variable)) + 
+  geom_boxplot() +
+  labs(x="", y="Proportion of Cells Expressing Markers",fill="Markers") +
+  scale_fill_discrete(labels=c("CD90","CD105","CD73","CD45,CD34,\nCD11b,CD19,\nHLA-DR")) +
+  theme(axis.text.x=element_text(angle=90, hjust=1))
+
+
+#Make plots for potential figures
+CombinePlots(plots=list((ggplot(subset(flow.tot,Cell_Type=="MSC"), aes(x=Species_Details, y=CD90_Percentage, fill=Species_Details)) + 
+                           geom_boxplot() +
+                           labs(x="", y="Proportion of Cells Expressing CD90") +
+                           scale_fill_grey(start=0.3, end=0.7) +
+                           theme_classic() +
+                           theme(legend.position="none",axis.title.y=element_text(size=10)) +
+                           ylim(0,1) +
+                           scale_x_discrete(labels=c("Human\nMSC","Chimp\nMSC"))),
+                        (ggplot(subset(flow.tot,Cell_Type=="MSC"), aes(x=Species_Details, y=CD73_Percentage, fill=Species_Details)) + 
+                           geom_boxplot() +
+                           labs(x="", y="Proportion of Cells Expressing CD73") +
+                           scale_fill_grey(start=0.3, end=0.7) +
+                           theme_classic() +
+                           theme(legend.position="none",axis.title.y=element_text(size=10)) +
+                           ylim(0,1) +
+                           scale_x_discrete(labels=c("Human\nMSC","Chimp\nMSC"))),
+                        (ggplot(subset(flow.tot,Cell_Type=="MSC"), aes(x=Species_Details, y=CD105_Percentage, fill=Species_Details)) + 
+                           geom_boxplot() +
+                           labs(x="", y="Proportion of Cells Expressing CD105") +
+                           scale_fill_grey(start=0.3, end=0.7) +
+                           theme_classic() +
+                           theme(legend.position="none",axis.title.y=element_text(size=10)) +
+                           ylim(0,1) +
+                           scale_x_discrete(labels=c("Human\nMSC","Chimp\nMSC"))),
+                        (ggplot(subset(flow.tot,Cell_Type=="MSC"), aes(x=Species_Details, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage,
+                                                                       fill=Species_Details)) + 
+                           geom_boxplot() +
+                           labs(x="", y="Proportion of Cells Expressing\nCD43/D34/CD11b/CD19/HLA-DR") +
+                           scale_fill_grey(start=0.3, end=0.7) +
+                           theme_classic() +
+                           theme(legend.position="none",axis.title.y=element_text(size=10)) +
+                           ylim(0,1) +
+                           scale_x_discrete(labels=c("Human\nMSC","Chimp\nMSC")))), ncol=4)
+CombinePlots(plots=list((ggplot(subset(flow.tot,Sample_Details=="iPSC - cocktail"), aes(x=Species_Details, y=CD90_Percentage,fill=Species_Details)) + 
+                           geom_boxplot() +
+                           labs(x="", y="Proportion of Cells Expressing CD90") +
+                           scale_fill_grey(start=0.3, end=0.7) +
+                           theme_classic() +
+                           theme(legend.position="none",axis.title.y=element_text(size=10)) +
+                           ylim(0,1) +
+                           scale_x_discrete(labels=c("Human\niPSC","Chimp\niPSC"))),
+                        (ggplot(subset(flow.tot,Sample_Details=="iPSC - cocktail"), aes(x=Species_Details, y=CD73_Percentage,fill=Species_Details)) + 
+                           geom_boxplot() +
+                           labs(x="", y="Proportion of Cells Expressing CD73") +
+                           scale_fill_grey(start=0.3, end=0.7) +
+                           theme_classic() +
+                           theme(legend.position="none",axis.title.y=element_text(size=10)) +
+                           ylim(0,1) +
+                           scale_x_discrete(labels=c("Human\niPSC","Chimp\niPSC"))),
+                        (ggplot(subset(flow.tot,Sample_Details=="iPSC - cocktail"), aes(x=Species_Details, y=CD105_Percentage,fill=Species_Details)) + 
+                           geom_boxplot() +
+                           labs(x="", y="Proportion of Cells Expressing CD105") +
+                           scale_fill_grey(start=0.3, end=0.7) +
+                           theme_classic() +
+                           theme(legend.position="none",axis.title.y=element_text(size=10)) +
+                           ylim(0,1) +
+                           scale_x_discrete(labels=c("Human\niPSC","Chimp\niPSC"))),
+                        (ggplot(subset(flow.tot,Sample_Details=="iPSC - cocktail"), aes(x=Species_Details,y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage,
+                                                                                        fill=Species_Details)) + 
+                           geom_boxplot() +
+                           labs(x="", y="Proportion of Cells Expressing\nCD43/D34/CD11b/CD19/HLA-DR") +
+                           scale_fill_grey(start=0.3, end=0.7) +
+                           theme_classic() +
+                           theme(legend.position="none",axis.title.y=element_text(size=10)) +
+                           ylim(0,1) +
+                           scale_x_discrete(labels=c("Human\niPSC","Chimp\niPSC")))), ncol=4)  
+
+```

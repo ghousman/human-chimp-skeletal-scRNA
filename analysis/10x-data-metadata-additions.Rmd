@@ -1,0 +1,281 @@
+---
+title: "10x-data-metadata-additions"
+author: "Genevieve Housman"
+date: "4/24/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 10X Data Cellranger Analysis - Add Additional Metadata to scRNAseq Data
+
+Add additional metadata (batch/sample details) to 10x data.
+
+Data being examined comes from 6 humans and 6 chimpanzees.
+- GHO-1:  H1-I + C1-I (iPSCs from H23555 and C8861)
+- GHO-2:  H1-M + C1-M (iPSC-derived MSCs from H23555 and C8861)
+- GHO-4:  H1-O + C1-O (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+- HOU-10: H1-I-r2 + C1-I-r2 (iPSCs from H23555 and C8861)
+- HOU-12: H1-M-r2 + C1-M-r2 (iPSC-derived MSCs from H23555 and C8861)
+- HOU-16: H1-O-r2 + C1-O-r2 (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+- HOU-1:  H2-I + C2-I (iPSCs from H20157 and C3647)
+- HOU-2:  H2-M + C2-M (iPSC-derived MSCs from H20157 and C3647)
+- HOU-4:  H2-O + C2-O (iPSC-MSC-derived osteoblasts from H20157 and C3647)
+- HOU-9:  H3-I + C3-I (iPSCs from H28126 and C3649)
+- HOU-11: H3-M + C3-M (iPSC-derived MSCs from H28126 and C3649)
+- HOU-15: H3-O + C3-O (iPSC-MSC-derived osteoblasts from H28126 and C3649)
+- HOU-5:  H4-I + C4-I (iPSCs from H28834 and C40210)
+- HOU-6:  H4-M + C4-M (iPSC-derived MSCs from H28834 and C40210)
+- HOU-8:  H4-O + C4-O (iPSC-MSC-derived osteoblasts from H28834 and C40210)
+- HOU-17:	H5-I + C5-I (iPSCs from H21792 and C40280)
+- HOU-19:	H5-M + C5-M (iPSC-derived MSCs from H21792 and C40280)
+- HOU-21:	H5-O + C5-O (iPSC-MSC-derived osteoblasts from H21792 and C40280)
+- HOU-18:	H6-I + C6-I (iPSCs from H20961 and C3624)
+- HOU-20:	H6-M + C6-M (iPSC-derived MSCs from H20961 and C3624)
+- HOU-22:	H6-O + C6-O (iPSC-MSC-derived osteoblasts from H20961 and C3624)
+
+Each dataset being evaluated comprises gene count data that were seperately calculated using both the hg38 human genome and the panTro6 chimpanzee genome, as well as the corresponding ortho-exon annotation in cellranger.Species-specific assignments were determined using human-chimpanzee genome combination with ortho-exon annotation.
+
+```{r load libraries}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(grid)
+library(gbm)
+library(colorspace)
+library(RColorBrewer)
+
+```
+
+```{r load data}
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+dir2 <- paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full")
+
+
+#Load and fix batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch-reformat.csv'), header=TRUE, sep=",")
+batch[,c(1:7,9:10,21,24:25)] <- lapply(batch[,c(1:7,9:10,21,24:25)], function(x) as.character(x)) #names, sex, dates
+batch[,c(8,11:20,22:23,25:26)] <- lapply(batch[,c(8,11:20,22:23,25:26)], function(x) as.numeric(as.character(x))) #numeric values only
+
+fcs <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/facs-MSC-collection-summary-total.csv'), header=TRUE, sep=",")
+fcs <- fcs[,c(2,6,29,31,33,35)]
+fcs$Sample_Details <- factor(fcs$Sample_Details,
+                             levels=c("iPSC - control","iPSC - cocktail","MSC - cocktail"),
+                             labels=c("iPSCcontrol","iPSCcocktail","MSCcocktail"))
+fcs <- split(fcs, fcs$Sample_Details)
+fcs$iPSCcontrol$Abbr_Details <- factor(fcs$iPSCcontrol$Abbr_Details,
+                                       levels=c("C1 iPSC - control","C1-r2 iPSC - control","C2 iPSC - control","C3 iPSC - control",
+                                                "C4 iPSC - control","C5 iPSC - control","C6 iPSC - control",
+                                                "H1 iPSC - control","H1-r2 iPSC - control","H2 iPSC - control","H3 iPSC - control",
+                                                "H4 iPSC - control","H5 iPSC - control","H6 iPSC - control"),
+                                       labels=c("C1-I","C1-I-r2","C2-I","C3-I","C4-I","C5-I","C6-I","H1-I","H1-I-r2","H2-I","H3-I","H4-I","H5-I","H6-I"))
+fcs$iPSCcocktail$Abbr_Details <- factor(fcs$iPSCcocktail$Abbr_Details,
+                                        levels=c("C1 iPSC - cocktail","C1-r2 iPSC - cocktail","C2 iPSC - cocktail","C3 iPSC - cocktail",
+                                                "C4 iPSC - cocktail","C5 iPSC - cocktail","C6 iPSC - cocktail",
+                                                "H1 iPSC - cocktail","H1-r2 iPSC - cocktail","H2 iPSC - cocktail","H3 iPSC - cocktail",
+                                                "H4 iPSC - cocktail","H5 iPSC - cocktail","H6 iPSC - cocktail"),
+                                       labels=c("C1-I","C1-I-r2","C2-I","C3-I","C4-I","C5-I","C6-I","H1-I","H1-I-r2","H2-I","H3-I","H4-I","H5-I","H6-I"))
+fcs$MSCcocktail$Abbr_Details <- factor(fcs$MSCcocktail$Abbr_Details,
+                                       levels=c("C1 MSC - cocktail","C1-r2 MSC - cocktail","C2 MSC - cocktail","C3 MSC - cocktail",
+                                                "C4 MSC - cocktail","C5 MSC - cocktail","C6 MSC - cocktail",
+                                                "H1 MSC - cocktail","H1-r2 MSC - cocktail","H2 MSC - cocktail","H3 MSC - cocktail",
+                                                "H4 MSC - cocktail","H5 MSC - cocktail","H6 MSC - cocktail"),
+                                       labels=c("C1-M","C1-M-r2","C2-M","C3-M","C4-M","C5-M","C6-M","H1-M","H1-M-r2","H2-M","H3-M","H4-M","H5-M","H6-M"))
+fcs.ctrl <- aggregate(. ~ Abbr_Details, fcs$iPSCcontrol, mean) #calculate averages
+fcs.ipsc <- aggregate(. ~ Abbr_Details, fcs$iPSCcocktail, mean) #calculate averages
+fcs.msc  <- aggregate(. ~ Abbr_Details, fcs$MSCcocktail, mean) #calculate averages
+fcs.ctrl$Abbr_Details <- as.character(fcs.ctrl$Abbr_Details)
+fcs.ipsc$Abbr_Details <- as.character(fcs.ipsc$Abbr_Details)
+fcs.msc$Abbr_Details <- as.character(fcs.msc$Abbr_Details)
+rm(fcs)
+
+alz <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/alizarin-red-quant-total.csv'), header=TRUE, sep=",")
+alz <- alz[c(1:8,13:20,25:60,65:72,77:140),] #remove C1-6W, H1-6W, H3-1A
+alz <- alz[c(1:8,10:11,14:18,20:124),] #remove outliers
+alz$Sample <- factor(alz$Sample, 
+                     levels = c("C1-M","C1-O 12w","CR-M","CR-O","C2-M","C2-O","C3-M","C3-O","C4-M","C4-O","C5-M","C5-O","C6-M","C6-O",
+                                "H1-M","H1-O 12w","HR-M","HR-O","H2-M","H2-O","H3-M(1)","H3-O(1)","H4-M","H4-O","H5-M","H5-O","H6-M","H6-O"),
+                     labels = c("C1-M","C1-O","C1-M-r2","C1-O-r2","C2-M","C2-O","C3-M","C3-O","C4-M","C4-O","C5-M","C5-O","C6-M","C6-O",
+                                "H1-M","H1-O","H1-M-r2","H1-O-r2","H2-M","H2-O","H3-M","H3-O","H4-M","H4-O","H5-M","H5-O","H6-M","H6-O")) 
+alz <- aggregate(Absorbance_Value ~ Sample, alz, mean) #calculate averages
+alz$Sample <- as.character(alz$Sample)
+ 
+oil <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/oil-red-quant-total.csv'), header=TRUE, sep=",")
+oil <- oil[c(1:63,65:91,93:112),] #remove outliers
+oil$Sample <- factor(oil$Sample, 
+                     levels = c("C1-M","C1-A","CR-M","CR-A","C2-M","C2-A","C3-M","C3-A","C4-M","C4-A","C5-M","C5-A","C6-M","C6-A",
+                                "H1-M","H1-A","HR-M","HR-A","H2-M","H2-A","H3-M","H3-A","H4-M","H4-A","H5-M","H5-A","H6-M","H6-A"),
+                     labels = c("C1-M","C1-O","C1-M-r2","C1-O-r2","C2-M","C2-O","C3-M","C3-O","C4-M","C4-O","C5-M","C5-O","C6-M","C6-O",
+                                "H1-M","H1-O","H1-M-r2","H1-O-r2","H2-M","H2-O","H3-M","H3-O","H4-M","H4-O","H5-M","H5-O","H6-M","H6-O")) 
+oil <- aggregate(Absorbance_Value ~ Sample, oil, mean) #calculate averages (for now put oil data with MSCs and Osteoblasts)
+oil$Sample <- as.character(oil$Sample)
+
+
+#Load data
+scrna <- "/data.filterMT.regMTB.indv.log.10k.int.rds"            #integrate across individuals - total
+#scrna <- "/data.filter.regB.indv-cell.log.10k.int.ipsc.rds"  #integrate across individuals - ipsc
+#scrna <- "/data.filter.regB.indv-cell.log.10k.int.msc.rds"   #integrate across individuals - msc
+#scrna <- "/data.filter.regB.indv-cell.log.10k.int.osteo.rds" #integrate across individuals - osteo
+indv <- readRDS(paste0(dir2,scrna))
+
+indv
+head(indv@meta.data)
+
+```
+
+```{r add metadata to scdata}
+
+#Add Metadata
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="Sample")
+indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="H1" & indv$Replicate=="1")] <- "H1-I" 
+indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="H1" & indv$Replicate=="2")] <- "H1-I-r2" 
+indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="H2" & indv$Replicate=="1")] <- "H2-I" 
+indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="H3" & indv$Replicate=="1")] <- "H3-I" 
+indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="H4" & indv$Replicate=="1")] <- "H4-I" 
+indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="H5" & indv$Replicate=="1")] <- "H5-I" 
+indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="H6" & indv$Replicate=="1")] <- "H6-I"
+indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="C1" & indv$Replicate=="1")] <- "C1-I" 
+indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="C1" & indv$Replicate=="2")] <- "C1-I-r2" 
+indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="C2" & indv$Replicate=="1")] <- "C2-I" 
+indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="C3" & indv$Replicate=="1")] <- "C3-I" 
+indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="C4" & indv$Replicate=="1")] <- "C4-I" 
+indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="C5" & indv$Replicate=="1")] <- "C5-I" 
+indv$Sample[which(indv$Cell.Type=="iPSC" & indv$Individual=="C6" & indv$Replicate=="1")] <- "C6-I" 
+indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="H1" & indv$Replicate=="1")] <- "H1-M" 
+indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="H1" & indv$Replicate=="2")] <- "H1-M-r2" 
+indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="H2" & indv$Replicate=="1")] <- "H2-M" 
+indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="H3" & indv$Replicate=="1")] <- "H3-M" 
+indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="H4" & indv$Replicate=="1")] <- "H4-M" 
+indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="H5" & indv$Replicate=="1")] <- "H5-M" 
+indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="H6" & indv$Replicate=="1")] <- "H6-M"
+indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="C1" & indv$Replicate=="1")] <- "C1-M" 
+indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="C1" & indv$Replicate=="2")] <- "C1-M-r2" 
+indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="C2" & indv$Replicate=="1")] <- "C2-M" 
+indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="C3" & indv$Replicate=="1")] <- "C3-M" 
+indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="C4" & indv$Replicate=="1")] <- "C4-M" 
+indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="C5" & indv$Replicate=="1")] <- "C5-M" 
+indv$Sample[which(indv$Cell.Type=="MSC" & indv$Individual=="C6" & indv$Replicate=="1")] <- "C6-M" 
+indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="H1" & indv$Replicate=="1")] <- "H1-O" 
+indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="H1" & indv$Replicate=="2")] <- "H1-O-r2" 
+indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="H2" & indv$Replicate=="1")] <- "H2-O" 
+indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="H3" & indv$Replicate=="1")] <- "H3-O" 
+indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="H4" & indv$Replicate=="1")] <- "H4-O" 
+indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="H5" & indv$Replicate=="1")] <- "H5-O" 
+indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="H6" & indv$Replicate=="1")] <- "H6-O"
+indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="C1" & indv$Replicate=="1")] <- "C1-O" 
+indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="C1" & indv$Replicate=="2")] <- "C1-O-r2" 
+indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="C2" & indv$Replicate=="1")] <- "C2-O" 
+indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="C3" & indv$Replicate=="1")] <- "C3-O" 
+indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="C4" & indv$Replicate=="1")] <- "C4-O" 
+indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="C5" & indv$Replicate=="1")] <- "C5-O" 
+indv$Sample[which(indv$Cell.Type=="Osteoblast" & indv$Individual=="C6" & indv$Replicate=="1")] <- "C6-O" 
+
+samples <- c("C1-I","C1-I-r2","C2-I","C3-I","C4-I","C5-I","C6-I","H1-I","H1-I-r2","H2-I","H3-I","H4-I","H5-I","H6-I",
+             "C1-M","C1-M-r2","C2-M","C3-M","C4-M","C5-M","C6-M","H1-M","H1-M-r2","H2-M","H3-M","H4-M","H5-M","H6-M",
+             "C1-O","C1-O-r2","C2-O","C3-O","C4-O","C5-O","C6-O","H1-O","H1-O-r2","H2-O","H3-O","H4-O","H5-O","H6-O")
+
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="Sex")
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="Age")
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="DateCollection")
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="Number6W")
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="PrewashCount")
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="PrewashViability")
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="PostwashCount")
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="PostwashViability")
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="PostmixCount")
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="PostmixViability")
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="DatecDNA")
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="DateLibrary")
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="SequencingBatch")
+for(i in samples) {
+  if(i %in% batch$Sample_in_Pool) {
+    indv$Sex[which(indv$Sample==i)] <- batch$Sex_in_Pool[which(batch$Sample_in_Pool==i)]
+    indv$Age[which(indv$Sample==i)] <- batch$Age_in_Pool[which(batch$Sample_in_Pool==i)]
+    indv$DateCollection[which(indv$Sample==i)] <- batch$Date_of_10X_Collection[which(batch$Sample_in_Pool==i)]
+    indv$Number6W[which(indv$Sample==i)] <- batch$Number_of_6wells_Used[which(batch$Sample_in_Pool==i)]
+    indv$PrewashCount[which(indv$Sample==i)] <- batch$X10X_Cell_Count_Prewash[which(batch$Sample_in_Pool==i)]
+    indv$PrewashViability[which(indv$Sample==i)] <- batch$X10X_Cell_Viability_Prewash[which(batch$Sample_in_Pool==i)]
+    indv$PostwashCount[which(indv$Sample==i)] <- batch$X10X_Cell_Count_Postwash[which(batch$Sample_in_Pool==i)]
+    indv$PostwashViability[which(indv$Sample==i)] <- batch$X10X_Cell_Viability_Postwash[which(batch$Sample_in_Pool==i)]
+    indv$PostmixCount[which(indv$Sample==i)] <- batch$X10X_Cell_Count_Postwash_Postmix[which(batch$Sample_in_Pool==i)]
+    indv$PostmixViability[which(indv$Sample==i)] <- batch$X10X_Cell_Viability_Postwash_Postmix[which(batch$Sample_in_Pool==i)]
+    indv$DatecDNA[which(indv$Sample==i)] <- batch$Date_of_10X_cDNA_Synthesis[which(batch$Sample_in_Pool==i)]
+    indv$DateLibrary[which(indv$Sample==i)] <- batch$Date_of_10X_Library_Prep[which(batch$Sample_in_Pool==i)]
+    indv$SequencingBatch[which(indv$Sample==i)] <- batch$X10X_Sequencing_Pool[which(batch$Sample_in_Pool==i)]
+  }
+}
+
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="CD90_Control")
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="CD73_Control")
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="CD105_Control")
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="CD45.CD34.CD11b.CD19.HLA.DR_Control")
+for(i in samples) {
+  if(i %in% fcs.ctrl$Abbr_Details) {
+    indv$CD90_Control[which(indv$Sample==i)] <- fcs.ctrl$CD90_Percentage[which(fcs.ctrl$Abbr_Details==i)] 
+    indv$CD73_Control[which(indv$Sample==i)] <- fcs.ctrl$CD73_Percentage[which(fcs.ctrl$Abbr_Details==i)] 
+    indv$CD105_Control[which(indv$Sample==i)] <- fcs.ctrl$CD105_Percentage[which(fcs.ctrl$Abbr_Details==i)] 
+    indv$CD45.CD34.CD11b.CD19.HLA.DR_Control[which(indv$Sample==i)] <- fcs.ctrl$CD45.CD34.CD11b.CD19.HLA.DR_Percentage[which(fcs.ctrl$Abbr_Details==i)]
+  }
+}
+
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="CD90")
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="CD73")
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="CD105")
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="CD45.CD34.CD11b.CD19.HLA.DR")
+for(i in samples) {
+  if(i %in% fcs.ipsc$Abbr_Details) {
+    indv$CD90[which(indv$Sample==i)] <- fcs.ipsc$CD90_Percentage[which(fcs.ipsc$Abbr_Details==i)] 
+    indv$CD73[which(indv$Sample==i)] <- fcs.ipsc$CD73_Percentage[which(fcs.ipsc$Abbr_Details==i)] 
+    indv$CD105[which(indv$Sample==i)] <- fcs.ipsc$CD105_Percentage[which(fcs.ipsc$Abbr_Details==i)] 
+    indv$CD45.CD34.CD11b.CD19.HLA.DR[which(indv$Sample==i)] <- fcs.ipsc$CD45.CD34.CD11b.CD19.HLA.DR_Percentage[which(fcs.ipsc$Abbr_Details==i)]
+  }
+}
+for(i in samples) {
+  if(i %in% fcs.msc$Abbr_Details) {
+    indv$CD90[which(indv$Sample==i)] <- fcs.msc$CD90_Percentage[which(fcs.msc$Abbr_Details==i)] 
+    indv$CD73[which(indv$Sample==i)] <- fcs.msc$CD73_Percentage[which(fcs.msc$Abbr_Details==i)] 
+    indv$CD105[which(indv$Sample==i)] <- fcs.msc$CD105_Percentage[which(fcs.msc$Abbr_Details==i)] 
+    indv$CD45.CD34.CD11b.CD19.HLA.DR[which(indv$Sample==i)] <- fcs.msc$CD45.CD34.CD11b.CD19.HLA.DR_Percentage[which(fcs.msc$Abbr_Details==i)]
+  }
+}
+
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="Alizarin")
+for(i in samples) {
+  if(i %in% alz$Sample) {
+    indv$Alizarin[which(indv$Sample==i)] <- alz$Absorbance_Value[which(alz$Sample==i)]
+  }
+}
+
+indv <- AddMetaData(indv, rep(NA,length(rownames(indv@meta.data))), col.name="OilRed")
+for(i in samples) {
+  if(i %in% oil$Sample) {
+    indv$OilRed[which(indv$Sample==i)] <- oil$Absorbance_Value[which(oil$Sample==i)]
+  }
+}
+
+rm(batch,fcs.ctrl,fcs.ipsc,fcs.msc,alz,oil,samples,i)
+
+indv@meta.data[,c(4,6:10,12:13,15,23:25)] <- lapply(indv@meta.data[,c(4,6:10,12:13,15,23:25)], function(x) as.factor(x))
+
+
+#Check data
+indv
+head(indv@meta.data)
+table(indv@meta.data$Sample)
+table(indv@meta.data$Sample[which(indv@meta.data$Alizarin>0)])
+
+
+#Save data
+saveRDS(indv, file=paste0(dir2,scrna))
+
+```

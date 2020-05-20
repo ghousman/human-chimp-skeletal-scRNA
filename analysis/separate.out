@@ -1,0 +1,450 @@
+
+R version 3.5.1 (2018-07-02) -- "Feather Spray"
+Copyright (C) 2018 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> #Load libraries
+> library(Seurat)
+> library(dplyr)
+
+Attaching package: 'dplyr'
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+> library(stringi)
+> library(stringr)
+> library(ggplot2)
+> library(colorspace)
+> library(RColorBrewer)
+> 
+> #Define main directory
+> dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+> 
+> #Load batch info
+> batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+> 
+> #Read in files
+> data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.rds"))
+> 
+> #Perform log normalization
+> #Reduce dimensionality
+> #Remove excess files
+> #Save datasets
+> 
+> #Perform log normalization on each collection
+> for (i in 1:length(data)) {
++   print(i)
++   data[[i]] <- NormalizeData(data[[i]], verbose=FALSE)
++   data[[i]] <- FindVariableFeatures(data[[i]], selection.method="vst", nfeatures=3000, verbose=FALSE)
++   data[[i]] <- ScaleData(data[[i]], verbose=FALSE)
++   data[[i]] <- RunPCA(object=data[[i]], npcs=100, verbose=FALSE)
++   pva <- data[[i]]@reductions$pca@stdev^2/data[[i]]@reductions$pca@misc$total.variance
++   ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
++   ndim #
++   data[[i]] <- RunUMAP(data[[i]], dims=1:ndim)
++ }
+[1] 1
+Warning: The default method for RunUMAP has changed from calling Python UMAP via reticulate to the R-native UWOT using the cosine metric
+To use Python UMAP via reticulate, set umap.method to 'umap-learn' and metric to 'correlation'
+This message will be shown once per session
+14:29:21 UMAP embedding parameters a = 0.9922 b = 1.112
+14:29:21 Read 6396 rows and found 26 numeric columns
+14:29:21 Using Annoy for neighbor search, n_neighbors = 30
+14:29:21 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:29:23 Writing NN index file to temp file /tmp/jobs/66292750/Rtmp9J04Tj/filed8df2dbe9ec7
+14:29:23 Searching Annoy index using 1 thread, search_k = 3000
+14:29:24 Annoy recall = 100%
+14:29:25 Commencing smooth kNN distance calibration using 1 thread
+14:29:25 Initializing from normalized Laplacian + noise
+14:29:26 Commencing optimization for 500 epochs, with 275604 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:29:41 Optimization finished
+[1] 2
+14:30:06 UMAP embedding parameters a = 0.9922 b = 1.112
+14:30:06 Read 5851 rows and found 43 numeric columns
+14:30:06 Using Annoy for neighbor search, n_neighbors = 30
+14:30:06 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:30:07 Writing NN index file to temp file /tmp/jobs/66292750/Rtmp9J04Tj/filed8df34f64164
+14:30:07 Searching Annoy index using 1 thread, search_k = 3000
+14:30:08 Annoy recall = 100%
+14:30:08 Commencing smooth kNN distance calibration using 1 thread
+14:30:09 Initializing from normalized Laplacian + noise
+14:30:09 Commencing optimization for 500 epochs, with 248018 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:30:23 Optimization finished
+[1] 3
+14:30:34 UMAP embedding parameters a = 0.9922 b = 1.112
+14:30:34 Read 3227 rows and found 100 numeric columns
+14:30:34 Using Annoy for neighbor search, n_neighbors = 30
+14:30:34 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:30:35 Writing NN index file to temp file /tmp/jobs/66292750/Rtmp9J04Tj/filed8df31a03fc2
+14:30:35 Searching Annoy index using 1 thread, search_k = 3000
+14:30:36 Annoy recall = 100%
+14:30:36 Commencing smooth kNN distance calibration using 1 thread
+14:30:36 Initializing from normalized Laplacian + noise
+14:30:36 Commencing optimization for 500 epochs, with 147318 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:30:44 Optimization finished
+[1] 4
+14:31:16 UMAP embedding parameters a = 0.9922 b = 1.112
+14:31:16 Read 6783 rows and found 21 numeric columns
+14:31:16 Using Annoy for neighbor search, n_neighbors = 30
+14:31:16 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:31:17 Writing NN index file to temp file /tmp/jobs/66292750/Rtmp9J04Tj/filed8dfe86c761
+14:31:17 Searching Annoy index using 1 thread, search_k = 3000
+14:31:19 Annoy recall = 100%
+14:31:19 Commencing smooth kNN distance calibration using 1 thread
+14:31:19 Initializing from normalized Laplacian + noise
+14:31:20 Commencing optimization for 500 epochs, with 287554 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:31:36 Optimization finished
+[1] 5
+14:32:02 UMAP embedding parameters a = 0.9922 b = 1.112
+14:32:02 Read 6663 rows and found 36 numeric columns
+14:32:02 Using Annoy for neighbor search, n_neighbors = 30
+14:32:02 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:32:03 Writing NN index file to temp file /tmp/jobs/66292750/Rtmp9J04Tj/filed8df3327feca
+14:32:03 Searching Annoy index using 1 thread, search_k = 3000
+14:32:05 Annoy recall = 100%
+14:32:05 Commencing smooth kNN distance calibration using 1 thread
+14:32:05 Initializing from normalized Laplacian + noise
+14:32:06 Commencing optimization for 500 epochs, with 278894 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:32:22 Optimization finished
+[1] 6
+14:32:32 UMAP embedding parameters a = 0.9922 b = 1.112
+14:32:32 Read 3058 rows and found 100 numeric columns
+14:32:32 Using Annoy for neighbor search, n_neighbors = 30
+14:32:32 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:32:33 Writing NN index file to temp file /tmp/jobs/66292750/Rtmp9J04Tj/filed8df374e9c1c
+14:32:33 Searching Annoy index using 1 thread, search_k = 3000
+14:32:34 Annoy recall = 100%
+14:32:34 Commencing smooth kNN distance calibration using 1 thread
+14:32:34 Initializing from normalized Laplacian + noise
+14:32:34 Commencing optimization for 500 epochs, with 144676 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:32:42 Optimization finished
+[1] 7
+14:32:53 UMAP embedding parameters a = 0.9922 b = 1.112
+14:32:53 Read 3279 rows and found 100 numeric columns
+14:32:53 Using Annoy for neighbor search, n_neighbors = 30
+14:32:53 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:32:54 Writing NN index file to temp file /tmp/jobs/66292750/Rtmp9J04Tj/filed8df7939e1c4
+14:32:54 Searching Annoy index using 1 thread, search_k = 3000
+14:32:55 Annoy recall = 100%
+14:32:55 Commencing smooth kNN distance calibration using 1 thread
+14:32:55 Initializing from normalized Laplacian + noise
+14:32:55 Commencing optimization for 500 epochs, with 156752 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:33:04 Optimization finished
+[1] 8
+14:33:24 UMAP embedding parameters a = 0.9922 b = 1.112
+14:33:24 Read 5329 rows and found 40 numeric columns
+14:33:24 Using Annoy for neighbor search, n_neighbors = 30
+14:33:24 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:33:25 Writing NN index file to temp file /tmp/jobs/66292750/Rtmp9J04Tj/filed8df3d005003
+14:33:25 Searching Annoy index using 1 thread, search_k = 3000
+14:33:26 Annoy recall = 100%
+14:33:26 Commencing smooth kNN distance calibration using 1 thread
+14:33:27 Initializing from normalized Laplacian + noise
+14:33:27 Commencing optimization for 500 epochs, with 220144 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:33:40 Optimization finished
+[1] 9
+14:34:01 UMAP embedding parameters a = 0.9922 b = 1.112
+14:34:01 Read 5589 rows and found 43 numeric columns
+14:34:01 Using Annoy for neighbor search, n_neighbors = 30
+14:34:01 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:34:01 Writing NN index file to temp file /tmp/jobs/66292750/Rtmp9J04Tj/filed8df306dab2a
+14:34:01 Searching Annoy index using 1 thread, search_k = 3000
+14:34:03 Annoy recall = 100%
+14:34:03 Commencing smooth kNN distance calibration using 1 thread
+14:34:04 Initializing from normalized Laplacian + noise
+14:34:04 Commencing optimization for 500 epochs, with 233954 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:34:17 Optimization finished
+[1] 10
+14:34:37 UMAP embedding parameters a = 0.9922 b = 1.112
+14:34:37 Read 5026 rows and found 64 numeric columns
+14:34:37 Using Annoy for neighbor search, n_neighbors = 30
+14:34:37 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:34:38 Writing NN index file to temp file /tmp/jobs/66292750/Rtmp9J04Tj/filed8df585c6a07
+14:34:38 Searching Annoy index using 1 thread, search_k = 3000
+14:34:40 Annoy recall = 100%
+14:34:40 Commencing smooth kNN distance calibration using 1 thread
+14:34:41 Initializing from normalized Laplacian + noise
+14:34:41 Commencing optimization for 500 epochs, with 239226 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:34:53 Optimization finished
+[1] 11
+14:35:11 UMAP embedding parameters a = 0.9922 b = 1.112
+14:35:11 Read 4944 rows and found 58 numeric columns
+14:35:11 Using Annoy for neighbor search, n_neighbors = 30
+14:35:11 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:35:12 Writing NN index file to temp file /tmp/jobs/66292750/Rtmp9J04Tj/filed8df5535d745
+14:35:12 Searching Annoy index using 1 thread, search_k = 3000
+14:35:14 Annoy recall = 100%
+14:35:14 Commencing smooth kNN distance calibration using 1 thread
+14:35:15 Initializing from normalized Laplacian + noise
+14:35:15 Commencing optimization for 500 epochs, with 214492 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:35:27 Optimization finished
+[1] 12
+14:35:29 UMAP embedding parameters a = 0.9922 b = 1.112
+14:35:29 Read 935 rows and found 100 numeric columns
+14:35:29 Using Annoy for neighbor search, n_neighbors = 30
+14:35:29 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:35:29 Writing NN index file to temp file /tmp/jobs/66292750/Rtmp9J04Tj/filed8df73f0bfc6
+14:35:29 Searching Annoy index using 1 thread, search_k = 3000
+14:35:29 Annoy recall = 100%
+14:35:29 Commencing smooth kNN distance calibration using 1 thread
+14:35:30 Initializing from normalized Laplacian + noise
+14:35:30 Commencing optimization for 500 epochs, with 42692 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:35:32 Optimization finished
+[1] 13
+14:35:47 UMAP embedding parameters a = 0.9922 b = 1.112
+14:35:47 Read 4042 rows and found 100 numeric columns
+14:35:47 Using Annoy for neighbor search, n_neighbors = 30
+14:35:47 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:35:48 Writing NN index file to temp file /tmp/jobs/66292750/Rtmp9J04Tj/filed8df3653042a
+14:35:48 Searching Annoy index using 1 thread, search_k = 3000
+14:35:49 Annoy recall = 100%
+14:35:49 Commencing smooth kNN distance calibration using 1 thread
+14:35:50 Initializing from normalized Laplacian + noise
+14:35:50 Commencing optimization for 500 epochs, with 192740 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:36:00 Optimization finished
+[1] 14
+14:36:13 UMAP embedding parameters a = 0.9922 b = 1.112
+14:36:13 Read 3933 rows and found 81 numeric columns
+14:36:13 Using Annoy for neighbor search, n_neighbors = 30
+14:36:13 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:36:14 Writing NN index file to temp file /tmp/jobs/66292750/Rtmp9J04Tj/filed8df5d20c2f
+14:36:14 Searching Annoy index using 1 thread, search_k = 3000
+14:36:15 Annoy recall = 100%
+14:36:16 Commencing smooth kNN distance calibration using 1 thread
+14:36:16 Initializing from normalized Laplacian + noise
+14:36:16 Commencing optimization for 500 epochs, with 170408 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:36:26 Optimization finished
+[1] 15
+14:36:36 UMAP embedding parameters a = 0.9922 b = 1.112
+14:36:36 Read 3105 rows and found 100 numeric columns
+14:36:36 Using Annoy for neighbor search, n_neighbors = 30
+14:36:36 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:36:36 Writing NN index file to temp file /tmp/jobs/66292750/Rtmp9J04Tj/filed8df3fa8151f
+14:36:36 Searching Annoy index using 1 thread, search_k = 3000
+14:36:37 Annoy recall = 100%
+14:36:38 Commencing smooth kNN distance calibration using 1 thread
+14:36:38 Initializing from normalized Laplacian + noise
+14:36:38 Commencing optimization for 500 epochs, with 138212 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:36:46 Optimization finished
+[1] 16
+14:37:13 UMAP embedding parameters a = 0.9922 b = 1.112
+14:37:13 Read 6057 rows and found 30 numeric columns
+14:37:13 Using Annoy for neighbor search, n_neighbors = 30
+14:37:13 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:37:14 Writing NN index file to temp file /tmp/jobs/66292750/Rtmp9J04Tj/filed8df30d1027e
+14:37:14 Searching Annoy index using 1 thread, search_k = 3000
+14:37:16 Annoy recall = 100%
+14:37:16 Commencing smooth kNN distance calibration using 1 thread
+14:37:17 Initializing from normalized Laplacian + noise
+14:37:17 Commencing optimization for 500 epochs, with 270404 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:37:32 Optimization finished
+[1] 17
+14:38:00 UMAP embedding parameters a = 0.9922 b = 1.112
+14:38:00 Read 7024 rows and found 43 numeric columns
+14:38:00 Using Annoy for neighbor search, n_neighbors = 30
+14:38:00 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:38:01 Writing NN index file to temp file /tmp/jobs/66292750/Rtmp9J04Tj/filed8df606495a1
+14:38:01 Searching Annoy index using 1 thread, search_k = 3000
+14:38:03 Annoy recall = 100%
+14:38:03 Commencing smooth kNN distance calibration using 1 thread
+14:38:04 Initializing from normalized Laplacian + noise
+14:38:04 Commencing optimization for 500 epochs, with 288798 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:38:21 Optimization finished
+[1] 18
+14:38:32 UMAP embedding parameters a = 0.9922 b = 1.112
+14:38:32 Read 3071 rows and found 100 numeric columns
+14:38:32 Using Annoy for neighbor search, n_neighbors = 30
+14:38:32 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:38:33 Writing NN index file to temp file /tmp/jobs/66292750/Rtmp9J04Tj/filed8df2abf5494
+14:38:33 Searching Annoy index using 1 thread, search_k = 3000
+14:38:34 Annoy recall = 100%
+14:38:34 Commencing smooth kNN distance calibration using 1 thread
+14:38:34 Initializing from normalized Laplacian + noise
+14:38:34 Commencing optimization for 500 epochs, with 139260 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:38:42 Optimization finished
+[1] 19
+14:39:07 UMAP embedding parameters a = 0.9922 b = 1.112
+14:39:07 Read 5926 rows and found 39 numeric columns
+14:39:07 Using Annoy for neighbor search, n_neighbors = 30
+14:39:07 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:39:08 Writing NN index file to temp file /tmp/jobs/66292750/Rtmp9J04Tj/filed8df53ecd550
+14:39:08 Searching Annoy index using 1 thread, search_k = 3000
+14:39:10 Annoy recall = 100%
+14:39:10 Commencing smooth kNN distance calibration using 1 thread
+14:39:11 Initializing from normalized Laplacian + noise
+14:39:11 Commencing optimization for 500 epochs, with 263196 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:39:25 Optimization finished
+[1] 20
+14:39:44 UMAP embedding parameters a = 0.9922 b = 1.112
+14:39:44 Read 4850 rows and found 71 numeric columns
+14:39:44 Using Annoy for neighbor search, n_neighbors = 30
+14:39:44 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:39:45 Writing NN index file to temp file /tmp/jobs/66292750/Rtmp9J04Tj/filed8df1545f045
+14:39:45 Searching Annoy index using 1 thread, search_k = 3000
+14:39:47 Annoy recall = 100%
+14:39:47 Commencing smooth kNN distance calibration using 1 thread
+14:39:48 Initializing from normalized Laplacian + noise
+14:39:48 Commencing optimization for 500 epochs, with 212032 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:39:59 Optimization finished
+[1] 21
+14:40:28 UMAP embedding parameters a = 0.9922 b = 1.112
+14:40:28 Read 7092 rows and found 38 numeric columns
+14:40:28 Using Annoy for neighbor search, n_neighbors = 30
+14:40:28 Building Annoy index with metric = cosine, n_trees = 50
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:40:29 Writing NN index file to temp file /tmp/jobs/66292750/Rtmp9J04Tj/filed8df332c2dc5
+14:40:29 Searching Annoy index using 1 thread, search_k = 3000
+14:40:31 Annoy recall = 100%
+14:40:31 Commencing smooth kNN distance calibration using 1 thread
+14:40:32 Initializing from normalized Laplacian + noise
+14:40:32 Commencing optimization for 500 epochs, with 303362 positive edges
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+14:40:49 Optimization finished
+> 
+> saveRDS(data, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.separate.rds"))
+> 
+> proc.time()
+    user   system  elapsed 
+1166.640   39.152 1213.665 

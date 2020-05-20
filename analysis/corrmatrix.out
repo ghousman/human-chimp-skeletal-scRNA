@@ -1,0 +1,85 @@
+
+R version 3.4.3 (2017-11-30) -- "Kite-Eating Tree"
+Copyright (C) 2017 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> #Load libraries
+> library(Seurat)
+> library(dplyr)
+
+Attaching package: 'dplyr'
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+> library(stringi)
+> library(stringr)
+> library(ggplot2)
+> library(colorspace)
+> library(RColorBrewer)
+> library(tidyr)
+> 
+> #Compute the correlation matrix use a seurat object and cell line matrix as input
+> ComputeCorMat <- function(object, cell.line, CorMethod="pearson"){
++ 
++     data=GetAssayData(object, slot="data", assay="RNA") #additions - added slot and assay info because SCT assay 
++     data_norm <- apply(data, 2, function(x) x/sum(x))
++     data_libsize <- apply(data_norm, 2, function(x) x * 1e+06)
++ 
++     Data.use <- data_libsize
++ 
++     gene.id <- rownames(Data.use)
++     gene.ref <- rownames(cell.line)
++     common <- intersect(gene.id, gene.ref)
++     logxx <- apply(Data.use[common, ], 2, function(x) {
++         log(x + 0.1)
++     })
++     selected.cell.line <- apply(cell.line[common, ], 2, function(x) {
++         x - mean(x)
++     })
++     n <- ncol(logxx)
++     m <- ncol(cell.line)
++     cor.mat <- matrix(0, nrow = n, ncol = m)
++     for (j in 1:m) {
++         for (i in 1:n) {
++             cor.mat[i,j] <- cor(logxx[,i], selected.cell.line[,j], method=CorMethod)
++         }
++     }
++     rownames(cor.mat) <- colnames(Data.use)
++     colnames(cor.mat) <- colnames(cell.line)
++ 	return(cor.mat)
++ }
+> 
+> #Compute the correlation matrix use a seurat object and cell line matrix as input
+> hpca <- read.table("/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA/data/HumanPrimaryCellAtlasData-SingleR")
+> hpca.names <- read.csv("/project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA/data/HumanPrimaryCellAtlasLabels-SingleR.csv", row.names=1)
+> hpca.names$label <- paste0(hpca.names$geo.currated,"_",hpca.names$label.currated)
+> i=1
+> while(i <= length(colnames(hpca))) {
++   colnames(hpca)[i] <- hpca.names$label[rownames(hpca.names)==colnames(hpca)[i]]
++   i=i+1
++ }
+> 
+> #Define directory
+> dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+> 
+> #Compute correlation matrix for each data set
+> indv <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.10k.int.ipsc.rds"))  #integrate across individuals - ipsc
+> cor.mat.hpca=ComputeCorMat(indv,hpca)
