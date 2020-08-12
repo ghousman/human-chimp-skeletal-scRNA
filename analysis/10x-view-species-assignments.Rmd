@@ -1,7 +1,7 @@
 ---
 title: "10x-view-species-assignments"
 author: "Genevieve Housman"
-date: "2/1/2020"
+date: "August 2020"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -14,29 +14,36 @@ knitr::opts_chunk$set(echo = TRUE)
 ## View 10X Data Cellranger Species Assignments
 
 Data being examined comes from 6 humans and 6 chimpanzees.
-- GHO-1:  H1-I + C1-I (iPSCs from H23555 and C8861)
-- GHO-2:  H1-M + C1-M (iPSC-derived MSCs from H23555 and C8861)
-- GHO-4:  H1-O + C1-O (iPSC-MSC-derived osteoblasts from H23555 and C8861)
-- HOU-10: H1-I-r2 + C1-I-r2 (iPSCs from H23555 and C8861)
-- HOU-12: H1-M-r2 + C1-M-r2 (iPSC-derived MSCs from H23555 and C8861)
-- HOU-16: H1-O-r2 + C1-O-r2 (iPSC-MSC-derived osteoblasts from H23555 and C8861)
-- HOU-1:  H2-I + C2-I (iPSCs from H20157 and C3647)
-- HOU-2:  H2-M + C2-M (iPSC-derived MSCs from H20157 and C3647)
-- HOU-4:  H2-O + C2-O (iPSC-MSC-derived osteoblasts from H20157 and C3647)
-- HOU-9:  H3-I + C3-I (iPSCs from H28126 and C3649)
-- HOU-11: H3-M + C3-M (iPSC-derived MSCs from H28126 and C3649)
-- HOU-15: H3-O + C3-O (iPSC-MSC-derived osteoblasts from H28126 and C3649)
-- HOU-5:  H4-I + C4-I (iPSCs from H28834 and C40210)
-- HOU-6:  H4-M + C4-M (iPSC-derived MSCs from H28834 and C40210)
-- HOU-8:  H4-O + C4-O (iPSC-MSC-derived osteoblasts from H28834 and C40210)
-- HOU-17:	H5-I + C5-I (iPSCs from H21792 and C40280)
-- HOU-19:	H5-M + C5-M (iPSC-derived MSCs from H21792 and C40280)
-- HOU-21:	H5-O + C5-O (iPSC-MSC-derived osteoblasts from H21792 and C40280)
-- HOU-18:	H6-I + C6-I (iPSCs from H20961 and C3624)
-- HOU-20:	H6-M + C6-M (iPSC-derived MSCs from H20961 and C3624)
-- HOU-22:	H6-O + C6-O (iPSC-MSC-derived osteoblasts from H20961 and C3624)
 
-```{r load libraries}
+* GHO-1:  H1-I + C1-I (iPSCs from H23555 and C8861)
+* GHO-2:  H1-M + C1-M (iPSC-derived MSCs from H23555 and C8861)
+* GHO-4:  H1-O + C1-O (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+* HOU-10: H1-I-r2 + C1-I-r2 (iPSCs from H23555 and C8861)
+* HOU-12: H1-M-r2 + C1-M-r2 (iPSC-derived MSCs from H23555 and C8861)
+* HOU-16: H1-O-r2 + C1-O-r2 (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+* HOU-1:  H2-I + C2-I (iPSCs from H20157 and C3647)
+* HOU-2:  H2-M + C2-M (iPSC-derived MSCs from H20157 and C3647)
+* HOU-4:  H2-O + C2-O (iPSC-MSC-derived osteoblasts from H20157 and C3647)
+* HOU-9:  H3-I + C3-I (iPSCs from H28126 and C3649)
+* HOU-11: H3-M + C3-M (iPSC-derived MSCs from H28126 and C3649)
+* HOU-15: H3-O + C3-O (iPSC-MSC-derived osteoblasts from H28126 and C3649)
+* HOU-5:  H4-I + C4-I (iPSCs from H28834 and C40210)
+* HOU-6:  H4-M + C4-M (iPSC-derived MSCs from H28834 and C40210)
+* HOU-8:  H4-O + C4-O (iPSC-MSC-derived osteoblasts from H28834 and C40210)
+* HOU-17:	H5-I + C5-I (iPSCs from H21792 and C40280)
+* HOU-19:	H5-M + C5-M (iPSC-derived MSCs from H21792 and C40280)
+* HOU-21:	H5-O + C5-O (iPSC-MSC-derived osteoblasts from H21792 and C40280)
+* HOU-18:	H6-I + C6-I (iPSCs from H20961 and C3624)
+* HOU-20:	H6-M + C6-M (iPSC-derived MSCs from H20961 and C3624)
+* HOU-22:	H6-O + C6-O (iPSC-MSC-derived osteoblasts from H20961 and C3624)
+
+Collections are classified by the stage of differentiation at which cells were collected:
+
+* Time 0 = iPSCs
+* Time 1 = iPSC-derived MSCs
+* Time 2 = iPSC-MSC-derived osteoblasts
+
+```{r load libraries, message=FALSE}
 
 library(Seurat)
 library(dplyr)
@@ -48,35 +55,30 @@ library(RColorBrewer)
 
 ```
 
-```{r assess species assignments}
-
-#Define main directory
-dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+```{r load species assignments, results="hide"}
 
 #Load batch info
-batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+batch <- read.csv(file='./data/scrna-batch.csv', header=TRUE, sep=",")
 
-#Make empty dataframe for species data
+#Load species assignments
 spp <- data.frame()
-
-#Load species assignments from full data
-dir_scrna <- paste0(dir,'scRNA/cellranger-data-full')
 i <- 1
 while (i <= length(batch$Sample_Name_at_Core)) {
   print(i)
   #Define directory containing data from one collection
-  dir_data <- paste0(dir_scrna,'/cellranger-ortho-hg38-and-ortho-panTro6/',batch$Sample_Name_at_Core[i],'/outs/analysis/')
-  #Load summary metrics
+  dir_data <- paste0('./../scRNA/cellranger-data-full/cellranger-data-HumanOrthoV2_and_ChimpOrthoV2/',batch$Sample_Name_at_Core[i],'/outs/analysis/')
+  #Load summary metrics from one collection
   temp <- read.csv(file=paste0(dir_data,'gem_classification.csv'))
   #Process metrics
   temp$barcode <- sapply(temp$barcode, gsub, pattern="-1", replacement="")
-  temp$call <- sapply(temp$call, gsub, pattern="ortho.panTro6", replacement="Chimp")
-  temp$call <- sapply(temp$call, gsub, pattern="ortho.hg38", replacement="Human")
+  temp$call <- sapply(temp$call, gsub, pattern="HumanOrthoV2", replacement="Human")
+  temp$call <- sapply(temp$call, gsub, pattern="ChimpOrthoV2", replacement="Chimp")
   temp$Collection.Name <- batch$Sample_Name_at_Core[i]
   #Add data to dataframe
   spp <- rbind(spp,temp)
   i <- i+1
 }
+rm(dir_data,temp)
 
 #Fix species assignment details so that plotting is easier
 spp$Collection.Name <- factor(spp$Collection.Name,
@@ -87,137 +89,198 @@ spp$Collection.Name <- factor(spp$Collection.Name,
                                            "HOU-5","HOU-6","HOU-8",
                                            "HOU-17","HOU-19","HOU-21",
                                            "HOU-18","HOU-20","HOU-22"))
-cell = c()
+stage = c()
 for (j in spp$Collection.Name) {
-  if (j=="GHO-1"|j=="HOU-10"|j=="HOU-1"|j=="HOU-9"|j=="HOU-5"|j=="HOU-17"|j=="HOU-18") { cell = c(cell,"iPSCs") }
-  if (j=="GHO-2"|j=="HOU-12"|j=="HOU-2"|j=="HOU-11"|j=="HOU-6"|j=="HOU-19"|j=="HOU-20") { cell = c(cell,"MSCs") }
-  if (j=="GHO-4"|j=="HOU-16"|j=="HOU-4"|j=="HOU-15"|j=="HOU-8"|j=="HOU-21"|j=="HOU-22") { cell = c(cell,"Osteoblasts") }
+  if (j=="GHO-1"|j=="HOU-10"|j=="HOU-1"|j=="HOU-9"|j=="HOU-5"|j=="HOU-17"|j=="HOU-18") {
+    stage = c(stage,"Time 0")
+  }
+  if (j=="GHO-2"|j=="HOU-12"|j=="HOU-2"|j=="HOU-11"|j=="HOU-6"|j=="HOU-19"|j=="HOU-20") {
+    stage = c(stage,"Time 1")
+  }
+  if (j=="GHO-4"|j=="HOU-16"|j=="HOU-4"|j=="HOU-15"|j=="HOU-8"|j=="HOU-21"|j=="HOU-22") {
+    stage = c(stage,"Time 2")
+  }
 }
-spp$Cell.Type <- cell
-#spp$Cell.Type <- factor(spp$Cell.Type, levels=c("Osteoblasts","MSCs","iPSCs"))
-spp$Cell.Type <- factor(spp$Cell.Type, levels=c("iPSCs","MSCs","Osteoblasts"))
+spp$Stage <- stage
+spp$Stage <- factor(spp$Stage, levels=c("Time 0","Time 1","Time 2"))
+
+rm(stage,i,j)
+
+```
+
+```{r number of cells assigned to each species, results="hide"}
 
 #Examine species assignment data
-table(spp[spp$Collection.Name=="GHO-1",]$call)  #Chimp=3428, Human=2968, Multiplet= 298
-table(spp[spp$Collection.Name=="GHO-2",]$call)  #Chimp=3246, Human=2605, Multiplet= 129
-table(spp[spp$Collection.Name=="GHO-4",]$call)  #Chimp=1185, Human=2042, Multiplet=1466
-table(spp[spp$Collection.Name=="HOU-10",]$call) #Chimp=3081, Human=3702, Multiplet= 250
-table(spp[spp$Collection.Name=="HOU-12",]$call) #Chimp=2601, Human=4062, Multiplet= 164
-table(spp[spp$Collection.Name=="HOU-16",]$call) #Chimp=1286, Human=1772, Multiplet=1172
-table(spp[spp$Collection.Name=="HOU-1",]$call)  #Chimp=1262, Human=2017, Multiplet= 870
-table(spp[spp$Collection.Name=="HOU-2",]$call)  #Chimp=2223, Human=3106, Multiplet=  74
-table(spp[spp$Collection.Name=="HOU-4",]$call)  #Chimp=2669, Human=2920, Multiplet= 149
-table(spp[spp$Collection.Name=="HOU-9",]$call)  #Chimp=2637, Human=2389, Multiplet= 205
-table(spp[spp$Collection.Name=="HOU-11",]$call) #Chimp=2510, Human=2434, Multiplet= 117
-table(spp[spp$Collection.Name=="HOU-15",]$call) #Chimp= 534, Human= 401, Multiplet=1350
-table(spp[spp$Collection.Name=="HOU-5",]$call)  #Chimp=1978, Human=2064, Multiplet= 606
-table(spp[spp$Collection.Name=="HOU-6",]$call)  #Chimp=2653, Human=1280, Multiplet= 329
-table(spp[spp$Collection.Name=="HOU-8",]$call)  #Chimp=2113, Human= 992, Multiplet=1724
-table(spp[spp$Collection.Name=="HOU-17",]$call) #Chimp=3316, Human=2741, Multiplet= 150
-table(spp[spp$Collection.Name=="HOU-19",]$call) #Chimp=4117, Human=2907, Multiplet= 208
-table(spp[spp$Collection.Name=="HOU-21",]$call) #Chimp=1913, Human=1158, Multiplet= 908
-table(spp[spp$Collection.Name=="HOU-18",]$call) #Chimp=3696, Human=2230, Multiplet= 130
-table(spp[spp$Collection.Name=="HOU-20",]$call) #Chimp=1969, Human=2881, Multiplet= 157
-table(spp[spp$Collection.Name=="HOU-22",]$call) #Chimp=3146, Human=3946, Multiplet= 200
+table(spp[spp$Collection.Name=="GHO-1",]$call)  #Chimp=3558, Human=2992, Multiplet= 157
+table(spp[spp$Collection.Name=="GHO-2",]$call)  #Chimp=3238, Human=2602, Multiplet= 127
+table(spp[spp$Collection.Name=="GHO-4",]$call)  #Chimp=1704, Human=2062, Multiplet= 913
+table(spp[spp$Collection.Name=="HOU-10",]$call) #Chimp=3101, Human=3711, Multiplet= 210
+table(spp[spp$Collection.Name=="HOU-12",]$call) #Chimp=2612, Human=4063, Multiplet= 161
+table(spp[spp$Collection.Name=="HOU-16",]$call) #Chimp=1680, Human=1873, Multiplet= 702
+table(spp[spp$Collection.Name=="HOU-1",]$call)  #Chimp=1466, Human=2087, Multiplet= 607
+table(spp[spp$Collection.Name=="HOU-2",]$call)  #Chimp=2228, Human=3102, Multiplet=  71
+table(spp[spp$Collection.Name=="HOU-4",]$call)  #Chimp=2676, Human=2924, Multiplet= 135
+table(spp[spp$Collection.Name=="HOU-9",]$call)  #Chimp=2659, Human=2417, Multiplet= 181
+table(spp[spp$Collection.Name=="HOU-11",]$call) #Chimp=2507, Human=2435, Multiplet= 116
+table(spp[spp$Collection.Name=="HOU-15",]$call) #Chimp= 611, Human= 404, Multiplet=1197
+table(spp[spp$Collection.Name=="HOU-5",]$call)  #Chimp=2489, Human=2083, Multiplet=  87
+table(spp[spp$Collection.Name=="HOU-6",]$call)  #Chimp=2891, Human=1308, Multiplet=  91
+table(spp[spp$Collection.Name=="HOU-8",]$call)  #Chimp=3017, Human=1001, Multiplet= 811
+table(spp[spp$Collection.Name=="HOU-17",]$call) #Chimp=3334, Human=2758, Multiplet= 141
+table(spp[spp$Collection.Name=="HOU-19",]$call) #Chimp=4139, Human=2906, Multiplet= 210
+table(spp[spp$Collection.Name=="HOU-21",]$call) #Chimp=2070, Human=1245, Multiplet= 673
+table(spp[spp$Collection.Name=="HOU-18",]$call) #Chimp=3693, Human=2239, Multiplet= 130
+table(spp[spp$Collection.Name=="HOU-20",]$call) #Chimp=1975, Human=2878, Multiplet= 152
+table(spp[spp$Collection.Name=="HOU-22",]$call) #Chimp=3195, Human=3994, Multiplet= 171
 
-table(spp$Cell.Type)                           #iPSCs=40018, MSCs=39772, Osteoblasts=33046
-table(spp[spp$Cell.Type=="iPSCs",]$call)       #Chimp=19398, Human=18111, Multiplet= 2509
-table(spp[spp$Cell.Type=="MSCs",]$call)        #Chimp=19319, Human=19275, Multiplet= 1178
-table(spp[spp$Cell.Type=="Osteoblasts",]$call) #Chimp=12846, Human=13231, Multiplet= 6969
-table(spp$call)                                #Chimp=51563, Human=50617, Multiplet=10656
+table(spp$Stage)                      #Time0=40100, Time1=39812, Time2=33058
+table(spp[spp$Stage=="Time 0",]$call) #Chimp=20300, Human=18287, Multiplet=1513
+table(spp[spp$Stage=="Time 1",]$call) #Chimp=19590, Human=19294, Multiplet= 928
+table(spp[spp$Stage=="Time 2",]$call) #Chimp=14953, Human=13503, Multiplet=4602
+table(spp$call)                       #Chimp=54843, Human=51084, Multiplet=7043
 
-#Define directory for saving plots
-dir_out <- paste0(dir,'human-chimp-skeletal-scRNA/output')
+```
 
-#Summarize metrics
+### Visualize species assignment counts:
 
-#total number of each cell assignment
-p <- ggplot(spp, aes(x=Collection.Name, fill=call)) +
-      geom_bar() +
-      labs(title="Alignment to Human Ortho-Exon") +
-      theme(axis.text.x=element_text(size=6)) +
-      labs(title="Species Assignments (Genomes: hg38 + panTro6 Annotations: ortho-exon)",y="Number of Cells",x="Collection") +
-      scale_fill_grey(start=0.8, end=0.2) +
-      theme_classic() +
-      ylim(0,7500)
-ggsave("qc-sppcount.png", plot=p, path=dir_out, width=20, heigh=5)
+* numbers of human and chimpanzee cells are approximately 50/50 across all collections
+* cells collected at Time 2 (osteoblasts) tend to have lower counts than cells collected at Time 0 (iPSCs) and Time 1 (MSCs)
 
-#proportions of cell assignments
-p <- ggplot(spp, aes(x=Collection.Name, fill=call)) +
-      geom_bar(position="fill") +
-      labs(title="Alignment to Human Ortho-Exon") +
-      theme(axis.text.x=element_text(size=6)) +
-      labs(title="Species Assignments (Genomes: hg38 + panTro6 Annotations: ortho-exon)",y="Number of Cells",x="Collection") +
-      scale_fill_grey(start=0.8, end=0.2) +
-      theme_classic() +
-      ylim(0,1)
-ggsave("qc-sppprop.png", plot=p, path=dir_out, width=20, heigh=5)
+```{r}
 
+#total number of species assignments per collection
+ggplot(spp, aes(x=Collection.Name, fill=call)) +
+  geom_bar() +
+  labs(title="Alignment to Human Ortho-Exon") +
+  theme(axis.text.x=element_text(size=6)) +
+  labs(title="Species Assignments (Genomes: hg38 + panTro6 Annotations: ortho-exon)",y="Number of Cells",x="Collection") +
+  scale_fill_grey(start=0.8, end=0.2) +
+  theme_classic() +
+  ylim(0,7500)
+
+```
+
+```{r}
+
+#proportions of species assignments per collection
+ggplot(spp, aes(x=Collection.Name, fill=call)) +
+  geom_bar(position="fill") +
+  labs(title="Alignment to Human Ortho-Exon") +
+  theme(axis.text.x=element_text(size=6)) +
+  labs(title="Species Assignments (Genomes: hg38 + panTro6 Annotations: ortho-exon)",y="Proportion of Cells",x="Collection") +
+  scale_fill_grey(start=0.8, end=0.2) +
+  theme_classic() +
+  ylim(0,1)
+
+```
+
+### Species assigments with multiplets removed:
+
+```{r}
+
+#total number of species assignments per collection with multiplets removed
 ggplot(subset(spp,call!="Multiplet"), aes(x=Collection.Name, fill=call)) +
-      geom_bar() +
-      labs(title="Alignment to Human Ortho-Exon") +
-      theme(axis.text.x=element_text(size=6)) +
-      labs(title="Species Assignments (Genomes: hg38 + panTro6 Annotations: ortho-exon)",y="Number of Cells",x="Collection") +
-      scale_fill_grey(start=0.7, end=0.3) +
-      theme_classic() +
-      ylim(0,7500) +
-      scale_x_discrete(labels=c("GHO-1"="H1-I/C1-I", "GHO-2"="H1-M/C1-M", "GHO-4"="H1-O/C1-O",
-                                "HOU-10"="H1-r2-I/C1-r2-I", "HOU-12"="H1-r2-M/C1-r2-M", "HOU-16"="H1-r2-O/C1-r2-O",
-                                "HOU-1"="H2-I/C2-I", "HOU-2"="H2-M/C2-M", "HOU-4"="H2-O/C2-O",
-                                "HOU-9"="H3-I/C3-I", "HOU-11"="H3-M/C3-M", "HOU-15"="H3-O/C3-O",
-                                "HOU-5"="H4-I/C4-I", "HOU-6"="H4-M/C4-M", "HOU-8"="H4-O/C4-O",
-                                "HOU-17"="H5-I/C5-I","HOU-19"="H5-M/C5-M","HOU-21"="H5-O/C5-O",
-                                "HOU-18"="H6-I/C6-I","HOU-20"="H6-M/C6-M","HOU-22"="H6-O/C6-O"))
+  geom_bar() +
+  labs(title="Alignment to Human Ortho-Exon") +
+  theme_classic() +
+  theme(axis.text.x=element_text(size=12), legend.text=element_text(size=12)) +
+  labs(title="Species Assignments (Genomes: hg38 + panTro6 Annotations: ortho-exon)", y="Number of Cells", x="Collection") +
+  scale_fill_grey(start=0.7, end=0.3) +
+  ylim(0,7500) +
+  scale_x_discrete(labels=c("GHO-1"="H1+C1\nTime 0",
+                            "GHO-2"="H1+C1\nTime 1",
+                            "GHO-4"="H1+C1\nTime 2",
+                            "HOU-10"="H1r2+C1r2\nTime 0",
+                            "HOU-12"="H1r2+C1r2\nTime 1",
+                            "HOU-16"="H1r2+C1r2\nTime 2",
+                            "HOU-1"="H2+C2\nTime 0",
+                            "HOU-2"="H2+C2\nTime 1",
+                            "HOU-4"="H2+C2\nTime 2",
+                            "HOU-9"="H3+C3\nTime 0",
+                            "HOU-11"="H3+C3\nTime 1",
+                            "HOU-15"="H3+C3\nTime 2",
+                            "HOU-5"="H4+C4\nTime 0",
+                            "HOU-6"="H4+C4\nTime 1",
+                            "HOU-8"="H4+C4\nTime 2",
+                            "HOU-17"="H5+C5\nTime 0",
+                            "HOU-19"="H5+C5\nTime 1",
+                            "HOU-21"="H5+C5\nTime 2",
+                            "HOU-18"="H6+C6\nTime 0",
+                            "HOU-20"="H6+C6\nTime 1",
+                            "HOU-22"="H6+C6\nTime 2"))
 
+```
+
+```{r}
+
+#proportions of species assignments per collection with multiplets removed
 ggplot(subset(spp,call!="Multiplet"), aes(x=Collection.Name, fill=call)) +
-      geom_bar(position="fill") +
-      labs(title="Alignment to Human Ortho-Exon") +
-      theme(axis.text.x=element_text(size=6)) +
-      labs(title="Species Assignments (Genomes: hg38 + panTro6 Annotations: ortho-exon)",y="Proportion of Cells",x="Collection") +
-      scale_fill_grey(start=0.7, end=0.3) +
-      theme_classic() +
-      ylim(0,1) +
-      scale_x_discrete(labels=c("GHO-1"="H1-I/C1-I", "GHO-2"="H1-M/C1-M", "GHO-4"="H1-O/C1-O",
-                                "HOU-10"="H1-r2-I/C1-r2-I", "HOU-12"="H1-r2-M/C1-r2-M", "HOU-16"="H1-r2-O/C1-r2-O",
-                                "HOU-1"="H2-I/C2-I", "HOU-2"="H2-M/C2-M", "HOU-4"="H2-O/C2-O",
-                                "HOU-9"="H3-I/C3-I", "HOU-11"="H3-M/C3-M", "HOU-15"="H3-O/C3-O",
-                                "HOU-5"="H4-I/C4-I", "HOU-6"="H4-M/C4-M", "HOU-8"="H4-O/C4-O",
-                                "HOU-17"="H5-I/C5-I","HOU-19"="H5-M/C5-M","HOU-21"="H5-O/C5-O",
-                                "HOU-18"="H6-I/C6-I","HOU-20"="H6-M/C6-M","HOU-22"="H6-O/C6-O"))
+  geom_bar(position="fill") +
+  labs(title="Alignment to Human Ortho-Exon") +
+  theme(axis.text.x=element_text(size=6)) +
+  labs(title="Species Assignments (Genomes: hg38 + panTro6 Annotations: ortho-exon)",y="Proportion of Cells",x="Collection") +
+  scale_fill_grey(start=0.7, end=0.3) +
+  theme_classic() +
+  ylim(0,1) +
+  scale_x_discrete(labels=c("GHO-1"="H1+C1\nTime 0",
+                            "GHO-2"="H1+C1\nTime 1",
+                            "GHO-4"="H1+C1\nTime 2",
+                            "HOU-10"="H1r2+C1r2\nTime 0",
+                            "HOU-12"="H1r2+C1r2\nTime 1",
+                            "HOU-16"="H1r2+C1r2\nTime 2",
+                            "HOU-1"="H2+C2\nTime 0",
+                            "HOU-2"="H2+C2\nTime 1",
+                            "HOU-4"="H2+C2\nTime 2",
+                            "HOU-9"="H3+C3\nTime 0",
+                            "HOU-11"="H3+C3\nTime 1",
+                            "HOU-15"="H3+C3\nTime 2",
+                            "HOU-5"="H4+C4\nTime 0",
+                            "HOU-6"="H4+C4\nTime 1",
+                            "HOU-8"="H4+C4\nTime 2",
+                            "HOU-17"="H5+C5\nTime 0",
+                            "HOU-19"="H5+C5\nTime 1",
+                            "HOU-21"="H5+C5\nTime 2",
+                            "HOU-18"="H6+C6\nTime 0",
+                            "HOU-20"="H6+C6\nTime 1",
+                            "HOU-22"="H6+C6\nTime 2"))
 
+```
 
-ggplot(subset(spp,call!="Multiplet"), aes(x=Cell.Type, fill=call)) +
-      geom_bar(position="fill") +
-      labs(title="Alignment to Human Ortho-Exon") +
-      theme_classic() +
-      theme(axis.text.x=element_text(size=12), axis.text.y=element_text(size=12), legend.text=element_text(size=12)) +
-      labs(title="Species Assignments (Genomes: hg38 + panTro6 Annotations: ortho-exon)",y="Proportion of Cells",x="Cell Type") +
-      scale_fill_grey(start=0.7, end=0.3, name="Species Assignment") +
-      coord_flip()
+### Species assignments of cells collected at different stages of differentiation:
 
-ggplot(subset(spp,call!="Multiplet"), aes(x=Cell.Type, fill=call)) +
-      geom_bar(position="dodge") +
-      labs(title="Alignment to Human Ortho-Exon") +
-      theme_classic() +
-      theme(axis.text.x=element_text(size=12), axis.text.y=element_text(size=12), legend.text=element_text(size=12)) +
-      labs(title="Species Assignments (Genomes: hg38 + panTro6 Annotations: ortho-exon)",y="Number of Cells",x="Cell Type") +
-      scale_fill_grey(start=0.7, end=0.3, name="Species Assignment")
+```{r}
 
-ggplot(subset(spp,call!="Multiplet"), aes(x=Collection.Name, fill=call)) +
-      geom_bar() +
-      labs(title="Alignment to Human Ortho-Exon") +
-      theme_classic() +
-      theme(axis.text.x=element_text(size=12), legend.text=element_text(size=12)) +
-      labs(title="Species Assignments (Genomes: hg38 + panTro6 Annotations: ortho-exon)", y="Number of Cells", x="Collection") +
-      scale_fill_grey(start=0.7, end=0.3) +
-      ylim(0,7500) +
-      scale_x_discrete(labels=c("GHO-1"="H1+C1\niPSCs", "GHO-2"="H1+C1\nMSCs", "GHO-4"="H1+C1\nOsteoblasts",
-                                "HOU-10"="H1r2+C1r2\niPSCs", "HOU-12"="H1r2+C1r2\nMSCs", "HOU-16"="H1r2+C1r2\nOsteoblasts",
-                                "HOU-1"="H2+C2\niPSCs", "HOU-2"="H2+C2\nMSCs", "HOU-4"="H2+C2\nOsteoblasts",
-                                "HOU-9"="H3+C3\niPSCs", "HOU-11"="H3+C3\nMSCs", "HOU-15"="H3+C3\nOsteoblasts",
-                                "HOU-5"="H4+C4\niPSCs", "HOU-6"="H4+C4\nMSCs", "HOU-8"="H4+C4\nOsteoblasts",
-                                "HOU-17"="H5+C5\niPSCs", "HOU-19"="H5+C5\nMSCs", "HOU-21"="H5+C5\nOsteoblasts",
-                                "HOU-18"="H6+C6\niPSCs", "HOU-20"="H6+C6\nMSCs", "HOU-22"="H6+C6\nOsteoblasts"))
+#proportion of species assignments for different stages of differentiation with multiplets removed
+ggplot(subset(spp,call!="Multiplet"), aes(x=Stage, fill=call)) +
+  geom_bar(position="fill") +
+  labs(title="Alignment to Human Ortho-Exon") +
+  theme_classic() +
+  theme(axis.text.x=element_text(size=12), axis.text.y=element_text(size=12), legend.text=element_text(size=12)) +
+  labs(title="Species Assignments (Genomes: hg38 + panTro6 Annotations: ortho-exon)",y="Proportion of Cells",x="Cell Type") +
+  scale_fill_grey(start=0.7, end=0.3, name="Species Assignment") +
+  coord_flip()
+
+```
+
+```{r}
+
+#total number of species assignments for different stages of differentiation with multiplets removed
+ggplot(subset(spp,call!="Multiplet"), aes(x=Stage, fill=call)) +
+  geom_bar(position="dodge") +
+  labs(title="Alignment to Human Ortho-Exon") +
+  theme_classic() +
+  theme(axis.text.x=element_text(size=12), axis.text.y=element_text(size=12), legend.text=element_text(size=12)) +
+  labs(title="Species Assignments (Genomes: hg38 + panTro6 Annotations: ortho-exon)",y="Number of Cells",x="Cell Type") +
+  scale_fill_grey(start=0.7, end=0.3, name="Species Assignment")
 
 
 ```
+
+### Conclusion after viewing 10X cellranger species assignments:
+
+* Each 10X collection has ~50% human cells and ~50% chimp cells
+* Cells from each stage of differentiation (across individuals) are ~50% human and ~50% chimp
+* 10X collections from Time 2 generally had fewer total barcodes (fewer singlets, more multiplets) than Time 0 or Time 1
+* Some variation in the number of cells across collections
+* Collection HOU-15 (H3+C3 Time 2) has many fewer cells than other collections
+* Using ortho-exon v2 (as compared to v1) generally results in fewer multiplets, more chimp singlets, and more Time 2 cells

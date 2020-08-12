@@ -1,7 +1,7 @@
 ---
-title: "10x-view-validataion-data"
+title: "10x-view-validation-data"
 author: "Genevieve Housman"
-date: "4/2/2020"
+date: "August 2020"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -11,32 +11,33 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Viewing of 10X Data Cellranger Metrics
+## Viewing of Traditional Cell Differentiation Validation Data in Overall Study
 
 Data being examined comes from 6 humans and 6 chimpanzees.
-- GHO-1:  H1-I + C1-I (iPSCs from H23555 and C8861)
-- GHO-2:  H1-M + C1-M (iPSC-derived MSCs from H23555 and C8861)
-- GHO-4:  H1-O + C1-O (iPSC-MSC-derived osteoblasts from H23555 and C8861)
-- HOU-10: H1-I-r2 + C1-I-r2 (iPSCs from H23555 and C8861)
-- HOU-12: H1-M-r2 + C1-M-r2 (iPSC-derived MSCs from H23555 and C8861)
-- HOU-16: H1-O-r2 + C1-O-r2 (iPSC-MSC-derived osteoblasts from H23555 and C8861)
-- HOU-1:  H2-I + C2-I (iPSCs from H20157 and C3647)
-- HOU-2:  H2-M + C2-M (iPSC-derived MSCs from H20157 and C3647)
-- HOU-4:  H2-O + C2-O (iPSC-MSC-derived osteoblasts from H20157 and C3647)
-- HOU-9:  H3-I + C3-I (iPSCs from H28126 and C3649)
-- HOU-11: H3-M + C3-M (iPSC-derived MSCs from H28126 and C3649)
-- HOU-15: H3-O + C3-O (iPSC-MSC-derived osteoblasts from H28126 and C3649)
-- HOU-5:  H4-I + C4-I (iPSCs from H28834 and C40210)
-- HOU-6:  H4-M + C4-M (iPSC-derived MSCs from H28834 and C40210)
-- HOU-8:  H4-O + C4-O (iPSC-MSC-derived osteoblasts from H28834 and C40210)
-- HOU-17:	H5-I + C5-I (iPSCs from H21792 and C40280)
-- HOU-19:	H5-M + C5-M (iPSC-derived MSCs from H21792 and C40280)
-- HOU-21:	H5-O + C5-O (iPSC-MSC-derived osteoblasts from H21792 and C40280)
-- HOU-18:	H6-I + C6-I (iPSCs from H20961 and C3624)
-- HOU-20:	H6-M + C6-M (iPSC-derived MSCs from H20961 and C3624)
-- HOU-22:	H6-O + C6-O (iPSC-MSC-derived osteoblasts from H20961 and C3624)
 
-```{r load libraries}
+* GHO-1:  H1-I + C1-I (iPSCs from H23555 and C8861)
+* GHO-2:  H1-M + C1-M (iPSC-derived MSCs from H23555 and C8861)
+* GHO-4:  H1-O + C1-O (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+* HOU-10: H1-I-r2 + C1-I-r2 (iPSCs from H23555 and C8861)
+* HOU-12: H1-M-r2 + C1-M-r2 (iPSC-derived MSCs from H23555 and C8861)
+* HOU-16: H1-O-r2 + C1-O-r2 (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+* HOU-1:  H2-I + C2-I (iPSCs from H20157 and C3647)
+* HOU-2:  H2-M + C2-M (iPSC-derived MSCs from H20157 and C3647)
+* HOU-4:  H2-O + C2-O (iPSC-MSC-derived osteoblasts from H20157 and C3647)
+* HOU-9:  H3-I + C3-I (iPSCs from H28126 and C3649)
+* HOU-11: H3-M + C3-M (iPSC-derived MSCs from H28126 and C3649)
+* HOU-15: H3-O + C3-O (iPSC-MSC-derived osteoblasts from H28126 and C3649)
+* HOU-5:  H4-I + C4-I (iPSCs from H28834 and C40210)
+* HOU-6:  H4-M + C4-M (iPSC-derived MSCs from H28834 and C40210)
+* HOU-8:  H4-O + C4-O (iPSC-MSC-derived osteoblasts from H28834 and C40210)
+* HOU-17:	H5-I + C5-I (iPSCs from H21792 and C40280)
+* HOU-19:	H5-M + C5-M (iPSC-derived MSCs from H21792 and C40280)
+* HOU-21:	H5-O + C5-O (iPSC-MSC-derived osteoblasts from H21792 and C40280)
+* HOU-18:	H6-I + C6-I (iPSCs from H20961 and C3624)
+* HOU-20:	H6-M + C6-M (iPSC-derived MSCs from H20961 and C3624)
+* HOU-22:	H6-O + C6-O (iPSC-MSC-derived osteoblasts from H20961 and C3624)
+
+```{r load libraries, message=FALSE}
 
 library(Seurat)
 library(dplyr)
@@ -44,321 +45,196 @@ library(stringi)
 library(stringr)
 library(ggplot2)
 library(ggsignif)
+library(gridExtra)
 library(colorspace)
 library(RColorBrewer)
 
 ```
 
-```{r view alizarin red data}
+### FACS Results
 
-#Define main directory
-dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+Flow cytometry data were collected for iPSCs (Time 0) and iPSC-derived MSCs (Time 1) in order to confirm MSC differentiation. Expect positive expression of CD90 in cells collected at Time 0, positive expression of CD90, CD73, and CD105 in cells collected at Time 1, and no expression of control markers (CD45, CD34, CD11b, CD19, HLA-DR) in all cells.
 
-#Load alizarin red data
-alz <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/alizarin-red-quant-total.csv'), header=TRUE, sep=",")
-ggplot(alz, aes(x=Sample, y=Absorbance_Value)) + geom_boxplot()
-
-
-#Reformat alizarin red data
-alz <- alz[c(1:8,13:20,25:60,65:72,77:140),] #remove C1-6W, H1-6W, H3-1A
-ggplot(alz, aes(x=Sample, y=Absorbance_Value)) + geom_boxplot()
-
-
-#Remove outliers from alizarin red data
-##individual samples - none have outliers
-##1:4,5:8,9:12,13:16,17:20,21:24,25:28,29:32,33:36,37:40,41:44,45:48,49:52,53:56,57:60,61:64,65:68,69:72,73:76,77:80
-##81:84,85:88,89:92,93:96,97:100,101:104,105:108,109:112,113:116,117:120,121:124,125:128,129:132,133:136,137:140
-##chimpanzee osteoblast - none have outliers
-##which(oil$Species_Details=="Chimpanzee Osteoblast")
-##human osteoblast - all H2 osteoblasts (n=4) and all H6 osteoblasts (n=4) are outliers (will keep because small variation in these reps so likely valid)
-##which(oil$Species_Details=="Human Osteoblast")
-##chimpanzee mscs - all C1 mscs (n=4) are outliers (will keep because small variation in these reps so likely valid),
-##                  C1-r2 rep (n=1) is an outlier (will remove)
-##which(oil$Species_Details=="Chimpanzee MSC")
-##human mscs - H1 reps (n=2) are ouliers (will remove), H1-r2 reps (n=2) are outliers (will remove 1 but keep the other because small variation so likely valid)
-##which(oil$Species_Details=="Human MSC")
-##osteoblast samples - all H6 osteoblasts (n=4) are outliers (will keep because small variation in these reps so likely valid)
-##which(alz$Cell_Type=="Osteoblast")
-##msc samples - all C1 mscs (n=4) are outliers (will keep because small variation in these reps so likely valid),
-##              H1 reps (n=2) / C1-r2 rep (n=1) / H1-r2 rep (n=1) are outliers (will remove)
-##which(alz$Cell_Type=="MSC")
-outlier_values <- boxplot.stats(alz$Absorbance_Value[which(alz$Species_Details=="Human MSC")])$out  #outlier values
-boxplot(alz$Absorbance_Value[which(alz$Species_Details=="Human MSC")], boxwex=0.1)
-mtext(paste("Outliers: ", paste(outlier_values, collapse=", ")), cex=0.6)
-
-alz <- alz[c(1:8,10:11,14:18,20:124),] #remove outliers
-ggplot(alz, aes(x=Sample, y=Absorbance_Value)) + geom_boxplot()
-
-
-#Adjust variables in alizarin red data
-alz$Sample <- factor(alz$Sample, 
-                     levels = c("C1-M","C1-O 12w","CR-M","CR-O","C2-M","C2-O","C3-M","C3-O","C4-M","C4-O","C5-M","C5-O","C6-M","C6-O",
-                                "H1-M","H1-O 12w","HR-M","HR-O","H2-M","H2-O","H3-M(1)","H3-O(1)","H4-M","H4-O","H5-M","H5-O","H6-M","H6-O"),
-                     labels = c("C1-M","C1-O","C1-r2-M","C1-r2-O","C2-M","C2-O","C3-M","C3-O","C4-M","C4-O","C5-M","C5-O","C6-M","C6-O",
-                                "H1-M","H1-O","H1-r2-M","H1-r2-O","H2-M","H2-O","H3-M","H3-O","H4-M","H4-O","H5-M","H5-O","H6-M","H6-O")) 
-alz$Species_Details <- factor(alz$Species_Details,
-                              levels = c("Chimpanzee MSC","Chimpanzee Osteoblast","Human MSC","Human Osteoblast"),
-                              labels = c("Chimpanzee MSC","Chimpanzee Osteoblast","Human MSC","Human Osteoblast")) 
-alz$Cell_Type <- factor(alz$Cell_Type,
-                        levels = c("MSC","Osteoblast"),
-                        labels = c("MSC","Osteoblast")) 
-ggplot(alz, aes(x=Sample, y=Absorbance_Value)) + geom_boxplot()
-
-
-#Wilcox test of each sample
-wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="C1-O")], y=alz$Absorbance_Value[which(alz$Sample=="C1-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="C2-O")], y=alz$Absorbance_Value[which(alz$Sample=="C2-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="C3-O")], y=alz$Absorbance_Value[which(alz$Sample=="C3-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="C4-O")], y=alz$Absorbance_Value[which(alz$Sample=="C4-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="C5-O")], y=alz$Absorbance_Value[which(alz$Sample=="C5-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="C6-O")], y=alz$Absorbance_Value[which(alz$Sample=="C6-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="C1-r2-O")], y=alz$Absorbance_Value[which(alz$Sample=="C1-r2-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="H1-O")], y=alz$Absorbance_Value[which(alz$Sample=="H1-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="H2-O")], y=alz$Absorbance_Value[which(alz$Sample=="H2-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="H3-O")], y=alz$Absorbance_Value[which(alz$Sample=="H3-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="H4-O")], y=alz$Absorbance_Value[which(alz$Sample=="H4-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="H5-O")], y=alz$Absorbance_Value[which(alz$Sample=="H5-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="H6-O")], y=alz$Absorbance_Value[which(alz$Sample=="H6-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="H1-r2-O")], y=alz$Absorbance_Value[which(alz$Sample=="H1-r2-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-#C1: p=0.01519 / C2: p=0.0147 / C3: p=0.01519 / C4: p=0.01519 / C5: p=0.09697 / C6: p=0.01519 / C1-r2: p=0.01519
-#H1: p=0.9467 / H2: p=0.01519 / H3: p=0.0147 / H4: p=8.881e-05 / H5: p=0.01519 / H6: p=0.0147 / H1-r2: p=0.02591
-ggplot(alz, aes(x=Sample, y=Absorbance_Value, fill=Cell_Type)) +
-  geom_boxplot() +
-  scale_fill_manual(values=c("white","red")) +
-  labs(x="", y="Alizarin Red S Absorbance") +
-  theme(legend.title = element_blank()) +
-  geom_signif(comparisons = list(c("C1-O","C1-M"),c("C1-r2-O","C1-r2-M"),c("C2-O","C2-M"),c("C3-O","C3-M"),c("C4-O","C4-M"),c("C5-O","C5-M"),c("C6-O","C6-M"),
-                                 c("H1-O","H1-M"),c("H1-r2-O","H1-r2-M"),c("H2-O","H2-M"),c("H3-O","H3-M"),c("H4-O","H4-M"),c("H5-O","H5-M"),c("H6-O","H6-M")), 
-              test="wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE)
-
-
-#Wilcox test of each species
-wilcox.test(x=alz$Absorbance_Value[which(alz$Species_Details=="Chimpanzee Osteoblast")], y=alz$Absorbance_Value[which(alz$Species_Details=="Chimpanzee MSC")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=alz$Absorbance_Value[which(alz$Species_Details=="Human Osteoblast")], y=alz$Absorbance_Value[which(alz$Species_Details=="Human MSC")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-#Chimp: p=5.869e-09
-#Human: p=6.924e-12
-ggplot(alz, aes(x=Species_Details, y=Absorbance_Value, fill=Cell_Type)) +
-  geom_boxplot() +
-  scale_fill_manual(values=c("white","red")) +
-  labs(x="", y="Alizarin Red S Absorbance") +
-  theme(legend.title = element_blank()) +
-  geom_signif(comparisons = list(c("Chimpanzee Osteoblast","Chimpanzee MSC"),c("Human Osteoblast","Human MSC")), 
-              test="wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE)
-
-
-#Wilcox test of full sample set
-wilcox.test(x=alz$Absorbance_Value[which(alz$Cell_Type=="Osteoblast")], y=alz$Absorbance_Value[which(alz$Cell_Type=="MSC")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-#p < 2.2e-16
-ggplot(alz, aes(x=Cell_Type, y=Absorbance_Value, fill=Cell_Type)) +
-  geom_boxplot() +
-  scale_fill_manual(values=c("white","red")) +
-  labs(x="", y="Alizarin Red S Absorbance") +
-  theme(legend.title = element_blank()) +
-  geom_signif(comparisons = list(c("Osteoblast","MSC")), test="wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE)
-
-```
-
-```{r view oil red data}
-
-#Define main directory
-dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
-
-
-#Load oil red data
-oil <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/oil-red-quant-total.csv'), header=TRUE, sep=",")
-ggplot(oil, aes(x=Sample, y=Absorbance_Value)) + geom_boxplot()
-
-
-#Remove outliers from alizarin red data
-##individual samples - none have outliers
-##1:4,5:8,9:12,13:16,17:20,21:24,25:28,29:32,33:36,37:40,41:44,45:48,49:52,53:56,57:60,
-#61:64,65:68,69:72,73:76,77:80,81:84,85:88,89:92,93:96,97:100,101:104,105:108,109:112
-##chimpanzee adipocytes - all C3 adipocytes (n=4) are outliers (will keep 3 of these because small variation in these reps so likely valid),
-##which(oil$Species_Details=="Chimpanzee Adipocyte")
-##human adipocytes - none have outliers
-##which(oil$Species_Details=="Human Adipocyte")
-##chimpanzee mscs - C1 reps (n=3) are outliers (will keep because small variation in these reps so likely valid)
-##which(oil$Species_Details=="Chimpanzee MSC")
-##human mscs - none have outliers
-##which(oil$Species_Details=="Human MSC")
-##adipocyte samples - all C3 adipocytes (n=4) are outliers (will keep 3 of these because small variation in these reps so likely valid),
-##                    C5 reps (n=2) are outliers (will keep these BUT remove 1 other rep because small variation in this rep)
-##which(oil$Cell_Type=="Adipocyte")
-##msc samples - C1 reps (n=3) are outliers (will keep because small variation in these reps so likely valid)
-##which(oil$Cell_Type=="MSC")
-outlier_values <- boxplot.stats(oil$Absorbance_Value[which(oil$Species_Details=="Chimpanzee Adipocyte")])$out  #outlier values
-boxplot(oil$Absorbance_Value[which(oil$Species_Details=="Chimpanzee Adipocyte")], boxwex=0.1)
-mtext(paste("Outliers: ", paste(outlier_values, collapse=", ")), cex=0.6)
-
-oil <- oil[c(1:63,65:91,93:112),] #remove outliers
-ggplot(oil, aes(x=Sample, y=Absorbance_Value)) + geom_boxplot()
-
-
-#Adjust variables in alizarin red data
-oil$Sample <- factor(oil$Sample, 
-                     levels = c("C1-M","C1-A","CR-M","CR-A","C2-M","C2-A","C3-M","C3-A","C4-M","C4-A","C5-M","C5-A","C6-M","C6-A",
-                                "H1-M","H1-A","HR-M","HR-A","H2-M","H2-A","H3-M","H3-A","H4-M","H4-A","H5-M","H5-A","H6-M","H6-A"),
-                     labels = c("C1-M","C1-A","C1-r2-M","C1-r2-A","C2-M","C2-A","C3-M","C3-A","C4-M","C4-A","C5-M","C5-A","C6-M","C6-A",
-                                "H1-M","H1-A","H1-r2-M","H1-r2-A","H2-M","H2-A","H3-M","H3-A","H4-M","H4-A","H5-M","H5-A","H6-M","H6-A")) 
-oil$Species_Details <- factor(oil$Species_Details,
-                              levels = c("Chimpanzee MSC","Chimpanzee Adipocyte","Human MSC","Human Adipocyte"),
-                              labels = c("Chimpanzee MSC","Chimpanzee Adipocyte","Human MSC","Human Adipocyte")) 
-oil$Cell_Type <- factor(oil$Cell_Type,
-                        levels = c("MSC","Adipocyte"),
-                        labels = c("MSC","Adipocyte")) 
-ggplot(oil, aes(x=Sample, y=Absorbance_Value)) + geom_boxplot()
-
-
-#Wilcox test of each sample
-wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="C1-A")], y=oil$Absorbance_Value[which(oil$Sample=="C1-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="C2-A")], y=oil$Absorbance_Value[which(oil$Sample=="C2-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="C3-A")], y=oil$Absorbance_Value[which(oil$Sample=="C3-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="C4-A")], y=oil$Absorbance_Value[which(oil$Sample=="C4-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="C5-A")], y=oil$Absorbance_Value[which(oil$Sample=="C5-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="C6-A")], y=oil$Absorbance_Value[which(oil$Sample=="C6-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="C1-r2-A")], y=oil$Absorbance_Value[which(oil$Sample=="C1-r2-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="H1-A")], y=oil$Absorbance_Value[which(oil$Sample=="H1-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="H2-A")], y=oil$Absorbance_Value[which(oil$Sample=="H2-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="H3-A")], y=oil$Absorbance_Value[which(oil$Sample=="H3-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="H4-A")], y=oil$Absorbance_Value[which(oil$Sample=="H4-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="H5-A")], y=oil$Absorbance_Value[which(oil$Sample=="H5-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="H6-A")], y=oil$Absorbance_Value[which(oil$Sample=="H6-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="H1-r2-A")], y=oil$Absorbance_Value[which(oil$Sample=="H1-r2-M")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-#C1: p=0.9929 / C2: p=0.09697 / C3: p=0.02487 / C4: p=0.01519 / C5: p=0.02487 / C6: p=0.09563 / C1-r2: p=0.0303
-#H1: p=0.903 / H2: p=0.01519 / H3: p=0.09563 / H4: p=0.9929 / H5: p=0.09697 / H6: p=0.05618 / H1-r2: p=0.979
-ggplot(oil, aes(x=Sample, y=Absorbance_Value, fill=Cell_Type)) +
-  geom_boxplot() +
-  scale_fill_manual(values=c("white","red")) +
-  labs(x="", y="Oil Red O Absorbance") +
-  theme(legend.title = element_blank()) +
-  geom_signif(comparisons = list(c("C1-A","C1-M"),c("C1-r2-A","C1-r2-M"),c("C2-A","C2-M"),c("C3-A","C3-M"),c("C4-A","C4-M"),c("C5-A","C5-M"),c("C6-A","C6-M"),
-                                 c("H1-A","H1-M"),c("H1-r2-A","H1-r2-M"),c("H2-A","H2-M"),c("H3-A","H3-M"),c("H4-A","H4-M"),c("H5-A","H5-M"),c("H6-A","H6-M")), 
-              test="wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE)
-
-
-#Wilcox test of each species
-wilcox.test(x=oil$Absorbance_Value[which(oil$Species_Details=="Chimpanzee Adipocyte")], y=oil$Absorbance_Value[which(oil$Species_Details=="Chimpanzee MSC")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-wilcox.test(x=oil$Absorbance_Value[which(oil$Species_Details=="Human Adipocyte")], y=oil$Absorbance_Value[which(oil$Species_Details=="Human MSC")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-#Chimp: p=0.002586
-#Human: p=0.04572
-ggplot(oil, aes(x=Species_Details, y=Absorbance_Value, fill=Cell_Type)) +
-  geom_boxplot() +
-  scale_fill_manual(values=c("white","red")) +
-  labs(x="", y="Alizarin Red S Absorbance") +
-  theme(legend.title = element_blank()) +
-  geom_signif(comparisons = list(c("Chimpanzee Adipocyte","Chimpanzee MSC"),c("Human Adipocyte","Human MSC")), 
-              test="wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE)
-
-
-#Wilcox test of full sample set
-wilcox.test(x=oil$Absorbance_Value[which(oil$Cell_Type=="Adipocyte")], y=oil$Absorbance_Value[which(oil$Cell_Type=="MSC")],
-            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-#p < 0.0008825
-ggplot(oil, aes(x=Cell_Type, y=Absorbance_Value, fill=Cell_Type)) +
-  geom_boxplot() +
-  scale_fill_manual(values=c("white","red")) +
-  labs(x="", y="Alizarin Red S Absorbance") +
-  theme(legend.title = element_blank()) +
-  geom_signif(comparisons = list(c("Adipocyte","MSC")), test="wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE)
-
-```
-
-```{r view facs}
-
-#Define main directory
-dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
-
+```{r}
 
 #Load fcs data
-fcs <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/facs-MSC-collection-summary-total.csv'), header=TRUE, sep=",")
-#fcs <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/facs-MSC-collection-summary-sample-avg.csv'), header=TRUE, sep=",")
-ggplot(fcs, aes(x=Abbr_Details, y=CD90_Percentage)) + geom_boxplot()
-ggplot(fcs, aes(x=Abbr_Details, y=CD73_Percentage)) + geom_boxplot()
-ggplot(fcs, aes(x=Abbr_Details, y=CD105_Percentage)) + geom_boxplot()
-ggplot(fcs, aes(x=Abbr_Details, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage)) + geom_boxplot()
+fcs <- read.csv(file='./data/facs-MSC-collection-summary-total.csv', header=TRUE, sep=",")
+#fcs <- read.csv(file='./data/facs-MSC-collection-summary-sample-avg.csv', header=TRUE, sep=",")
 
+```
+
+Look at all of the data:
+
+```{r}
+
+p1 <- ggplot(fcs, aes(x=Abbr_Details, y=CD90_Percentage)) + geom_boxplot()
+p2 <- ggplot(fcs, aes(x=Abbr_Details, y=CD73_Percentage)) + geom_boxplot()
+p3 <- ggplot(fcs, aes(x=Abbr_Details, y=CD105_Percentage)) + geom_boxplot()
+p4 <- ggplot(fcs, aes(x=Abbr_Details, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage)) + geom_boxplot()
+grid.arrange(grobs=list(p1,p2,p3,p4), ncol=1)
+
+```
+
+```{r}
 
 #Reformat fcs data
 fcs <- fcs[,c(2,4,6,8,9,29:36)]
 fcs$Abbr_Details <- factor(fcs$Abbr_Details,
-                           levels=c("C1 iPSC - control","C1 iPSC - cocktail","C1 MSC - cocktail",
-                                    "C1-r2 iPSC - control","C1-r2 iPSC - cocktail","C1-r2 MSC - cocktail",
-                                    "C2 iPSC - control","C2 iPSC - cocktail","C2 MSC - cocktail",
-                                    "C3 iPSC - control","C3 iPSC - cocktail","C3 MSC - cocktail",
-                                    "C4 iPSC - control","C4 iPSC - cocktail","C4 MSC - cocktail",
-                                    "C5 iPSC - control","C5 iPSC - cocktail","C5 MSC - cocktail",
-                                    "C6 iPSC - control","C6 iPSC - cocktail","C6 MSC - cocktail",
-                                    "H1 iPSC - control","H1 iPSC - cocktail","H1 MSC - cocktail",
-                                    "H1-r2 iPSC - control","H1-r2 iPSC - cocktail","H1-r2 MSC - cocktail",
-                                    "H2 iPSC - control","H2 iPSC - cocktail","H2 MSC - cocktail",
-                                    "H3 iPSC - control","H3 iPSC - cocktail","H3 MSC - cocktail",
-                                    "H4 iPSC - control","H4 iPSC - cocktail","H4 MSC - cocktail",
-                                    "H5 iPSC - control","H5 iPSC - cocktail","H5 MSC - cocktail",
-                                    "H6 iPSC - control","H6 iPSC - cocktail","H6 MSC - cocktail"),
-                           labels=c("C1 iPSC - control","C1 iPSC - cocktail","C1 MSC - cocktail",
-                                    "C1-r2 iPSC - control","C1-r2 iPSC - cocktail","C1-r2 MSC - cocktail",
-                                    "C2 iPSC - control","C2 iPSC - cocktail","C2 MSC - cocktail",
-                                    "C3 iPSC - control","C3 iPSC - cocktail","C3 MSC - cocktail",
-                                    "C4 iPSC - control","C4 iPSC - cocktail","C4 MSC - cocktail",
-                                    "C5 iPSC - control","C5 iPSC - cocktail","C5 MSC - cocktail",
-                                    "C6 iPSC - control","C6 iPSC - cocktail","C6 MSC - cocktail",
-                                    "H1 iPSC - control","H1 iPSC - cocktail","H1 MSC - cocktail",
-                                    "H1-r2 iPSC - control","H1-r2 iPSC - cocktail","H1-r2 MSC - cocktail",
-                                    "H2 iPSC - control","H2 iPSC - cocktail","H2 MSC - cocktail",
-                                    "H3 iPSC - control","H3 iPSC - cocktail","H3 MSC - cocktail",
-                                    "H4 iPSC - control","H4 iPSC - cocktail","H4 MSC - cocktail",
-                                    "H5 iPSC - control","H5 iPSC - cocktail","H5 MSC - cocktail",
-                                    "H6 iPSC - control","H6 iPSC - cocktail","H6 MSC - cocktail"))
+                           levels=c("C1 iPSC - control",
+                                    "C1 iPSC - cocktail",
+                                    "C1 MSC - cocktail",
+                                    "C1-r2 iPSC - control",
+                                    "C1-r2 iPSC - cocktail",
+                                    "C1-r2 MSC - cocktail",
+                                    "C2 iPSC - control",
+                                    "C2 iPSC - cocktail",
+                                    "C2 MSC - cocktail",
+                                    "C3 iPSC - control",
+                                    "C3 iPSC - cocktail",
+                                    "C3 MSC - cocktail",
+                                    "C4 iPSC - control",
+                                    "C4 iPSC - cocktail",
+                                    "C4 MSC - cocktail",
+                                    "C5 iPSC - control",
+                                    "C5 iPSC - cocktail",
+                                    "C5 MSC - cocktail",
+                                    "C6 iPSC - control",
+                                    "C6 iPSC - cocktail",
+                                    "C6 MSC - cocktail",
+                                    "H1 iPSC - control",
+                                    "H1 iPSC - cocktail",
+                                    "H1 MSC - cocktail",
+                                    "H1-r2 iPSC - control",
+                                    "H1-r2 iPSC - cocktail",
+                                    "H1-r2 MSC - cocktail",
+                                    "H2 iPSC - control",
+                                    "H2 iPSC - cocktail",
+                                    "H2 MSC - cocktail",
+                                    "H3 iPSC - control",
+                                    "H3 iPSC - cocktail",
+                                    "H3 MSC - cocktail",
+                                    "H4 iPSC - control",
+                                    "H4 iPSC - cocktail",
+                                    "H4 MSC - cocktail",
+                                    "H5 iPSC - control",
+                                    "H5 iPSC - cocktail",
+                                    "H5 MSC - cocktail",
+                                    "H6 iPSC - control",
+                                    "H6 iPSC - cocktail",
+                                    "H6 MSC - cocktail"),
+                           labels=c("C1 iPSC - control",
+                                    "C1 iPSC - cocktail",
+                                    "C1 MSC - cocktail",
+                                    "C1-r2 iPSC - control",
+                                    "C1-r2 iPSC - cocktail",
+                                    "C1-r2 MSC - cocktail",
+                                    "C2 iPSC - control",
+                                    "C2 iPSC - cocktail",
+                                    "C2 MSC - cocktail",
+                                    "C3 iPSC - control",
+                                    "C3 iPSC - cocktail",
+                                    "C3 MSC - cocktail",
+                                    "C4 iPSC - control",
+                                    "C4 iPSC - cocktail",
+                                    "C4 MSC - cocktail",
+                                    "C5 iPSC - control",
+                                    "C5 iPSC - cocktail",
+                                    "C5 MSC - cocktail",
+                                    "C6 iPSC - control",
+                                    "C6 iPSC - cocktail",
+                                    "C6 MSC - cocktail",
+                                    "H1 iPSC - control",
+                                    "H1 iPSC - cocktail",
+                                    "H1 MSC - cocktail",
+                                    "H1-r2 iPSC - control",
+                                    "H1-r2 iPSC - cocktail",
+                                    "H1-r2 MSC - cocktail",
+                                    "H2 iPSC - control",
+                                    "H2 iPSC - cocktail",
+                                    "H2 MSC - cocktail",
+                                    "H3 iPSC - control",
+                                    "H3 iPSC - cocktail",
+                                    "H3 MSC - cocktail",
+                                    "H4 iPSC - control",
+                                    "H4 iPSC - cocktail",
+                                    "H4 MSC - cocktail",
+                                    "H5 iPSC - control",
+                                    "H5 iPSC - cocktail",
+                                    "H5 MSC - cocktail",
+                                    "H6 iPSC - control",
+                                    "H6 iPSC - cocktail",
+                                    "H6 MSC - cocktail"))
 fcs$Species_Details <- factor(fcs$Species_Details,
-                              levels=c("Chimpanzee iPSC - control","Chimpanzee iPSC - cocktail","Chimpanzee MSC - cocktail",
-                                       "Human iPSC - control","Human iPSC - cocktail","Human MSC - cocktail"),
-                              labels=c("Chimpanzee iPSC - control","Chimpanzee iPSC - cocktail","Chimpanzee MSC - cocktail",
-                                       "Human iPSC - control","Human iPSC - cocktail","Human MSC - cocktail"))
+                              levels=c("Chimpanzee iPSC - control",
+                                       "Chimpanzee iPSC - cocktail",
+                                       "Chimpanzee MSC - cocktail",
+                                       "Human iPSC - control",
+                                       "Human iPSC - cocktail",
+                                       "Human MSC - cocktail"),
+                              labels=c("Chimpanzee iPSC - control",
+                                       "Chimpanzee iPSC - cocktail",
+                                       "Chimpanzee MSC - cocktail",
+                                       "Human iPSC - control",
+                                       "Human iPSC - cocktail",
+                                       "Human MSC - cocktail"))
 fcs$Sample_Details <- factor(fcs$Sample_Details,
-                             levels=c("iPSC - control","iPSC - cocktail","MSC - cocktail"),
-                             labels=c("iPSC - control","iPSC - cocktail","MSC - cocktail"))
+                             levels=c("iPSC - control",
+                                      "iPSC - cocktail",
+                                      "MSC - cocktail"),
+                             labels=c("iPSC - control",
+                                      "iPSC - cocktail",
+                                      "MSC - cocktail"))
 fcs$Cell_Type <- factor(fcs$Cell_Type,
                         levels=c("iPSC","MSC"),
                         labels=c("iPSC","MSC"))
-ggplot(fcs, aes(x=Abbr_Details, y=CD90_Percentage)) + geom_boxplot()
-ggplot(fcs, aes(x=Species_Details, y=CD90_Percentage)) + geom_boxplot()
-ggplot(fcs, aes(x=Sample_Details, y=CD90_Percentage)) + geom_boxplot()
 
+```
 
-#Remove outliers from fcs data - CD90 / CD105 / CD73 / CD45.CD34.CD11b.CD19.HLA.DR_Percentage
+Consolidate data across species and stages of cell differentiation:
+
+```{r}
+
+p1 <- ggplot(fcs, aes(x=Abbr_Details, y=CD90_Percentage)) + geom_boxplot()
+p2 <- ggplot(fcs, aes(x=Species_Details, y=CD90_Percentage)) + geom_boxplot()
+p3 <- ggplot(fcs, aes(x=Sample_Details, y=CD90_Percentage)) + geom_boxplot()
+grid.arrange(grobs=list(p1,p2,p3), ncol=1)
+
+```
+
+```{r}
+
+p1 <- ggplot(fcs, aes(x=Abbr_Details, y=CD73_Percentage)) + geom_boxplot()
+p2 <- ggplot(fcs, aes(x=Species_Details, y=CD73_Percentage)) + geom_boxplot()
+p3 <- ggplot(fcs, aes(x=Sample_Details, y=CD73_Percentage)) + geom_boxplot()
+grid.arrange(grobs=list(p1,p2,p3), ncol=1)
+
+```
+
+```{r}
+
+p1 <- ggplot(fcs, aes(x=Abbr_Details, y=CD105_Percentage)) + geom_boxplot()
+p2 <- ggplot(fcs, aes(x=Species_Details, y=CD105_Percentage)) + geom_boxplot()
+p3 <- ggplot(fcs, aes(x=Sample_Details, y=CD105_Percentage)) + geom_boxplot()
+grid.arrange(grobs=list(p1,p2,p3), ncol=1)
+
+```
+
+```{r}
+
+p1 <- ggplot(fcs, aes(x=Abbr_Details, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage)) + geom_boxplot()
+p2 <- ggplot(fcs, aes(x=Species_Details, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage)) + geom_boxplot()
+p3 <- ggplot(fcs, aes(x=Sample_Details, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage)) + geom_boxplot()
+grid.arrange(grobs=list(p1,p2,p3), ncol=1)
+
+```
+
+Remove any potential outliers:
+
+* no samples removed at this time
+
+```{r, eval=FALSE}
+
+#Identify outliers from fcs data - CD90 / CD105 / CD73 / CD45.CD34.CD11b.CD19.HLA.DR_Percentage
 
 ##individual samples - none are outliers / none are outliers / none are outliers / none are outliers
 ##1:3,4:6,7:9,10:12,13:15,16:18,19:21,22:24,25,26:28,29:31,32:34,35:37,38:40,41:43,44:46,47:49,50:52,53:55,56:58,59:61,62:64,65:67,
@@ -442,6 +318,11 @@ ggplot(fcs, aes(x=Abbr_Details, y=CD73_Percentage)) + geom_boxplot()
 ggplot(fcs, aes(x=Abbr_Details, y=CD105_Percentage)) + geom_boxplot()
 ggplot(fcs, aes(x=Abbr_Details, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage)) + geom_boxplot()
 
+```
+
+#### Comparison across samples
+
+```{r, eval=FALSE, echo=FALSE}
 
 #Wilcox test of each sample
 wilcox.test(x=fcs$CD90_Percentage[which(fcs$Abbr_Details=="C1 iPSC - cocktail")],
@@ -483,136 +364,280 @@ wilcox.test(x=fcs$CD45.CD34.CD11b.CD19.HLA.DR_Percentage[which(fcs$Abbr_Details=
 wilcox.test(x=fcs$CD45.CD34.CD11b.CD19.HLA.DR_Percentage[which(fcs$Abbr_Details=="C1 MSC - cocktail")],
             y=fcs$CD45.CD34.CD11b.CD19.HLA.DR_Percentage[which(fcs$Abbr_Details=="C1 iPSC - cocktail")],
             alternative="two.sided", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-#...
+
+```
+
+```{r}
+
 ggplot(fcs, aes(x=Abbr_Details, y=CD90_Percentage, fill=Sample_Details)) +
   geom_boxplot() +
   scale_fill_manual(values=c("white","pink","mediumorchid")) +
   labs(x="", y="Proportion of Cells Expressing CD90") +
   theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
-  stat_signif(comparisons=list(c("C1 iPSC - cocktail","C1 iPSC - control"),c("C1-r2 iPSC - cocktail","C1-r2 iPSC - control"),
-                               c("C2 iPSC - cocktail","C2 iPSC - control"),c("C3 iPSC - cocktail","C3 iPSC - control"),
-                               c("C4 iPSC - cocktail","C4 iPSC - control"),c("C5 iPSC - cocktail","C5 iPSC - control"),
+  stat_signif(comparisons=list(c("C1 iPSC - cocktail","C1 iPSC - control"),
+                               c("C1-r2 iPSC - cocktail","C1-r2 iPSC - control"),
+                               c("C2 iPSC - cocktail","C2 iPSC - control"),
+                               c("C3 iPSC - cocktail","C3 iPSC - control"),
+                               c("C4 iPSC - cocktail","C4 iPSC - control"),
+                               c("C5 iPSC - cocktail","C5 iPSC - control"),
                                c("C6 iPSC - cocktail","C6 iPSC - control"),
-                               c("H1 iPSC - cocktail","H1 iPSC - control"),c("H1-r2 iPSC - cocktail","H1-r2 iPSC - control"),
-                               c("H2 iPSC - cocktail","H2 iPSC - control"),c("H3 iPSC - cocktail","H3 iPSC - control"),
-                               c("H4 iPSC - cocktail","H4 iPSC - control"),c("H5 iPSC - cocktail","H5 iPSC - control"),
+                               c("H1 iPSC - cocktail","H1 iPSC - control"),
+                               c("H1-r2 iPSC - cocktail","H1-r2 iPSC - control"),
+                               c("H2 iPSC - cocktail","H2 iPSC - control"),
+                               c("H3 iPSC - cocktail","H3 iPSC - control"),
+                               c("H4 iPSC - cocktail","H4 iPSC - control"),
+                               c("H5 iPSC - cocktail","H5 iPSC - control"),
                                c("H6 iPSC - cocktail","H6 iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.05) +
-  stat_signif(comparisons=list(c("C1 MSC - cocktail","C1 iPSC - control"),c("C1-r2 MSC - cocktail","C1-r2 iPSC - control"),
-                               c("C2 MSC - cocktail","C2 iPSC - control"),c("C3 MSC - cocktail","C3 iPSC - control"),
-                               c("C4 MSC - cocktail","C4 iPSC - control"),c("C5 MSC - cocktail","C5 iPSC - control"),
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
+  stat_signif(comparisons=list(c("C1 MSC - cocktail","C1 iPSC - control"),
+                               c("C1-r2 MSC - cocktail","C1-r2 iPSC - control"),
+                               c("C2 MSC - cocktail","C2 iPSC - control"),
+                               c("C3 MSC - cocktail","C3 iPSC - control"),
+                               c("C4 MSC - cocktail","C4 iPSC - control"),
+                               c("C5 MSC - cocktail","C5 iPSC - control"),
                                c("C6 MSC - cocktail","C6 iPSC - control"),
-                               c("H1 MSC - cocktail","H1 iPSC - control"),c("H1-r2 MSC - cocktail","H1-r2 iPSC - control"),
-                               c("H2 MSC - cocktail","H2 iPSC - control"),c("H3 MSC - cocktail","H3 iPSC - control"),
-                               c("H4 MSC - cocktail","H4 iPSC - control"),c("H5 MSC - cocktail","H5 iPSC - control"),
+                               c("H1 MSC - cocktail","H1 iPSC - control"),
+                               c("H1-r2 MSC - cocktail","H1-r2 iPSC - control"),
+                               c("H2 MSC - cocktail","H2 iPSC - control"),
+                               c("H3 MSC - cocktail","H3 iPSC - control"),
+                               c("H4 MSC - cocktail","H4 iPSC - control"),
+                               c("H5 MSC - cocktail","H5 iPSC - control"),
                                c("H6 MSC - cocktail","H6 iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.15) +
-  stat_signif(comparisons=list(c("C1 MSC - cocktail","C1 iPSC - cocktail"),c("C1-r2 MSC - cocktail","C1-r2 iPSC - cocktail"),
-                               c("C2 MSC - cocktail","C2 iPSC - cocktail"),c("C3 MSC - cocktail","C3 iPSC - cocktail"),
-                               c("C4 MSC - cocktail","C4 iPSC - cocktail"),c("C5 MSC - cocktail","C5 iPSC - cocktail"),
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
+  stat_signif(comparisons=list(c("C1 MSC - cocktail","C1 iPSC - cocktail"),
+                               c("C1-r2 MSC - cocktail","C1-r2 iPSC - cocktail"),
+                               c("C2 MSC - cocktail","C2 iPSC - cocktail"),
+                               c("C3 MSC - cocktail","C3 iPSC - cocktail"),
+                               c("C4 MSC - cocktail","C4 iPSC - cocktail"),
+                               c("C5 MSC - cocktail","C5 iPSC - cocktail"),
                                c("C6 MSC - cocktail","C6 iPSC - cocktail"),
-                               c("H1 MSC - cocktail","H1 iPSC - cocktail"),c("H1-r2 MSC - cocktail","H1-r2 iPSC - cocktail"),
-                               c("H2 MSC - cocktail","H2 iPSC - cocktail"),c("H3 MSC - cocktail","H3 iPSC - cocktail"),
-                               c("H4 MSC - cocktail","H4 iPSC - cocktail"),c("H5 MSC - cocktail","H5 iPSC - cocktail"),
+                               c("H1 MSC - cocktail","H1 iPSC - cocktail"),
+                               c("H1-r2 MSC - cocktail","H1-r2 iPSC - cocktail"),
+                               c("H2 MSC - cocktail","H2 iPSC - cocktail"),
+                               c("H3 MSC - cocktail","H3 iPSC - cocktail"),
+                               c("H4 MSC - cocktail","H4 iPSC - cocktail"),
+                               c("H5 MSC - cocktail","H5 iPSC - cocktail"),
                                c("H6 MSC - cocktail","H6 iPSC - cocktail")),
-              test = "wilcox.test", test.args=list(alternative="two.sided", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.25)
+              test = "wilcox.test",
+              test.args=list(alternative="two.sided", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)
+
+```
+
+```{r}
+
 ggplot(fcs, aes(x=Abbr_Details, y=CD73_Percentage, fill=Sample_Details)) +
   geom_boxplot() +
   scale_fill_manual(values=c("white","pink","mediumorchid")) +
   labs(x="", y="Proportion of Cells Expressing CD73") +
   theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
-  stat_signif(comparisons=list(c("C1 iPSC - cocktail","C1 iPSC - control"),c("C1-r2 iPSC - cocktail","C1-r2 iPSC - control"),
-                               c("C2 iPSC - cocktail","C2 iPSC - control"),c("C3 iPSC - cocktail","C3 iPSC - control"),
-                               c("C4 iPSC - cocktail","C4 iPSC - control"),c("C5 iPSC - cocktail","C5 iPSC - control"),
+  stat_signif(comparisons=list(c("C1 iPSC - cocktail","C1 iPSC - control"),
+                               c("C1-r2 iPSC - cocktail","C1-r2 iPSC - control"),
+                               c("C2 iPSC - cocktail","C2 iPSC - control"),
+                               c("C3 iPSC - cocktail","C3 iPSC - control"),
+                               c("C4 iPSC - cocktail","C4 iPSC - control"),
+                               c("C5 iPSC - cocktail","C5 iPSC - control"),
                                c("C6 iPSC - cocktail","C6 iPSC - control"),
-                               c("H1 iPSC - cocktail","H1 iPSC - control"),c("H1-r2 iPSC - cocktail","H1-r2 iPSC - control"),
-                               c("H2 iPSC - cocktail","H2 iPSC - control"),c("H3 iPSC - cocktail","H3 iPSC - control"),
-                               c("H4 iPSC - cocktail","H4 iPSC - control"),c("H5 iPSC - cocktail","H5 iPSC - control"),
+                               c("H1 iPSC - cocktail","H1 iPSC - control"),
+                               c("H1-r2 iPSC - cocktail","H1-r2 iPSC - control"),
+                               c("H2 iPSC - cocktail","H2 iPSC - control"),
+                               c("H3 iPSC - cocktail","H3 iPSC - control"),
+                               c("H4 iPSC - cocktail","H4 iPSC - control"),
+                               c("H5 iPSC - cocktail","H5 iPSC - control"),
                                c("H6 iPSC - cocktail","H6 iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.05) +
-  stat_signif(comparisons=list(c("C1 MSC - cocktail","C1 iPSC - control"),c("C1-r2 MSC - cocktail","C1-r2 iPSC - control"),
-                               c("C2 MSC - cocktail","C2 iPSC - control"),c("C3 MSC - cocktail","C3 iPSC - control"),
-                               c("C4 MSC - cocktail","C4 iPSC - control"),c("C5 MSC - cocktail","C5 iPSC - control"),
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
+  stat_signif(comparisons=list(c("C1 MSC - cocktail","C1 iPSC - control"),
+                               c("C1-r2 MSC - cocktail","C1-r2 iPSC - control"),
+                               c("C2 MSC - cocktail","C2 iPSC - control"),
+                               c("C3 MSC - cocktail","C3 iPSC - control"),
+                               c("C4 MSC - cocktail","C4 iPSC - control"),
+                               c("C5 MSC - cocktail","C5 iPSC - control"),
                                c("C6 MSC - cocktail","C6 iPSC - control"),
-                               c("H1 MSC - cocktail","H1 iPSC - control"),c("H1-r2 MSC - cocktail","H1-r2 iPSC - control"),
-                               c("H2 MSC - cocktail","H2 iPSC - control"),c("H3 MSC - cocktail","H3 iPSC - control"),
-                               c("H4 MSC - cocktail","H4 iPSC - control"),c("H5 MSC - cocktail","H5 iPSC - control"),
+                               c("H1 MSC - cocktail","H1 iPSC - control"),
+                               c("H1-r2 MSC - cocktail","H1-r2 iPSC - control"),
+                               c("H2 MSC - cocktail","H2 iPSC - control"),
+                               c("H3 MSC - cocktail","H3 iPSC - control"),
+                               c("H4 MSC - cocktail","H4 iPSC - control"),
+                               c("H5 MSC - cocktail","H5 iPSC - control"),
                                c("H6 MSC - cocktail","H6 iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.15) +
-  stat_signif(comparisons=list(c("C1 MSC - cocktail","C1 iPSC - cocktail"),c("C1-r2 MSC - cocktail","C1-r2 iPSC - cocktail"),
-                               c("C2 MSC - cocktail","C2 iPSC - cocktail"),c("C3 MSC - cocktail","C3 iPSC - cocktail"),
-                               c("C4 MSC - cocktail","C4 iPSC - cocktail"),c("C5 MSC - cocktail","C5 iPSC - cocktail"),
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
+  stat_signif(comparisons=list(c("C1 MSC - cocktail","C1 iPSC - cocktail")
+                               ,c("C1-r2 MSC - cocktail","C1-r2 iPSC - cocktail"),
+                               c("C2 MSC - cocktail","C2 iPSC - cocktail"),
+                               c("C3 MSC - cocktail","C3 iPSC - cocktail"),
+                               c("C4 MSC - cocktail","C4 iPSC - cocktail"),
+                               c("C5 MSC - cocktail","C5 iPSC - cocktail"),
                                c("C6 MSC - cocktail","C6 iPSC - cocktail"),
-                               c("H1 MSC - cocktail","H1 iPSC - cocktail"),c("H1-r2 MSC - cocktail","H1-r2 iPSC - cocktail"),
-                               c("H2 MSC - cocktail","H2 iPSC - cocktail"),c("H3 MSC - cocktail","H3 iPSC - cocktail"),
-                               c("H4 MSC - cocktail","H4 iPSC - cocktail"),c("H5 MSC - cocktail","H5 iPSC - cocktail"),
+                               c("H1 MSC - cocktail","H1 iPSC - cocktail"),
+                               c("H1-r2 MSC - cocktail","H1-r2 iPSC - cocktail"),
+                               c("H2 MSC - cocktail","H2 iPSC - cocktail"),
+                               c("H3 MSC - cocktail","H3 iPSC - cocktail"),
+                               c("H4 MSC - cocktail","H4 iPSC - cocktail"),
+                               c("H5 MSC - cocktail","H5 iPSC - cocktail"),
                                c("H6 MSC - cocktail","H6 iPSC - cocktail")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.25)
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)
+
+```
+
+```{r}
+
 ggplot(fcs, aes(x=Abbr_Details, y=CD105_Percentage, fill=Sample_Details)) +
   geom_boxplot() +
   scale_fill_manual(values=c("white","pink","mediumorchid")) +
   labs(x="", y="Proportion of Cells Expressing CD105") +
   theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
-  stat_signif(comparisons=list(c("C1 iPSC - cocktail","C1 iPSC - control"),c("C1-r2 iPSC - cocktail","C1-r2 iPSC - control"),
-                               c("C2 iPSC - cocktail","C2 iPSC - control"),c("C3 iPSC - cocktail","C3 iPSC - control"),
-                               c("C4 iPSC - cocktail","C4 iPSC - control"),c("C5 iPSC - cocktail","C5 iPSC - control"),
+  stat_signif(comparisons=list(c("C1 iPSC - cocktail","C1 iPSC - control"),
+                               c("C1-r2 iPSC - cocktail","C1-r2 iPSC - control"),
+                               c("C2 iPSC - cocktail","C2 iPSC - control"),
+                               c("C3 iPSC - cocktail","C3 iPSC - control"),
+                               c("C4 iPSC - cocktail","C4 iPSC - control"),
+                               c("C5 iPSC - cocktail","C5 iPSC - control"),
                                c("C6 iPSC - cocktail","C6 iPSC - control"),
-                               c("H1 iPSC - cocktail","H1 iPSC - control"),c("H1-r2 iPSC - cocktail","H1-r2 iPSC - control"),
-                               c("H2 iPSC - cocktail","H2 iPSC - control"),c("H3 iPSC - cocktail","H3 iPSC - control"),
-                               c("H4 iPSC - cocktail","H4 iPSC - control"),c("H5 iPSC - cocktail","H5 iPSC - control"),
+                               c("H1 iPSC - cocktail","H1 iPSC - control"),
+                               c("H1-r2 iPSC - cocktail","H1-r2 iPSC - control"),
+                               c("H2 iPSC - cocktail","H2 iPSC - control"),
+                               c("H3 iPSC - cocktail","H3 iPSC - control"),
+                               c("H4 iPSC - cocktail","H4 iPSC - control"),
+                               c("H5 iPSC - cocktail","H5 iPSC - control"),
                                c("H6 iPSC - cocktail","H6 iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.05) +
-  stat_signif(comparisons=list(c("C1 MSC - cocktail","C1 iPSC - control"),c("C1-r2 MSC - cocktail","C1-r2 iPSC - control"),
-                               c("C2 MSC - cocktail","C2 iPSC - control"),c("C3 MSC - cocktail","C3 iPSC - control"),
-                               c("C4 MSC - cocktail","C4 iPSC - control"),c("C5 MSC - cocktail","C5 iPSC - control"),
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
+  stat_signif(comparisons=list(c("C1 MSC - cocktail","C1 iPSC - control"),
+                               c("C1-r2 MSC - cocktail","C1-r2 iPSC - control"),
+                               c("C2 MSC - cocktail","C2 iPSC - control"),
+                               c("C3 MSC - cocktail","C3 iPSC - control"),
+                               c("C4 MSC - cocktail","C4 iPSC - control"),
+                               c("C5 MSC - cocktail","C5 iPSC - control"),
                                c("C6 MSC - cocktail","C6 iPSC - control"),
-                               c("H1 MSC - cocktail","H1 iPSC - control"),c("H1-r2 MSC - cocktail","H1-r2 iPSC - control"),
-                               c("H2 MSC - cocktail","H2 iPSC - control"),c("H3 MSC - cocktail","H3 iPSC - control"),
-                               c("H4 MSC - cocktail","H4 iPSC - control"),c("H5 MSC - cocktail","H5 iPSC - control"),
+                               c("H1 MSC - cocktail","H1 iPSC - control"),
+                               c("H1-r2 MSC - cocktail","H1-r2 iPSC - control"),
+                               c("H2 MSC - cocktail","H2 iPSC - control"),
+                               c("H3 MSC - cocktail","H3 iPSC - control"),
+                               c("H4 MSC - cocktail","H4 iPSC - control"),
+                               c("H5 MSC - cocktail","H5 iPSC - control"),
                                c("H6 MSC - cocktail","H6 iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.15) +
-  stat_signif(comparisons=list(c("C1 MSC - cocktail","C1 iPSC - cocktail"),c("C1-r2 MSC - cocktail","C1-r2 iPSC - cocktail"),
-                               c("C2 MSC - cocktail","C2 iPSC - cocktail"),c("C3 MSC - cocktail","C3 iPSC - cocktail"),
-                               c("C4 MSC - cocktail","C4 iPSC - cocktail"),c("C5 MSC - cocktail","C5 iPSC - cocktail"),
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
+  stat_signif(comparisons=list(c("C1 MSC - cocktail","C1 iPSC - cocktail"),
+                               c("C1-r2 MSC - cocktail","C1-r2 iPSC - cocktail"),
+                               c("C2 MSC - cocktail","C2 iPSC - cocktail"),
+                               c("C3 MSC - cocktail","C3 iPSC - cocktail"),
+                               c("C4 MSC - cocktail","C4 iPSC - cocktail"),
+                               c("C5 MSC - cocktail","C5 iPSC - cocktail"),
                                c("C6 MSC - cocktail","C6 iPSC - cocktail"),
-                               c("H1 MSC - cocktail","H1 iPSC - cocktail"),c("H1-r2 MSC - cocktail","H1-r2 iPSC - cocktail"),
-                               c("H2 MSC - cocktail","H2 iPSC - cocktail"),c("H3 MSC - cocktail","H3 iPSC - cocktail"),
-                               c("H4 MSC - cocktail","H4 iPSC - cocktail"),c("H5 MSC - cocktail","H5 iPSC - cocktail"),
+                               c("H1 MSC - cocktail","H1 iPSC - cocktail"),
+                               c("H1-r2 MSC - cocktail","H1-r2 iPSC - cocktail"),
+                               c("H2 MSC - cocktail","H2 iPSC - cocktail"),
+                               c("H3 MSC - cocktail","H3 iPSC - cocktail"),
+                               c("H4 MSC - cocktail","H4 iPSC - cocktail"),
+                               c("H5 MSC - cocktail","H5 iPSC - cocktail"),
                                c("H6 MSC - cocktail","H6 iPSC - cocktail")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.25)
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)
+
+```
+
+```{r}
+
 ggplot(fcs, aes(x=Abbr_Details, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage, fill=Sample_Details)) +
   geom_boxplot() +
   scale_fill_manual(values=c("white","pink","mediumorchid")) +
   labs(x="", y="Proportion of Cells Expressing\nCD45/CD34/CD11b/CD19/HLA.DR") +
   theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
-  stat_signif(comparisons=list(c("C1 iPSC - cocktail","C1 iPSC - control"),c("C1-r2 iPSC - cocktail","C1-r2 iPSC - control"),
-                               c("C2 iPSC - cocktail","C2 iPSC - control"),c("C3 iPSC - cocktail","C3 iPSC - control"),
-                               c("C4 iPSC - cocktail","C4 iPSC - control"),c("C5 iPSC - cocktail","C5 iPSC - control"),
+  stat_signif(comparisons=list(c("C1 iPSC - cocktail","C1 iPSC - control"),
+                               c("C1-r2 iPSC - cocktail","C1-r2 iPSC - control"),
+                               c("C2 iPSC - cocktail","C2 iPSC - control"),
+                               c("C3 iPSC - cocktail","C3 iPSC - control"),
+                               c("C4 iPSC - cocktail","C4 iPSC - control"),
+                               c("C5 iPSC - cocktail","C5 iPSC - control"),
                                c("C6 iPSC - cocktail","C6 iPSC - control"),
-                               c("H1 iPSC - cocktail","H1 iPSC - control"),c("H1-r2 iPSC - cocktail","H1-r2 iPSC - control"),
-                               c("H2 iPSC - cocktail","H2 iPSC - control"),c("H3 iPSC - cocktail","H3 iPSC - control"),
-                               c("H4 iPSC - cocktail","H4 iPSC - control"),c("H5 iPSC - cocktail","H5 iPSC - control"),
+                               c("H1 iPSC - cocktail","H1 iPSC - control"),
+                               c("H1-r2 iPSC - cocktail","H1-r2 iPSC - control"),
+                               c("H2 iPSC - cocktail","H2 iPSC - control"),
+                               c("H3 iPSC - cocktail","H3 iPSC - control"),
+                               c("H4 iPSC - cocktail","H4 iPSC - control"),
+                               c("H5 iPSC - cocktail","H5 iPSC - control"),
                                c("H6 iPSC - cocktail","H6 iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.05) +
-  stat_signif(comparisons=list(c("C1 MSC - cocktail","C1 iPSC - control"),c("C1-r2 MSC - cocktail","C1-r2 iPSC - control"),
-                               c("C2 MSC - cocktail","C2 iPSC - control"),c("C3 MSC - cocktail","C3 iPSC - control"),
-                               c("C4 MSC - cocktail","C4 iPSC - control"),c("C5 MSC - cocktail","C5 iPSC - control"),
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
+  stat_signif(comparisons=list(c("C1 MSC - cocktail","C1 iPSC - control"),
+                               c("C1-r2 MSC - cocktail","C1-r2 iPSC - control"),
+                               c("C2 MSC - cocktail","C2 iPSC - control"),
+                               c("C3 MSC - cocktail","C3 iPSC - control"),
+                               c("C4 MSC - cocktail","C4 iPSC - control"),
+                               c("C5 MSC - cocktail","C5 iPSC - control"),
                                c("C6 MSC - cocktail","C6 iPSC - control"),
-                               c("H1 MSC - cocktail","H1 iPSC - control"),c("H1-r2 MSC - cocktail","H1-r2 iPSC - control"),
-                               c("H2 MSC - cocktail","H2 iPSC - control"),c("H3 MSC - cocktail","H3 iPSC - control"),
-                               c("H4 MSC - cocktail","H4 iPSC - control"),c("H5 MSC - cocktail","H5 iPSC - control"),
+                               c("H1 MSC - cocktail","H1 iPSC - control"),
+                               c("H1-r2 MSC - cocktail","H1-r2 iPSC - control"),
+                               c("H2 MSC - cocktail","H2 iPSC - control"),
+                               c("H3 MSC - cocktail","H3 iPSC - control"),
+                               c("H4 MSC - cocktail","H4 iPSC - control"),
+                               c("H5 MSC - cocktail","H5 iPSC - control"),
                                c("H6 MSC - cocktail","H6 iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.15) +
-  stat_signif(comparisons=list(c("C1 MSC - cocktail","C1 iPSC - cocktail"),c("C1-r2 MSC - cocktail","C1-r2 iPSC - cocktail"),
-                               c("C2 MSC - cocktail","C2 iPSC - cocktail"),c("C3 MSC - cocktail","C3 iPSC - cocktail"),
-                               c("C4 MSC - cocktail","C4 iPSC - cocktail"),c("C5 MSC - cocktail","C5 iPSC - cocktail"),
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
+  stat_signif(comparisons=list(c("C1 MSC - cocktail","C1 iPSC - cocktail"),
+                               c("C1-r2 MSC - cocktail","C1-r2 iPSC - cocktail"),
+                               c("C2 MSC - cocktail","C2 iPSC - cocktail"),
+                               c("C3 MSC - cocktail","C3 iPSC - cocktail"),
+                               c("C4 MSC - cocktail","C4 iPSC - cocktail"),
+                               c("C5 MSC - cocktail","C5 iPSC - cocktail"),
                                c("C6 MSC - cocktail","C6 iPSC - cocktail"),
-                               c("H1 MSC - cocktail","H1 iPSC - cocktail"),c("H1-r2 MSC - cocktail","H1-r2 iPSC - cocktail"),
-                               c("H2 MSC - cocktail","H2 iPSC - cocktail"),c("H3 MSC - cocktail","H3 iPSC - cocktail"),
-                               c("H4 MSC - cocktail","H4 iPSC - cocktail"),c("H5 MSC - cocktail","H5 iPSC - cocktail"),
+                               c("H1 MSC - cocktail","H1 iPSC - cocktail"),
+                               c("H1-r2 MSC - cocktail","H1-r2 iPSC - cocktail"),
+                               c("H2 MSC - cocktail","H2 iPSC - cocktail"),
+                               c("H3 MSC - cocktail","H3 iPSC - cocktail"),
+                               c("H4 MSC - cocktail","H4 iPSC - cocktail"),
+                               c("H5 MSC - cocktail","H5 iPSC - cocktail"),
                                c("H6 MSC - cocktail","H6 iPSC - cocktail")),
-              test = "wilcox.test", test.args=list(alternative="two.sided", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.25)
+              test = "wilcox.test",
+              test.args=list(alternative="two.sided", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)
 
+```
+
+#### Comparison across species
+
+```{r, eval=FALSE, echo=FALSE}
 
 #Wilcox test of each species
 wilcox.test(x=fcs$CD90_Percentage[which(fcs$Species_Details=="Chimpanzee iPSC - cocktail")],
@@ -654,7 +679,11 @@ wilcox.test(x=fcs$CD45.CD34.CD11b.CD19.HLA.DR_Percentage[which(fcs$Species_Detai
 wilcox.test(x=fcs$CD45.CD34.CD11b.CD19.HLA.DR_Percentage[which(fcs$Species_Details=="Chimpanzee MSC - cocktail")],
             y=fcs$CD45.CD34.CD11b.CD19.HLA.DR_Percentage[which(fcs$Species_Details=="Chimpanzee iPSC - cocktail")],
             alternative="two.sided", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-#...
+
+```
+
+```{r}
+
 ggplot(fcs, aes(x=Species_Details, y=CD90_Percentage, fill=Sample_Details)) +
   geom_boxplot() +
   scale_fill_manual(values=c("white","pink","mediumorchid")) +
@@ -662,13 +691,30 @@ ggplot(fcs, aes(x=Species_Details, y=CD90_Percentage, fill=Sample_Details)) +
   theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
   stat_signif(comparisons=list(c("Chimpanzee iPSC - cocktail","Chimpanzee iPSC - control"),
                                c("Human iPSC - cocktail","Human iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.05) +
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
   stat_signif(comparisons=list(c("Chimpanzee MSC - cocktail","Chimpanzee iPSC - control"),
                                c("Human MSC - cocktail","Human iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.15) +
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
   stat_signif(comparisons=list(c("Chimpanzee MSC - cocktail","Chimpanzee iPSC - cocktail"),
                                c("Human MSC - cocktail","Human iPSC - cocktail")),
-              test = "wilcox.test", test.args=list(alternative="two.sided", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.25)
+              test = "wilcox.test",
+              test.args=list(alternative="two.sided", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)
+
+```
+
+```{r}
+
 ggplot(fcs, aes(x=Species_Details, y=CD73_Percentage, fill=Sample_Details)) +
   geom_boxplot() +
   scale_fill_manual(values=c("white","pink","mediumorchid")) +
@@ -676,13 +722,30 @@ ggplot(fcs, aes(x=Species_Details, y=CD73_Percentage, fill=Sample_Details)) +
   theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
   stat_signif(comparisons=list(c("Chimpanzee iPSC - cocktail","Chimpanzee iPSC - control"),
                                c("Human iPSC - cocktail","Human iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.05) +
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
   stat_signif(comparisons=list(c("Chimpanzee MSC - cocktail","Chimpanzee iPSC - control"),
                                c("Human MSC - cocktail","Human iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.15) +
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
   stat_signif(comparisons=list(c("Chimpanzee MSC - cocktail","Chimpanzee iPSC - cocktail"),
                                c("Human MSC - cocktail","Human iPSC - cocktail")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.25)
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)
+
+```
+
+```{r}
+
 ggplot(fcs, aes(x=Species_Details, y=CD105_Percentage, fill=Sample_Details)) +
   geom_boxplot() +
   scale_fill_manual(values=c("white","pink","mediumorchid")) +
@@ -690,13 +753,30 @@ ggplot(fcs, aes(x=Species_Details, y=CD105_Percentage, fill=Sample_Details)) +
   theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
   stat_signif(comparisons=list(c("Chimpanzee iPSC - cocktail","Chimpanzee iPSC - control"),
                                c("Human iPSC - cocktail","Human iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.05) +
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
   stat_signif(comparisons=list(c("Chimpanzee MSC - cocktail","Chimpanzee iPSC - control"),
                                c("Human MSC - cocktail","Human iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.15) +
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
   stat_signif(comparisons=list(c("Chimpanzee MSC - cocktail","Chimpanzee iPSC - cocktail"),
                                c("Human MSC - cocktail","Human iPSC - cocktail")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.25)
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)
+
+```
+
+```{r}
+
 ggplot(fcs, aes(x=Species_Details, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage, fill=Sample_Details)) +
   geom_boxplot() +
   scale_fill_manual(values=c("white","pink","mediumorchid")) +
@@ -704,14 +784,32 @@ ggplot(fcs, aes(x=Species_Details, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage, fil
   theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
   stat_signif(comparisons=list(c("Chimpanzee iPSC - cocktail","Chimpanzee iPSC - control"),
                                c("Human iPSC - cocktail","Human iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.05) +
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
   stat_signif(comparisons=list(c("Chimpanzee MSC - cocktail","Chimpanzee iPSC - control"),
                                c("Human MSC - cocktail","Human iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.15) +
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
   stat_signif(comparisons=list(c("Chimpanzee MSC - cocktail","Chimpanzee iPSC - cocktail"),
                                c("Human MSC - cocktail","Human iPSC - cocktail")),
-              test = "wilcox.test", test.args=list(alternative="two.sided", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.25)
+              test = "wilcox.test",
+              test.args=list(alternative="two.sided", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)
 
+
+```
+
+#### Comparison across full sample set
+
+```{r, eval=FALSE, echo=FALSE}
 
 #Wilcox test of full sample set
 wilcox.test(x=fcs$CD90_Percentage[which(fcs$Sample_Details=="iPSC - cocktail")],
@@ -753,52 +851,580 @@ wilcox.test(x=fcs$CD45.CD34.CD11b.CD19.HLA.DR_Percentage[which(fcs$Sample_Detail
 wilcox.test(x=fcs$CD45.CD34.CD11b.CD19.HLA.DR_Percentage[which(fcs$Sample_Details=="MSC - cocktail")],
             y=fcs$CD45.CD34.CD11b.CD19.HLA.DR_Percentage[which(fcs$Sample_Details=="iPSC - cocktail")],
             alternative="two.sided", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
-#...
+
+```
+
+```{r}
+
 ggplot(fcs, aes(x=Sample_Details, y=CD90_Percentage, fill=Sample_Details)) +
   geom_boxplot() +
   scale_fill_manual(values=c("white","pink","mediumorchid")) +
   labs(x="", y="Proportion of Cells Expressing CD90") +
   theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
   stat_signif(comparisons=list(c("iPSC - cocktail","iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.05) +
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
   stat_signif(comparisons=list(c("MSC - cocktail","iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.15) +
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
   stat_signif(comparisons=list(c("MSC - cocktail","iPSC - cocktail")),
-              test = "wilcox.test", test.args=list(alternative="two.sided", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.25)
+              test = "wilcox.test",
+              test.args=list(alternative="two.sided", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)
+```
+
+```{r}
+
 ggplot(fcs, aes(x=Sample_Details, y=CD73_Percentage, fill=Sample_Details)) +
   geom_boxplot() +
   scale_fill_manual(values=c("white","pink","mediumorchid")) +
   labs(x="", y="Proportion of Cells Expressing CD73") +
   theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
   stat_signif(comparisons=list(c("iPSC - cocktail","iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.05) +
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
   stat_signif(comparisons=list(c("MSC - cocktail","iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.15) +
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
   stat_signif(comparisons=list(c("MSC - cocktail","iPSC - cocktail")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.25)
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)
+```
+
+```{r}
+
 ggplot(fcs, aes(x=Sample_Details, y=CD105_Percentage, fill=Sample_Details)) +
   geom_boxplot() +
   scale_fill_manual(values=c("white","pink","mediumorchid")) +
   labs(x="", y="Proportion of Cells Expressing CD105") +
   theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
   stat_signif(comparisons=list(c("iPSC - cocktail","iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.05) +
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
   stat_signif(comparisons=list(c("MSC - cocktail","iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.15) +
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
   stat_signif(comparisons=list(c("MSC - cocktail","iPSC - cocktail")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.25)
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)
+```
+
+```{r}
+
 ggplot(fcs, aes(x=Sample_Details, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage, fill=Sample_Details)) +
   geom_boxplot() +
   scale_fill_manual(values=c("white","pink","mediumorchid")) +
   labs(x="", y="Proportion of Cells Expressing\nCD45/CD34/CD11b/CD19/HLA.DR") +
   theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
   stat_signif(comparisons=list(c("iPSC - cocktail","iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.05) +
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
   stat_signif(comparisons=list(c("MSC - cocktail","iPSC - control")),
-              test = "wilcox.test", test.args=list(alternative="greater", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.15) +
+              test = "wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
   stat_signif(comparisons=list(c("MSC - cocktail","iPSC - cocktail")),
-              test = "wilcox.test", test.args=list(alternative="two.sided", exact=FALSE), map_signif_level=TRUE, tip_length=0.01, y_position=1.25)
+              test = "wilcox.test",
+              test.args=list(alternative="two.sided", exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)
 
 ```
+
+### Staining Results - Alizarin Red
+
+Alizarin Red S staining which binds to calcium deposits was performed on iPSC-derived MSCs (Time 1) and iPSC-MSC-derived osteoblasts (Time 2) in order to confirm osteogenic differentiation. Quatification of stain was determined by extracting stain and measuring absorbance levels. Expect higher absorbance values in cells collected at Time 2 than Time 1.
+
+```{r view alizarin red data}
+
+#Load alizarin red data
+alz <- read.csv(file='./data/alizarin-red-quant-total.csv', header=TRUE, sep=",")
+
+#Remove data not reformat alizarin red data
+alz <- alz[c(1:8,13:20,25:60,65:72,77:140),] #remove C1-6W, H1-6W, H3-1A
+
+```
+
+Look at all of the data:
+
+```{r}
+
+ggplot(alz, aes(x=Sample, y=Absorbance_Value)) + geom_boxplot()
+
+```
+
+Remove any potential outliers from data and reformat.
+
+```{r, eval=FALSE, echo=FALSE}
+
+#Identify outliers from alizarin red data
+##individual samples - none have outliers
+##1:4,5:8,9:12,13:16,17:20,21:24,25:28,29:32,33:36,37:40,41:44,45:48,49:52,53:56,57:60,61:64,65:68,69:72,73:76,77:80
+##81:84,85:88,89:92,93:96,97:100,101:104,105:108,109:112,113:116,117:120,121:124,125:128,129:132,133:136,137:140
+##chimpanzee osteoblast - none have outliers
+##which(oil$Species_Details=="Chimpanzee Osteoblast")
+##human osteoblast - all H2 osteoblasts (n=4) and all H6 osteoblasts (n=4) are outliers (will keep because small variation in these reps so likely valid)
+##which(oil$Species_Details=="Human Osteoblast")
+##chimpanzee mscs - all C1 mscs (n=4) are outliers (will keep because small variation in these reps so likely valid),
+##                  C1-r2 rep (n=1) is an outlier (will remove)
+##which(oil$Species_Details=="Chimpanzee MSC")
+##human mscs - H1 reps (n=2) are ouliers (will remove), H1-r2 reps (n=2) are outliers (will remove 1 but keep the other because small variation so likely valid)
+##which(oil$Species_Details=="Human MSC")
+##osteoblast samples - all H6 osteoblasts (n=4) are outliers (will keep because small variation in these reps so likely valid)
+##which(alz$Cell_Type=="Osteoblast")
+##msc samples - all C1 mscs (n=4) are outliers (will keep because small variation in these reps so likely valid),
+##              H1 reps (n=2) / C1-r2 rep (n=1) / H1-r2 rep (n=1) are outliers (will remove)
+##which(alz$Cell_Type=="MSC")
+outlier_values <- boxplot.stats(alz$Absorbance_Value[which(alz$Species_Details=="Human MSC")])$out  #outlier values
+boxplot(alz$Absorbance_Value[which(alz$Species_Details=="Human MSC")], boxwex=0.1)
+mtext(paste("Outliers: ", paste(outlier_values, collapse=", ")), cex=0.6)
+
+```
+
+```{r}
+
+#Remove outliers
+alz <- alz[c(1:8,10:11,14:18,20:124),]
+
+#Adjust variables in alizarin red data
+alz$Sample <- factor(alz$Sample, 
+                     levels = c("C1-M","C1-O 12w",
+                                "CR-M","CR-O",
+                                "C2-M","C2-O",
+                                "C3-M","C3-O",
+                                "C4-M","C4-O",
+                                "C5-M","C5-O",
+                                "C6-M","C6-O",
+                                "H1-M","H1-O 12w",
+                                "HR-M","HR-O",
+                                "H2-M","H2-O",
+                                "H3-M(1)","H3-O(1)",
+                                "H4-M","H4-O",
+                                "H5-M","H5-O",
+                                "H6-M","H6-O"),
+                     labels = c("C1-M","C1-O",
+                                "C1-r2-M","C1-r2-O",
+                                "C2-M","C2-O",
+                                "C3-M","C3-O",
+                                "C4-M","C4-O",
+                                "C5-M","C5-O",
+                                "C6-M","C6-O",
+                                "H1-M","H1-O",
+                                "H1-r2-M","H1-r2-O",
+                                "H2-M","H2-O",
+                                "H3-M","H3-O",
+                                "H4-M","H4-O",
+                                "H5-M","H5-O",
+                                "H6-M","H6-O")) 
+alz$Species_Details <- factor(alz$Species_Details,
+                              levels = c("Chimpanzee MSC",
+                                         "Chimpanzee Osteoblast",
+                                         "Human MSC",
+                                         "Human Osteoblast"),
+                              labels = c("Chimpanzee MSC",
+                                         "Chimpanzee Osteoblast",
+                                         "Human MSC",
+                                         "Human Osteoblast")) 
+alz$Cell_Type <- factor(alz$Cell_Type,
+                        levels = c("MSC","Osteoblast"),
+                        labels = c("MSC","Osteoblast")) 
+
+```
+
+```{r}
+
+ggplot(alz, aes(x=Sample, y=Absorbance_Value)) + geom_boxplot()
+
+```
+
+#### Comparison across samples
+
+```{r, eval=FALSE, echo=FALSE}
+
+#Wilcox test of each sample
+wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="C1-O")], y=alz$Absorbance_Value[which(alz$Sample=="C1-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="C2-O")], y=alz$Absorbance_Value[which(alz$Sample=="C2-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="C3-O")], y=alz$Absorbance_Value[which(alz$Sample=="C3-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="C4-O")], y=alz$Absorbance_Value[which(alz$Sample=="C4-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="C5-O")], y=alz$Absorbance_Value[which(alz$Sample=="C5-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="C6-O")], y=alz$Absorbance_Value[which(alz$Sample=="C6-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="C1-r2-O")], y=alz$Absorbance_Value[which(alz$Sample=="C1-r2-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="H1-O")], y=alz$Absorbance_Value[which(alz$Sample=="H1-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="H2-O")], y=alz$Absorbance_Value[which(alz$Sample=="H2-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="H3-O")], y=alz$Absorbance_Value[which(alz$Sample=="H3-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="H4-O")], y=alz$Absorbance_Value[which(alz$Sample=="H4-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="H5-O")], y=alz$Absorbance_Value[which(alz$Sample=="H5-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="H6-O")], y=alz$Absorbance_Value[which(alz$Sample=="H6-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=alz$Absorbance_Value[which(alz$Sample=="H1-r2-O")], y=alz$Absorbance_Value[which(alz$Sample=="H1-r2-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+#C1: p=0.01519 / C2: p=0.0147 / C3: p=0.01519 / C4: p=0.01519 / C5: p=0.09697 / C6: p=0.01519 / C1-r2: p=0.01519
+#H1: p=0.9467 / H2: p=0.01519 / H3: p=0.0147 / H4: p=8.881e-05 / H5: p=0.01519 / H6: p=0.0147 / H1-r2: p=0.02591
+
+```
+
+```{r}
+
+ggplot(alz, aes(x=Sample, y=Absorbance_Value, fill=Cell_Type)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c("white","red")) +
+  labs(x="", y="Alizarin Red Absorbance") +
+  theme(legend.title = element_blank()) +
+  geom_signif(comparisons = list(c("C1-O","C1-M"),
+                                 c("C1-r2-O","C1-r2-M"),
+                                 c("C2-O","C2-M"),
+                                 c("C3-O","C3-M"),
+                                 c("C4-O","C4-M"),
+                                 c("C5-O","C5-M"),
+                                 c("C6-O","C6-M"),
+                                 c("H1-O","H1-M"),
+                                 c("H1-r2-O","H1-r2-M"),
+                                 c("H2-O","H2-M"),
+                                 c("H3-O","H3-M"),
+                                 c("H4-O","H4-M"),
+                                 c("H5-O","H5-M"),
+                                 c("H6-O","H6-M")), 
+              test="wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE)
+
+```
+
+#### Comparison across species
+
+```{r, eval=FALSE, echo=FALSE}
+
+#Wilcox test of each species
+wilcox.test(x=alz$Absorbance_Value[which(alz$Species_Details=="Chimpanzee Osteoblast")],
+            y=alz$Absorbance_Value[which(alz$Species_Details=="Chimpanzee MSC")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=alz$Absorbance_Value[which(alz$Species_Details=="Human Osteoblast")],
+            y=alz$Absorbance_Value[which(alz$Species_Details=="Human MSC")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+#Chimp: p=5.869e-09
+#Human: p=6.924e-12
+
+```
+
+```{r}
+
+ggplot(alz, aes(x=Species_Details, y=Absorbance_Value, fill=Cell_Type)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c("white","red")) +
+  labs(x="", y="Alizarin Red Absorbance") +
+  theme(legend.title = element_blank()) +
+  geom_signif(comparisons = list(c("Chimpanzee Osteoblast","Chimpanzee MSC"),
+                                 c("Human Osteoblast","Human MSC")), 
+              test="wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE)
+
+```
+
+#### Comparison across full sample set
+
+```{r, eval=FALSE, echo=FALSE}
+
+#Wilcox test of full sample set
+wilcox.test(x=alz$Absorbance_Value[which(alz$Cell_Type=="Osteoblast")],
+            y=alz$Absorbance_Value[which(alz$Cell_Type=="MSC")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+#p < 2.2e-16
+
+```
+
+```{r}
+
+ggplot(alz, aes(x=Cell_Type, y=Absorbance_Value, fill=Cell_Type)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c("white","red")) +
+  labs(x="", y="Alizarin Red Absorbance") +
+  theme(legend.title = element_blank()) +
+  geom_signif(comparisons = list(c("Osteoblast","MSC")),
+              test="wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE)
+
+```
+
+### Staining Results - Oil Red
+
+Oil Red O staining which binds to fat globules was performed on iPSC-derived MSCs (Time 1) and iPSC-MSC-derived adipocytes in order to confirm adipogenic differentiation. Quatification of stain was determined by extracting stain and measuring absorbance levels. Expect higher absorbance values in cells collected after adipogenic differentiation than Time 1.
+
+```{r}
+
+#Load oil red data
+oil <- read.csv(file='./data/oil-red-quant-total.csv', header=TRUE, sep=",")
+
+```
+
+Look at all of the data:
+
+```{r}
+
+ggplot(oil, aes(x=Sample, y=Absorbance_Value)) + geom_boxplot()
+
+```
+
+Remove any potential outliers from data and reformat.
+
+```{r, eval=FALSE, echo=FALSE}
+
+#Identify outliers from alizarin red data
+##individual samples - none have outliers
+##1:4,5:8,9:12,13:16,17:20,21:24,25:28,29:32,33:36,37:40,41:44,45:48,49:52,53:56,57:60,
+#61:64,65:68,69:72,73:76,77:80,81:84,85:88,89:92,93:96,97:100,101:104,105:108,109:112
+##chimpanzee adipocytes - all C3 adipocytes (n=4) are outliers (will keep 3 of these because small variation in these reps so likely valid),
+##which(oil$Species_Details=="Chimpanzee Adipocyte")
+##human adipocytes - none have outliers
+##which(oil$Species_Details=="Human Adipocyte")
+##chimpanzee mscs - C1 reps (n=3) are outliers (will keep because small variation in these reps so likely valid)
+##which(oil$Species_Details=="Chimpanzee MSC")
+##human mscs - none have outliers
+##which(oil$Species_Details=="Human MSC")
+##adipocyte samples - all C3 adipocytes (n=4) are outliers (will keep 3 of these because small variation in these reps so likely valid),
+##                    C5 reps (n=2) are outliers (will keep these BUT remove 1 other rep because small variation in this rep)
+##which(oil$Cell_Type=="Adipocyte")
+##msc samples - C1 reps (n=3) are outliers (will keep because small variation in these reps so likely valid)
+##which(oil$Cell_Type=="MSC")
+outlier_values <- boxplot.stats(oil$Absorbance_Value[which(oil$Species_Details=="Chimpanzee Adipocyte")])$out  #outlier values
+boxplot(oil$Absorbance_Value[which(oil$Species_Details=="Chimpanzee Adipocyte")], boxwex=0.1)
+mtext(paste("Outliers: ", paste(outlier_values, collapse=", ")), cex=0.6)
+
+```
+
+```{r}
+
+#Remove outliers
+oil <- oil[c(1:63,65:91,93:112),]
+
+#Adjust variables in oil red data
+oil$Sample <- factor(oil$Sample, 
+                     levels = c("C1-M","C1-A",
+                                "CR-M","CR-A",
+                                "C2-M","C2-A",
+                                "C3-M","C3-A",
+                                "C4-M","C4-A",
+                                "C5-M","C5-A",
+                                "C6-M","C6-A",
+                                "H1-M","H1-A",
+                                "HR-M","HR-A",
+                                "H2-M","H2-A",
+                                "H3-M","H3-A",
+                                "H4-M","H4-A",
+                                "H5-M","H5-A",
+                                "H6-M","H6-A"),
+                     labels = c("C1-M","C1-A",
+                                "C1-r2-M","C1-r2-A",
+                                "C2-M","C2-A",
+                                "C3-M","C3-A",
+                                "C4-M","C4-A",
+                                "C5-M","C5-A",
+                                "C6-M","C6-A",
+                                "H1-M","H1-A",
+                                "H1-r2-M","H1-r2-A",
+                                "H2-M","H2-A",
+                                "H3-M","H3-A",
+                                "H4-M","H4-A",
+                                "H5-M","H5-A",
+                                "H6-M","H6-A")) 
+oil$Species_Details <- factor(oil$Species_Details,
+                              levels = c("Chimpanzee MSC",
+                                         "Chimpanzee Adipocyte",
+                                         "Human MSC",
+                                         "Human Adipocyte"),
+                              labels = c("Chimpanzee MSC",
+                                         "Chimpanzee Adipocyte",
+                                         "Human MSC",
+                                         "Human Adipocyte")) 
+oil$Cell_Type <- factor(oil$Cell_Type,
+                        levels = c("MSC","Adipocyte"),
+                        labels = c("MSC","Adipocyte")) 
+
+```
+
+```{r}
+
+ggplot(oil, aes(x=Sample, y=Absorbance_Value)) + geom_boxplot()
+
+```
+
+#### Comparison across samples
+
+```{r, eval=FALSE, echo=FALSE}
+
+#Wilcox test of each sample
+wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="C1-A")], y=oil$Absorbance_Value[which(oil$Sample=="C1-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="C2-A")], y=oil$Absorbance_Value[which(oil$Sample=="C2-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="C3-A")], y=oil$Absorbance_Value[which(oil$Sample=="C3-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="C4-A")], y=oil$Absorbance_Value[which(oil$Sample=="C4-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="C5-A")], y=oil$Absorbance_Value[which(oil$Sample=="C5-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="C6-A")], y=oil$Absorbance_Value[which(oil$Sample=="C6-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="C1-r2-A")], y=oil$Absorbance_Value[which(oil$Sample=="C1-r2-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="H1-A")], y=oil$Absorbance_Value[which(oil$Sample=="H1-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="H2-A")], y=oil$Absorbance_Value[which(oil$Sample=="H2-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="H3-A")], y=oil$Absorbance_Value[which(oil$Sample=="H3-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="H4-A")], y=oil$Absorbance_Value[which(oil$Sample=="H4-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="H5-A")], y=oil$Absorbance_Value[which(oil$Sample=="H5-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="H6-A")], y=oil$Absorbance_Value[which(oil$Sample=="H6-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=oil$Absorbance_Value[which(oil$Sample=="H1-r2-A")], y=oil$Absorbance_Value[which(oil$Sample=="H1-r2-M")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+#C1: p=0.9929 / C2: p=0.09697 / C3: p=0.02487 / C4: p=0.01519 / C5: p=0.02487 / C6: p=0.09563 / C1-r2: p=0.0303
+#H1: p=0.903 / H2: p=0.01519 / H3: p=0.09563 / H4: p=0.9929 / H5: p=0.09697 / H6: p=0.05618 / H1-r2: p=0.979
+
+```
+
+```{r}
+
+ggplot(oil, aes(x=Sample, y=Absorbance_Value, fill=Cell_Type)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c("white","red")) +
+  labs(x="", y="Oil Red Absorbance") +
+  theme(legend.title = element_blank()) +
+  geom_signif(comparisons = list(c("C1-A","C1-M"),
+                                 c("C1-r2-A","C1-r2-M"),
+                                 c("C2-A","C2-M"),
+                                 c("C3-A","C3-M"),
+                                 c("C4-A","C4-M"),
+                                 c("C5-A","C5-M"),
+                                 c("C6-A","C6-M"),
+                                 c("H1-A","H1-M"),
+                                 c("H1-r2-A","H1-r2-M"),
+                                 c("H2-A","H2-M"),
+                                 c("H3-A","H3-M"),
+                                 c("H4-A","H4-M"),
+                                 c("H5-A","H5-M"),
+                                 c("H6-A","H6-M")), 
+              test="wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE)
+
+```
+
+#### Comparison across species
+
+```{r, eval=FALSE, echo=FALSE}
+
+#Wilcox test of each species
+wilcox.test(x=oil$Absorbance_Value[which(oil$Species_Details=="Chimpanzee Adipocyte")],
+            y=oil$Absorbance_Value[which(oil$Species_Details=="Chimpanzee MSC")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+wilcox.test(x=oil$Absorbance_Value[which(oil$Species_Details=="Human Adipocyte")],
+            y=oil$Absorbance_Value[which(oil$Species_Details=="Human MSC")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+#Chimp: p=0.002586
+#Human: p=0.04572
+
+```
+
+```{r}
+
+ggplot(oil, aes(x=Species_Details, y=Absorbance_Value, fill=Cell_Type)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c("white","red")) +
+  labs(x="", y="Oil Red Absorbance") +
+  theme(legend.title = element_blank()) +
+  geom_signif(comparisons = list(c("Chimpanzee Adipocyte","Chimpanzee MSC"),
+                                 c("Human Adipocyte","Human MSC")), 
+              test="wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE)
+
+```
+
+#### Comparison across full sample set
+
+```{r, eval=FALSE, echo=FALSE}
+
+#Wilcox test of full sample set
+wilcox.test(x=oil$Absorbance_Value[which(oil$Cell_Type=="Adipocyte")],
+            y=oil$Absorbance_Value[which(oil$Cell_Type=="MSC")],
+            alternative="greater", mu=0, paired=FALSE, exact=FALSE, correct=TRUE, conf.int=FALSE, conf.level=0.95)
+#p < 0.0008825
+
+```
+
+```{r}
+
+ggplot(oil, aes(x=Cell_Type, y=Absorbance_Value, fill=Cell_Type)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c("white","red")) +
+  labs(x="", y="Oil Red Absorbance") +
+  theme(legend.title = element_blank()) +
+  geom_signif(comparisons = list(c("Adipocyte","MSC")),
+              test="wilcox.test",
+              test.args=list(alternative="greater", exact=FALSE),
+              map_signif_level=TRUE)
+
+```
+
+### qPCR Results
+
+qPCRs of candidate genes were performed on iPSCs (Time 0), iPSC-derived MSCs (Time 1), iPSC-MSC-derived osteoblasts (Time 2), iPSC-MSC-derived chondrocytes, and iPSC-MSC-derived adipocytes in order to confirm cell differentiation.
+
+```{r}
+```
+
+### Conclusions of Validation Data
+
+* Most results match the expectations
+* H3 MSC FACS values are off - nonsignificant CD90, CD73, and CD105 but CD45/CD34/CD11b/CD19/HLA-DR is more highly expressed than expected
 
 

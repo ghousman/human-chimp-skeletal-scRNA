@@ -120,6 +120,14 @@ saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-
 edgr <- runEDGER(subset(data,subset=seurat_clusters==5), genes.no.ribo)
 saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.o3.rds"))
 
+#Find differentially expressed genes using ad hoc definitions
+edgr <- runEDGER(subset(data,subset=AdHoc.Assign=="iPSC"), genes.no.ribo)
+saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.hoci.rds"))
+edgr <- runEDGER(subset(data,subset=AdHoc.Assign=="MSC"), genes.no.ribo)
+saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.hocm.rds"))
+edgr <- runEDGER(subset(data,subset=AdHoc.Assign=="Osteoblast"), genes.no.ribo)
+saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.hoco.rds"))
+
 #Find differentially expressed genes using osteogenic ad hoc definitions
 edgr <- runEDGER(subset(data,subset=OstAdHoc.Assign=="preosteoblast"), genes.no.ribo)
 saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.pre.rds"))
@@ -130,7 +138,7 @@ saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-
 #edgr <- runEDGER(subset(data,subset=OstAdHoc.Assign=="mineralizing osteocyte"), genes.no.ribo)
 #saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.min.rds"))
 #edgr <- runEDGER(subset(data,subset=OstAdHoc.Assign=="mature osteocyte"), genes.no.ribo)
-#saveRDS(edgr.mat, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.mat.rds"))
+#saveRDS(edgr, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.mat.rds"))
 
 #Find differentially expressed genes using grade of membership definitions
 edgr <- runEDGER(subset(data,subset=GoM.Assign=="iPSC"), genes.no.ribo)

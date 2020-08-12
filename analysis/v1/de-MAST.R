@@ -113,6 +113,14 @@ saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-
 mast <- runMAST(subset(data,subset=seurat_clusters==5), genes.no.ribo)
 saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.o3.rds"))
 
+#Find differentially expressed genes using ad hoc definitions
+mast <- runMAST(subset(data,subset=AdHoc.Assign=="iPSC"), genes.no.ribo)
+saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.hoci.rds"))
+mast <- runMAST(subset(data,subset=AdHoc.Assign=="MSC"), genes.no.ribo)
+saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.hocm.rds"))
+mast <- runMAST(subset(data,subset=AdHoc.Assign=="Osteoblast"), genes.no.ribo)
+saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.hoco.rds"))
+
 #Find differentially expressed genes using osteogenic ad hoc definitions
 mast <- runMAST(subset(data,subset=OstAdHoc.Assign=="preosteoblast"), genes.no.ribo)
 saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.pre.rds"))
@@ -123,7 +131,7 @@ saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-
 #mast <- runMAST(subset(data,subset=OstAdHoc.Assign=="mineralizing osteocyte"), genes.no.ribo)
 #saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.min.rds"))
 #mast <- runMAST(subset(data,subset=OstAdHoc.Assign=="mature osteocyte"), genes.no.ribo)
-#saveRDS(mast.mat, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.mat.rds"))
+#saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.mat.rds"))
 
 #Find differentially expressed genes using grade of membership definitions
 mast <- runMAST(subset(data,subset=GoM.Assign=="iPSC"), genes.no.ribo)

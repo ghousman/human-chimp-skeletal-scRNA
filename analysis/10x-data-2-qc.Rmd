@@ -1,0 +1,324 @@
+---
+title: "10x-data-qc"
+author: "Genevieve Housman"
+date: "August 2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 10X Data Cellranger Analysis - Data QC
+
+Examine QC metrics of processed 10X data using seurat.
+
+```{r load libraries, eval=FALSE, echo=TRUE}
+
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+#library(patchwork)
+
+```
+
+```{r load data, eval=FALSE, echo=TRUE}
+
+#Load batch info
+batch <- read.csv(file='./data/scrna-batch.csv', header=TRUE, sep=",")
+
+#Read in files
+data <- readRDS("./data/cellranger-data-full/data.rds")
+
+```
+
+Data QC before barcode filtering.
+
+```{r qc scRNA data - visual qc metrics, eval=FALSE, echo=TRUE}
+
+i <- 1
+collection <- paste0(data[[i]]@meta.data$Cell.Type[1],": ",data[[i]]@meta.data$Pair[1])
+
+
+#Check and visualize numbers of cells per species
+
+table(data[[i]]@meta.data$species, useNA="always")
+ggplot(data[[i]]@meta.data, aes(x=species)) +
+  geom_bar() +
+  labs(title=collection) +
+  ylim(0,5000)
+
+
+#Check and visualize QC metrics
+# - number of umi per cell (count depth)
+# - reads per genes
+# - expressed genes per cell (complexity)
+# - rarity of genes (cells expressing genes)
+
+#nCount_RNA: total number of molecules (umi) detected within a cell
+mean(data[[i]]@meta.data$nCount_RNA[which(data[[i]]@meta.data$species=="Chimp")])
+mean(data[[i]]@meta.data$nCount_RNA[which(data[[i]]@meta.data$species=="Human")])
+#nFeature_RNA: number of unique genes detected in each cell
+mean(data[[i]]@meta.data$nFeature_RNA[which(data[[i]]@meta.data$species=="Chimp")])
+mean(data[[i]]@meta.data$nFeature_RNA[which(data[[i]]@meta.data$species=="Human")])
+#percent.mt: percentage of reads that map to the mitochondrial genome
+mean(data[[i]]@meta.data$percent.mt[which(data[[i]]@meta.data$species=="Chimp")])
+mean(data[[i]]@meta.data$percent.mt[which(data[[i]]@meta.data$species=="Human")])
+
+CombinePlots(plots=list((ggplot(data[[i]]@meta.data, aes(x=species, y=nCount_RNA, fill=species)) +
+                           geom_violin() +
+                           geom_boxplot(fill="white", alpha=0.5, width=0.1) +
+                           labs(title=collection, x="Cell Type", y="UMI per Cell") + ylim(0,75000)),
+                        (ggplot(data[[i]]@meta.data, aes(x=species, y=nFeature_RNA, fill=species)) +
+                           geom_violin() +
+                           geom_boxplot(fill="white", alpha=0.5, width=0.1) +
+                           labs(title=collection, x="Cell Type", y="Genes per Cell") + ylim(0,8000)),
+                        (ggplot(data[[i]]@meta.data, aes(x=nCount_RNA, y=nFeature_RNA, color=species)) +
+                           geom_point(size=2,alpha=0.3) + xlim(0,75000) + ylim(0,8000) + facet_grid(species ~ .)+
+                           labs(title=collection,x="UMI per Cell",y="Genes per Cell")),
+                        (ggplot(data[[i]]@meta.data, aes(x=species, y=percent.mt, fill=species)) +
+                           geom_violin() +
+                           geom_boxplot(fill="white", alpha=0.5, width=0.1) +
+                           labs(title=collection, x="Cell Type", y="Percent Mitochondrial Reads") + ylim(0,1))), ncol=4)
+
+CombinePlots(plots=list((ggplot(data[[i]]@meta.data, aes(x=nCount_RNA,color=species)) +
+                           geom_histogram(fill="white", alpha=0.1, position="identity", binwidth=100) +
+                           labs(title=collection,x="UMI per Cell",y="Count") +
+                           xlim(0,75000) +
+                           facet_grid(species ~ .)),
+                        (ggplot(data[[i]]@meta.data, aes(x=nFeature_RNA,color=species)) +
+                           geom_histogram(fill="white", alpha=0.1, position="identity", binwidth=10) +
+                           labs(title=collection,x="Genes per Cell",y="Count") +
+                           xlim(0,8000) +
+                           facet_grid(species ~ .)),
+                        (ggplot(data[[i]]@meta.data, aes(x=percent.mt,color=species)) +
+                           geom_histogram(fill="white", alpha=0.1, position="identity", binwidth=0.005) +
+                           labs(title=collection,x="Percent of Mitochondrial Reads",y="Count") +
+                           xlim(0,1) +
+                           facet_grid(species ~ .))), ncol=3)
+
+#thresholds: umi per cell > 1000 | genes per cell > 700 | percent mito = PENDING (hold off for now)
+#should thresholds be different across different cell types/species?
+CombinePlots(plots=list((ggplot(data[[i]]@meta.data, aes(x=nCount_RNA,color=species)) +
+                           geom_histogram(fill="white", alpha=0.1, position="identity", binwidth=100) +
+                           labs(title=collection,x="UMI per Cell",y="Count") +
+                           geom_vline(xintercept=1000, linetype="dashed") +
+                           xlim(0,20000) +
+                           facet_grid(species ~ .)),
+                        (ggplot(data[[i]]@meta.data, aes(x=nFeature_RNA,color=species)) +
+                           geom_histogram(fill="white", alpha=0.1, position="identity", binwidth=10) +
+                           labs(title=collection,x="Genes per Cell",y="Count") +
+                           geom_vline(xintercept=700, linetype="dashed") +
+                           xlim(0,4000) +
+                           facet_grid(species ~ .)),
+                        (ggplot(data[[i]]@meta.data, aes(x=nCount_RNA, y=nFeature_RNA, color=percent.mt)) +
+                           geom_point(size=0.5, alpha=0.3) +
+                           scale_color_gradient(low="black",high="red") +
+                           labs(title=collection,x="UMI per Cell",y="Genes per Cell") +
+                           xlim(0,20000) +
+                           ylim(0,4000) +
+                           geom_vline(xintercept=1000, linetype="dashed") +
+                           geom_hline(yintercept=700, linetype="dashed") +
+                           facet_grid(species ~ .))), ncol=3)
+table(data[[i]]@meta.data$species[which(data[[i]]@meta.data$nCount_RNA > 1000 & data[[i]]@meta.data$nFeature_RNA > 700)])
+
+#investigate potential that cells are actually failed libraries (lower end outliers) or are cell doublets (higher end outliers)
+CombinePlots(plots=list((ggplot(subset(data[[i]]@meta.data,species%in%"Chimp"), aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#F8766D") +
+                           labs(title=collection, x="Cell Rank", y="UMI per Cell") +
+                           geom_hline(yintercept=1000, linetype="dashed")),
+                        (ggplot(subset(data[[i]]@meta.data,species%in%"Human"), aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
+                           labs(title=collection, x="Cell Rank", y="UMI per Cell") +
+                           geom_hline(yintercept=1000, linetype="dashed"))), ncol=2)
+
+CombinePlots(plots=list((ggplot(subset(data[[i]]@meta.data,species%in%"Chimp"), aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#F8766D") +
+                           labs(title=collection, x="Cell Rank", y="Genes per Cell") +
+                           geom_hline(yintercept=700, linetype="dashed")),
+                        (ggplot(subset(data[[i]]@meta.data,species%in%"Human"), aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+                           geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
+                           labs(title=collection, x="Cell Rank", y="Genes per Cell") +
+                           geom_hline(yintercept=700, linetype="dashed"))), ncol=2)
+
+#look at genes instead of cells
+#umis per gene & rarity of genes (cells expressing genes)
+#thresholds: umi per gene > 1
+df <- data.frame(
+  counts_per_gene_chimp <- Matrix::rowSums(data[[i]]@assays$RNA@counts[,which(data[[i]]@meta.data$species=="Chimp")]),
+  counts_per_gene_human <- Matrix::rowSums(data[[i]]@assays$RNA@counts[,which(data[[i]]@meta.data$species=="Human")]),
+  cells_per_gene_chimp <- Matrix::rowSums(data[[i]]@assays$RNA@counts[,which(data[[i]]@meta.data$species=="Chimp")]>0),
+  cells_per_gene_human <- Matrix::rowSums(data[[i]]@assays$RNA@counts[,which(data[[i]]@meta.data$species=="Human")]>0)
+)
+rm(counts_per_gene_chimp,counts_per_gene_human,cells_per_gene_chimp,cells_per_gene_human)
+colnames(df) <- c("counts_per_gene_chimp","counts_per_gene_human","cells_per_gene_chimp","cells_per_gene_human")
+
+CombinePlots(plots=list((ggplot(df, aes(x=log10(counts_per_gene_chimp+1))) +
+                           geom_histogram(color="#F8766D", fill="white", alpha=0.1, binwidth=0.05) +
+                           ylim(0,6000) +
+                           geom_vline(xintercept=log10(1.5), linetype="dashed") +
+                           labs(title=collection, x="Log10 UMIs per Gene (Chimp)", y="Count")),
+                        (ggplot(df, aes(x=log10(counts_per_gene_human+1))) +
+                           geom_histogram(color="#00BFC4", fill="white", alpha=0.1, binwidth=0.05) +
+                           ylim(0,6000) +
+                           geom_vline(xintercept=log10(1.5), linetype="dashed") +
+                           labs(title=collection, x="Log10 UMIs per Gene (Human)", y="Count")),
+                        (ggplot(df, aes(x=log10(cells_per_gene_chimp+1))) +
+                           geom_histogram(color="#F8766D", fill="white", alpha=0.1, binwidth=0.05) +
+                           ylim(0,6000) +
+                           geom_vline(xintercept=log10(1.5), linetype="dashed") +
+                           labs(title=collection,x="Log10 Cells per Gene (Chimp)",y="Count")),
+                        (ggplot(df, aes(x=log10(cells_per_gene_human+1))) +
+                           geom_histogram(color="#00BFC4", fill="white", alpha=0.1, binwidth=0.05) +
+                           ylim(0,6000) +
+                           geom_vline(xintercept=log10(1.5), linetype="dashed") +
+                           labs(title=collection,x="Log10 Cells per Gene (Human)",y="Count"))), ncol=4)
+
+i <- 1
+length(rownames(data[[i]]@assays$RNA@counts))
+table(Matrix::rowSums(data[[i]]@assays$RNA@counts[,which(data[[i]]@meta.data$species=="Chimp")])>0)
+table(Matrix::rowSums(data[[i]]@assays$RNA@counts[,which(data[[i]]@meta.data$species=="Human")])>0)
+table(Matrix::rowSums(data[[i]]@assays$RNA@counts)>0)
+
+#Should I look into assessing expression of housekeeping genes?
+#https://broadinstitute.github.io/2019_scWorkshop/data-wrangling-scrnaseq.html
+
+```
+
+```{r qc scRNA data - filter barcodes and genes, eval=FALSE, echo=TRUE}
+
+### NEED TO LOOK INTO THIS FURTHER AND EDIT ###
+
+
+#Filter Barcodes
+
+#library(scater)
+#https://scrnaseq-course.cog.sanger.ac.uk/website/cleaning-the-expression-matrix.html
+#https://broadinstitute.github.io/2019_scWorkshop/data-wrangling-scrnaseq.html#preprocessing-step-1-filter-out-low-quality-cells
+
+#(1a) Filter based on number of read counts in each cell (count depth)
+#(1b) Filter based on number of unique genes detected in each cell (complexity)
+#current thresholds: umi per cell > 1000 | genes per cell > 700
+data.filter <- list()
+i=1
+while (i <= length(data)) {
+  data.filter[[i]] <- subset(data[[i]], subset=nFeature_RNA>700 & nCount_RNA>1000)
+  i=i+1
+}
+
+#(2) Filter basted on detectable genes
+#detectable gene: >=1 UMI in >=2 cells (>=5 reads in >=2 cells)
+#genes must be filtered after cell filtering since some genes may only be detected in poor quality cells
+#notes: no filtering on genes at this time (should do this before constructing a seurat object)
+
+#(3) Filter based on mitochondrial RNA content
+#Rationale: cells lyse more easily than mitochondria, so high mito RNA content can signal cell lysis and RNA degradation (ideally percent.mt should be <5%)
+#current thresholds: umi per cell > 1000 | genes per cell > 700 | percent.mt < 10
+data.filterMT <- list()
+i=1
+while (i <= length(data)) {
+  data.filterMT[[i]] <- subset(data[[i]], subset=nFeature_RNA>700 & nCount_RNA>1000 & percent.mt<10)
+  i=i+1
+}
+
+#Save data
+saveRDS(data.filter, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.filter.rds"))
+saveRDS(data.filterMT, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.filterMT.rds"))
+
+```
+
+```{r qc scRNA data - visual qc metrics after filtering cells: data.filter, eval=FALSE, echo=TRUE}
+
+#Check and visualize qc metrics after filtering cells
+
+i <- 1
+collection <- paste0(data.filter[[i]]@meta.data$Cell.Type[1],": ",data.filter[[i]]@meta.data$Pair[1])
+
+#cell counts per species
+table(data.filter[[i]]@meta.data$species, useNA="always")
+#nCount_RNA: total number of molecules (umi) detected within a cell
+mean(data.filter[[i]]@meta.data$nCount_RNA[which(data.filter[[i]]@meta.data$species=="Chimp")])
+mean(data.filter[[i]]@meta.data$nCount_RNA[which(data.filter[[i]]@meta.data$species=="Human")])
+#nFeature_RNA: number of unique genes detected in each cell
+mean(data.filter[[i]]@meta.data$nFeature_RNA[which(data.filter[[i]]@meta.data$species=="Chimp")])
+mean(data.filter[[i]]@meta.data$nFeature_RNA[which(data.filter[[i]]@meta.data$species=="Human")])
+#percent.mt: percentage of reads that map to the mitochondrial genome
+mean(data.filter[[i]]@meta.data$percent.mt[which(data.filter[[i]]@meta.data$species=="Chimp")])
+mean(data.filter[[i]]@meta.data$percent.mt[which(data.filter[[i]]@meta.data$species=="Human")])
+
+p1 <- ggplot(data.filter[[i]]@meta.data, aes(x=species, y=nCount_RNA, fill=species)) +
+        geom_violin() +
+        geom_boxplot(fill="white", alpha=0.5, width=0.1) +
+        labs(title=collection, x="Cell Type", y="UMI per Cell") +
+        ylim(0,100000)
+p2 <- ggplot(data.filter[[i]]@meta.data, aes(x=species, y=nFeature_RNA, fill=species)) +
+        geom_violin() +
+        geom_boxplot(fill="white", alpha=0.5, width=0.1) +
+        labs(title=collection, x="Cell Type", y="Genes per Cell") +
+        ylim(0,8500)
+p3 <- ggplot(data.filter[[i]]@meta.data, aes(x=nCount_RNA, y=nFeature_RNA, color=percent.mt)) +
+        geom_point(size=0.5, alpha=0.3) +
+        scale_color_gradient(low="black",high="red") +
+        labs(title=collection,x="UMI per Cell",y="Genes per Cell") +
+        xlim(0,100000) +
+        ylim(0,8500) +
+        facet_grid(species ~ .)
+p4 <- ggplot(data.filter[[i]]@meta.data, aes(x=species, y=percent.mt, fill=species)) +
+        geom_violin() +
+        geom_boxplot(fill="white", alpha=0.5, width=0.1) +
+        labs(title=collection, x="Cell Type", y="Percent Mitochondrial Reads") +
+        ylim(0,100)
+p1 + p2 + p3 + p4 + plot_layout(nrow=1, byrow=TRUE)
+
+```
+
+```{r qc scRNA data - visual qc metrics after filtering cells: data.filterMT, eval=FALSE, echo=TRUE}
+
+#Check and visualize qc metrics after filtering cells
+
+i <- 1
+collection <- paste0(data.filterMT[[i]]@meta.data$Cell.Type[1],": ",data.filterMT[[i]]@meta.data$Pair[1])
+
+#cell counts per species
+table(data.filterMT[[i]]@meta.data$species, useNA="always")
+#nCount_RNA: total number of molecules (umi) detected within a cell
+mean(data.filterMT[[i]]@meta.data$nCount_RNA[which(data.filterMT[[i]]@meta.data$species=="Chimp")])
+mean(data.filterMT[[i]]@meta.data$nCount_RNA[which(data.filterMT[[i]]@meta.data$species=="Human")])
+#nFeature_RNA: number of unique genes detected in each cell
+mean(data.filterMT[[i]]@meta.data$nFeature_RNA[which(data.filterMT[[i]]@meta.data$species=="Chimp")])
+mean(data.filterMT[[i]]@meta.data$nFeature_RNA[which(data.filterMT[[i]]@meta.data$species=="Human")])
+#percent.mt: percentage of reads that map to the mitochondrial genome
+mean(data.filterMT[[i]]@meta.data$percent.mt[which(data.filterMT[[i]]@meta.data$species=="Chimp")])
+mean(data.filterMT[[i]]@meta.data$percent.mt[which(data.filterMT[[i]]@meta.data$species=="Human")])
+
+p1 <- ggplot(data.filterMT[[i]]@meta.data, aes(x=species, y=nCount_RNA, fill=species)) +
+               geom_violin() +
+               geom_boxplot(fill="white", alpha=0.5, width=0.1) +
+               labs(title=collection, x="Cell Type", y="UMI per Cell") +
+               ylim(0,100000)
+p2 <- ggplot(data.filterMT[[i]]@meta.data, aes(x=species, y=nFeature_RNA, fill=species)) +
+               geom_violin() +
+               geom_boxplot(fill="white", alpha=0.5, width=0.1) +
+               labs(title=collection, x="Cell Type", y="Genes per Cell") +
+               ylim(0,8500)
+p3 <- ggplot(data.filterMT[[i]]@meta.data, aes(x=nCount_RNA, y=nFeature_RNA, color=percent.mt)) +
+               geom_point(size=0.5, alpha=0.3) +
+               scale_color_gradient(low="black",high="red",limit=c(0,100)) +
+               labs(title=collection,x="UMI per Cell",y="Genes per Cell") +
+               xlim(0,100000) +
+               ylim(0,8500) +
+               facet_grid(species ~ .)
+p4 <- ggplot(data.filterMT[[i]]@meta.data, aes(x=species, y=percent.mt, fill=species)) +
+               geom_violin() +
+               geom_boxplot(fill="white", alpha=0.5, width=0.1) +
+               labs(title=collection, x="Cell Type", y="Percent Mitochondrial Reads") +
+               ylim(0,100)
+p1 + p2 + p3 + p4 + plot_layout(nrow=1, byrow=TRUE)
+
+```

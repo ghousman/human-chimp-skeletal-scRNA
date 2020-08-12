@@ -1,7 +1,7 @@
 ---
 title: "10x-view-batch-effects"
 author: "Genevieve Housman"
-date: "1/14/2020"
+date: "August 2020"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -11,32 +11,33 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Viewing of 10X Data Cellranger Metrics
+## Viewing of Known Batch Effects in Overall Study Design
 
 Data being examined comes from 6 humans and 6 chimpanzees.
-- GHO-1:  H1-I + C1-I (iPSCs from H23555 and C8861)
-- GHO-2:  H1-M + C1-M (iPSC-derived MSCs from H23555 and C8861)
-- GHO-4:  H1-O + C1-O (iPSC-MSC-derived osteoblasts from H23555 and C8861)
-- HOU-10: H1-I-r2 + C1-I-r2 (iPSCs from H23555 and C8861)
-- HOU-12: H1-M-r2 + C1-M-r2 (iPSC-derived MSCs from H23555 and C8861)
-- HOU-16: H1-O-r2 + C1-O-r2 (iPSC-MSC-derived osteoblasts from H23555 and C8861)
-- HOU-1:  H2-I + C2-I (iPSCs from H20157 and C3647)
-- HOU-2:  H2-M + C2-M (iPSC-derived MSCs from H20157 and C3647)
-- HOU-4:  H2-O + C2-O (iPSC-MSC-derived osteoblasts from H20157 and C3647)
-- HOU-9:  H3-I + C3-I (iPSCs from H28126 and C3649)
-- HOU-11: H3-M + C3-M (iPSC-derived MSCs from H28126 and C3649)
-- HOU-15: H3-O + C3-O (iPSC-MSC-derived osteoblasts from H28126 and C3649)
-- HOU-5:  H4-I + C4-I (iPSCs from H28834 and C40210)
-- HOU-6:  H4-M + C4-M (iPSC-derived MSCs from H28834 and C40210)
-- HOU-8:  H4-O + C4-O (iPSC-MSC-derived osteoblasts from H28834 and C40210)
-- HOU-17:	H5-I + C5-I (iPSCs from H21792 and C40280)
-- HOU-19:	H5-M + C5-M (iPSC-derived MSCs from H21792 and C40280)
-- HOU-21:	H5-O + C5-O (iPSC-MSC-derived osteoblasts from H21792 and C40280)
-- HOU-18:	H6-I + C6-I (iPSCs from H20961 and C3624)
-- HOU-20:	H6-M + C6-M (iPSC-derived MSCs from H20961 and C3624)
-- HOU-22:	H6-O + C6-O (iPSC-MSC-derived osteoblasts from H20961 and C3624)
 
-```{r load libraries}
+* GHO-1:  H1-I + C1-I (iPSCs from H23555 and C8861)
+* GHO-2:  H1-M + C1-M (iPSC-derived MSCs from H23555 and C8861)
+* GHO-4:  H1-O + C1-O (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+* HOU-10: H1-I-r2 + C1-I-r2 (iPSCs from H23555 and C8861)
+* HOU-12: H1-M-r2 + C1-M-r2 (iPSC-derived MSCs from H23555 and C8861)
+* HOU-16: H1-O-r2 + C1-O-r2 (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+* HOU-1:  H2-I + C2-I (iPSCs from H20157 and C3647)
+* HOU-2:  H2-M + C2-M (iPSC-derived MSCs from H20157 and C3647)
+* HOU-4:  H2-O + C2-O (iPSC-MSC-derived osteoblasts from H20157 and C3647)
+* HOU-9:  H3-I + C3-I (iPSCs from H28126 and C3649)
+* HOU-11: H3-M + C3-M (iPSC-derived MSCs from H28126 and C3649)
+* HOU-15: H3-O + C3-O (iPSC-MSC-derived osteoblasts from H28126 and C3649)
+* HOU-5:  H4-I + C4-I (iPSCs from H28834 and C40210)
+* HOU-6:  H4-M + C4-M (iPSC-derived MSCs from H28834 and C40210)
+* HOU-8:  H4-O + C4-O (iPSC-MSC-derived osteoblasts from H28834 and C40210)
+* HOU-17:	H5-I + C5-I (iPSCs from H21792 and C40280)
+* HOU-19:	H5-M + C5-M (iPSC-derived MSCs from H21792 and C40280)
+* HOU-21:	H5-O + C5-O (iPSC-MSC-derived osteoblasts from H21792 and C40280)
+* HOU-18:	H6-I + C6-I (iPSCs from H20961 and C3624)
+* HOU-20:	H6-M + C6-M (iPSC-derived MSCs from H20961 and C3624)
+* HOU-22:	H6-O + C6-O (iPSC-MSC-derived osteoblasts from H20961 and C3624)
+
+```{r load libraries, message=FALSE}
 
 library(Seurat)
 library(dplyr)
@@ -45,16 +46,14 @@ library(stringr)
 library(ggplot2)
 library(colorspace)
 library(RColorBrewer)
+library(tidyr)
 
 ```
 
-```{r view correlation between known batch effects}
-
-#Define main directory
-dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+```{r load known batch effects}
 
 #Load batch info
-batch.full <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+batch.full <- read.csv(file='./data/scrna-batch.csv', header=TRUE, sep=",")
 
 #Reformate batch data of interest
 batch <- batch.full[,c(1:3,7:8,11:13,15:30,32:37)]
@@ -62,6 +61,14 @@ batch[,c(1:4,6,8,25,28)] <- lapply(batch[,c(1:4,6,8,25,28)], function(x) as.fact
 batch[,c(5,7,9:24,26:27,29:30)] <- lapply(batch[,c(5,7,9:24,26:27,29:30)], function(x) as.numeric(as.character(x)))
 #batch[,c(8,25,28)] <- lapply(batch[,c(8,25,28)], function(x) as.Date(x, "%m/%d/%y"))
 batch.sub <- batch[,c(5,7,9:24,26:27,29:30)]
+
+colnames(batch.sub)
+
+```
+
+### Examine correlation among known batch effects
+
+```{r, warning=FALSE, results="hide"}
 
 #Make correlation matrix
 cov.cor <- matrix(ncol=ncol(batch.sub), nrow=ncol(batch),
@@ -80,7 +87,6 @@ while (i <= length(colnames(batch.sub))) {
 }
 
 #Convert to long format to plot in ggplot2
-library(tidyr)
 cov.cor.df <- as.data.frame(cov.cor) 
 cov.cor.df$variable <- rownames(cov.cor.df) 
 cov.cor.df <- gather(cov.cor.df, key="batch", value="cor", -variable) 
@@ -88,41 +94,115 @@ head(cov.cor.df)
 
 #Plot heatmap
 cov.cor.df$variable <- factor(cov.cor.df$variable, 
-                              levels = c("Pooled_Sample_Name","Batch","Cell_Type","Human_Sex_in_Pool","Chimp_Sex_in_Pool","Date_of_10X_Collection",
-                                         "Date_of_10X_cDNA_Synthesis","Date_of_10X_Library_Prep","Human_Age_in_Pool","Chimp_Age_in_Pool",
-                                         "Number_of_6wells_Used_Human","X10X_Cell_Count_Prewash_Human","X10X_Cell_Viability_Prewash_Human",
-                                         "X10X_Cell_Count_Postwash_Human","X10X_Cell_Viability_Postwash_Human","X10X_Cell_Multiplication_Factor_for_Mixture_Human",
-                                         "X10X_Cell_Volume_for_Mixture_Human","Number_of_6wells_Used_Chimp","X10X_Cell_Count_Prewash_Chimp",
-                                         "X10X_Cell_Viability_Prewash_Chimp","X10X_Cell_Count_Postwash_Chimp","X10X_Cell_Viability_Postwash_Chimp",
-                                         "X10X_Cell_Multiplication_Factor_for_Mixture_Chimp","X10X_Cell_Volume_for_Mixture_Chimp",
-                                         "X10X_Cell_Count_Postwash_Postmix","X10X_Cell_Viability_Postwash_Postmix","X10X_cDNA_Concentration_pg.uL",
-                                         "X10X_cDNA_Average_Size_bp","X10X_Library_Concentration_pg.uL","X10X_Library_Average_Size_bp"), 
-                              labels = c("Pooled_Sample_Name","Batch","Cell_Type","Human_Sex_in_Pool","Chimp_Sex_in_Pool","Date_of_10X_Collection",
-                                         "Date_of_10X_cDNA_Synthesis","Date_of_10X_Library_Prep","Human_Age_in_Pool","Chimp_Age_in_Pool",
-                                         "Number_of_6wells_Used_Human","X10X_Cell_Count_Prewash_Human","X10X_Cell_Viability_Prewash_Human",
-                                         "X10X_Cell_Count_Postwash_Human","X10X_Cell_Viability_Postwash_Human","X10X_Cell_Multiplication_Factor_for_Mixture_Human",
-                                         "X10X_Cell_Volume_for_Mixture_Human","Number_of_6wells_Used_Chimp","X10X_Cell_Count_Prewash_Chimp",
-                                         "X10X_Cell_Viability_Prewash_Chimp","X10X_Cell_Count_Postwash_Chimp","X10X_Cell_Viability_Postwash_Chimp",
-                                         "X10X_Cell_Multiplication_Factor_for_Mixture_Chimp","X10X_Cell_Volume_for_Mixture_Chimp",
-                                         "X10X_Cell_Count_Postwash_Postmix","X10X_Cell_Viability_Postwash_Postmix","X10X_cDNA_Concentration_pg.uL",
-                                         "X10X_cDNA_Average_Size_bp","X10X_Library_Concentration_pg.uL","X10X_Library_Average_Size_bp"))
+                              levels = c("Pooled_Sample_Name",
+                                         "Batch",
+                                         "Cell_Type",
+                                         "Human_Sex_in_Pool",
+                                         "Chimp_Sex_in_Pool",
+                                         "Date_of_10X_Collection",
+                                         "Date_of_10X_cDNA_Synthesis",
+                                         "Date_of_10X_Library_Prep",
+                                         "Human_Age_in_Pool",
+                                         "Chimp_Age_in_Pool",
+                                         "Number_of_6wells_Used_Human",
+                                         "X10X_Cell_Count_Prewash_Human",
+                                         "X10X_Cell_Viability_Prewash_Human",
+                                         "X10X_Cell_Count_Postwash_Human",
+                                         "X10X_Cell_Viability_Postwash_Human",
+                                         "X10X_Cell_Multiplication_Factor_for_Mixture_Human",
+                                         "X10X_Cell_Volume_for_Mixture_Human",
+                                         "Number_of_6wells_Used_Chimp",
+                                         "X10X_Cell_Count_Prewash_Chimp",
+                                         "X10X_Cell_Viability_Prewash_Chimp",
+                                         "X10X_Cell_Count_Postwash_Chimp",
+                                         "X10X_Cell_Viability_Postwash_Chimp",
+                                         "X10X_Cell_Multiplication_Factor_for_Mixture_Chimp",
+                                         "X10X_Cell_Volume_for_Mixture_Chimp",
+                                         "X10X_Cell_Count_Postwash_Postmix",
+                                         "X10X_Cell_Viability_Postwash_Postmix",
+                                         "X10X_cDNA_Concentration_pg.uL",
+                                         "X10X_cDNA_Average_Size_bp",
+                                         "X10X_Library_Concentration_pg.uL",
+                                         "X10X_Library_Average_Size_bp"), 
+                              labels = c("Pooled_Sample_Name",
+                                         "Batch","Cell_Type",
+                                         "Human_Sex_in_Pool",
+                                         "Chimp_Sex_in_Pool",
+                                         "Date_of_10X_Collection",
+                                         "Date_of_10X_cDNA_Synthesis",
+                                         "Date_of_10X_Library_Prep",
+                                         "Human_Age_in_Pool",
+                                         "Chimp_Age_in_Pool",
+                                         "Number_of_6wells_Used_Human",
+                                         "X10X_Cell_Count_Prewash_Human",
+                                         "X10X_Cell_Viability_Prewash_Human",
+                                         "X10X_Cell_Count_Postwash_Human",
+                                         "X10X_Cell_Viability_Postwash_Human",
+                                         "X10X_Cell_Multiplication_Factor_for_Mixture_Human",
+                                         "X10X_Cell_Volume_for_Mixture_Human",
+                                         "Number_of_6wells_Used_Chimp",
+                                         "X10X_Cell_Count_Prewash_Chimp",
+                                         "X10X_Cell_Viability_Prewash_Chimp",
+                                         "X10X_Cell_Count_Postwash_Chimp",
+                                         "X10X_Cell_Viability_Postwash_Chimp",
+                                         "X10X_Cell_Multiplication_Factor_for_Mixture_Chimp",
+                                         "X10X_Cell_Volume_for_Mixture_Chimp",
+                                         "X10X_Cell_Count_Postwash_Postmix",
+                                         "X10X_Cell_Viability_Postwash_Postmix",
+                                         "X10X_cDNA_Concentration_pg.uL",
+                                         "X10X_cDNA_Average_Size_bp",
+                                         "X10X_Library_Concentration_pg.uL",
+                                         "X10X_Library_Average_Size_bp"))
+
 cov.cor.df$batch <- factor(cov.cor.df$batch, 
-                           levels = c("Human_Age_in_Pool","Chimp_Age_in_Pool","Number_of_6wells_Used_Human","X10X_Cell_Count_Prewash_Human",
-                                      "X10X_Cell_Viability_Prewash_Human","X10X_Cell_Count_Postwash_Human","X10X_Cell_Viability_Postwash_Human",
-                                      "X10X_Cell_Multiplication_Factor_for_Mixture_Human","X10X_Cell_Volume_for_Mixture_Human","Number_of_6wells_Used_Chimp",
-                                      "X10X_Cell_Count_Prewash_Chimp","X10X_Cell_Viability_Prewash_Chimp","X10X_Cell_Count_Postwash_Chimp",
-                                      "X10X_Cell_Viability_Postwash_Chimp","X10X_Cell_Multiplication_Factor_for_Mixture_Chimp",
-                                      "X10X_Cell_Volume_for_Mixture_Chimp","X10X_Cell_Count_Postwash_Postmix","X10X_Cell_Viability_Postwash_Postmix",
-                                      "X10X_cDNA_Concentration_pg.uL","X10X_cDNA_Average_Size_bp","X10X_Library_Concentration_pg.uL",
+                           levels = c("Human_Age_in_Pool",
+                                      "Chimp_Age_in_Pool",
+                                      "Number_of_6wells_Used_Human",
+                                      "X10X_Cell_Count_Prewash_Human",
+                                      "X10X_Cell_Viability_Prewash_Human",
+                                      "X10X_Cell_Count_Postwash_Human",
+                                      "X10X_Cell_Viability_Postwash_Human",
+                                      "X10X_Cell_Multiplication_Factor_for_Mixture_Human",
+                                      "X10X_Cell_Volume_for_Mixture_Human",
+                                      "Number_of_6wells_Used_Chimp",
+                                      "X10X_Cell_Count_Prewash_Chimp",
+                                      "X10X_Cell_Viability_Prewash_Chimp",
+                                      "X10X_Cell_Count_Postwash_Chimp",
+                                      "X10X_Cell_Viability_Postwash_Chimp",
+                                      "X10X_Cell_Multiplication_Factor_for_Mixture_Chimp",
+                                      "X10X_Cell_Volume_for_Mixture_Chimp",
+                                      "X10X_Cell_Count_Postwash_Postmix",
+                                      "X10X_Cell_Viability_Postwash_Postmix",
+                                      "X10X_cDNA_Concentration_pg.uL",
+                                      "X10X_cDNA_Average_Size_bp",
+                                      "X10X_Library_Concentration_pg.uL",
                                       "X10X_Library_Average_Size_bp"),
-                           labels = c("Human_Age_in_Pool","Chimp_Age_in_Pool","Number_of_6wells_Used_Human","X10X_Cell_Count_Prewash_Human",
-                                      "X10X_Cell_Viability_Prewash_Human","X10X_Cell_Count_Postwash_Human","X10X_Cell_Viability_Postwash_Human",
-                                      "X10X_Cell_Multiplication_Factor_for_Mixture_Human","X10X_Cell_Volume_for_Mixture_Human","Number_of_6wells_Used_Chimp",
-                                      "X10X_Cell_Count_Prewash_Chimp","X10X_Cell_Viability_Prewash_Chimp","X10X_Cell_Count_Postwash_Chimp",
-                                      "X10X_Cell_Viability_Postwash_Chimp","X10X_Cell_Multiplication_Factor_for_Mixture_Chimp",
-                                      "X10X_Cell_Volume_for_Mixture_Chimp","X10X_Cell_Count_Postwash_Postmix","X10X_Cell_Viability_Postwash_Postmix",
-                                      "X10X_cDNA_Concentration_pg.uL","X10X_cDNA_Average_Size_bp","X10X_Library_Concentration_pg.uL",
+                           labels = c("Human_Age_in_Pool",
+                                      "Chimp_Age_in_Pool",
+                                      "Number_of_6wells_Used_Human",
+                                      "X10X_Cell_Count_Prewash_Human",
+                                      "X10X_Cell_Viability_Prewash_Human",
+                                      "X10X_Cell_Count_Postwash_Human",
+                                      "X10X_Cell_Viability_Postwash_Human",
+                                      "X10X_Cell_Multiplication_Factor_for_Mixture_Human",
+                                      "X10X_Cell_Volume_for_Mixture_Human",
+                                      "Number_of_6wells_Used_Chimp",
+                                      "X10X_Cell_Count_Prewash_Chimp",
+                                      "X10X_Cell_Viability_Prewash_Chimp",
+                                      "X10X_Cell_Count_Postwash_Chimp",
+                                      "X10X_Cell_Viability_Postwash_Chimp",
+                                      "X10X_Cell_Multiplication_Factor_for_Mixture_Chimp",
+                                      "X10X_Cell_Volume_for_Mixture_Chimp",
+                                      "X10X_Cell_Count_Postwash_Postmix",
+                                      "X10X_Cell_Viability_Postwash_Postmix",
+                                      "X10X_cDNA_Concentration_pg.uL",
+                                      "X10X_cDNA_Average_Size_bp",
+                                      "X10X_Library_Concentration_pg.uL",
                                       "X10X_Library_Average_Size_bp")) 
+
+```
+
+```{r}
 
 ggplot(cov.cor.df, aes(x=batch, y=variable, fill=cor)) +
   geom_tile(color="white") +
@@ -132,13 +212,29 @@ ggplot(cov.cor.df, aes(x=batch, y=variable, fill=cor)) +
 
 ```
 
-```{r plot viability data}
+### Examine cell viability information
+
+```{r, results="hide"}
 
 batch.full$Pooled_Sample_Name <- factor(batch.full$Pooled_Sample_Name,
-                                        levels = c("1-I","1-M","1-O","1-I-r2","1-M-r2","1-O-r2","2-I","2-M","2-O","3-I","3-M","3-O",
-                                                   "4-I","4-M","4-O","5-I","5-M","5-O","6-I","6-M","6-O"),
-                                        labels = c("1-I","1-M","1-O","1-I-r2","1-M-r2","1-O-r2","2-I","2-M","2-O","3-I","3-M","3-O",
-                                                   "4-I","4-M","4-O","5-I","5-M","5-O","6-I","6-M","6-O"))
+                                        levels = c("1-I","1-M","1-O",
+                                                   "1-I-r2","1-M-r2","1-O-r2",
+                                                   "2-I","2-M","2-O",
+                                                   "3-I","3-M","3-O",
+                                                   "4-I","4-M","4-O",
+                                                   "5-I","5-M","5-O",
+                                                   "6-I","6-M","6-O"),
+                                        labels = c("1-I","1-M","1-O",
+                                                   "1-I-r2","1-M-r2","1-O-r2",
+                                                   "2-I","2-M","2-O",
+                                                   "3-I","3-M","3-O",
+                                                   "4-I","4-M","4-O",
+                                                   "5-I","5-M","5-O",
+                                                   "6-I","6-M","6-O"))
+
+```
+
+```{r}
 
 #postmix viabilities for each collection
 ggplot(batch.full, aes(x=Pooled_Sample_Name, y=X10X_Cell_Viability_Postwash_Postmix)) +
@@ -147,6 +243,10 @@ ggplot(batch.full, aes(x=Pooled_Sample_Name, y=X10X_Cell_Viability_Postwash_Post
   labs(x="10X Collections", y="Cell Viability Post-Mixing") +
   theme(text=element_text(size=14)) 
 
+```
+
+```{r}
+
 #postmix viabilities for each cell type
 ggplot(batch.full, aes(x=Cell_Type, y=X10X_Cell_Viability_Postwash_Postmix)) +
   geom_boxplot() +
@@ -154,23 +254,49 @@ ggplot(batch.full, aes(x=Cell_Type, y=X10X_Cell_Viability_Postwash_Postmix)) +
   labs(x="", y="Cell Viability Post-Mixing") +
   theme(text=element_text(size=14)) 
 
+```
+
+```{r}
 
 #make data frame for human and chimp sample plotting
 h.batch.full <- batch.full[,c(1:8,13:21)]
 c.batch.full <- batch.full[,c(1:4,9:12,13:14,22:28)]
-headings <- c("Pooled_Sample_Name","Batch","Cell_Type","Sample_Name_at_Core","Sample_in_Pool","Individual_in_Pool","Sex_in_Pool","Age_in_Pool",
-              "Date_of_10X_Collection","X10X_Collection_Researcher","Number_of_6wells_Used","X10X_Cell_Count_Prewash","X10X_Cell_Viability_Prewash",
-              "X10X_Cell_Count_Postwash","X10X_Cell_Viability_Postwash","X10X_Cell_Multiplication_Factor_for_Mixture_Human","X10X_Cell_Volume_for_Mixture_Human")
+headings <- c("Pooled_Sample_Name",
+              "Batch","Cell_Type",
+              "Sample_Name_at_Core",
+              "Sample_in_Pool",
+              "Individual_in_Pool",
+              "Sex_in_Pool",
+              "Age_in_Pool",
+              "Date_of_10X_Collection",
+              "X10X_Collection_Researcher",
+              "Number_of_6wells_Used",
+              "X10X_Cell_Count_Prewash",
+              "X10X_Cell_Viability_Prewash",
+              "X10X_Cell_Count_Postwash",
+              "X10X_Cell_Viability_Postwash",
+              "X10X_Cell_Multiplication_Factor_for_Mixture_Human",
+              "X10X_Cell_Volume_for_Mixture_Human")
 names(h.batch.full) <- headings
 names(c.batch.full) <- headings
 batch.sub <- rbind(h.batch.full, c.batch.full)
 rm(h.batch.full,c.batch.full,headings)
 
 batch.sub$Individual_in_Pool <- factor(batch.sub$Individual_in_Pool,
-                                levels = c("H23555","H20157","H28126","H28834","H21792","H20961","C8861","C3647","C3649","C40210","C40280","C3624"),
-                                labels = c("H23555","H20157","H28126","H28834","H21792","H20961","C8861","C3647","C3649","C40210","C40280","C3624"))
+                                levels = c("H23555","H20157","H28126",
+                                           "H28834","H21792","H20961",
+                                           "C8861","C3647","C3649",
+                                           "C40210","C40280","C3624"),
+                                labels = c("H23555","H20157","H28126",
+                                           "H28834","H21792","H20961",
+                                           "C8861","C3647","C3649",
+                                           "C40210","C40280","C3624"))
 batch.sub$Species <- c(rep("Human",21),rep("Chimp",21))
 batch.sub$Species <- factor(batch.sub$Species, levels=c("Human","Chimp"), labels=c("Human","Chimp"))
+
+```
+
+```{r}
 
 #premix viabilities for each sample
 ggplot(batch.sub, aes(x=Individual_in_Pool, y=X10X_Cell_Viability_Postwash)) +
@@ -179,6 +305,10 @@ ggplot(batch.sub, aes(x=Individual_in_Pool, y=X10X_Cell_Viability_Postwash)) +
   ylim(0,1) +
   labs(x="Samples", y="Cell Viability Pre-Mixing") +
   theme(text=element_text(size=14)) 
+
+```
+
+```{r}
 
 #premix viabilities for each cell type and species
 ggplot(batch.sub, aes(x=Cell_Type, y=X10X_Cell_Viability_Postwash, fill=Species)) +

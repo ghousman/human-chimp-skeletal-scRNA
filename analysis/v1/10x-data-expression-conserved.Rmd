@@ -1,0 +1,960 @@
+---
+title: "10x-data-expression-conserved"
+author: "Genevieve Housman"
+date: "7/28/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 10X Data Cellranger Analysis - Identify and Examine Gene Expression Patterns that are Conserved across Species
+
+The appearance of conservation could be due to 
+
+
+```{r load libraries}
+
+#Load libraries
+library(Seurat)
+library(edgeR)
+library(matrixStats)
+library(tidyverse)
+library(gridExtra)
+library(UpSetR)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+
+```
+
+```{r load data}
+
+#Define data
+scrna <- "/data.filterMT.regMT.indv.log.10k.int.rds"            #integrate across individuals - total
+scraw <- "/data.filterMT.merge.l-TEMP.rds"                      #merge across individiuals - total
+
+#Load data
+indv <- readRDS(paste0("data/cellranger-data-full",scrna))
+data <- readRDS(paste0("data/cellranger-data-full",scraw))
+
+#Reformat data
+indv@meta.data$Collection <- as.factor(indv@meta.data$Collection)
+data@meta.data$Collection <- as.factor(data@meta.data$Collection)
+Idents(indv) <- factor(indv@meta.data$species, levels=c("Chimp","Human"))
+Idents(data) <- factor(data@meta.data$species, levels=c("Chimp","Human"))
+
+```
+
+### Should "keep" parameters be reduced? (currently: min.count=1, min.total.count=15 --> results in mean count > 8)
+### Is renormalizing gene count necessary? Can I just use normalized data from indv instead? (probably not because integration messes things up)
+### Should this information also be evaluated using raw counts instead of normalized counts?
+
+```{r normalize data}
+
+#Isolate ribosomal genes
+genes <- rownames(data@assays$RNA@counts)
+genes.ribo <- grep('^RP',genes,value=T)
+genes.no.ribo <- genes[which(!(genes %in% genes.ribo))]
+
+#Get normalized gene count data for iPSCs (Time 0)
+ips.cnts <- as.matrix(GetAssayData(subset(data,subset=Cell.Type=="iPSC"), assay="RNA", slot="counts"))
+ips.cnts <- ips.cnts[which(rownames(ips.cnts) %in% genes.no.ribo),]
+ips.meta <- data@meta.data[colnames(ips.cnts),c("species","Cell.Type")]
+ips.dge <- DGEList(ips.cnts)
+meta_dge <- ips.dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, ips.meta)
+ips.dge$samples <- meta_dge
+keep <- filterByExpr(ips.dge, group=ips.dge$samples$species, min.count=1, min.total.count=15)
+table(keep)
+ips.dge <- ips.dge[keep, , keep.lib.sizes=FALSE]
+ips.dge <- calcNormFactors(ips.dge, method="TMM")
+data.ips <- cpm(ips.dge, normalized.lib.sizes=TRUE, log=TRUE, prior=2)
+rm(ips.cnts,ips.meta,ips.dge)
+
+#Get normalized gene count data for MSCs (Time 1)
+msc.cnts <- as.matrix(GetAssayData(subset(data,subset=Cell.Type=="MSC"), assay="RNA", slot="counts"))
+msc.cnts <- msc.cnts[which(rownames(msc.cnts) %in% genes.no.ribo),]
+msc.meta <- data@meta.data[colnames(msc.cnts),c("species","Cell.Type")]
+msc.dge <- DGEList(msc.cnts)
+meta_dge <- msc.dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, msc.meta)
+msc.dge$samples <- meta_dge
+keep <- filterByExpr(msc.dge, group=msc.dge$samples$species, min.count=1, min.total.count=15)
+table(keep)
+msc.dge <- msc.dge[keep, , keep.lib.sizes=FALSE]
+msc.dge <- calcNormFactors(msc.dge, method="TMM")
+data.msc <- cpm(msc.dge, normalized.lib.sizes=TRUE, log=TRUE, prior=2)
+rm(msc.cnts,msc.meta,msc.dge)
+
+#Get normalized gene count data for Osteogenic Cells (Time 2)
+ost.cnts <- as.matrix(GetAssayData(subset(data,subset=Cell.Type=="Osteoblast"), assay="RNA", slot="counts"))
+ost.cnts <- ost.cnts[which(rownames(ost.cnts) %in% genes.no.ribo),]
+ost.meta <- data@meta.data[colnames(ost.cnts),c("species","Cell.Type")]
+ost.dge <- DGEList(ost.cnts)
+meta_dge <- ost.dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, ost.meta)
+ost.dge$samples <- meta_dge
+keep <- filterByExpr(ost.dge, group=ost.dge$samples$species, min.count=1, min.total.count=15)
+table(keep)
+ost.dge <- ost.dge[keep, , keep.lib.sizes=FALSE]
+ost.dge <- calcNormFactors(ost.dge, method="TMM")
+data.ost <- cpm(ost.dge, normalized.lib.sizes=TRUE, log=TRUE, prior=2)
+rm(ost.cnts,ost.meta,ost.dge)
+
+rm(meta_dge,keep,genes,genes.ribo,genes.no.ribo)
+
+```
+
+```{r summarize count data - sum / average / variance}
+
+ips.norm <- tibble(Gene=rownames(data.ips),
+                   HumanSumCount=rowSums(data.ips[,which(ips.meta$species=="Human")]),
+                   ChimpSumCount=rowSums(data.ips[,which(ips.meta$species=="Chimp")]),
+                   TotalSumCount=rowSums(data.ips),
+                   HumanAvgCount=rowMeans(data.ips[,which(ips.meta$species=="Human")]),
+                   ChimpAvgCount=rowMeans(data.ips[,which(ips.meta$species=="Chimp")]),
+                   TotalAvgCount=rowMeans(data.ips),
+                   HumanVarCount=rowVars(as.matrix(data.ips[,which(ips.meta$species=="Human")])),
+                   ChimpVarCount=rowVars(as.matrix(data.ips[,which(ips.meta$species=="Chimp")])),
+                   TotalVarCount=rowVars(data.ips))
+ips.norm$AbsDiffAvg <- abs(ips.norm$HumanAvgCount - ips.norm$ChimpAvgCount)
+ips.norm$AbsDiffVar <- abs(ips.norm$HumanVarCount - ips.norm$ChimpVarCount)
+
+msc.norm <- tibble(Gene=rownames(data.msc),
+                   HumanSumCount=rowSums(data.msc[,which(msc.meta$species=="Human")]),
+                   ChimpSumCount=rowSums(data.msc[,which(msc.meta$species=="Chimp")]),
+                   TotalSumCount=rowSums(data.msc),
+                   HumanAvgCount=rowMeans(data.msc[,which(msc.meta$species=="Human")]),
+                   ChimpAvgCount=rowMeans(data.msc[,which(msc.meta$species=="Chimp")]),
+                   TotalAvgCount=rowMeans(data.msc),
+                   HumanVarCount=rowVars(as.matrix(data.msc[,which(msc.meta$species=="Human")])),
+                   ChimpVarCount=rowVars(as.matrix(data.msc[,which(msc.meta$species=="Chimp")])),
+                   TotalVarCount=rowVars(data.msc))
+msc.norm$AbsDiffAvg <- abs(msc.norm$HumanAvgCount - msc.norm$ChimpAvgCount)
+msc.norm$AbsDiffVar <- abs(msc.norm$HumanVarCount - msc.norm$ChimpVarCount)
+
+ost.norm <- tibble(Gene=rownames(data.ost),
+                   HumanSumCount=rowSums(data.ost[,which(ost.meta$species=="Human")]),
+                   ChimpSumCount=rowSums(data.ost[,which(ost.meta$species=="Chimp")]),
+                   TotalSumCount=rowSums(data.ost),
+                   HumanAvgCount=rowMeans(data.ost[,which(ost.meta$species=="Human")]),
+                   ChimpAvgCount=rowMeans(data.ost[,which(ost.meta$species=="Chimp")]),
+                   TotalAvgCount=rowMeans(data.ost),
+                   HumanVarCount=rowVars(as.matrix(data.ost[,which(ost.meta$species=="Human")])),
+                   ChimpVarCount=rowVars(as.matrix(data.ost[,which(ost.meta$species=="Chimp")])),
+                   TotalVarCount=rowVars(data.ost))
+ost.norm$AbsDiffAvg <- abs(ost.norm$HumanAvgCount - ost.norm$ChimpAvgCount)
+ost.norm$AbsDiffVar <- abs(ost.norm$HumanVarCount - ost.norm$ChimpVarCount)
+
+rm(data.ips,data.msc,data.ost)
+
+```
+
+Subsetting data on just the 1st quartile may not be appropriate.
+
+```{r get summary information on data}
+
+summary(ips.norm$AbsDiffAvg) #1st quartile = 0.047
+summary(msc.norm$AbsDiffAvg) #1st quartile = 0.061
+summary(ost.norm$AbsDiffAvg) #1st quartile = 0.069
+summary(ips.norm$TotalAvgCount) #1st quartile = 8.443
+summary(msc.norm$TotalAvgCount) #1st quartile = 8.068
+summary(ost.norm$TotalAvgCount) #1st quartile = 9.103
+summary(ips.norm$TotalVarCount) #1st quartile = 0.2480
+summary(msc.norm$TotalVarCount) #1st quartile = 0.2870
+summary(ost.norm$TotalVarCount) #1st quartile = 0.3351
+
+par(mfrow=c(3,3))
+hist(log2(ips.norm$AbsDiffAvg))
+abline(v=log2(0.047), col="red")
+hist(log2(msc.norm$AbsDiffAvg))
+abline(v=log2(0.061), col="red")
+hist(log2(ost.norm$AbsDiffAvg))
+abline(v=log2(0.069), col="red")
+hist(log2(ips.norm$TotalAvgCount))
+abline(v=log2(8.443), col="red")
+hist(log2(msc.norm$TotalAvgCount))
+abline(v=log2(8.068), col="red")
+hist(log2(ost.norm$TotalAvgCount))
+abline(v=log2(9.103), col="red")
+hist(log2(ips.norm$TotalVarCount))
+abline(v=log2(0.2480), col="red")
+hist(log2(msc.norm$TotalVarCount))
+abline(v=log2(0.2870), col="red")
+hist(log2(ost.norm$TotalVarCount))
+abline(v=log2(0.3351), col="red")
+
+par(mfrow=c(2,3))
+plot(log2(ips.norm$AbsDiffAvg), log2(ips.norm$TotalVarCount))
+abline(v=log2(0.047), h=log2(0.2480), col="red")
+plot(log2(msc.norm$AbsDiffAvg), log2(msc.norm$TotalVarCount))
+abline(v=log2(0.061), h=log2(0.2870), col="red")
+plot(log2(ost.norm$AbsDiffAvg), log2(ost.norm$TotalVarCount))
+abline(v=log2(0.069), h=log2(0.3351), col="red")
+#TotalAvgCount and TotalSumCount produce same plot
+plot(log2(ips.norm$TotalAvgCount), log2(ips.norm$TotalVarCount))
+abline(v=log2(8.443), h=log2(0.2480), col="red")
+plot(log2(msc.norm$TotalAvgCount), log2(msc.norm$TotalVarCount))
+abline(v=log2(8.068), h=log2(0.2870), col="red")
+plot(log2(ost.norm$TotalAvgCount), log2(ost.norm$TotalVarCount))
+abline(v=log2(9.103), h=log2(0.3351), col="red")
+
+```
+
+```{r}
+
+ips.norm <- ips.norm[order(ips.norm$TotalVarCount,decreasing=FALSE),]
+msc.norm <- msc.norm[order(msc.norm$TotalVarCount,decreasing=FALSE),]
+ost.norm <- ost.norm[order(ost.norm$TotalVarCount,decreasing=FALSE),]
+
+```
+
+Would better to isolate the 10% of genes outside the confidence interval when comparing mean vs. variance in normalized counts.
+
+```{r}
+
+ips.norm %>%
+  #Add a new column called 'bin'
+  mutate(bin=cut_width(TotalAvgCount,width=0.5,boundary=0)) %>%
+  #Plot
+  ggplot(aes(x=bin,y=TotalVarCount) ) +
+    geom_boxplot(fill="darkgrey") +
+    theme_classic() +
+    labs(title="Time 0 (iPSCs)",
+         x="Mean Normalized Gene Count",
+         y="Variance in Normalized Gene Count")
+
+msc.norm %>%
+  #Add a new column called 'bin'
+  mutate(bin=cut_width(TotalAvgCount,width=0.5,boundary=0)) %>%
+  #Plot
+  ggplot(aes(x=bin,y=TotalVarCount) ) +
+    geom_boxplot(fill="darkgrey") +
+    theme_classic() +
+    labs(title="Time 1 (MSCs)",
+         x="Mean Normalized Gene Count",
+         y="Variance in Normalized Gene Count")
+
+ost.norm %>%
+  #Add a new column called 'bin'
+  mutate(bin=cut_width(TotalAvgCount,width=0.5,boundary=0)) %>%
+  #Plot
+  ggplot(aes(x=bin,y=TotalVarCount) ) +
+    geom_boxplot(fill="darkgrey") +
+    theme_classic() +
+    labs(title="Time 2 (Osteoblasts)",
+         x="Mean Normalized Gene Count",
+         y="Variance in Normalized Gene Count")
+
+```
+
+```{r}
+
+p1 <- ggplot(ips.norm, aes(x=TotalAvgCount, y=TotalVarCount))+
+        geom_point() +
+        geom_smooth(method="loess", level=0.90) +
+        theme_classic() +
+        labs(title="Time 0 (iPSCs)",
+             x="Mean Normalized Gene Count",
+             y="Variance in Normalized Gene Count")
+
+p2 <- ggplot(msc.norm, aes(x=TotalAvgCount, y=TotalVarCount))+
+        geom_point() +
+        geom_smooth(method="loess", level=0.90) +
+        theme_classic() +
+        labs(title="Time 1 (MSCs)",
+             x="Mean Normalized Gene Count",
+             y="Variance in Normalized Gene Count")
+
+p3 <- ggplot(ost.norm, aes(x=TotalAvgCount, y=TotalVarCount))+
+        geom_point() +
+        geom_smooth(method="loess", level=0.90) +
+        theme_classic() +
+        labs(title="Time 2 (Osteoblasts)",
+             x="Mean Normalized Gene Count",
+             y="Variance in Normalized Gene Count")
+
+grid.arrange(p1,p2,p3,nrow=1)
+
+rm(p1,p2,p3)
+
+```
+
+Isolate genes that fall below the 90% confidence interval of variance for a given mean normalized count.
+
+```{r}
+
+data.lo <- loess(TotalVarCount ~ TotalAvgCount, ips.norm)
+pred <- predict(data.lo, se=TRUE)
+ips.norm$LowConfIntCut10 <- +(ips.norm$TotalVarCount < pred$fit - pred$se.fit*qt(0.90/2+0.5,pred$df))
+
+data.lo <- loess(TotalVarCount ~ TotalAvgCount, msc.norm)
+pred <- predict(data.lo, se=TRUE)
+msc.norm$LowConfIntCut10 <- +(msc.norm$TotalVarCount < pred$fit - pred$se.fit*qt(0.90/2+0.5,pred$df))
+
+data.lo <- loess(TotalVarCount ~ TotalAvgCount, ost.norm)
+pred <- predict(data.lo, se=TRUE)
+ost.norm$LowConfIntCut10 <- +(ost.norm$TotalVarCount < pred$fit - pred$se.fit*qt(0.90/2+0.5,pred$df))
+
+```
+
+```{r}
+
+p1 <- ggplot(ips.norm, aes(x=TotalAvgCount, y=TotalVarCount))+
+        geom_point(color="lightgrey") +
+        geom_point(data=ips.norm%>%filter(LowConfIntCut10==1),
+                   aes(x=TotalAvgCount, y=TotalVarCount)) +
+        geom_smooth(method="loess", level=0.90) +
+        theme_classic() +
+        labs(title="Time 0 (iPSCs)",
+             x="Mean Normalized Gene Count",
+             y="Variance in Normalized Gene Count")
+
+p2 <- ggplot(msc.norm, aes(x=TotalAvgCount, y=TotalVarCount))+
+        geom_point(color="lightgrey") +
+        geom_point(data=msc.norm%>%filter(LowConfIntCut10==1),
+                   aes(x=TotalAvgCount, y=TotalVarCount)) +
+        geom_smooth(method="loess", level=0.90) +
+        theme_classic() +
+        labs(title="Time 1 (MSCs)",
+             x="Mean Normalized Gene Count",
+             y="Variance in Normalized Gene Count")
+
+p3 <- ggplot(ost.norm, aes(x=TotalAvgCount, y=TotalVarCount))+
+        geom_point(color="lightgrey") +
+        geom_point(data=ost.norm%>%filter(LowConfIntCut10==1),
+                   aes(x=TotalAvgCount, y=TotalVarCount)) +
+        geom_smooth(method="loess", level=0.90) +
+        theme_classic() +
+        labs(title="Time 2 (Osteoblasts)",
+             x="Mean Normalized Gene Count",
+             y="Variance in Normalized Gene Count")
+
+grid.arrange(p1,p2,p3,nrow=1)
+
+rm(p1,p2,p3)
+
+#if I wanted to add a line marking the lower 10% CI boundary:
+#geom_line(data=df2, aes(ips.norm.TotalAvgCount, fit-se.fit, group=1), color="red")
+
+```
+
+iPSCs:       1653 genes have conserved levels of expression (out of 2715 genes considered)
+MSCs:        1685 genes have conserved levels of expression (out of 2738 genes considered)
+Osteoblasts:  890 genes have conserved levels of expression (out of 1590 genes considered)
+
+```{r}
+
+ips.cons <-
+  ips.norm %>%
+    filter(LowConfIntCut10==1) %>% 
+      pull(Gene)
+
+msc.cons <-  
+  msc.norm %>%
+    filter(LowConfIntCut10==1) %>% 
+      pull(Gene)
+
+ost.cons <-
+  ost.norm %>%
+    filter(LowConfIntCut10==1) %>% 
+      pull(Gene)
+
+```
+
+Check which conserved genes are shared/divergent across cell types.
+
+```{r}
+
+#Define conserved genes that are shared across cell types
+cons.tot <- intersect(ips.cons, intersect(msc.cons, ost.cons))
+
+#Define DE genes that are unique to each cell types
+cons.ips.tot <- setdiff(ips.cons, c(msc.cons, ost.cons))
+cons.msc.tot <- setdiff(msc.cons, c(ips.cons, ost.cons))
+cons.ost.tot <- setdiff(ost.cons, c(ips.cons, msc.cons))
+
+length(cons.tot)
+length(cons.ips.tot)
+length(cons.msc.tot)
+length(cons.ost.tot)
+
+cons.df <- data.frame(cell=(c("Time 0","Time 1","Time 2")),
+                      totalCONSgenes=c(length(ips.cons),
+                                       length(msc.cons),
+                                       length(ost.cons)),
+                      Other=c((length(ips.cons)-length(cons.ips.tot)-length(cons.tot)),
+                              (length(msc.cons)-length(cons.msc.tot)-length(cons.tot)),
+                              (length(ost.cons)-length(cons.ost.tot)-length(cons.tot))),
+                      Shared=c(rep(length(cons.tot),3)),
+                      Unique=c(length(cons.ips.tot),
+                               length(cons.msc.tot),
+                               length(cons.ost.tot)))
+cons.df$cell <- factor(DE.df$cell, levels=c("Time 0","Time 1","Time 2"))
+
+
+#MAKE UPSETTER PLOT?
+
+upset(data[which(data$Cell.Type=="iPSC" & data$species=="Human"),genes],
+                            nintersects=NA, empty.intersections="on", keep.order=TRUE, order.by="degree", decreasing=TRUE,
+                            sets=genes, intersections=intersections, mainbar.y.max=ymax)
+
+
+#Functional enrichement
+
+ref.df <- bitr(compare.ips$gene, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+#gene.df <- bitr(ips.cons, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+gene.df <- bitr(cons.ips.tot, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+ego <- enrichGO(gene          = gene.df$ENSEMBL,
+                OrgDb         = org.Hs.eg.db,
+                universe      = ref.df$ENSEMBL,
+                keyType       = 'ENSEMBL',
+                ont           = "CC",
+                pAdjustMethod = "BH",
+                pvalueCutoff  = 0.01,
+                qvalueCutoff  = 0.05,
+                readable      = TRUE)
+head(ego@result[which(ego@result$p.adjust<0.05),1:7])
+#all iPSC conserved genes: mitochondrial related functions
+#conserved genes unique to iPSCs: nuclear/chromosomal
+ego <- enrichGO(gene          = gene.df$ENSEMBL,
+                OrgDb         = org.Hs.eg.db,
+                universe      = ref.df$ENSEMBL,
+                keyType       = 'ENSEMBL',
+                ont           = "BP",
+                pAdjustMethod = "BH",
+                pvalueCutoff  = 0.01,
+                qvalueCutoff  = 0.05,
+                readable      = TRUE)
+head(ego@result[which(ego@result$p.adjust<0.05),1:7])
+#all iPSC conserved genes: mitochondrial related functions
+#conserved genes unique to iPSCs: transcription/translation
+
+ref.df <- bitr(compare.msc$gene, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+#gene.df <- bitr(msc.cons, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+gene.df <- bitr(cons.msc.tot, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+ego <- enrichGO(gene          = gene.df$ENSEMBL,
+                OrgDb         = org.Hs.eg.db,
+                universe      = ref.df$ENSEMBL,
+                keyType       = 'ENSEMBL',
+                ont           = "CC",
+                pAdjustMethod = "BH",
+                pvalueCutoff  = 0.01,
+                qvalueCutoff  = 0.05,
+                readable      = TRUE)
+head(ego@result[which(ego@result$p.adjust<0.05),1:7])
+#all MSC conserved genes: mitochondrial related functions
+#conserved genes unique to MSCs: mitochondrial/ER
+ego <- enrichGO(gene          = gene.df$ENSEMBL,
+                OrgDb         = org.Hs.eg.db,
+                universe      = ref.df$ENSEMBL,
+                keyType       = 'ENSEMBL',
+                ont           = "BP",
+                pAdjustMethod = "BH",
+                pvalueCutoff  = 0.01,
+                qvalueCutoff  = 0.05,
+                readable      = TRUE)
+head(ego@result[which(ego@result$p.adjust<0.05),1:7])
+#all MSC conserved genes: transcription/translation functions
+#conserved genes unique to MSCs: neuron functions (cerebral cortex)
+
+ref.df <- bitr(compare.ost$gene, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+#gene.df <- bitr(ost.cons, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+gene.df <- bitr(cons.ost.tot, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+ego <- enrichGO(gene          = gene.df$ENSEMBL,
+                OrgDb         = org.Hs.eg.db,
+                universe      = ref.df$ENSEMBL,
+                keyType       = 'ENSEMBL',
+                ont           = "CC",
+                pAdjustMethod = "BH",
+                pvalueCutoff  = 0.01,
+                qvalueCutoff  = 0.05,
+                readable      = TRUE)
+head(ego@result[which(ego@result$p.adjust<0.05),1:7])
+#all osteogenic conserved genes: mitochondrial related functions
+#conserved genes unique to osteoblasts: lysosome/vacuole
+ego <- enrichGO(gene          = gene.df$ENSEMBL,
+                OrgDb         = org.Hs.eg.db,
+                universe      = ref.df$ENSEMBL,
+                keyType       = 'ENSEMBL',
+                ont           = "BP",
+                pAdjustMethod = "BH",
+                pvalueCutoff  = 0.01,
+                qvalueCutoff  = 0.05,
+                readable      = TRUE)
+head(ego@result[which(ego@result$p.adjust<0.05),1:7])
+#all osteogenic conserved genes: mitochondrial related functions
+#conserved genes unique to osteoblasts: lysosome/vacuole
+
+```
+
+
+
+Compare conserved genes with DE genes.
+
+```{r}
+
+#Load DE genes identified using edgeR
+compare.ips <- readRDS("./data/cellranger-data-full/de.edger-compare.ips.rds")$table
+compare.msc <- readRDS("./data/cellranger-data-full/de.edger-compare.msc.rds")$table
+compare.ost <- readRDS("./data/cellranger-data-full/de.edger-compare.ost.rds")$table
+
+dim(compare.ips)
+dim(compare.msc)
+dim(compare.ost)
+
+table(compare.ips$FDR<0.05)
+table(compare.msc$FDR<0.05)
+table(compare.ost$FDR<0.05)
+
+compare.ips$gene <- rownames(compare.ips)
+compare.msc$gene <- rownames(compare.msc)
+compare.ost$gene <- rownames(compare.ost)
+
+ips.de <- compare.ips[which(compare.ips$FDR<0.05),]
+msc.de <- compare.msc[which(compare.msc$FDR<0.05),]
+ost.de <- compare.ost[which(compare.ost$FDR<0.05),]
+
+#Define DE genes that are shared across cell types
+de.tot <- intersect(ips.de$gene, intersect(msc.de$gene, ost.de$gene))
+#Define DE genes that are unique to each cell types
+de.ips.tot <- setdiff(ips.de$gene, c(msc.de$gene, ost.de$gene))
+de.msc.tot <- setdiff(msc.de$gene, c(ips.de$gene, ost.de$gene))
+de.ost.tot <- setdiff(ost.de$gene, c(ips.de$gene, msc.de$gene))
+
+length(de.tot)
+length(de.ips.tot)
+length(de.msc.tot)
+length(de.ost.tot)
+
+DE.df <- data.frame(cell=(c("Time 0","Time 1","Time 2")),
+                    totalDEgenes=c(length(ips.de$gene),
+                                   length(msc.de$gene),
+                                   length(ost.de$gene)),
+                    Other=c((length(ips.de$gene)-length(de.ips.tot)-length(de.tot)),
+                            (length(msc.de$gene)-length(de.msc.tot)-length(de.tot)),
+                            (length(ost.de$gene)-length(de.ost.tot)-length(de.tot))),
+                    Shared=c(rep(length(de.tot),3)),
+                    Unique=c(length(de.ips.tot),
+                             length(de.msc.tot),
+                             length(de.ost.tot)))
+DE.df$cell <- factor(DE.df$cell, levels=c("Time 0","Time 1","Time 2"))
+
+#ggplot(DE.df, aes(x=cell, y=totalDEgenes)) +
+#  geom_bar(stat="identity") +
+#  labs(x="",y="Number of DE Genes") +
+#  theme_classic() +
+#  theme(axis.text=element_text(size=12), axis.title=element_text(size=12), legend.text=element_text(size=12))
+#DE.df <- melt(DE.df, id.var="cell")
+#ggplot(DE.df[4:12,], aes(x=cell, y=value, fill=variable)) +
+#  geom_bar(stat="identity") +
+#  labs(x="",y="Number of DE Genes") +
+#  theme(legend.title = element_blank()) +
+#  scale_fill_manual(values=c("grey80","grey40","black")) +
+#  theme_classic() +
+#  theme(axis.text=element_text(size=12), axis.title=element_text(size=12), legend.text=element_text(size=12), legend.title=element_text(size=0))
+
+```
+
+Compare conserved genes and DE genes within each cell type.
+
+```{r}
+
+length(intersect(ips.cons, ips.de$gene))
+length(intersect(msc.cons, msc.de$gene))
+length(intersect(ost.cons, ost.de$gene))
+
+```
+
+What do some of the genes that overlap look like?
+
+```{r}
+
+VlnPlot(subset(indv,subset=Stage=="Time 0"), features=intersect(ips.cons, ips.de$gene)[1:5], pt.size=0)
+VlnPlot(subset(indv,subset=Stage=="Time 1"), features=intersect(msc.cons, msc.de$gene)[1:5], pt.size=0)
+VlnPlot(subset(indv,subset=Stage=="Time 2"), features=intersect(ost.cons, ost.de$gene)[1:5], pt.size=0)
+
+head(ips.de[which(ips.de$gene %in% intersect(ips.cons, ips.de$gene)),])
+head(msc.de[which(msc.de$gene %in% intersect(msc.cons, msc.de$gene)),])
+head(ost.de[which(ost.de$gene %in% intersect(ost.cons, ost.de$gene)),])
+
+```
+
+### WHY DO SO MANY OF MY DE GENES OVERLAP WITH MY CONSERVED GENES - NEED TO LOOK BACK AT DE ANALYSES!!!
+Since several genes overlap, lets make sure none of these...
+
+
+
+
+
+Define functions for assessing ontology enrichment.
+
+```{r}
+
+goCCenrich <- function(data, markers) {
+  
+  ref.df <- bitr(rownames(data@assays$RNA), fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+  
+  gene <- markers$gene[markers$p_val_adj<0.05 & markers$avg_logFC>0]
+  #gene <- markers$gene[markers$p_val_adj<0.05 & markers$avg_logFC>0]
+  gene.df <- bitr(gene, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+  ego_human <- enrichGO(gene          = gene.df$ENSEMBL,
+                        OrgDb         = org.Hs.eg.db,
+                        universe      = ref.df$ENSEMBL,
+                        keyType       = 'ENSEMBL',
+                        ont           = "CC",
+                        pAdjustMethod = "BH",
+                        pvalueCutoff  = 0.01,
+                        qvalueCutoff  = 0.05,
+                        readable      = TRUE)
+  
+  gene <- markers$gene[markers$p_val_adj<0.05 & markers$avg_logFC<0]
+  #gene <- markers$gene[markers$p_val_adj<0.05 & markers$avg_logFC<0]
+  gene.df <- bitr(gene, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+  ego_chimp <- enrichGO(gene          = gene.df$ENSEMBL,
+                        OrgDb         = org.Hs.eg.db,
+                        universe      = ref.df$ENSEMBL,
+                        keyType       = 'ENSEMBL',
+                        ont           = "CC",
+                        pAdjustMethod = "BH",
+                        pvalueCutoff  = 0.01,
+                        qvalueCutoff  = 0.05,
+                        readable      = TRUE)
+  
+  gene <- markers$gene[markers$p_val_adj<0.05 & markers$avg_logFC!=0]
+  #gene <- markers$gene[markers$p_val_adj<0.05 & markers$avg_logFC!=0]
+  gene.df <- bitr(gene, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+  ego <- enrichGO(gene          = gene.df$ENSEMBL,
+                  OrgDb         = org.Hs.eg.db,
+                  universe      = ref.df$ENSEMBL,
+                  keyType       = 'ENSEMBL',
+                  ont           = "CC",
+                  pAdjustMethod = "BH",
+                  pvalueCutoff  = 0.01,
+                  qvalueCutoff  = 0.05,
+                  readable      = TRUE)
+  
+  return(list(barplot(ego_human, drop=TRUE, showCategory=10, title = 'Upregulated in Human GO Analysis'),
+              barplot(ego_chimp, drop=TRUE, showCategory=10, title = 'Upregulated in Chimp GO Analysis'),
+              barplot(ego, drop=TRUE, showCategory=10, title = 'DE Genes GO Analysis')))
+
+}
+goBPenrich <- function(data, markers) {
+  
+  ref.df <- bitr(rownames(data@assays$RNA), fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+  
+  gene <- markers$gene[markers$p_val_adj<0.05 & markers$avg_logFC>0]
+  #gene <- markers$gene[markers$p_val_adj<0.05 & markers$avg_logFC>0]
+  gene.df <- bitr(gene, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+  ego_human <- enrichGO(gene          = gene.df$ENSEMBL,
+                        OrgDb         = org.Hs.eg.db,
+                        universe      = ref.df$ENSEMBL,
+                        keyType       = 'ENSEMBL',
+                        ont           = "BP",
+                        pAdjustMethod = "BH",
+                        pvalueCutoff  = 0.01,
+                        qvalueCutoff  = 0.05,
+                        readable      = TRUE)
+  
+  gene <- markers$gene[markers$p_val_adj<0.05 & markers$avg_logFC<0]
+  #gene <- markers$gene[markers$p_val_adj<0.05 & markers$avg_logFC<0]
+  gene.df <- bitr(gene, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+  ego_chimp <- enrichGO(gene          = gene.df$ENSEMBL,
+                        OrgDb         = org.Hs.eg.db,
+                        universe      = ref.df$ENSEMBL,
+                        keyType       = 'ENSEMBL',
+                        ont           = "BP",
+                        pAdjustMethod = "BH",
+                        pvalueCutoff  = 0.01,
+                        qvalueCutoff  = 0.05,
+                        readable      = TRUE)
+  
+  gene <- markers$gene[markers$p_val_adj<0.05 & markers$avg_logFC!=0]
+  #gene <- markers$gene[markers$p_val_adj<0.05 & markers$avg_logFC!=0]
+  gene.df <- bitr(gene, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+  ego <- enrichGO(gene          = gene.df$ENSEMBL,
+                  OrgDb         = org.Hs.eg.db,
+                  universe      = ref.df$ENSEMBL,
+                  keyType       = 'ENSEMBL',
+                  ont           = "BP",
+                  pAdjustMethod = "BH",
+                  pvalueCutoff  = 0.01,
+                  qvalueCutoff  = 0.05,
+                  readable      = TRUE)
+  
+  return(list(barplot(ego_human, drop=TRUE, showCategory=10, title = 'Upregulated in Human GO Analysis'),
+              barplot(ego_chimp, drop=TRUE, showCategory=10, title = 'Upregulated in Chimp GO Analysis'),
+              barplot(ego, drop=TRUE, showCategory=10, title = 'DE Genes GO Analysis')))
+
+}
+
+```
+
+Assess functional enrichment of DE genes.
+
+```{r}
+
+#All DE genes
+p.ips <- goCCenrich(indv,compare.ips)
+p.msc <- goCCenrich(indv,compare.msc)
+p.ost <- goCCenrich(indv,compare.ost)
+p.ips[[3]]
+p.msc[[3]]
+p.ost[[3]]
+p.ips <- goBPenrich(indv,compare.ips)
+p.msc <- goBPenrich(indv,compare.msc)
+p.ost <- goBPenrich(indv,compare.ost)
+p.ips[[3]]
+p.msc[[3]]
+p.ost[[3]]
+
+#Cell-type specific DE genes
+p.tot1 <- goCCenrich(indv,compare.ips[which(rownames(compare.ips)%in%compare.tot1),])
+p.ips.tot <- goCCenrich(indv,compare.ips[which(rownames(compare.ips)%in%compare.ips.tot),])
+p.msc.tot <- goCCenrich(indv,compare.msc[which(rownames(compare.msc)%in%compare.msc.tot),])
+p.ost.tot <- goCCenrich(indv,compare.ost[which(rownames(compare.ost)%in%compare.ost.tot),])
+p.tot1[[3]]
+p.ips.tot[[3]]
+p.msc.tot[[3]]
+p.ost.tot[[3]]
+p.tot1 <- goBPenrich(indv,compare.ips[which(rownames(compare.ips)%in%compare.tot1),])
+p.ips.tot <- goBPenrich(indv,compare.ips[which(rownames(compare.ips)%in%compare.ips.tot),])
+p.msc.tot <- goBPenrich(indv,compare.msc[which(rownames(compare.msc)%in%compare.msc.tot),])
+p.ost.tot <- goBPenrich(indv,compare.ost[which(rownames(compare.ost)%in%compare.ost.tot),])
+p.tot1[[3]]
+p.ips.tot[[3]]
+p.msc.tot[[3]]
+p.ost.tot[[3]]
+
+```
+
+
+
+
+
+##THIS IS THE WRONG WAY TO SORT VARIANCE - KEEP FOR NOW BUT EVENTUALLY REFORMAT
+
+```{r expression patterns that are shared}
+
+library(edgeR)
+library(matrixStats)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+dir2 <- paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full")
+
+#Load data
+indv <- readRDS(paste0(dir2,"/data.filterMT.regMT.indv.log.10k.int.rds" ))
+indv@meta.data$Collection <- as.factor(indv@meta.data$Collection)
+data <- readRDS(paste0(dir2,"/data.filterMT.merge.l-TEMP.rds"))
+data@meta.data$Collection <- as.factor(data@meta.data$Collection)
+
+#Find differentially expressed genes between humans and chimpanzees
+Idents(indv) <- factor(indv@meta.data$species, levels=c("Chimp","Human"))
+Idents(data) <- factor(data@meta.data$species, levels=c("Chimp","Human"))
+
+#Isolate ribosomal genes
+genes <- rownames(data@assays$RNA@counts)
+genes.ribo <- grep('^RP',genes,value=T)
+genes.no.ribo <- genes[which(!(genes %in% genes.ribo))]
+
+#Get normalized gene count data
+ips.cnts <- as.matrix(GetAssayData(subset(data,subset=Cell.Type=="iPSC"), assay="RNA", slot="counts"))
+ips.cnts <- ips.cnts[which(rownames(ips.cnts) %in% genes.no.ribo),]
+ips.meta <- data@meta.data[colnames(ips.cnts),c("species","Cell.Type")]
+ips.dge <- DGEList(ips.cnts)
+meta_dge <- ips.dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, ips.meta)
+ips.dge$samples <- meta_dge
+keep <- filterByExpr(ips.dge, group=ips.dge$samples$species, min.count=1, min.total.count=15)
+table(keep)
+ips.dge <- ips.dge[keep, , keep.lib.sizes=FALSE]
+ips.dge <- calcNormFactors(ips.dge, method="TMM")
+data.ips <- cpm(ips.dge, normalized.lib.sizes=TRUE, log=TRUE, prior=2)
+ips.meta <- ips.dge$samples[,c("species","Cell.Type")]
+
+msc.cnts <- as.matrix(GetAssayData(subset(data,subset=Cell.Type=="MSC"), assay="RNA", slot="counts"))
+msc.cnts <- msc.cnts[which(rownames(msc.cnts) %in% genes.no.ribo),]
+msc.meta <- data@meta.data[colnames(msc.cnts),c("species","Cell.Type")]
+msc.dge <- DGEList(msc.cnts)
+meta_dge <- msc.dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, msc.meta)
+msc.dge$samples <- meta_dge
+keep <- filterByExpr(msc.dge, group=msc.dge$samples$species, min.count=1, min.total.count=15)
+table(keep)
+msc.dge <- msc.dge[keep, , keep.lib.sizes=FALSE]
+msc.dge <- calcNormFactors(msc.dge, method="TMM")
+data.msc <- cpm(msc.dge, normalized.lib.sizes=TRUE, log=TRUE, prior=2)
+msc.meta <- msc.dge$samples[,c("species","Cell.Type")]
+
+ost.cnts <- as.matrix(GetAssayData(subset(data,subset=Cell.Type=="Osteoblast"), assay="RNA", slot="counts"))
+ost.cnts <- ost.cnts[which(rownames(ost.cnts) %in% genes.no.ribo),]
+ost.meta <- data@meta.data[colnames(ost.cnts),c("species","Cell.Type")]
+ost.dge <- DGEList(ost.cnts)
+meta_dge <- ost.dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, ost.meta)
+ost.dge$samples <- meta_dge
+keep <- filterByExpr(ost.dge, group=ost.dge$samples$species, min.count=1, min.total.count=15)
+table(keep)
+ost.dge <- ost.dge[keep, , keep.lib.sizes=FALSE]
+ost.dge <- calcNormFactors(ost.dge, method="TMM")
+data.ost <- cpm(ost.dge, normalized.lib.sizes=TRUE, log=TRUE, prior=2)
+ost.meta <- ost.dge$samples[,c("species","Cell.Type")]
+
+ips.norm <- tibble(Gene=rownames(data.ips),
+                   HumanSumCount=rowSums(data.ips[,which(ips.meta$species=="Human")]),
+                   ChimpSumCount=rowSums(data.ips[,which(ips.meta$species=="Chimp")]),
+                   HumanAvgCount=rowMeans(data.ips[,which(ips.meta$species=="Human")]),
+                   ChimpAvgCount=rowMeans(data.ips[,which(ips.meta$species=="Chimp")]),
+                   HumanVarCount=rowVars(as.matrix(data.ips[,which(ips.meta$species=="Human")])),
+                   ChimpVarCount=rowVars(as.matrix(data.ips[,which(ips.meta$species=="Chimp")])))
+ips.norm$AbsDiffAvg <- abs(ips.norm$HumanAvgCount - ips.norm$ChimpAvgCount)
+ips.norm$AbsDiffVar <- abs(ips.norm$HumanVarCount - ips.norm$ChimpVarCount)
+
+msc.norm <- tibble(Gene=rownames(data.msc),
+                   HumanSumCount=rowSums(data.msc[,which(msc.meta$species=="Human")]),
+                   ChimpSumCount=rowSums(data.msc[,which(msc.meta$species=="Chimp")]),
+                   HumanAvgCount=rowMeans(data.msc[,which(msc.meta$species=="Human")]),
+                   ChimpAvgCount=rowMeans(data.msc[,which(msc.meta$species=="Chimp")]),
+                   HumanVarCount=rowVars(as.matrix(data.msc[,which(msc.meta$species=="Human")])),
+                   ChimpVarCount=rowVars(as.matrix(data.msc[,which(msc.meta$species=="Chimp")])))
+msc.norm$AbsDiffAvg <- abs(msc.norm$HumanAvgCount - msc.norm$ChimpAvgCount)
+msc.norm$AbsDiffVar <- abs(msc.norm$HumanVarCount - msc.norm$ChimpVarCount)
+
+ost.norm <- tibble(Gene=rownames(data.ost),
+                   HumanSumCount=rowSums(data.ost[,which(ost.meta$species=="Human")]),
+                   ChimpSumCount=rowSums(data.ost[,which(ost.meta$species=="Chimp")]),
+                   HumanAvgCount=rowMeans(data.ost[,which(ost.meta$species=="Human")]),
+                   ChimpAvgCount=rowMeans(data.ost[,which(ost.meta$species=="Chimp")]),
+                   HumanVarCount=rowVars(as.matrix(data.ost[,which(ost.meta$species=="Human")])),
+                   ChimpVarCount=rowVars(as.matrix(data.ost[,which(ost.meta$species=="Chimp")])))
+ost.norm$AbsDiffAvg <- abs(ost.norm$HumanAvgCount - ost.norm$ChimpAvgCount)
+ost.norm$AbsDiffVar <- abs(ost.norm$HumanVarCount - ost.norm$ChimpVarCount)
+
+##########
+#groups.raw <- indv@meta.data[,c("species","Stage","Cluster","AdHoc.Assign","OstAdHoc.Assign","GoM.Assign")]
+#data.raw <- as.data.frame(indv@assays$RNA@counts[,match(rownames(groups),colnames(indv@assays$RNA@counts))])
+#ips <- data.frame(Gene=rownames(data),
+#                  HumanSumCount=rowSums(data[,which(groups$Stage=="Time 0" & groups$species=="Human")]),
+#                  ChimpSumCount=rowSums(data[,which(groups$Stage=="Time 0" & groups$species=="Chimp")]),
+#                  HumanAvgCount=rowMeans(data[,which(groups$Stage=="Time 0" & groups$species=="Human")]),
+#                  ChimpAvgCount=rowMeans(data[,which(groups$Stage=="Time 0" & groups$species=="Chimp")]),
+#                  HumanVarCount=rowVars(as.matrix(data[,which(groups$Stage=="Time 0" & groups$species=="Human")])),
+#                  ChimpVarCount=rowVars(as.matrix(data[,which(groups$Stage=="Time 0" & groups$species=="Chimp")])))
+##########
+
+#Get raw gene count data
+raw.ips <- as.data.frame(data@assays$RNA@counts[match(rownames(data.ips),rownames(data@assays$RNA@counts)),
+                                                match(colnames(data.ips),colnames(data@assays$RNA@counts))])
+raw.msc <- as.data.frame(data@assays$RNA@counts[match(rownames(data.msc),rownames(data@assays$RNA@counts)),
+                                                match(colnames(data.msc),colnames(data@assays$RNA@counts))])
+raw.ost <- as.data.frame(data@assays$RNA@counts[match(rownames(data.ost),rownames(data@assays$RNA@counts)),
+                                                match(colnames(data.ost),colnames(data@assays$RNA@counts))])
+
+ips.raw <- tibble(Gene=rownames(raw.ips),
+                  HumanSumCount=rowSums(raw.ips[,which(ips.meta$species=="Human")]),
+                  ChimpSumCount=rowSums(raw.ips[,which(ips.meta$species=="Chimp")]),
+                  HumanAvgCount=rowMeans(raw.ips[,which(ips.meta$species=="Human")]),
+                  ChimpAvgCount=rowMeans(raw.ips[,which(ips.meta$species=="Chimp")]),
+                  HumanVarCount=rowVars(as.matrix(raw.ips[,which(ips.meta$species=="Human")])),
+                  ChimpVarCount=rowVars(as.matrix(raw.ips[,which(ips.meta$species=="Chimp")])))
+ips.raw$AbsDiffAvg <- abs(ips.raw$HumanAvgCount - ips.raw$ChimpAvgCount)
+ips.raw$AbsDiffVar <- abs(ips.raw$HumanVarCount - ips.raw$ChimpVarCount)
+
+msc.raw <- tibble(Gene=rownames(raw.msc),
+                  HumanSumCount=rowSums(raw.msc[,which(msc.meta$species=="Human")]),
+                  ChimpSumCount=rowSums(raw.msc[,which(msc.meta$species=="Chimp")]),
+                  HumanAvgCount=rowMeans(raw.msc[,which(msc.meta$species=="Human")]),
+                  ChimpAvgCount=rowMeans(raw.msc[,which(msc.meta$species=="Chimp")]),
+                  HumanVarCount=rowVars(as.matrix(raw.msc[,which(msc.meta$species=="Human")])),
+                  ChimpVarCount=rowVars(as.matrix(raw.msc[,which(msc.meta$species=="Chimp")])))
+msc.raw$AbsDiffAvg <- abs(msc.raw$HumanAvgCount - msc.raw$ChimpAvgCount)
+msc.raw$AbsDiffVar <- abs(msc.raw$HumanVarCount - msc.raw$ChimpVarCount)
+
+ost.raw <- tibble(Gene=rownames(raw.ost),
+                  HumanSumCount=rowSums(raw.ost[,which(ost.meta$species=="Human")]),
+                  ChimpSumCount=rowSums(raw.ost[,which(ost.meta$species=="Chimp")]),
+                  HumanAvgCount=rowMeans(raw.ost[,which(ost.meta$species=="Human")]),
+                  ChimpAvgCount=rowMeans(raw.ost[,which(ost.meta$species=="Chimp")]),
+                  HumanVarCount=rowVars(as.matrix(raw.ost[,which(ost.meta$species=="Human")])),
+                  ChimpVarCount=rowVars(as.matrix(raw.ost[,which(ost.meta$species=="Chimp")])))
+ost.raw$AbsDiffAvg <- abs(ost.raw$HumanAvgCount - ost.raw$ChimpAvgCount)
+ost.raw$AbsDiffVar <- abs(ost.raw$HumanVarCount - ost.raw$ChimpVarCount)
+
+rm(data.ips,data.msc,data.ost,ips.cnts,ips.meta,ips.dge,msc.cnts,msc.meta,msc.dge,ost.cnts,ost.meta,ost.dge)
+rm(meta_dge,keep,genes,genes.ribo,genes.no.ribo)
+
+#Visualize gene similarities
+summary(ips.norm$AbsDiffAvg) #1st quartile = 0.047
+summary(msc.norm$AbsDiffAvg) #1st quartile = 0.061
+summary(ost.norm$AbsDiffAvg) #1st quartile = 0.069
+summary(ips.norm$AbsDiffVar) #1st quartile = 0.017
+summary(msc.norm$AbsDiffVar) #1st quartile = 0.027
+summary(ost.norm$AbsDiffVar) #1st quartile = 0.033
+
+par(mfrow=c(3,3))
+hist(log2(ips.norm$AbsDiffAvg))
+abline(v=log2(0.05), col="red")
+hist(log2(msc.norm$AbsDiffAvg))
+abline(v=log2(0.05), col="red")
+hist(log2(ost.norm$AbsDiffAvg))
+abline(v=log2(0.05), col="red")
+hist(log2(ips.norm$AbsDiffVar))
+abline(v=log2(0.01), col="red")
+hist(log2(msc.norm$AbsDiffVar))
+abline(v=log2(0.01), col="red")
+hist(log2(ost.norm$AbsDiffVar))
+abline(v=log2(0.01), col="red")
+plot(log2(ips.norm$AbsDiffAvg), log2(ips.norm$AbsDiffVar))
+abline(v=log2(0.05), h=log2(0.01), col="red")
+plot(log2(msc.norm$AbsDiffAvg), log2(msc.norm$AbsDiffVar))
+abline(v=log2(0.05), h=log2(0.01), col="red")
+plot(log2(ost.norm$AbsDiffAvg), log2(ost.norm$AbsDiffVar))
+abline(v=log2(0.05), h=log2(0.01), col="red")
+
+ips.norm <- ips.norm[order(ips.norm$HumanSumCount,decreasing=TRUE),]
+msc.norm <- msc.norm[order(msc.norm$HumanSumCount,decreasing=TRUE),]
+ost.norm <- ost.norm[order(ost.norm$HumanSumCount,decreasing=TRUE),]
+
+ips.genes <- ips.norm %>% 
+                dplyr::filter(AbsDiffAvg<0.05 & AbsDiffVar<0.01)
+msc.genes <- msc.norm %>% 
+                dplyr::filter(AbsDiffAvg<0.05 & AbsDiffVar<0.01)
+ost.genes <- ost.norm %>% 
+                dplyr::filter(AbsDiffAvg<0.05 & AbsDiffVar<0.01)
+
+par(mfrow=c(2,3))
+plot(ips.norm$HumanSumCount, ips.norm$AbsDiffVar, xlim=c(100000,200000))
+plot(msc.norm$HumanSumCount, msc.norm$AbsDiffVar, xlim=c(130000,240000))
+plot(ost.norm$HumanSumCount, ost.norm$AbsDiffVar, xlim=c(80000,150000))
+plot(ips.genes$HumanSumCount, ips.genes$AbsDiffVar, xlim=c(100000,200000))
+plot(msc.genes$HumanSumCount, msc.genes$AbsDiffVar, xlim=c(130000,240000))
+plot(ost.genes$HumanSumCount, ost.genes$AbsDiffVar, xlim=c(80000,150000))
+
+intersect(ips.genes$Gene, msc.genes$Gene) #shared genes: DEK, SEC11C, WDR33
+intersect(ips.genes$Gene, ost.genes$Gene) #shared genes: none
+intersect(msc.genes$Gene, ost.genes$Gene) #shared genes: none
+
+ips.genes <- ips.norm %>% 
+                dplyr::filter(AbsDiffAvg<0.05 & AbsDiffVar<0.01) %>% 
+                dplyr::filter(Gene %in% rownames(indv@assays$integrated))
+msc.genes <- msc.norm %>% 
+                dplyr::filter(AbsDiffAvg<0.05 & AbsDiffVar<0.01) %>% 
+                dplyr::filter(Gene %in% rownames(indv@assays$integrated))
+ost.genes <- ost.norm %>% 
+                dplyr::filter(AbsDiffAvg<0.05 & AbsDiffVar<0.01) %>% 
+                dplyr::filter(Gene %in% rownames(indv@assays$integrated))
+
+VlnPlot(subset(indv,subset=Stage=="Time 0"), assay="integrated", slot="data", features=ips.genes$Gene[1:3], pt.size=0)
+VlnPlot(subset(indv,subset=Stage=="Time 1"), assay="integrated", slot="data", features=msc.genes$Gene[1:3], pt.size=0)
+VlnPlot(subset(indv,subset=Stage=="Time 2"), assay="integrated", slot="data", features=ost.genes$Gene[1:3], pt.size=0)
+
+VlnPlot(subset(indv,subset=Stage=="Time 0"), assay="integrated", slot="data", features=c("DEK","SEC11C","WDR33"), pt.size=0)
+VlnPlot(subset(indv,subset=Stage=="Time 1"), assay="integrated", slot="data", features=c("DEK","SEC11C","WDR33"), pt.size=0)
+
+
+```
+

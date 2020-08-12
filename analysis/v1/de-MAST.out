@@ -1,13 +1,11 @@
 
-R version 3.4.3 (2017-11-30) -- "Kite-Eating Tree"
-Copyright (C) 2017 The R Foundation for Statistical Computing
+R version 3.6.1 (2019-07-05) -- "Action of the Toes"
+Copyright (C) 2019 The R Foundation for Statistical Computing
 Platform: x86_64-pc-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
 You are welcome to redistribute it under certain conditions.
 Type 'license()' or 'licence()' for distribution details.
-
-  Natural language support but running in an English locale
 
 R is a collaborative project with many contributors.
 Type 'contributors()' for more information and
@@ -21,13 +19,13 @@ Type 'q()' to quit R.
 > library(Seurat)
 > library(dplyr)
 
-Attaching package: ‘dplyr’
+Attaching package: 'dplyr'
 
-The following objects are masked from ‘package:stats’:
+The following objects are masked from 'package:stats':
 
     filter, lag
 
-The following objects are masked from ‘package:base’:
+The following objects are masked from 'package:base':
 
     intersect, setdiff, setequal, union
 
@@ -60,58 +58,59 @@ Loading required package: limma
 > 
 > #Define MAST Function
 > library(MAST)
+Loading required package: SingleCellExperiment
 Loading required package: SummarizedExperiment
 Loading required package: GenomicRanges
 Loading required package: stats4
 Loading required package: BiocGenerics
 Loading required package: parallel
 
-Attaching package: ‘BiocGenerics’
+Attaching package: 'BiocGenerics'
 
-The following objects are masked from ‘package:parallel’:
+The following objects are masked from 'package:parallel':
 
     clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
     clusterExport, clusterMap, parApply, parCapply, parLapply,
     parLapplyLB, parRapply, parSapply, parSapplyLB
 
-The following object is masked from ‘package:limma’:
+The following object is masked from 'package:limma':
 
     plotMA
 
-The following objects are masked from ‘package:dplyr’:
+The following objects are masked from 'package:dplyr':
 
     combine, intersect, setdiff, union
 
-The following objects are masked from ‘package:stats’:
+The following objects are masked from 'package:stats':
 
     IQR, mad, sd, var, xtabs
 
-The following objects are masked from ‘package:base’:
+The following objects are masked from 'package:base':
 
-    anyDuplicated, append, as.data.frame, cbind, colMeans, colnames,
-    colSums, do.call, duplicated, eval, evalq, Filter, Find, get, grep,
-    grepl, intersect, is.unsorted, lapply, lengths, Map, mapply, match,
-    mget, order, paste, pmax, pmax.int, pmin, pmin.int, Position, rank,
-    rbind, Reduce, rowMeans, rownames, rowSums, sapply, setdiff, sort,
-    table, tapply, union, unique, unsplit, which, which.max, which.min
+    Filter, Find, Map, Position, Reduce, anyDuplicated, append,
+    as.data.frame, basename, cbind, colnames, dirname, do.call,
+    duplicated, eval, evalq, get, grep, grepl, intersect, is.unsorted,
+    lapply, mapply, match, mget, order, paste, pmax, pmax.int, pmin,
+    pmin.int, rank, rbind, rownames, sapply, setdiff, sort, table,
+    tapply, union, unique, unsplit, which, which.max, which.min
 
 Loading required package: S4Vectors
 
-Attaching package: ‘S4Vectors’
+Attaching package: 'S4Vectors'
 
-The following objects are masked from ‘package:dplyr’:
+The following objects are masked from 'package:dplyr':
 
     first, rename
 
-The following object is masked from ‘package:base’:
+The following object is masked from 'package:base':
 
     expand.grid
 
 Loading required package: IRanges
 
-Attaching package: ‘IRanges’
+Attaching package: 'IRanges'
 
-The following objects are masked from ‘package:dplyr’:
+The following objects are masked from 'package:dplyr':
 
     collapse, desc, slice
 
@@ -126,42 +125,50 @@ Welcome to Bioconductor
 Loading required package: DelayedArray
 Loading required package: matrixStats
 
-Attaching package: ‘matrixStats’
+Attaching package: 'matrixStats'
 
-The following objects are masked from ‘package:Biobase’:
+The following objects are masked from 'package:Biobase':
 
     anyMissing, rowMedians
 
-The following object is masked from ‘package:dplyr’:
+The following object is masked from 'package:dplyr':
 
     count
 
+Loading required package: BiocParallel
 
-Attaching package: ‘DelayedArray’
+Attaching package: 'DelayedArray'
 
-The following objects are masked from ‘package:matrixStats’:
+The following objects are masked from 'package:matrixStats':
 
     colMaxs, colMins, colRanges, rowMaxs, rowMins, rowRanges
 
-The following object is masked from ‘package:base’:
+The following objects are masked from 'package:base':
 
-    apply
+    aperm, apply, rowsum
 
 
-Attaching package: ‘SummarizedExperiment’
+Attaching package: 'SummarizedExperiment'
 
-The following object is masked from ‘package:Seurat’:
+The following object is masked from 'package:Seurat':
 
     Assays
 
 
-Attaching package: ‘MAST’
+Attaching package: 'SingleCellExperiment'
 
-The following object is masked from ‘package:dplyr’:
+The following object is masked from 'package:edgeR':
+
+    cpm
+
+
+Attaching package: 'MAST'
+
+The following object is masked from 'package:dplyr':
 
     filter
 
-The following object is masked from ‘package:stats’:
+The following object is masked from 'package:stats':
 
     filter
 
@@ -224,12 +231,13 @@ The following object is masked from ‘package:stats’:
 > 
 > #Find differentially expressed genes using differentiation stage at collection
 > mast <- runMAST(subset(data,subset=Cell.Type=="iPSC"), genes.no.ribo)
-.......................................................................................................................................
+Assuming data assay in position 1, with name et is log-transformed.
+
 Done!
 Fitted zlm on 2715 genes and 31557 cells.
  Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
 Refitting on reduced model...
-.......................................................................................................................................
+
 Done!
 [1] 2715
 
@@ -238,12 +246,13 @@ FALSE  TRUE
 There were 24 warnings (use warnings() to see them)
 > saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.ips.rds"))
 > mast <- runMAST(subset(data,subset=Cell.Type=="MSC"), genes.no.ribo)
-........................................................................................................................................
+Assuming data assay in position 1, with name et is log-transformed.
+
 Done!
 Fitted zlm on 2738 genes and 36738 cells.
  Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
 Refitting on reduced model...
-........................................................................................................................................
+
 Done!
 [1] 2738
 
@@ -252,12 +261,13 @@ FALSE  TRUE
 There were 50 or more warnings (use warnings() to see the first 50)
 > saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.msc.rds"))
 > mast <- runMAST(subset(data,subset=Cell.Type=="Osteoblast"), genes.no.ribo)
-...............................................................................
+Assuming data assay in position 1, with name et is log-transformed.
+
 Done!
 Fitted zlm on 1590 genes and 20746 cells.
  Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
 Refitting on reduced model...
-...............................................................................
+
 Done!
 [1] 1590
 
@@ -267,12 +277,13 @@ FALSE  TRUE
 > 
 > #Find differentially expressed genes using cluster definitions
 > mast <- runMAST(subset(data,subset=(seurat_clusters==1|seurat_clusters==4|seurat_clusters==6)), genes.no.ribo)
-.......................................................................................................................................
+Assuming data assay in position 1, with name et is log-transformed.
+
 Done!
 Fitted zlm on 2715 genes and 31554 cells.
  Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
 Refitting on reduced model...
-.......................................................................................................................................
+
 Done!
 [1] 2715
 
@@ -281,12 +292,13 @@ FALSE  TRUE
 There were 20 warnings (use warnings() to see them)
 > saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.i.rds"))
 > mast <- runMAST(subset(data,subset=seurat_clusters==0), genes.no.ribo)
-...................................................................................................................................................
+Assuming data assay in position 1, with name et is log-transformed.
+
 Done!
 Fitted zlm on 2949 genes and 36218 cells.
  Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
 Refitting on reduced model...
-...................................................................................................................................................
+
 Done!
 [1] 2949
 
@@ -295,12 +307,13 @@ FALSE  TRUE
 There were 50 or more warnings (use warnings() to see the first 50)
 > saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.m.rds"))
 > mast <- runMAST(subset(data,subset=(seurat_clusters==2|seurat_clusters==3|seurat_clusters==5)), genes.no.ribo)
-..................................................................
+Assuming data assay in position 1, with name et is log-transformed.
+
 Done!
 Fitted zlm on 1337 genes and 21269 cells.
  Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
 Refitting on reduced model...
-..................................................................
+
 Done!
 [1] 1337
 
@@ -308,12 +321,13 @@ FALSE  TRUE
    43  1294 
 > saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.o.rds"))
 > mast <- runMAST(subset(data,subset=seurat_clusters==1), genes.no.ribo)
-..................................................................................................................................................................
+Assuming data assay in position 1, with name et is log-transformed.
+
 Done!
 Fitted zlm on 3254 genes and 26002 cells.
  Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
 Refitting on reduced model...
-..................................................................................................................................................................
+
 Done!
 [1] 3254
 
@@ -324,12 +338,13 @@ In .bayesglm.fit.loop.printWarnings(Warning, state, family) :
   fitted probabilities numerically 0 or 1 occurred
 > saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.i1.rds"))
 > mast <- runMAST(subset(data,subset=seurat_clusters==4), genes.no.ribo)
-..............................
+Assuming data assay in position 1, with name et is log-transformed.
+
 Done!
 Fitted zlm on 610 genes and 5050 cells.
  Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
 Refitting on reduced model...
-..............................
+
 Done!
 [1] 610
 
@@ -338,12 +353,13 @@ FALSE  TRUE
 There were 16 warnings (use warnings() to see them)
 > saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.i2.rds"))
 > mast <- runMAST(subset(data,subset=seurat_clusters==6), genes.no.ribo)
-...........................................................................................................
+Assuming data assay in position 1, with name et is log-transformed.
+
 Done!
 Fitted zlm on 2157 genes and 502 cells.
  Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
 Refitting on reduced model...
-...........................................................................................................
+
 Done!
 [1] 2157
 
@@ -351,12 +367,13 @@ FALSE  TRUE
  1690   467 
 > saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.i3.rds"))
 > mast <- runMAST(subset(data,subset=seurat_clusters==2), genes.no.ribo)
-...............................................................................................................
+Assuming data assay in position 1, with name et is log-transformed.
+
 Done!
 Fitted zlm on 2232 genes and 13295 cells.
  Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
 Refitting on reduced model...
-...............................................................................................................
+
 Done!
 [1] 2232
 
@@ -364,12 +381,13 @@ FALSE  TRUE
   152  2080 
 > saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.o1.rds"))
 > mast <- runMAST(subset(data,subset=seurat_clusters==3), genes.no.ribo)
-........................
+Assuming data assay in position 1, with name et is log-transformed.
+
 Done!
 Fitted zlm on 483 genes and 6007 cells.
  Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
 Refitting on reduced model...
-........................
+
 Done!
 [1] 483
 
@@ -382,12 +400,13 @@ Warning messages:
   fitted probabilities numerically 0 or 1 occurred
 > saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.o2.rds"))
 > mast <- runMAST(subset(data,subset=seurat_clusters==5), genes.no.ribo)
-........................................................................................................................................................................................................................................................................................................................................................................................................
+Assuming data assay in position 1, with name et is log-transformed.
+
 Done!
 Fitted zlm on 7855 genes and 1967 cells.
  Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
 Refitting on reduced model...
-........................................................................................................................................................................................................................................................................................................................................................................................................
+
 Done!
 [1] 7855
 
@@ -400,14 +419,62 @@ Warning messages:
   fitted probabilities numerically 0 or 1 occurred
 > saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.o3.rds"))
 > 
+> #Find differentially expressed genes using ad hoc definitions
+> mast <- runMAST(subset(data,subset=AdHoc.Assign=="iPSC"), genes.no.ribo)
+Assuming data assay in position 1, with name et is log-transformed.
+
+Done!
+Fitted zlm on 3234 genes and 21571 cells.
+ Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
+Refitting on reduced model...
+
+Done!
+[1] 3234
+
+FALSE  TRUE 
+  217  3017 
+There were 50 or more warnings (use warnings() to see the first 50)
+> saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.hoci.rds"))
+> mast <- runMAST(subset(data,subset=AdHoc.Assign=="MSC"), genes.no.ribo)
+Assuming data assay in position 1, with name et is log-transformed.
+
+Done!
+Fitted zlm on 3375 genes and 22448 cells.
+ Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
+Refitting on reduced model...
+
+Done!
+[1] 3375
+
+FALSE  TRUE 
+   42  3333 
+There were 50 or more warnings (use warnings() to see the first 50)
+> saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.hocm.rds"))
+> mast <- runMAST(subset(data,subset=AdHoc.Assign=="Osteoblast"), genes.no.ribo)
+Assuming data assay in position 1, with name et is log-transformed.
+
+Done!
+Fitted zlm on 1927 genes and 17191 cells.
+ Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
+Refitting on reduced model...
+
+Done!
+[1] 1927
+
+FALSE  TRUE 
+  135  1792 
+There were 14 warnings (use warnings() to see them)
+> saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.hoco.rds"))
+> 
 > #Find differentially expressed genes using osteogenic ad hoc definitions
 > mast <- runMAST(subset(data,subset=OstAdHoc.Assign=="preosteoblast"), genes.no.ribo)
-........................................................................................................................................................................................................................
+Assuming data assay in position 1, with name et is log-transformed.
+
 Done!
 Fitted zlm on 4323 genes and 628 cells.
  Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
 Refitting on reduced model...
-........................................................................................................................................................................................................................
+
 Done!
 [1] 4323
 
@@ -415,12 +482,13 @@ FALSE  TRUE
  2634  1689 
 > saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.pre.rds"))
 > mast <- runMAST(subset(data,subset=OstAdHoc.Assign=="osteoblast"), genes.no.ribo)
-......................................................................................................................................................................................................................................................
+Assuming data assay in position 1, with name et is log-transformed.
+
 Done!
 Fitted zlm on 4937 genes and 578 cells.
  Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
 Refitting on reduced model...
-......................................................................................................................................................................................................................................................
+
 Done!
 [1] 4937
 
@@ -428,12 +496,13 @@ FALSE  TRUE
  3270  1667 
 > saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.obl.rds"))
 > mast <- runMAST(subset(data,subset=OstAdHoc.Assign=="embedding osteoblast"), genes.no.ribo)
-.........................................................................................
+Assuming data assay in position 1, with name et is log-transformed.
+
 Done!
 Fitted zlm on 1785 genes and 13599 cells.
  Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
 Refitting on reduced model...
-.........................................................................................
+
 Done!
 [1] 1785
 
@@ -458,16 +527,17 @@ Warning messages:
 > #mast <- runMAST(subset(data,subset=OstAdHoc.Assign=="mineralizing osteocyte"), genes.no.ribo)
 > #saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.min.rds"))
 > #mast <- runMAST(subset(data,subset=OstAdHoc.Assign=="mature osteocyte"), genes.no.ribo)
-> #saveRDS(mast.mat, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.mat.rds"))
+> #saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.mat.rds"))
 > 
 > #Find differentially expressed genes using grade of membership definitions
 > mast <- runMAST(subset(data,subset=GoM.Assign=="iPSC"), genes.no.ribo)
-.........................................................................................................................................
+Assuming data assay in position 1, with name et is log-transformed.
+
 Done!
 Fitted zlm on 2750 genes and 31270 cells.
  Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
 Refitting on reduced model...
-.........................................................................................................................................
+
 Done!
 [1] 2750
 
@@ -476,12 +546,13 @@ FALSE  TRUE
 There were 38 warnings (use warnings() to see them)
 > saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.gomi.rds"))
 > mast <- runMAST(subset(data,subset=GoM.Assign=="MSC"), genes.no.ribo)
-.........................................................................................................................................................................................................................................................................................................................................................................................
+Assuming data assay in position 1, with name et is log-transformed.
+
 Done!
 Fitted zlm on 7558 genes and 21903 cells.
  Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
 Refitting on reduced model...
-.........................................................................................................................................................................................................................................................................................................................................................................................
+
 Done!
 [1] 7558
 
@@ -490,12 +561,13 @@ FALSE  TRUE
 There were 50 or more warnings (use warnings() to see the first 50)
 > saveRDS(mast, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.MAST-compare.gomm.rds"))
 > mast <- runMAST(subset(data,subset=GoM.Assign=="Osteoblast"), genes.no.ribo)
-..................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+Assuming data assay in position 1, with name et is log-transformed.
+
 Done!
 Fitted zlm on 12526 genes and 16180 cells.
  Using BayesGLMlike ~ Collection + cdr + nCount_RNA + Phase + species 
 Refitting on reduced model...
-..................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+
 Done!
 [1] 12526
 
@@ -507,5 +579,5 @@ There were 50 or more warnings (use warnings() to see the first 50)
 > 
 > 
 > proc.time()
-     user    system   elapsed 
-23689.264  1667.062 25423.125 
+    user   system  elapsed 
+24950.95  1654.89 26668.21 

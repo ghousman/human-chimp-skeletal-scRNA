@@ -66,8 +66,6 @@ library(topGO)
 library("org.Hs.eg.db")
 library(clusterProfiler)
 
-library(reshape2)
-
 #library(pcaMethods)
 #library(SC3)
 #library(scater)
@@ -3417,6 +3415,12 @@ ggplot(DE.df[4:12,], aes(x=cell, y=value, fill=variable)) +
 #Load libraries
 library(Seurat)
 library(clusterProfiler)
+library("org.Hs.eg.db")
+library(topGO)
+library(ggplot2)
+library(grid)
+library(reshape2)
+library(UpSetR)
 
 #Define main directory
 dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
@@ -3472,6 +3476,21 @@ genes.no.ribo <- genes[which(!(genes %in% genes.ribo))]
 #(data): 482/1465
 
 #Negative Binomial GLM (ignores return.thresh argument)
+runSEURATnegbinom <- function(dataSub, genes.no.ribo) {
+  deGenes <- FindMarkers(dataSub,
+                         assay="RNA",
+                         slot="counts",
+                         ident.1="Human",
+                         ident.2="Chimp",
+                         features=genes.no.ribo,
+                         logfc.threshold=0.25,
+                         min.pct=0.25,
+                         min.cells.feature=3,
+                         test.use="negbinom",
+                         latent.vars=c("Collection","nCount_RNA","Phase"))
+  return(deGenes)
+}
+compare.obl <- runSEURATnegbinom(subset(data,subset=OstAdHoc.Assign=="osteoblast"), genes.no.ribo)
 compare.obl  <- FindMarkers(subset(data,subset=OstAdHoc.Assign=="osteoblast"),
                             assay="RNA",
                             slot="counts",
@@ -3504,9 +3523,24 @@ head(compare.obl, n=5)
 #latent.vars=c("Collection","SequencingBatch","nCount_RNA")(counts): 434/2036
 #latent.vars=c("DateCollection","SequencingBatch","nCount_RNA","Phase")(counts): 448/2037
 #latent.vars=c("Collection","SequencingBatch","nCount_RNA","Phase")(counts): 436/2036
-#latent.vars=c("Collection","nCount_RNA","Phase")(counts): 435/2036 --------------------- (USE THIS MODEL FOR NOW)
+#latent.vars=c("Collection","nCount_RNA","Phase")(counts): 436/2036 --------------------- (USE THIS MODEL FOR NOW)
 
 #Poisson GLM
+runSEURATpoisson <- function(dataSub, genes.no.ribo) {
+  deGenes <- FindMarkers(dataSub,
+                         assay="RNA",
+                         slot="counts",
+                         ident.1="Human",
+                         ident.2="Chimp",
+                         features=genes.no.ribo,
+                         logfc.threshold=0.25,
+                         min.pct=0.25,
+                         min.cells.feature=3,
+                         test.use="poisson",
+                         latent.vars=c("Collection","nCount_RNA","Phase"))
+  return(deGenes)
+}
+compare.obl <- runSEURATpoisson(subset(data,subset=OstAdHoc.Assign=="osteoblast"), genes.no.ribo)
 compare.obl  <- FindMarkers(subset(data,subset=OstAdHoc.Assign=="osteoblast"),
                             assay="RNA",
                             slot="counts",
@@ -3528,9 +3562,24 @@ head(compare.obl, n=5)
 #latent.vars=c("Collection","nCount_RNA","Phase")(counts): 598/2040
 
 #MAST (generalized linear hurdel model - does not support categorical SO cannot currently include "Collection" or "SequencingBatch" in model)
+runSEURATmast <- function(dataSub, genes.no.ribo) {
+  deGenes <- FindMarkers(dataSub,
+                         assay="RNA",
+                         slot="data",
+                         ident.1="Human",
+                         ident.2="Chimp",
+                         features=genes.no.ribo,
+                         logfc.threshold=0.25,
+                         min.pct=0.25,
+                         min.cells.feature=3,
+                         test.use="MAST",
+                         latent.vars="nCount_RNA")
+  return(deGenes)
+}
+compare.obl <- runSEURATmast(subset(data,subset=OstAdHoc.Assign=="osteoblast"), genes.no.ribo)
 compare.obl  <- FindMarkers(subset(data,subset=OstAdHoc.Assign=="osteoblast"),
                             assay="RNA",
-                            slot="counts",
+                            slot="data",
                             ident.1="Human",
                             ident.2="Chimp",
                             features=genes.no.ribo,
@@ -3546,7 +3595,7 @@ hist(compare.obl$p_val_adj)
 dim(compare.obl)
 table(compare.obl$p_val_adj<0.05)
 head(compare.obl, n=5)
-#latent.vars="nCount_RNA"(counts): 596/2040
+#latent.vars="nCount_RNA"(counts): 615/1465
 
 #edgeRQLF (Han et al., 2015)
 #uses negative binomial model-based method to determine DE genes
@@ -4083,7 +4132,20 @@ goBPenrich <- function(data, markers) {
               barplot(ego, drop=TRUE, showCategory=10, title = 'DE Genes GO Analysis')))
 
 }
-funcEnrich <- function(data, markers) {
+funcEnrichCC <- function(data, markers) {
+  genes <- structure(rep(1, length(rownames(data@assays$RNA@data))), names=rownames(data@assays$RNA@data))
+  x=1
+  while (x <= length(rownames(markers))) {
+    genes[which(names(genes)==rownames(markers)[x])] <- markers$p_val_adj[x]
+    x=x+1
+  }
+  go_data <- new("topGOdata", ontology="CC", allGenes=genes, geneSel=function(allScore){return(allScore < 0.01)},
+                 nodeSize=5, annotationFun=annFUN.org, mapping="org.Hs.eg.db", ID="symbol")
+  go_test <- runTest(go_data, algorithm="weight01", statistic="fisher")
+  go_table <- GenTable(go_data, weightFisher=go_test, orderBy="weightFisher", ranksOf="weightFisher", topNodes=sum(score(go_test) < .01))
+  return(go_table)
+}
+funcEnrichBP <- function(data, markers) {
   genes <- structure(rep(1, length(rownames(data@assays$RNA@data))), names=rownames(data@assays$RNA@data))
   x=1
   while (x <= length(rownames(markers))) {
@@ -4097,108 +4159,174 @@ funcEnrich <- function(data, markers) {
   return(go_table)
 }
 
+intersect3way <- function(group1, group2, group3) {
+  group.tot <- intersect(rownames(group1)[which(group1$p_val_adj<0.05)],
+                         intersect(rownames(group2)[which(group2$p_val_adj<0.05)],
+                                   rownames(group3)[which(group3$p_val_adj<0.05)]))
+  return(group.tot)
+}
+setdiff3way <- function(target, diff1, diff2) {
+  group.tot <- setdiff(rownames(target)[which(target$p_val_adj<0.05)],
+                       c(rownames(diff1)[which(diff1$p_val_adj<0.05)],
+                         rownames(diff2)[which(diff2$p_val_adj<0.05)]))
+  return(group.tot)
+}
+df3way <- function(labels, group1, group2, group3, group.tot, group1.tot, group2.tot, group3.tot) {
+  DE.df <- data.frame(cell=labels,
+                      totalDEgenes=c(length(group1$gene[which(group1$p_val_adj<0.05)]),
+                                     length(group2$gene[which(group2$p_val_adj<0.05)]),
+                                     length(group3$gene[which(group3$p_val_adj<0.05)])),
+                      Other=c((length(group1$gene[which(group1$p_val_adj<0.05)])-length(group1.tot)-length(group.tot)),
+                              (length(group2$gene[which(group2$p_val_adj<0.05)])-length(group2.tot)-length(group.tot)),
+                              (length(group3$gene[which(group3$p_val_adj<0.05)])-length(group3.tot)-length(group.tot))),
+                      Shared=c(rep(length(group.tot),3)),
+                      Unique=c(length(group1.tot),
+                               length(group2.tot),
+                               length(group3.tot)))
+  DE.df$cell <- factor(DE.df$cell, levels=labels)
+  return(DE.df)
+}
+
+intersect7way <- function(group1, group2, group3, group4, group5, group6, group7) {
+  group.tot <- intersect(rownames(group1)[which(group1$p_val_adj<0.05)],
+                         intersect(rownames(group2)[which(group2$p_val_adj<0.05)],
+                                   intersect(rownames(group3)[which(group3$p_val_adj<0.05)],
+                                             intersect(rownames(group4)[which(group4$p_val_adj<0.05)],
+                                                       intersect(rownames(group5)[which(group5$p_val_adj<0.05)],
+                                                                 intersect(rownames(group6)[which(group6$p_val_adj<0.05)],
+                                                                           rownames(group7)[which(group7$p_val_adj<0.05)]))))))
+  return(group.tot)
+}
+setdiff7way <- function(target, diff1, diff2, diff3, diff4, diff5, diff6) {
+  group.tot <- setdiff(rownames(target)[which(target$p_val_adj<0.05)],
+                       c(rownames(diff1)[which(diff1$p_val_adj<0.05)],
+                         rownames(diff2)[which(diff2$p_val_adj<0.05)],
+                         rownames(diff3)[which(diff3$p_val_adj<0.05)],
+                         rownames(diff4)[which(diff4$p_val_adj<0.05)],
+                         rownames(diff5)[which(diff5$p_val_adj<0.05)],
+                         rownames(diff6)[which(diff6$p_val_adj<0.05)]))
+  return(group.tot)
+}
+df7way <- function(labels2, group1, group2, group3, group4, group5, group6, group7,
+                   group.tot, group1.tot, group2.tot, group3.tot, group4.tot, group5.tot, group6.tot, group7.tot) {
+  DE.df <- data.frame(cell=labels2,
+                      totalDEgenes=c(length(group1$gene[which(group1$p_val_adj<0.05)]),
+                                     length(group2$gene[which(group2$p_val_adj<0.05)]),
+                                     length(group3$gene[which(group3$p_val_adj<0.05)]),
+                                     length(group4$gene[which(group4$p_val_adj<0.05)]),
+                                     length(group5$gene[which(group5$p_val_adj<0.05)]),
+                                     length(group6$gene[which(group6$p_val_adj<0.05)]),
+                                     length(group7$gene[which(group7$p_val_adj<0.05)])),
+                      Other=c((length(group1$gene[which(group1$p_val_adj<0.05)])-length(group1.tot)-length(group.tot)),
+                              (length(group2$gene[which(group2$p_val_adj<0.05)])-length(group2.tot)-length(group.tot)),
+                              (length(group3$gene[which(group3$p_val_adj<0.05)])-length(group3.tot)-length(group.tot)),
+                              (length(group4$gene[which(group4$p_val_adj<0.05)])-length(group4.tot)-length(group.tot)),
+                              (length(group5$gene[which(group5$p_val_adj<0.05)])-length(group5.tot)-length(group.tot)),
+                              (length(group6$gene[which(group6$p_val_adj<0.05)])-length(group6.tot)-length(group.tot)),
+                              (length(group7$gene[which(group7$p_val_adj<0.05)])-length(group7.tot)-length(group.tot))),
+                      Shared=c(rep(length(group.tot),7)),
+                      Unique=c(length(group1.tot),
+                               length(group2.tot),
+                               length(group3.tot),
+                               length(group4.tot),
+                               length(group5.tot),
+                               length(group6.tot),
+                               length(group7.tot)))
+  DE.df$cell <- factor(DE.df$cell, levels=labels2)
+  return(DE.df)
+}
+
 #Find differentially expressed genes using differentiation stage at collection
-compare.ips <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.w-compare.ips.rds"))
-compare.msc <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.w-compare.msc.rds"))
-compare.ost <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.w-compare.ost.rds"))
+labels=c("iPSC","MSC","Osteoblast")
+compare.1 <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.ips.rds"))
+compare.2 <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.msc.rds"))
+compare.3 <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.ost.rds"))
 #Find differentially expressed genes using cluster definitions
-compare.i <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.w-compare.i.rds"))
-compare.m <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.w-compare.m.rds"))
-compare.o <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.w-compare.o.rds"))
-compare.i1 <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.w-compare.i1.rds"))
-compare.i2 <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.w-compare.i2.rds"))
-compare.i3 <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.w-compare.i3.rds"))
-compare.o1 <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.w-compare.o1.rds"))
-compare.o2 <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.w-compare.o2.rds"))
-compare.o3 <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.w-compare.o3.rds"))
+labels=c("iPSC","MSC","Osteoblast")
+labels2=c("iPSC.c1","iPSC.c2","iPSC.c3","MSC.c1","Osteo.c1","Osteo.c2","Osteo.c3")
+compare.1 <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.i.rds"))
+compare.2 <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.m.rds"))
+compare.3 <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.o.rds"))
+compare.1a <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.i1.rds"))
+compare.1b <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.i2.rds"))
+compare.1c <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.i3.rds"))
+compare.3a <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.o1.rds"))
+compare.3b <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.o2.rds"))
+compare.3c <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.o3.rds"))
 #Find differentially expressed genes using ad hoc definitions
-compare.hoci <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.w-compare.hoci.rds"))
-compare.hocm <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.w-compare.hocm.rds"))
-compare.hoco <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.w-compare.hoco.rds"))
+labels=c("iPSC","MSC","Osteoblast")
+compare.1 <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.hoci.rds"))
+compare.2 <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.hocm.rds"))
+compare.3 <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.hoco.rds"))
 #Find differentially expressed genes using osteogenic ad hoc definitions
-compare.pre <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.w-compare.pre.rds"))
-compare.obl <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.w-compare.obl.rds"))
-compare.emb <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.w-compare.emb.rds"))
+labels=c("preosteoblast","osteoblast","embedding osteoblast")
+compare.1 <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.pre.rds"))
+compare.2 <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.obl.rds"))
+compare.3 <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.edger-compare.emb.rds"))
+
+#Restructure data if necessary
+compare.1 <- compare.1$table
+compare.2 <- compare.2$table
+compare.3 <- compare.3$table
+compare.1a <- compare.1a$table
+compare.1b <- compare.1b$table
+compare.1c <- compare.1c$table
+compare.3a <- compare.3a$table
+compare.3b <- compare.3b$table
+compare.3c <- compare.3c$table
+#Rename columns if necessary
+colnames(compare.1)[5] <- "p_val_adj"
+colnames(compare.2)[5] <- "p_val_adj"
+colnames(compare.3)[5] <- "p_val_adj"
+colnames(compare.1a)[5] <- "p_val_adj"
+colnames(compare.1b)[5] <- "p_val_adj"
+colnames(compare.1c)[5] <- "p_val_adj"
+colnames(compare.3a)[5] <- "p_val_adj"
+colnames(compare.3b)[5] <- "p_val_adj"
+colnames(compare.3c)[5] <- "p_val_adj"
+#Reorder data if necessary
+compare.1 <- compare.1[order(-compare.1$logFC, compare.1$p_val_adj),]
+compare.2 <- compare.2[order(-compare.2$logFC, compare.2$p_val_adj),]
+compare.3 <- compare.3[order(-compare.3$logFC, compare.3$p_val_adj),]
+compare.1a <- compare.1a[order(-compare.1a$logFC, compare.1a$p_val_adj),]
+compare.1b <- compare.1b[order(-compare.1b$logFC, compare.1b$p_val_adj),]
+compare.1c <- compare.1c[order(-compare.1c$logFC, compare.1c$p_val_adj),]
+compare.3a <- compare.3a[order(-compare.3a$logFC, compare.3a$p_val_adj),]
+compare.3b <- compare.3b[order(-compare.3b$logFC, compare.3b$p_val_adj),]
+compare.3c <- compare.3c[order(-compare.3c$logFC, compare.3c$p_val_adj),]
 
 
-dim(compare.hoci)
-dim(compare.hocm)
-dim(compare.hoco)
-table(compare.hoci$p_val_adj<0.05)
-table(compare.hocm$p_val_adj<0.05)
-table(compare.hoco$p_val_adj<0.05)
-head(compare.hoci, n=5)
-head(compare.hocm, n=5)
-head(compare.hoco, n=5)
-compare.hoci$gene <- rownames(compare.hoci)
-compare.hocm$gene <- rownames(compare.hocm)
-compare.hoco$gene <- rownames(compare.hoco)
-fracRibo(compare.hoci)
-fracRibo(compare.hocm)
-fracRibo(compare.hoco)
-p.hoci <- goCCenrich(indv,compare.hoci)
-p.hocm <- goCCenrich(indv,compare.hocm)
-p.hoco <- goCCenrich(indv,compare.hoco)
-p.hoci[[3]]
-p.hocm[[3]]
-p.hoco[[3]]
-#go.hoci <- funcEnrich(indv, compare.hoci)
-#go.hocm <- funcEnrich(indv, compare.hocm)
-#go.hoco <- funcEnrich(indv, compare.hoco)
-#dim(go.hoci)
-#dim(go.hocm)
-#dim(go.hoco)
-#head(go.hoci, n=5)
-#head(go.hocm, n=5)
-#head(go.hoco, n=5)
-compare.tot5 <- intersect(rownames(compare.hoci)[which(compare.hoci$p_val_adj<0.05)],intersect(rownames(compare.hocm)[which(compare.hocm$p_val_adj<0.05)],
-                                                                                                rownames(compare.hoco)[which(compare.hoco$p_val_adj<0.05)]))
-compare.hoci.tot <- setdiff(rownames(compare.hoci)[which(compare.hoci$p_val_adj<0.05)],c(rownames(compare.hocm)[which(compare.hocm$p_val_adj<0.05)],
-                                                                                          rownames(compare.hoco)[which(compare.hoco$p_val_adj<0.05)])) #DE hoci
-compare.hocm.tot <- setdiff(rownames(compare.hocm)[which(compare.hocm$p_val_adj<0.05)],c(rownames(compare.hoci)[which(compare.hoci$p_val_adj<0.05)],
-                                                                                          rownames(compare.hoco)[which(compare.hoco$p_val_adj<0.05)])) #DE hocm
-compare.hoco.tot <- setdiff(rownames(compare.hoco)[which(compare.hoco$p_val_adj<0.05)],c(rownames(compare.hoci)[which(compare.hoci$p_val_adj<0.05)],
-                                                                                          rownames(compare.hocm)[which(compare.hocm$p_val_adj<0.05)])) #DE hoco
-length(compare.tot5)
-length(compare.hoci.tot)
-length(compare.hocm.tot)
-length(compare.hoco.tot)
-head(compare.hoci[which(rownames(compare.hoci)%in%compare.tot5),], n=5)
-head(compare.hoci[which(rownames(compare.hoci)%in%compare.hoci.tot),], n=5)
-head(compare.hocm[which(rownames(compare.hocm)%in%compare.hocm.tot),], n=5)
-head(compare.hoco[which(rownames(compare.hoco)%in%compare.hoco.tot),], n=5)
-fracRibo(compare.hoci[which(rownames(compare.hoci)%in%compare.tot5),])
-fracRibo(compare.hoci[which(rownames(compare.hoci)%in%compare.hoci.tot),])
-fracRibo(compare.hocm[which(rownames(compare.hocm)%in%compare.hocm.tot),])
-fracRibo(compare.hoco[which(rownames(compare.hoco)%in%compare.hoco.tot),])
-p.tot5 <- goCCenrich(indv,compare.hoci[which(rownames(compare.hoci)%in%compare.tot5),])
-p.hoci.tot <- goCCenrich(indv,compare.hoci[which(rownames(compare.hoci)%in%compare.hoci.tot),])
-p.hocm.tot <- goCCenrich(indv,compare.hocm[which(rownames(compare.hocm)%in%compare.hocm.tot),])
-p.hoco.tot <- goCCenrich(indv,compare.hoco[which(rownames(compare.hoco)%in%compare.hoco.tot),])
-p.tot5[[3]]
-p.hoci.tot[[3]]
-p.hocm.tot[[3]]
-p.hoco.tot[[3]]
-p.tot5 <- goBPenrich(indv,compare.hoci[which(rownames(compare.hoci)%in%compare.tot5),])
-p.hoci.tot <- goBPenrich(indv,compare.hoci[which(rownames(compare.hoci)%in%compare.hoci.tot),])
-p.hocm.tot <- goBPenrich(indv,compare.hocm[which(rownames(compare.hocm)%in%compare.hocm.tot),])
-p.hoco.tot <- goBPenrich(indv,compare.hoco[which(rownames(compare.hoco)%in%compare.hoco.tot),])
-p.tot5[[3]]
-p.hoci.tot[[3]]
-p.hocm.tot[[3]]
-p.hoco.tot[[3]]
-DE.df <- data.frame(cell=(c("iPSC","MSC","Osteoblast")),
-                    totalDEgenes=c(length(compare.hoci$gene[which(compare.hoci$p_val_adj<0.05)]),
-                                   length(compare.hocm$gene[which(compare.hocm$p_val_adj<0.05)]),
-                                   length(compare.hoco$gene[which(compare.hoco$p_val_adj<0.05)])),
-                    Other=c((length(compare.hoci$gene[which(compare.hoci$p_val_adj<0.05)])-length(compare.hoci.tot)-length(compare.tot5)),
-                            (length(compare.hocm$gene[which(compare.hocm$p_val_adj<0.05)])-length(compare.hocm.tot)-length(compare.tot5)),
-                            (length(compare.hoco$gene[which(compare.hoco$p_val_adj<0.05)])-length(compare.hoco.tot)-length(compare.tot5))),
-                    Shared=c(rep(length(compare.tot5),3)),
-                    Unique=c(length(compare.hoci.tot),
-                             length(compare.hocm.tot),
-                             length(compare.hoco.tot)))
-DE.df$cell <- factor(DE.df$cell, levels=c("iPSC","MSC","Osteoblast"))
+#View results of 3 cell types
+paste0("All Genes Examined: ",dim(compare.1)[1],", ",dim(compare.2)[1],", ",dim(compare.3)[1])
+paste0("DE Genes: ",table(compare.1$p_val_adj<0.05)[2],", ",table(compare.2$p_val_adj<0.05)[2],", ",table(compare.3$p_val_adj<0.05)[2])
+head(compare.1, n=5)
+head(compare.2, n=5)
+head(compare.3, n=5)
+compare.1$gene <- rownames(compare.1)
+compare.2$gene <- rownames(compare.2)
+compare.3$gene <- rownames(compare.3)
+head(funcEnrichCC(data,compare.1), n=5)
+head(funcEnrichCC(data,compare.2), n=5)
+head(funcEnrichCC(data,compare.3), n=5)
+compare.tot <- intersect3way(compare.1, compare.2, compare.3)
+compare.1.tot <- setdiff3way(compare.1, compare.2, compare.3)
+compare.2.tot <- setdiff3way(compare.2, compare.1, compare.3)
+compare.3.tot <- setdiff3way(compare.3, compare.1, compare.2)
+paste0("Shared DE Genes: ",length(compare.tot))
+paste0("Unique DE Genes: ",length(compare.1.tot),", ",length(compare.2.tot),", ",length(compare.3.tot))
+head(compare.1[which(rownames(compare.1)%in%compare.tot),], n=5)
+head(compare.1[which(rownames(compare.1)%in%compare.1.tot),], n=5)
+head(compare.2[which(rownames(compare.2)%in%compare.2.tot),], n=5)
+head(compare.3[which(rownames(compare.3)%in%compare.3.tot),], n=5)
+head(funcEnrichCC(data,compare.1[which(rownames(compare.1)%in%compare.tot),]), n=5)
+head(funcEnrichCC(data,compare.1[which(rownames(compare.1)%in%compare.1.tot),]), n=5)
+head(funcEnrichCC(data,compare.2[which(rownames(compare.2)%in%compare.2.tot),]), n=5)
+head(funcEnrichCC(data,compare.3[which(rownames(compare.3)%in%compare.3.tot),]), n=5)
+head(funcEnrichBP(data,compare.1[which(rownames(compare.1)%in%compare.tot),]), n=5)
+head(funcEnrichBP(data,compare.1[which(rownames(compare.1)%in%compare.1.tot),]), n=5)
+head(funcEnrichBP(data,compare.2[which(rownames(compare.2)%in%compare.2.tot),]), n=5)
+head(funcEnrichBP(data,compare.3[which(rownames(compare.3)%in%compare.3.tot),]), n=5)
+DE.df <- df3way(labels=labels,compare.1,compare.2,compare.3,compare.tot,compare.1.tot,compare.2.tot,compare.3.tot)
 ggplot(DE.df, aes(x=cell, y=totalDEgenes)) +
   geom_bar(stat="identity") +
   labs(x="",y="Number of DE Genes") +
@@ -4212,290 +4340,84 @@ ggplot(DE.df[4:12,], aes(x=cell, y=value, fill=variable)) +
   scale_fill_manual(values=c("grey80","grey40","black")) +
   theme_classic() +
   theme(axis.text=element_text(size=12), axis.title=element_text(size=12), legend.text=element_text(size=12), legend.title=element_text(size=0))
+all.genes <- merge(compare.1, merge(compare.2, compare.3, by="gene", all.x=TRUE, all.y=TRUE), by="gene", all.x=TRUE, all.y=TRUE)
+all.genes$compare.1 <- 0
+all.genes$compare.2 <- 0
+all.genes$compare.3 <- 0
+i=1
+while(i <= length(all.genes$gene)) {
+  if(is.na(all.genes$p_val_adj[i])==FALSE & all.genes$p_val_adj[i] < 0.05) {all.genes$compare.1[i] <- 1}
+  if(is.na(all.genes$p_val_adj.x[i])==FALSE & all.genes$p_val_adj.x[i] < 0.05) {all.genes$compare.2[i] <- 1}
+  if(is.na(all.genes$p_val_adj.y[i])==FALSE & all.genes$p_val_adj.y[i] < 0.05) {all.genes$compare.3[i] <- 1}
+  i=i+1
+}
+upset(all.genes[,17:19], nintersects=NA, empty.intersections="on", keep.order=TRUE, order.by="degree", decreasing=TRUE)
 
-
-dim(compare.i)
-dim(compare.m)
-dim(compare.o) 
-dim(compare.i1)
-dim(compare.i2)
-dim(compare.i3)
-dim(compare.o1)
-dim(compare.o2)
-dim(compare.o3)
-table(compare.i$p_val_adj<0.05)
-table(compare.m$p_val_adj<0.05)
-table(compare.o$p_val_adj<0.05)
-table(compare.i1$p_val_adj<0.05)
-table(compare.i2$p_val_adj<0.05)
-table(compare.i3$p_val_adj<0.05)
-table(compare.o1$p_val_adj<0.05)
-table(compare.o2$p_val_adj<0.05)
-table(compare.o3$p_val_adj<0.05)
-head(compare.i, n=5)
-head(compare.m, n=5)
-head(compare.o, n=5)
-head(compare.i1, n=5)
-head(compare.i2, n=5)
-head(compare.i3, n=5)
-head(compare.o1, n=5)
-head(compare.o2, n=5)
-head(compare.o3, n=5)
-compare.i$gene <- rownames(compare.i)
-compare.m$gene <- rownames(compare.m)
-compare.o$gene <- rownames(compare.o)
-compare.i1$gene <- rownames(compare.i1)
-compare.i2$gene <- rownames(compare.i2)
-compare.i3$gene <- rownames(compare.i3)
-compare.o1$gene <- rownames(compare.o1)
-compare.o2$gene <- rownames(compare.o2)
-compare.o3$gene <- rownames(compare.o3)
-fracRibo(compare.i)
-fracRibo(compare.m)
-fracRibo(compare.o)
-fracRibo(compare.i1)
-fracRibo(compare.i2)
-fracRibo(compare.i3)
-fracRibo(compare.o1)
-fracRibo(compare.o2)
-fracRibo(compare.o3)
-p.i <- goCCenrich(indv,compare.i)
-p.m <- goCCenrich(indv,compare.m)
-p.o <- goCCenrich(indv,compare.o)
-p.i1 <- goCCenrich(indv,compare.i1)
-p.i2 <- goCCenrich(indv,compare.i2)
-p.i3 <- goCCenrich(indv,compare.i3)
-p.o1 <- goCCenrich(indv,compare.o1)
-p.o2 <- goCCenrich(indv,compare.o2)
-p.o3 <- goCCenrich(indv,compare.o3)
-p.i[[3]]
-p.m[[3]]
-p.o[[3]]
-p.i1[[3]]
-p.i2[[3]]
-p.i3[[3]]
-p.o1[[3]]
-p.o2[[3]]
-p.o3[[3]]
-#go.i <- funcEnrich(indv, compare.i)
-#go.m <- funcEnrich(indv, compare.m)
-#go.o <- funcEnrich(indv, compare.o)
-#go.i1 <- funcEnrich(indv, compare.i1)
-#go.i2 <- funcEnrich(indv, compare.i2)
-#go.i3 <- funcEnrich(indv, compare.i3)
-#go.o1 <- funcEnrich(indv, compare.o1)
-#go.o2 <- funcEnrich(indv, compare.o2)
-#go.o3 <- funcEnrich(indv, compare.o3)
-#dim(go.i)
-#dim(go.m)
-#dim(go.o)
-#dim(go.i1)
-#dim(go.i2)
-#dim(go.i3)
-#dim(go.o1)
-#dim(go.o2)
-#dim(go.o3)
-#head(go.i, n=5)
-#head(go.m, n=5)
-#head(go.o, n=5)
-#head(go.i1, n=5)
-#head(go.i2, n=5)
-#head(go.i3, n=5)
-#head(go.o1, n=5)
-#head(go.o2, n=5)
-#head(go.o3, n=5)
-compare.tot2 <- intersect(rownames(compare.i)[which(compare.i$p_val_adj<0.05)],
-                          intersect(rownames(compare.m)[which(compare.m$p_val_adj<0.05)],
-                                    rownames(compare.o)[which(compare.o$p_val_adj<0.05)])) #shared DE genes
-compare.i.tot <- setdiff(rownames(compare.i)[which(compare.i$p_val_adj<0.05)],c(rownames(compare.m)[which(compare.m$p_val_adj<0.05)],
-                                                                                rownames(compare.o)[which(compare.o$p_val_adj<0.05)])) #DE unique to i
-compare.m.tot <- setdiff(rownames(compare.m)[which(compare.m$p_val_adj<0.05)],c(rownames(compare.i)[which(compare.i$p_val_adj<0.05)],
-                                                                                rownames(compare.o)[which(compare.o$p_val_adj<0.05)])) #DE unique to m
-compare.o.tot <- setdiff(rownames(compare.o)[which(compare.o$p_val_adj<0.05)],c(rownames(compare.i)[which(compare.i$p_val_adj<0.05)],
-                                                                                rownames(compare.m)[which(compare.m$p_val_adj<0.05)])) #DE unique to o
-compare.tot3 <- intersect(rownames(compare.o)[which(compare.o$p_val_adj<0.05)],
-                          intersect(rownames(compare.i1)[which(compare.i1$p_val_adj<0.05)],
-                                    intersect(rownames(compare.i2)[which(compare.i2$p_val_adj<0.05)],
-                                              intersect(rownames(compare.i3)[which(compare.i3$p_val_adj<0.05)],
-                                                        intersect(rownames(compare.m)[which(compare.m$p_val_adj<0.05)],
-                                                                  intersect(rownames(compare.o1)[which(compare.o1$p_val_adj<0.05)],
-                                                                            intersect(rownames(compare.o2)[which(compare.o2$p_val_adj<0.05)],
-                                                                                      rownames(compare.o3)[which(compare.o3$p_val_adj<0.05)]))))))) #shared DE
-compare.i1.tot <- setdiff(rownames(compare.i1)[which(compare.i1$p_val_adj<0.05)],c(rownames(compare.i2)[which(compare.i2$p_val_adj<0.05)],
-                                                                                   rownames(compare.i3)[which(compare.i3$p_val_adj<0.05)],
-                                                                                   rownames(compare.m)[which(compare.m$p_val_adj<0.05)],
-                                                                                   rownames(compare.o1)[which(compare.o1$p_val_adj<0.05)],
-                                                                                   rownames(compare.o2)[which(compare.o2$p_val_adj<0.05)],
-                                                                                   rownames(compare.o3)[which(compare.o3$p_val_adj<0.05)])) #DE unique to i1
-compare.i2.tot <- setdiff(rownames(compare.i2)[which(compare.i2$p_val_adj<0.05)],c(rownames(compare.i1)[which(compare.i1$p_val_adj<0.05)],
-                                                                                   rownames(compare.i3)[which(compare.i3$p_val_adj<0.05)],
-                                                                                   rownames(compare.m)[which(compare.m$p_val_adj<0.05)],
-                                                                                   rownames(compare.o1)[which(compare.o1$p_val_adj<0.05)],
-                                                                                   rownames(compare.o2)[which(compare.o2$p_val_adj<0.05)],
-                                                                                   rownames(compare.o3)[which(compare.o3$p_val_adj<0.05)])) #DE unique to i2
-compare.i3.tot <- setdiff(rownames(compare.i3)[which(compare.i3$p_val_adj<0.05)],c(rownames(compare.i1)[which(compare.i1$p_val_adj<0.05)],
-                                                                                   rownames(compare.i2)[which(compare.i2$p_val_adj<0.05)],
-                                                                                   rownames(compare.m)[which(compare.m$p_val_adj<0.05)],
-                                                                                   rownames(compare.o1)[which(compare.o1$p_val_adj<0.05)],
-                                                                                   rownames(compare.o2)[which(compare.o2$p_val_adj<0.05)],
-                                                                                   rownames(compare.o3)[which(compare.o3$p_val_adj<0.05)])) #DE unique to i3
-compare.m1.tot <- setdiff(rownames(compare.m)[which(compare.m$p_val_adj<0.05)],c(rownames(compare.i1)[which(compare.i1$p_val_adj<0.05)],
-                                                                                 rownames(compare.i2)[which(compare.i2$p_val_adj<0.05)],
-                                                                                 rownames(compare.i3)[which(compare.i3$p_val_adj<0.05)],
-                                                                                 rownames(compare.o1)[which(compare.o1$p_val_adj<0.05)],
-                                                                                 rownames(compare.o2)[which(compare.o2$p_val_adj<0.05)],
-                                                                                 rownames(compare.o3)[which(compare.o3$p_val_adj<0.05)])) #DE unique to m1
-compare.o1.tot <- setdiff(rownames(compare.o1)[which(compare.o1$p_val_adj<0.05)],c(rownames(compare.i1)[which(compare.i1$p_val_adj<0.05)],
-                                                                                   rownames(compare.i2)[which(compare.i2$p_val_adj<0.05)],
-                                                                                   rownames(compare.i3)[which(compare.i3$p_val_adj<0.05)],
-                                                                                   rownames(compare.m)[which(compare.m$p_val_adj<0.05)],
-                                                                                   rownames(compare.o2)[which(compare.o2$p_val_adj<0.05)],
-                                                                                   rownames(compare.o3)[which(compare.o3$p_val_adj<0.05)])) #DE unique to o1
-compare.o2.tot <- setdiff(rownames(compare.o2)[which(compare.o2$p_val_adj<0.05)],c(rownames(compare.i1)[which(compare.i1$p_val_adj<0.05)],
-                                                                                   rownames(compare.i2)[which(compare.i2$p_val_adj<0.05)],
-                                                                                   rownames(compare.i3)[which(compare.i3$p_val_adj<0.05)],
-                                                                                   rownames(compare.m)[which(compare.m$p_val_adj<0.05)],
-                                                                                   rownames(compare.o1)[which(compare.o1$p_val_adj<0.05)],
-                                                                                   rownames(compare.o3)[which(compare.o3$p_val_adj<0.05)])) #DE unique to o2
-compare.o3.tot <- setdiff(rownames(compare.o3)[which(compare.o3$p_val_adj<0.05)],c(rownames(compare.i1)[which(compare.i1$p_val_adj<0.05)],
-                                                                                   rownames(compare.i2)[which(compare.i2$p_val_adj<0.05)],
-                                                                                   rownames(compare.i3)[which(compare.i3$p_val_adj<0.05)],
-                                                                                   rownames(compare.m)[which(compare.m$p_val_adj<0.05)],
-                                                                                   rownames(compare.o1)[which(compare.o1$p_val_adj<0.05)],
-                                                                                   rownames(compare.o2)[which(compare.o2$p_val_adj<0.05)])) #DE unique to o3
-length(compare.tot2)
-length(compare.i.tot)
-length(compare.m.tot)
-length(compare.o.tot)
-length(compare.tot3)
-length(compare.i1.tot)
-length(compare.i2.tot)
-length(compare.i3.tot)
-length(compare.m1.tot)
-length(compare.o1.tot)
-length(compare.o2.tot)
-length(compare.o3.tot)
-head(compare.i[which(rownames(compare.i)%in%compare.tot2),], n=5)
-head(compare.i[which(rownames(compare.i)%in%compare.i.tot),], n=5)
-head(compare.m[which(rownames(compare.m)%in%compare.m.tot),], n=5)
-head(compare.o[which(rownames(compare.o)%in%compare.o.tot),], n=5)
-head(compare.i1[which(rownames(compare.i1)%in%compare.tot3),], n=5)
-head(compare.i1[which(rownames(compare.i1)%in%compare.i1.tot),], n=5)
-head(compare.i2[which(rownames(compare.i2)%in%compare.i2.tot),], n=5)
-head(compare.i3[which(rownames(compare.i3)%in%compare.i3.tot),], n=5)
-head(compare.m[which(rownames(compare.m)%in%compare.m1.tot),], n=5)
-head(compare.o1[which(rownames(compare.o1)%in%compare.o1.tot),], n=5)
-head(compare.o2[which(rownames(compare.o2)%in%compare.o2.tot),], n=5)
-head(compare.o3[which(rownames(compare.o3)%in%compare.o3.tot),], n=5)
-fracRibo(compare.i[which(rownames(compare.i)%in%compare.tot2),])
-fracRibo(compare.i[which(rownames(compare.i)%in%compare.i.tot),])
-fracRibo(compare.m[which(rownames(compare.m)%in%compare.m.tot),])
-fracRibo(compare.o[which(rownames(compare.o)%in%compare.o.tot),])
-fracRibo(compare.i1[which(rownames(compare.i1)%in%compare.tot3),])
-fracRibo(compare.i1[which(rownames(compare.i1)%in%compare.i1.tot),])
-fracRibo(compare.i2[which(rownames(compare.i2)%in%compare.i2.tot),])
-fracRibo(compare.i3[which(rownames(compare.i3)%in%compare.i3.tot),])
-fracRibo(compare.m[which(rownames(compare.m)%in%compare.m1.tot),])
-fracRibo(compare.o1[which(rownames(compare.o1)%in%compare.o1.tot),])
-fracRibo(compare.o2[which(rownames(compare.o2)%in%compare.o2.tot),])
-fracRibo(compare.o3[which(rownames(compare.o3)%in%compare.o3.tot),])
-p.tot2 <- goCCenrich(indv,compare.i[which(rownames(compare.i)%in%compare.tot2),])
-p.i.tot <- goCCenrich(indv,compare.i[which(rownames(compare.i)%in%compare.i.tot),])
-p.m.tot <- goCCenrich(indv,compare.m[which(rownames(compare.m)%in%compare.m.tot),])
-p.o.tot <- goCCenrich(indv,compare.o[which(rownames(compare.o)%in%compare.o.tot),])
-p.tot3 <- goCCenrich(indv,compare.i1[which(rownames(compare.i1)%in%compare.tot3),])
-p.i1.tot <- goCCenrich(indv,compare.i1[which(rownames(compare.i1)%in%compare.i1.tot),])
-p.i2.tot <- goCCenrich(indv,compare.i2[which(rownames(compare.i2)%in%compare.i2.tot),])
-p.i3.tot <- goCCenrich(indv,compare.i3[which(rownames(compare.i3)%in%compare.i3.tot),])
-p.m1.tot <- goCCenrich(indv,compare.m[which(rownames(compare.m)%in%compare.m1.tot),])
-p.o1.tot <- goCCenrich(indv,compare.o1[which(rownames(compare.o1)%in%compare.o1.tot),])
-p.o2.tot <- goCCenrich(indv,compare.o2[which(rownames(compare.o2)%in%compare.o2.tot),])
-p.o3.tot <- goCCenrich(indv,compare.o3[which(rownames(compare.o3)%in%compare.o3.tot),])
-p.tot2[[3]]
-p.i.tot[[3]]
-p.m.tot[[3]]
-p.o.tot[[3]]
-p.tot3[[3]]
-p.i1.tot[[3]]
-p.i2.tot[[3]]
-p.i3.tot[[3]]
-p.m1.tot[[3]]
-p.o1.tot[[3]]
-p.o2.tot[[3]]
-p.o3.tot[[3]]
-p.tot2 <- goBPenrich(indv,compare.i[which(rownames(compare.i)%in%compare.tot2),])
-p.i.tot <- goBPenrich(indv,compare.i[which(rownames(compare.i)%in%compare.i.tot),])
-p.m.tot <- goBPenrich(indv,compare.m[which(rownames(compare.m)%in%compare.m.tot),])
-p.o.tot <- goBPenrich(indv,compare.o[which(rownames(compare.o)%in%compare.o.tot),])
-p.tot3 <- goBPenrich(indv,compare.i1[which(rownames(compare.i1)%in%compare.tot3),])
-p.i1.tot <- goBPenrich(indv,compare.i1[which(rownames(compare.i1)%in%compare.i1.tot),])
-p.i2.tot <- goBPenrich(indv,compare.i2[which(rownames(compare.i2)%in%compare.i2.tot),])
-p.i3.tot <- goBPenrich(indv,compare.i3[which(rownames(compare.i3)%in%compare.i3.tot),])
-p.m1.tot <- goBPenrich(indv,compare.m[which(rownames(compare.m)%in%compare.m1.tot),])
-p.o1.tot <- goBPenrich(indv,compare.o1[which(rownames(compare.o1)%in%compare.o1.tot),])
-p.o2.tot <- goBPenrich(indv,compare.o2[which(rownames(compare.o2)%in%compare.o2.tot),])
-p.o3.tot <- goBPenrich(indv,compare.o3[which(rownames(compare.o3)%in%compare.o3.tot),])
-p.tot2[[3]]
-p.i.tot[[3]]
-p.m.tot[[3]]
-p.o.tot[[3]]
-p.tot3[[3]]
-p.i1.tot[[3]]
-p.i2.tot[[3]]
-p.i3.tot[[3]]
-p.m1.tot[[3]]
-p.o1.tot[[3]]
-p.o2.tot[[3]]
-p.o3.tot[[3]]
-DE.df <- data.frame(cell=(c("iPSC","MSC","Osteoblast")),
-                    totalDEgenes=c(length(compare.i$gene[which(compare.i$p_val_adj<0.05)]),
-                                   length(compare.m$gene[which(compare.m$p_val_adj<0.05)]),
-                                   length(compare.o$gene[which(compare.o$p_val_adj<0.05)])),
-                    Other=c((length(compare.i$gene[which(compare.i$p_val_adj<0.05)])-length(compare.i.tot)-length(compare.tot2)),
-                            (length(compare.m$gene[which(compare.m$p_val_adj<0.05)])-length(compare.m.tot)-length(compare.tot2)),
-                            (length(compare.o$gene[which(compare.o$p_val_adj<0.05)])-length(compare.o.tot)-length(compare.tot2))),
-                    Shared=c(rep(length(compare.tot2),3)),
-                    Unique=c(length(compare.i.tot),
-                             length(compare.m.tot),
-                             length(compare.o.tot)))
-DE.df$cell <- factor(DE.df$cell, levels=c("iPSC","MSC","Osteoblast"))
-ggplot(DE.df, aes(x=cell, y=totalDEgenes)) +
-  geom_bar(stat="identity") +
-  labs(x="",y="Number of DE Genes") +
-  theme_classic() +
-  theme(axis.text=element_text(size=12), axis.title=element_text(size=12), legend.text=element_text(size=12))
-DE.df <- melt(DE.df, id.var="cell")
-ggplot(DE.df[4:12,], aes(x=cell, y=value, fill=variable)) +
-  geom_bar(stat="identity") +
-  labs(x="",y="Number of DE Genes") +
-  theme(legend.title = element_blank()) +
-  scale_fill_manual(values=c("grey80","grey40","black")) +
-  theme_classic() +
-  theme(axis.text=element_text(size=12), axis.title=element_text(size=12), legend.text=element_text(size=12), legend.title=element_text(size=0))
-DE.df <- data.frame(cell=(c("iPSC.c1","iPSC.c2","iPSC.c3","MSC.c1","Osteo.c1","Osteo.c2","Osteo.c3")),
-                    totalDEgenes=c(length(compare.i1$gene[which(compare.i1$p_val_adj<0.05)]),
-                                   length(compare.i2$gene[which(compare.i2$p_val_adj<0.05)]),
-                                   length(compare.i3$gene[which(compare.i3$p_val_adj<0.05)]),
-                                   length(compare.m$gene[which(compare.m$p_val_adj<0.05)]),
-                                   length(compare.o1$gene[which(compare.o1$p_val_adj<0.05)]),
-                                   length(compare.o2$gene[which(compare.o2$p_val_adj<0.05)]),
-                                   length(compare.o3$gene[which(compare.o3$p_val_adj<0.05)])),
-                    Other=c((length(compare.i1$gene[which(compare.i1$p_val_adj<0.05)])-length(compare.i1.tot)-length(compare.tot3)),
-                            (length(compare.i2$gene[which(compare.i2$p_val_adj<0.05)])-length(compare.i2.tot)-length(compare.tot3)),
-                            (length(compare.i3$gene[which(compare.i3$p_val_adj<0.05)])-length(compare.i3.tot)-length(compare.tot3)),
-                            (length(compare.m$gene[which(compare.m$p_val_adj<0.05)])-length(compare.m1.tot)-length(compare.tot3)),
-                            (length(compare.o1$gene[which(compare.o1$p_val_adj<0.05)])-length(compare.o1.tot)-length(compare.tot3)),
-                            (length(compare.o2$gene[which(compare.o2$p_val_adj<0.05)])-length(compare.o2.tot)-length(compare.tot3)),
-                            (length(compare.o3$gene[which(compare.o3$p_val_adj<0.05)])-length(compare.o3.tot)-length(compare.tot3))),
-                    Shared=c(rep(length(compare.tot3),7)),
-                    Unique=c(length(compare.i1.tot),
-                             length(compare.i2.tot),
-                             length(compare.i3.tot),
-                             length(compare.m1.tot),
-                             length(compare.o1.tot),
-                             length(compare.o2.tot),
-                             length(compare.o3.tot)))
-DE.df$cell <- factor(DE.df$cell, levels=c("iPSC.c1","iPSC.c2","iPSC.c3","MSC.c1","Osteo.c1","Osteo.c2","Osteo.c3"))
+#View results of 7 cell types
+paste0("All Genes Examined: ",dim(compare.1a)[1],", ",dim(compare.1b)[1],", ",dim(compare.1c)[1],", ",
+       dim(compare.2)[1],", ",dim(compare.3a)[1],", ",dim(compare.3b)[1],", ",dim(compare.3c)[1])
+paste0("DE Genes: ",table(compare.1a$p_val_adj<0.05)[2],", ",table(compare.1b$p_val_adj<0.05)[2],", ",
+       table(compare.1c$p_val_adj<0.05)[2],", ",table(compare.2$p_val_adj<0.05)[2],", ",
+       table(compare.3a$p_val_adj<0.05)[2],", ",table(compare.3b$p_val_adj<0.05)[2],", ",
+       table(compare.3c$p_val_adj<0.05)[2])
+head(compare.1a, n=5)
+head(compare.1b, n=5)
+head(compare.1c, n=5)
+head(compare.2, n=5)
+head(compare.3a, n=5)
+head(compare.3b, n=5)
+head(compare.3c, n=5)
+compare.1a$gene <- rownames(compare.1a)
+compare.1b$gene <- rownames(compare.1b)
+compare.1c$gene <- rownames(compare.1c)
+compare.2$gene <- rownames(compare.2)
+compare.3a$gene <- rownames(compare.3a)
+compare.3b$gene <- rownames(compare.3b)
+compare.3c$gene <- rownames(compare.3c)
+head(funcEnrichCC(data,compare.1a), n=5)
+head(funcEnrichCC(data,compare.1b), n=5)
+head(funcEnrichCC(data,compare.1c), n=5)
+head(funcEnrichCC(data,compare.2), n=5)
+head(funcEnrichCC(data,compare.3a), n=5)
+head(funcEnrichCC(data,compare.3b), n=5)
+head(funcEnrichCC(data,compare.3c), n=5)
+compare.tot <- intersect7way(compare.1a, compare.1b, compare.1c, compare.2, compare.3a, compare.3b, compare.3c)
+compare.1a.tot <- setdiff7way(compare.1a, compare.1b, compare.1c, compare.2, compare.3a, compare.3b, compare.3c)
+compare.1b.tot <- setdiff7way(compare.1b, compare.1a, compare.1c, compare.2, compare.3a, compare.3b, compare.3c)
+compare.1c.tot <- setdiff7way(compare.1c, compare.1a, compare.1b, compare.2, compare.3a, compare.3b, compare.3c)
+compare.2.tot <- setdiff7way(compare.2, compare.1a, compare.1b, compare.1c, compare.3a, compare.3b, compare.3c)
+compare.3a.tot <- setdiff7way(compare.3a, compare.1a, compare.1b, compare.1c, compare.2, compare.3b, compare.3c)
+compare.3b.tot <- setdiff7way(compare.3b, compare.1a, compare.1b, compare.1c, compare.2, compare.3a, compare.3c)
+compare.3c.tot <- setdiff7way(compare.3c, compare.1a, compare.1b, compare.1c, compare.2, compare.3a, compare.3b)
+paste0("Shared DE Genes: ",length(compare.tot))
+paste0("Unique DE Genes: ",length(compare.1a.tot),", ",length(compare.1b.tot),", ",length(compare.1c.tot),", ",
+       length(compare.2.tot),", ",length(compare.3a.tot),", ",length(compare.3b.tot),", ",length(compare.3c.tot))
+head(compare.1a[which(rownames(compare.1a)%in%compare.tot),], n=5)
+head(compare.1a[which(rownames(compare.1a)%in%compare.1a.tot),], n=5)
+head(compare.1b[which(rownames(compare.1b)%in%compare.1b.tot),], n=5)
+head(compare.1c[which(rownames(compare.1c)%in%compare.1c.tot),], n=5)
+head(compare.2[which(rownames(compare.2)%in%compare.2.tot),], n=5)
+head(compare.3a[which(rownames(compare.3a)%in%compare.3a.tot),], n=5)
+head(compare.3b[which(rownames(compare.3b)%in%compare.3b.tot),], n=5)
+head(compare.3c[which(rownames(compare.3c)%in%compare.3c.tot),], n=5)
+head(funcEnrichCC(data,compare.1a[which(rownames(compare.1a)%in%compare.tot),]), n=5)
+head(funcEnrichCC(data,compare.1a[which(rownames(compare.1a)%in%compare.1a.tot),]), n=5)
+head(funcEnrichCC(data,compare.1b[which(rownames(compare.1b)%in%compare.1b.tot),]), n=5)
+head(funcEnrichCC(data,compare.1c[which(rownames(compare.1c)%in%compare.1c.tot),]), n=5)
+head(funcEnrichCC(data,compare.2[which(rownames(compare.2)%in%compare.2.tot),]), n=5)
+head(funcEnrichCC(data,compare.3a[which(rownames(compare.3a)%in%compare.3a.tot),]), n=5)
+head(funcEnrichCC(data,compare.3b[which(rownames(compare.3b)%in%compare.3b.tot),]), n=5)
+head(funcEnrichCC(data,compare.3c[which(rownames(compare.3c)%in%compare.3c.tot),]), n=5)
+head(funcEnrichBP(data,compare.1a[which(rownames(compare.1a)%in%compare.tot),]), n=5)
+head(funcEnrichBP(data,compare.1a[which(rownames(compare.1a)%in%compare.1a.tot),]), n=5)
+head(funcEnrichBP(data,compare.1b[which(rownames(compare.1b)%in%compare.1b.tot),]), n=5)
+head(funcEnrichBP(data,compare.1c[which(rownames(compare.1c)%in%compare.1c.tot),]), n=5)
+head(funcEnrichBP(data,compare.2[which(rownames(compare.2)%in%compare.2.tot),]), n=5)
+head(funcEnrichBP(data,compare.3a[which(rownames(compare.3a)%in%compare.3a.tot),]), n=5)
+head(funcEnrichBP(data,compare.3b[which(rownames(compare.3b)%in%compare.3b.tot),]), n=5)
+head(funcEnrichBP(data,compare.3c[which(rownames(compare.3c)%in%compare.3c.tot),]), n=5)
+DE.df <- df7way(labels=labels2,compare.1a,compare.1b,compare.1c,compare.2,compare.3a,compare.3b,compare.3c,
+                compare.tot,compare.1a.tot,compare.1b.tot,compare.1c.tot,compare.2.tot,compare.3a.tot,compare.3b.tot,compare.3c.tot)
 ggplot(DE.df, aes(x=cell, y=totalDEgenes)) +
   geom_bar(stat="identity") +
   labs(x="",y="Number of DE Genes") +
@@ -4509,6 +4431,36 @@ ggplot(DE.df[8:28,], aes(x=cell, y=value, fill=variable)) +
   scale_fill_manual(values=c("grey80","grey40","black")) +
   theme_classic() +
   theme(axis.text=element_text(size=12), axis.title=element_text(size=12), legend.text=element_text(size=12), legend.title=element_text(size=0))
+all.genes <- merge(compare.1a,
+                   merge(compare.1b,
+                         merge(compare.1c,
+                               merge(compare.2,
+                                     merge(compare.3a,
+                                           merge(compare.3b, compare.3c, by="gene", all.x=TRUE, all.y=TRUE),
+                                           by="gene", all.x=TRUE, all.y=TRUE),
+                                     by="gene", all.x=TRUE, all.y=TRUE),
+                               by="gene", all.x=TRUE, all.y=TRUE),
+                         by="gene", all.x=TRUE, all.y=TRUE),
+                   by="gene", all.x=TRUE, all.y=TRUE)
+all.genes$compare.1a <- 0
+all.genes$compare.1b <- 0
+all.genes$compare.1c <- 0
+all.genes$compare.2 <- 0
+all.genes$compare.3a <- 0
+all.genes$compare.3b <- 0
+all.genes$compare.3c <- 0
+i=1
+while(i <= length(all.genes$gene)) {
+  if(is.na(all.genes$p_val_adj[i])==FALSE & all.genes$p_val_adj[i] < 0.05) {all.genes$compare.1a[i] <- 1}
+  if(is.na(all.genes$p_val_adj.x[i])==FALSE & all.genes$p_val_adj.x[i] < 0.05) {all.genes$compare.1b[i] <- 1}
+  if(is.na(all.genes$p_val_adj.y[i])==FALSE & all.genes$p_val_adj.y[i] < 0.05) {all.genes$compare.1c[i] <- 1}
+  if(is.na(all.genes$p_val_adj.x.2[i])==FALSE & all.genes$p_val_adj.x.2[i] < 0.05) {all.genes$compare.2[i] <- 1}
+  if(is.na(all.genes$p_val_adj.y.2[i])==FALSE & all.genes$p_val_adj.y.2[i] < 0.05) {all.genes$compare.3a[i] <- 1}
+  if(is.na(all.genes$p_val_adj.x.1[i])==FALSE & all.genes$p_val_adj.x.1[i] < 0.05) {all.genes$compare.3b[i] <- 1}
+  if(is.na(all.genes$p_val_adj.y.1[i])==FALSE & all.genes$p_val_adj.y.1[i] < 0.05) {all.genes$compare.3c[i] <- 1}
+  i=i+1
+}
+upset(all.genes[,37:43], nsets=7, nintersects=NA, empty.intersections="on", keep.order=TRUE, order.by="degree", decreasing=TRUE)
 
 
 ```
@@ -4724,4 +4676,468 @@ CombinePlots(plots=list((DimPlot(subset(indv,subset=Phase=="G1"),
 
 ```
 
+```{r expression patterns that are shared}
+
+library(edgeR)
+library(matrixStats)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+dir2 <- paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full")
+
+#Load data
+indv <- readRDS(paste0(dir2,"/data.filterMT.regMT.indv.log.10k.int.rds" ))
+indv@meta.data$Collection <- as.factor(indv@meta.data$Collection)
+data <- readRDS(paste0(dir2,"/data.filterMT.merge.l-TEMP.rds"))
+data@meta.data$Collection <- as.factor(data@meta.data$Collection)
+
+#Find differentially expressed genes between humans and chimpanzees
+Idents(indv) <- factor(indv@meta.data$species, levels=c("Chimp","Human"))
+Idents(data) <- factor(data@meta.data$species, levels=c("Chimp","Human"))
+
+#Isolate ribosomal genes
+genes <- rownames(data@assays$RNA@counts)
+genes.ribo <- grep('^RP',genes,value=T)
+genes.no.ribo <- genes[which(!(genes %in% genes.ribo))]
+
+#Get normalized gene count data
+ips.cnts <- as.matrix(GetAssayData(subset(data,subset=Cell.Type=="iPSC"), assay="RNA", slot="counts"))
+ips.cnts <- ips.cnts[which(rownames(ips.cnts) %in% genes.no.ribo),]
+ips.meta <- data@meta.data[colnames(ips.cnts),c("species","Cell.Type")]
+ips.dge <- DGEList(ips.cnts)
+meta_dge <- ips.dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, ips.meta)
+ips.dge$samples <- meta_dge
+keep <- filterByExpr(ips.dge, group=ips.dge$samples$species, min.count=1, min.total.count=15)
+table(keep)
+ips.dge <- ips.dge[keep, , keep.lib.sizes=FALSE]
+ips.dge <- calcNormFactors(ips.dge, method="TMM")
+data.ips <- cpm(ips.dge, normalized.lib.sizes=TRUE, log=TRUE, prior=2)
+ips.meta <- ips.dge$samples[,c("species","Cell.Type")]
+
+msc.cnts <- as.matrix(GetAssayData(subset(data,subset=Cell.Type=="MSC"), assay="RNA", slot="counts"))
+msc.cnts <- msc.cnts[which(rownames(msc.cnts) %in% genes.no.ribo),]
+msc.meta <- data@meta.data[colnames(msc.cnts),c("species","Cell.Type")]
+msc.dge <- DGEList(msc.cnts)
+meta_dge <- msc.dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, msc.meta)
+msc.dge$samples <- meta_dge
+keep <- filterByExpr(msc.dge, group=msc.dge$samples$species, min.count=1, min.total.count=15)
+table(keep)
+msc.dge <- msc.dge[keep, , keep.lib.sizes=FALSE]
+msc.dge <- calcNormFactors(msc.dge, method="TMM")
+data.msc <- cpm(msc.dge, normalized.lib.sizes=TRUE, log=TRUE, prior=2)
+msc.meta <- msc.dge$samples[,c("species","Cell.Type")]
+
+ost.cnts <- as.matrix(GetAssayData(subset(data,subset=Cell.Type=="Osteoblast"), assay="RNA", slot="counts"))
+ost.cnts <- ost.cnts[which(rownames(ost.cnts) %in% genes.no.ribo),]
+ost.meta <- data@meta.data[colnames(ost.cnts),c("species","Cell.Type")]
+ost.dge <- DGEList(ost.cnts)
+meta_dge <- ost.dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, ost.meta)
+ost.dge$samples <- meta_dge
+keep <- filterByExpr(ost.dge, group=ost.dge$samples$species, min.count=1, min.total.count=15)
+table(keep)
+ost.dge <- ost.dge[keep, , keep.lib.sizes=FALSE]
+ost.dge <- calcNormFactors(ost.dge, method="TMM")
+data.ost <- cpm(ost.dge, normalized.lib.sizes=TRUE, log=TRUE, prior=2)
+ost.meta <- ost.dge$samples[,c("species","Cell.Type")]
+
+ips.norm <- tibble(Gene=rownames(data.ips),
+                   HumanSumCount=rowSums(data.ips[,which(ips.meta$species=="Human")]),
+                   ChimpSumCount=rowSums(data.ips[,which(ips.meta$species=="Chimp")]),
+                   HumanAvgCount=rowMeans(data.ips[,which(ips.meta$species=="Human")]),
+                   ChimpAvgCount=rowMeans(data.ips[,which(ips.meta$species=="Chimp")]),
+                   HumanVarCount=rowVars(as.matrix(data.ips[,which(ips.meta$species=="Human")])),
+                   ChimpVarCount=rowVars(as.matrix(data.ips[,which(ips.meta$species=="Chimp")])))
+ips.norm$AbsDiffAvg <- abs(ips.norm$HumanAvgCount - ips.norm$ChimpAvgCount)
+ips.norm$AbsDiffVar <- abs(ips.norm$HumanVarCount - ips.norm$ChimpVarCount)
+
+msc.norm <- tibble(Gene=rownames(data.msc),
+                   HumanSumCount=rowSums(data.msc[,which(msc.meta$species=="Human")]),
+                   ChimpSumCount=rowSums(data.msc[,which(msc.meta$species=="Chimp")]),
+                   HumanAvgCount=rowMeans(data.msc[,which(msc.meta$species=="Human")]),
+                   ChimpAvgCount=rowMeans(data.msc[,which(msc.meta$species=="Chimp")]),
+                   HumanVarCount=rowVars(as.matrix(data.msc[,which(msc.meta$species=="Human")])),
+                   ChimpVarCount=rowVars(as.matrix(data.msc[,which(msc.meta$species=="Chimp")])))
+msc.norm$AbsDiffAvg <- abs(msc.norm$HumanAvgCount - msc.norm$ChimpAvgCount)
+msc.norm$AbsDiffVar <- abs(msc.norm$HumanVarCount - msc.norm$ChimpVarCount)
+
+ost.norm <- tibble(Gene=rownames(data.ost),
+                   HumanSumCount=rowSums(data.ost[,which(ost.meta$species=="Human")]),
+                   ChimpSumCount=rowSums(data.ost[,which(ost.meta$species=="Chimp")]),
+                   HumanAvgCount=rowMeans(data.ost[,which(ost.meta$species=="Human")]),
+                   ChimpAvgCount=rowMeans(data.ost[,which(ost.meta$species=="Chimp")]),
+                   HumanVarCount=rowVars(as.matrix(data.ost[,which(ost.meta$species=="Human")])),
+                   ChimpVarCount=rowVars(as.matrix(data.ost[,which(ost.meta$species=="Chimp")])))
+ost.norm$AbsDiffAvg <- abs(ost.norm$HumanAvgCount - ost.norm$ChimpAvgCount)
+ost.norm$AbsDiffVar <- abs(ost.norm$HumanVarCount - ost.norm$ChimpVarCount)
+
+##########
+#groups.raw <- indv@meta.data[,c("species","Stage","Cluster","AdHoc.Assign","OstAdHoc.Assign","GoM.Assign")]
+#data.raw <- as.data.frame(indv@assays$RNA@counts[,match(rownames(groups),colnames(indv@assays$RNA@counts))])
+#ips <- data.frame(Gene=rownames(data),
+#                  HumanSumCount=rowSums(data[,which(groups$Stage=="Time 0" & groups$species=="Human")]),
+#                  ChimpSumCount=rowSums(data[,which(groups$Stage=="Time 0" & groups$species=="Chimp")]),
+#                  HumanAvgCount=rowMeans(data[,which(groups$Stage=="Time 0" & groups$species=="Human")]),
+#                  ChimpAvgCount=rowMeans(data[,which(groups$Stage=="Time 0" & groups$species=="Chimp")]),
+#                  HumanVarCount=rowVars(as.matrix(data[,which(groups$Stage=="Time 0" & groups$species=="Human")])),
+#                  ChimpVarCount=rowVars(as.matrix(data[,which(groups$Stage=="Time 0" & groups$species=="Chimp")])))
+##########
+
+#Get raw gene count data
+raw.ips <- as.data.frame(data@assays$RNA@counts[match(rownames(data.ips),rownames(data@assays$RNA@counts)),
+                                                match(colnames(data.ips),colnames(data@assays$RNA@counts))])
+raw.msc <- as.data.frame(data@assays$RNA@counts[match(rownames(data.msc),rownames(data@assays$RNA@counts)),
+                                                match(colnames(data.msc),colnames(data@assays$RNA@counts))])
+raw.ost <- as.data.frame(data@assays$RNA@counts[match(rownames(data.ost),rownames(data@assays$RNA@counts)),
+                                                match(colnames(data.ost),colnames(data@assays$RNA@counts))])
+
+ips.raw <- tibble(Gene=rownames(raw.ips),
+                  HumanSumCount=rowSums(raw.ips[,which(ips.meta$species=="Human")]),
+                  ChimpSumCount=rowSums(raw.ips[,which(ips.meta$species=="Chimp")]),
+                  HumanAvgCount=rowMeans(raw.ips[,which(ips.meta$species=="Human")]),
+                  ChimpAvgCount=rowMeans(raw.ips[,which(ips.meta$species=="Chimp")]),
+                  HumanVarCount=rowVars(as.matrix(raw.ips[,which(ips.meta$species=="Human")])),
+                  ChimpVarCount=rowVars(as.matrix(raw.ips[,which(ips.meta$species=="Chimp")])))
+ips.raw$AbsDiffAvg <- abs(ips.raw$HumanAvgCount - ips.raw$ChimpAvgCount)
+ips.raw$AbsDiffVar <- abs(ips.raw$HumanVarCount - ips.raw$ChimpVarCount)
+
+msc.raw <- tibble(Gene=rownames(raw.msc),
+                  HumanSumCount=rowSums(raw.msc[,which(msc.meta$species=="Human")]),
+                  ChimpSumCount=rowSums(raw.msc[,which(msc.meta$species=="Chimp")]),
+                  HumanAvgCount=rowMeans(raw.msc[,which(msc.meta$species=="Human")]),
+                  ChimpAvgCount=rowMeans(raw.msc[,which(msc.meta$species=="Chimp")]),
+                  HumanVarCount=rowVars(as.matrix(raw.msc[,which(msc.meta$species=="Human")])),
+                  ChimpVarCount=rowVars(as.matrix(raw.msc[,which(msc.meta$species=="Chimp")])))
+msc.raw$AbsDiffAvg <- abs(msc.raw$HumanAvgCount - msc.raw$ChimpAvgCount)
+msc.raw$AbsDiffVar <- abs(msc.raw$HumanVarCount - msc.raw$ChimpVarCount)
+
+ost.raw <- tibble(Gene=rownames(raw.ost),
+                  HumanSumCount=rowSums(raw.ost[,which(ost.meta$species=="Human")]),
+                  ChimpSumCount=rowSums(raw.ost[,which(ost.meta$species=="Chimp")]),
+                  HumanAvgCount=rowMeans(raw.ost[,which(ost.meta$species=="Human")]),
+                  ChimpAvgCount=rowMeans(raw.ost[,which(ost.meta$species=="Chimp")]),
+                  HumanVarCount=rowVars(as.matrix(raw.ost[,which(ost.meta$species=="Human")])),
+                  ChimpVarCount=rowVars(as.matrix(raw.ost[,which(ost.meta$species=="Chimp")])))
+ost.raw$AbsDiffAvg <- abs(ost.raw$HumanAvgCount - ost.raw$ChimpAvgCount)
+ost.raw$AbsDiffVar <- abs(ost.raw$HumanVarCount - ost.raw$ChimpVarCount)
+
+rm(data.ips,data.msc,data.ost,ips.cnts,ips.meta,ips.dge,msc.cnts,msc.meta,msc.dge,ost.cnts,ost.meta,ost.dge)
+rm(meta_dge,keep,genes,genes.ribo,genes.no.ribo)
+
+#Visualize gene similarities
+summary(ips.norm$AbsDiffAvg) #1st quartile = 0.047
+summary(msc.norm$AbsDiffAvg) #1st quartile = 0.061
+summary(ost.norm$AbsDiffAvg) #1st quartile = 0.069
+summary(ips.norm$AbsDiffVar) #1st quartile = 0.017
+summary(msc.norm$AbsDiffVar) #1st quartile = 0.027
+summary(ost.norm$AbsDiffVar) #1st quartile = 0.033
+
+par(mfrow=c(3,3))
+hist(log2(ips.norm$AbsDiffAvg))
+abline(v=log2(0.05), col="red")
+hist(log2(msc.norm$AbsDiffAvg))
+abline(v=log2(0.05), col="red")
+hist(log2(ost.norm$AbsDiffAvg))
+abline(v=log2(0.05), col="red")
+hist(log2(ips.norm$AbsDiffVar))
+abline(v=log2(0.01), col="red")
+hist(log2(msc.norm$AbsDiffVar))
+abline(v=log2(0.01), col="red")
+hist(log2(ost.norm$AbsDiffVar))
+abline(v=log2(0.01), col="red")
+plot(log2(ips.norm$AbsDiffAvg), log2(ips.norm$AbsDiffVar))
+abline(v=log2(0.05), h=log2(0.01), col="red")
+plot(log2(msc.norm$AbsDiffAvg), log2(msc.norm$AbsDiffVar))
+abline(v=log2(0.05), h=log2(0.01), col="red")
+plot(log2(ost.norm$AbsDiffAvg), log2(ost.norm$AbsDiffVar))
+abline(v=log2(0.05), h=log2(0.01), col="red")
+
+ips.norm <- ips.norm[order(ips.norm$HumanSumCount,decreasing=TRUE),]
+msc.norm <- msc.norm[order(msc.norm$HumanSumCount,decreasing=TRUE),]
+ost.norm <- ost.norm[order(ost.norm$HumanSumCount,decreasing=TRUE),]
+
+ips.genes <- ips.norm %>% 
+                dplyr::filter(AbsDiffAvg<0.05 & AbsDiffVar<0.01)
+msc.genes <- msc.norm %>% 
+                dplyr::filter(AbsDiffAvg<0.05 & AbsDiffVar<0.01)
+ost.genes <- ost.norm %>% 
+                dplyr::filter(AbsDiffAvg<0.05 & AbsDiffVar<0.01)
+
+par(mfrow=c(2,3))
+plot(ips.norm$HumanSumCount, ips.norm$AbsDiffVar, xlim=c(100000,200000))
+plot(msc.norm$HumanSumCount, msc.norm$AbsDiffVar, xlim=c(130000,240000))
+plot(ost.norm$HumanSumCount, ost.norm$AbsDiffVar, xlim=c(80000,150000))
+plot(ips.genes$HumanSumCount, ips.genes$AbsDiffVar, xlim=c(100000,200000))
+plot(msc.genes$HumanSumCount, msc.genes$AbsDiffVar, xlim=c(130000,240000))
+plot(ost.genes$HumanSumCount, ost.genes$AbsDiffVar, xlim=c(80000,150000))
+
+intersect(ips.genes$Gene, msc.genes$Gene) #shared genes: DEK, SEC11C, WDR33
+intersect(ips.genes$Gene, ost.genes$Gene) #shared genes: none
+intersect(msc.genes$Gene, ost.genes$Gene) #shared genes: none
+
+ips.genes <- ips.norm %>% 
+                dplyr::filter(AbsDiffAvg<0.05 & AbsDiffVar<0.01) %>% 
+                dplyr::filter(Gene %in% rownames(indv@assays$integrated))
+msc.genes <- msc.norm %>% 
+                dplyr::filter(AbsDiffAvg<0.05 & AbsDiffVar<0.01) %>% 
+                dplyr::filter(Gene %in% rownames(indv@assays$integrated))
+ost.genes <- ost.norm %>% 
+                dplyr::filter(AbsDiffAvg<0.05 & AbsDiffVar<0.01) %>% 
+                dplyr::filter(Gene %in% rownames(indv@assays$integrated))
+
+VlnPlot(subset(indv,subset=Stage=="Time 0"), assay="integrated", slot="data", features=ips.genes$Gene[1:3], pt.size=0)
+VlnPlot(subset(indv,subset=Stage=="Time 1"), assay="integrated", slot="data", features=msc.genes$Gene[1:3], pt.size=0)
+VlnPlot(subset(indv,subset=Stage=="Time 2"), assay="integrated", slot="data", features=ost.genes$Gene[1:3], pt.size=0)
+
+VlnPlot(subset(indv,subset=Stage=="Time 0"), assay="integrated", slot="data", features=c("DEK","SEC11C","WDR33"), pt.size=0)
+VlnPlot(subset(indv,subset=Stage=="Time 1"), assay="integrated", slot="data", features=c("DEK","SEC11C","WDR33"), pt.size=0)
+
+
+```
+
+```{r UTF1 and TAC3 expression}
+
+#POTENTIAL MARKERS OF DIFFERENTIATION POTENTIAL
+VlnPlot(subset(indv,subset=Stage=="Time 0"), assay="integrated", slot="data", features=c("UTF1","TAC3"), pt.size=0, group.by="Sample")
+
+expression <- as.matrix(GetAssayData(indv, assay="integrated", slot="data"))[c("UTF1","TAC3"),]
+utf1.tac3 <- data.frame(C1=rowMeans(expression[,which(indv@meta.data$Sample=="C1-I")]),
+                        C1r=rowMeans(expression[,which(indv@meta.data$Sample=="C1-I-r2")]),
+                        C2=rowMeans(expression[,which(indv@meta.data$Sample=="C2-I")]),
+                        C3=rowMeans(expression[,which(indv@meta.data$Sample=="C3-I")]),
+                        C4=rowMeans(expression[,which(indv@meta.data$Sample=="C4-I")]),
+                        C5=rowMeans(expression[,which(indv@meta.data$Sample=="C5-I")]),
+                        C6=rowMeans(expression[,which(indv@meta.data$Sample=="C6-I")]),
+                        H1=rowMeans(expression[,which(indv@meta.data$Sample=="H1-I")]),
+                        H1r=rowMeans(expression[,which(indv@meta.data$Sample=="H1-I-r2")]),
+                        H2=rowMeans(expression[,which(indv@meta.data$Sample=="H2-I")]),
+                        H3=rowMeans(expression[,which(indv@meta.data$Sample=="H3-I")]),
+                        H4=rowMeans(expression[,which(indv@meta.data$Sample=="H4-I")]),
+                        H5=rowMeans(expression[,which(indv@meta.data$Sample=="H5-I")]),
+                        H6=rowMeans(expression[,which(indv@meta.data$Sample=="H6-I")]))
+utf1.tac3 <- data.frame(t(utf1.tac3))
+
+utf1.tac3$NumbTot.AdHoc <- c(length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="C1-O")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="C1-O-r2")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="C2-O")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="C3-O")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="C4-O")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="C5-O")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="C6-O")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="H1-O")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="H1-O-r2")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="H2-O")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="H3-O")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="H4-O")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="H5-O")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="H6-O")]))
+utf1.tac3$NumbOst.AdHoc <- c(length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="C1-O" & indv@meta.data$AdHoc.Assign=="Osteoblast")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="C1-O-r2" & indv@meta.data$AdHoc.Assign=="Osteoblast")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="C2-O" & indv@meta.data$AdHoc.Assign=="Osteoblast")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="C3-O" & indv@meta.data$AdHoc.Assign=="Osteoblast")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="C4-O" & indv@meta.data$AdHoc.Assign=="Osteoblast")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="C5-O" & indv@meta.data$AdHoc.Assign=="Osteoblast")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="C6-O" & indv@meta.data$AdHoc.Assign=="Osteoblast")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="H1-O" & indv@meta.data$AdHoc.Assign=="Osteoblast")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="H1-O-r2" & indv@meta.data$AdHoc.Assign=="Osteoblast")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="H2-O" & indv@meta.data$AdHoc.Assign=="Osteoblast")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="H3-O" & indv@meta.data$AdHoc.Assign=="Osteoblast")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="H4-O" & indv@meta.data$AdHoc.Assign=="Osteoblast")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="H5-O" & indv@meta.data$AdHoc.Assign=="Osteoblast")]),
+                             length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="H6-O" & indv@meta.data$AdHoc.Assign=="Osteoblast")]))
+utf1.tac3$PropOst.AdHoc <- utf1.tac3$NumbOst.AdHoc/utf1.tac3$NumbTot.AdHoc
+
+utf1.tac3$NumbTot.OstAdHoc <- c(length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C1-O")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C1-O-r2")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C2-O")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C3-O")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C4-O")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C5-O")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C6-O")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H1-O")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H1-O-r2")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H2-O")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H3-O")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H4-O")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H5-O")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H6-O")]))
+utf1.tac3$NumbPre.OstAdHoc <- c(length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C1-O" & indv@meta.data$OstAdHoc.Assign=="preosteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C1-O-r2" & indv@meta.data$OstAdHoc.Assign=="preosteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C2-O" & indv@meta.data$OstAdHoc.Assign=="preosteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C3-O" & indv@meta.data$OstAdHoc.Assign=="preosteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C4-O" & indv@meta.data$OstAdHoc.Assign=="preosteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C5-O" & indv@meta.data$OstAdHoc.Assign=="preosteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C6-O" & indv@meta.data$OstAdHoc.Assign=="preosteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H1-O" & indv@meta.data$OstAdHoc.Assign=="preosteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H1-O-r2" & indv@meta.data$OstAdHoc.Assign=="preosteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H2-O" & indv@meta.data$OstAdHoc.Assign=="preosteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H3-O" & indv@meta.data$OstAdHoc.Assign=="preosteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H4-O" & indv@meta.data$OstAdHoc.Assign=="preosteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H5-O" & indv@meta.data$OstAdHoc.Assign=="preosteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H6-O" & indv@meta.data$OstAdHoc.Assign=="preosteoblast")]))
+utf1.tac3$NumbObl.OstAdHoc <- c(length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C1-O" & indv@meta.data$OstAdHoc.Assign=="osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C1-O-r2" & indv@meta.data$OstAdHoc.Assign=="osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C2-O" & indv@meta.data$OstAdHoc.Assign=="osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C3-O" & indv@meta.data$OstAdHoc.Assign=="osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C4-O" & indv@meta.data$OstAdHoc.Assign=="osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C5-O" & indv@meta.data$OstAdHoc.Assign=="osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C6-O" & indv@meta.data$OstAdHoc.Assign=="osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H1-O" & indv@meta.data$OstAdHoc.Assign=="osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H1-O-r2" & indv@meta.data$OstAdHoc.Assign=="osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H2-O" & indv@meta.data$OstAdHoc.Assign=="osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H3-O" & indv@meta.data$OstAdHoc.Assign=="osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H4-O" & indv@meta.data$OstAdHoc.Assign=="osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H5-O" & indv@meta.data$OstAdHoc.Assign=="osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H6-O" & indv@meta.data$OstAdHoc.Assign=="osteoblast")]))
+utf1.tac3$NumbEmb.OstAdHoc <- c(length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C1-O" & indv@meta.data$OstAdHoc.Assign=="embedding osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C1-O-r2" & indv@meta.data$OstAdHoc.Assign=="embedding osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C2-O" & indv@meta.data$OstAdHoc.Assign=="embedding osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C3-O" & indv@meta.data$OstAdHoc.Assign=="embedding osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C4-O" & indv@meta.data$OstAdHoc.Assign=="embedding osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C5-O" & indv@meta.data$OstAdHoc.Assign=="embedding osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="C6-O" & indv@meta.data$OstAdHoc.Assign=="embedding osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H1-O" & indv@meta.data$OstAdHoc.Assign=="embedding osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H1-O-r2" & indv@meta.data$OstAdHoc.Assign=="embedding osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H2-O" & indv@meta.data$OstAdHoc.Assign=="embedding osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H3-O" & indv@meta.data$OstAdHoc.Assign=="embedding osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H4-O" & indv@meta.data$OstAdHoc.Assign=="embedding osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H5-O" & indv@meta.data$OstAdHoc.Assign=="embedding osteoblast")]),
+                                length(indv@meta.data$OstAdHoc.Assign[which(indv@meta.data$Sample=="H6-O" & indv@meta.data$OstAdHoc.Assign=="embedding osteoblast")]))
+utf1.tac3$PropPre.OstAdHoc <- utf1.tac3$NumbPre.OstAdHoc/utf1.tac3$NumbTot.OstAdHoc
+utf1.tac3$PropObl.OstAdHoc <- utf1.tac3$NumbObl.OstAdHoc/utf1.tac3$NumbTot.OstAdHoc
+utf1.tac3$PropEmb.OstAdHoc <- utf1.tac3$NumbEmb.OstAdHoc/utf1.tac3$NumbTot.OstAdHoc
+
+utf1.tac3$NumbTot.Cluster <- c(length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C1-O")]),
+                               length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C1-O-r2")]),
+                               length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C2-O")]),
+                               length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C3-O")]),
+                               length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C4-O")]),
+                               length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C5-O")]),
+                               length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C6-O")]),
+                               length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H1-O")]),
+                               length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H1-O-r2")]),
+                               length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H2-O")]),
+                               length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H3-O")]),
+                               length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H4-O")]),
+                               length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H5-O")]),
+                               length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H6-O")]))
+utf1.tac3$NumbOst1.Cluster <- c(length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C1-O" & indv@meta.data$Cluster=="Osteoblast.c1")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C1-O-r2" & indv@meta.data$Cluster=="Osteoblast.c1")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C2-O" & indv@meta.data$Cluster=="Osteoblast.c1")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C3-O" & indv@meta.data$Cluster=="Osteoblast.c1")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C4-O" & indv@meta.data$Cluster=="Osteoblast.c1")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C5-O" & indv@meta.data$Cluster=="Osteoblast.c1")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C6-O" & indv@meta.data$Cluster=="Osteoblast.c1")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H1-O" & indv@meta.data$Cluster=="Osteoblast.c1")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H1-O-r2" & indv@meta.data$Cluster=="Osteoblast.c1")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H2-O" & indv@meta.data$Cluster=="Osteoblast.c1")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H3-O" & indv@meta.data$Cluster=="Osteoblast.c1")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H4-O" & indv@meta.data$Cluster=="Osteoblast.c1")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H5-O" & indv@meta.data$Cluster=="Osteoblast.c1")]),
+                                length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="H6-O" & indv@meta.data$Cluster=="Osteoblast.c1")]))
+utf1.tac3$NumbOst2.Cluster <- c(length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C1-O" & indv@meta.data$Cluster=="Osteoblast.c2")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C1-O-r2" & indv@meta.data$Cluster=="Osteoblast.c2")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C2-O" & indv@meta.data$Cluster=="Osteoblast.c2")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C3-O" & indv@meta.data$Cluster=="Osteoblast.c2")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C4-O" & indv@meta.data$Cluster=="Osteoblast.c2")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C5-O" & indv@meta.data$Cluster=="Osteoblast.c2")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C6-O" & indv@meta.data$Cluster=="Osteoblast.c2")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H1-O" & indv@meta.data$Cluster=="Osteoblast.c2")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H1-O-r2" & indv@meta.data$Cluster=="Osteoblast.c2")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H2-O" & indv@meta.data$Cluster=="Osteoblast.c2")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H3-O" & indv@meta.data$Cluster=="Osteoblast.c2")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H4-O" & indv@meta.data$Cluster=="Osteoblast.c2")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H5-O" & indv@meta.data$Cluster=="Osteoblast.c2")]),
+                                length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="H6-O" & indv@meta.data$Cluster=="Osteoblast.c2")]))
+utf1.tac3$NumbOst3.Cluster <- c(length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C1-O" & indv@meta.data$Cluster=="Osteoblast.c3")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C1-O-r2" & indv@meta.data$Cluster=="Osteoblast.c3")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C2-O" & indv@meta.data$Cluster=="Osteoblast.c3")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C3-O" & indv@meta.data$Cluster=="Osteoblast.c3")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C4-O" & indv@meta.data$Cluster=="Osteoblast.c3")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C5-O" & indv@meta.data$Cluster=="Osteoblast.c3")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="C6-O" & indv@meta.data$Cluster=="Osteoblast.c3")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H1-O" & indv@meta.data$Cluster=="Osteoblast.c3")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H1-O-r2" & indv@meta.data$Cluster=="Osteoblast.c3")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H2-O" & indv@meta.data$Cluster=="Osteoblast.c3")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H3-O" & indv@meta.data$Cluster=="Osteoblast.c3")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H4-O" & indv@meta.data$Cluster=="Osteoblast.c3")]),
+                                length(indv@meta.data$Cluster[which(indv@meta.data$Sample=="H5-O" & indv@meta.data$Cluster=="Osteoblast.c3")]),
+                                length(indv@meta.data$AdHoc.Assign[which(indv@meta.data$Sample=="H6-O" & indv@meta.data$Cluster=="Osteoblast.c3")]))
+utf1.tac3$PropOst1.Cluster <- utf1.tac3$NumbOst1.Cluster/utf1.tac3$NumbTot.Cluster
+utf1.tac3$PropOst2.Cluster <- utf1.tac3$NumbOst2.Cluster/utf1.tac3$NumbTot.Cluster
+utf1.tac3$PropOst3.Cluster <- utf1.tac3$NumbOst3.Cluster/utf1.tac3$NumbTot.Cluster
+
+par(mfrow=c(1,2))
+cor(utf1.tac3$UTF1, utf1.tac3$PropOst.AdHoc, method="pearson") #pearson correlation = -0.61
+plot(utf1.tac3$UTF1, utf1.tac3$PropOst.AdHoc, xlab="UTF1 Expression", ylab="Proportion of Osteogenic Cells (ad hoc)", pch=c(rep(19,7),rep(1,7)))
+abline(lm(utf1.tac3$PropOst.AdHoc~utf1.tac3$UTF1), col="red")
+text(x=0.75, y=0.45, labels="r = -0.61", col="red")
+cor(utf1.tac3$TAC3, utf1.tac3$PropOst.AdHoc, method="pearson") #pearson correlation = 0.20
+plot(utf1.tac3$TAC3, utf1.tac3$PropOst.AdHoc, xlab="TAC3 Expression", ylab="Proportion of Osteogenic Cells (ad hoc)", pch=c(rep(19,7),rep(1,7)))
+abline(lm(utf1.tac3$PropOst.AdHoc~utf1.tac3$TAC3), col="red")
+text(x=0.09, y=0.75, labels="r = 0.20", col="red")
+
+par(mfrow=c(1,2))
+cor(utf1.tac3$UTF1, utf1.tac3$PropPre.OstAdHoc, method="pearson") #pearson correlation = -0.27
+plot(utf1.tac3$UTF1, utf1.tac3$PropPre.OstAdHoc, xlab="UTF1 Expression", ylab="Proportion of Preosteoblasts (ost ad hoc)", pch=c(rep(19,7),rep(1,7)))
+abline(lm(utf1.tac3$PropPre.OstAdHoc~utf1.tac3$UTF1), col="red")
+text(x=0.75, y=0.02, labels="r = -0.72", col="red")
+cor(utf1.tac3$TAC3, utf1.tac3$PropPre.OstAdHoc, method="pearson") #pearson correlation = 0.57
+plot(utf1.tac3$TAC3, utf1.tac3$PropPre.OstAdHoc, xlab="TAC3 Expression", ylab="Proportion of Preosteoblasts (ost ad hoc)", pch=c(rep(19,7),rep(1,7)))
+abline(lm(utf1.tac3$PropPre.OstAdHoc~utf1.tac3$TAC3), col="red")
+text(x=0.09, y=0.04, labels="r = 0.57", col="red")
+
+par(mfrow=c(1,2))
+cor(utf1.tac3$UTF1, utf1.tac3$PropObl.OstAdHoc, method="pearson") #pearson correlation = -0.32
+plot(utf1.tac3$UTF1, utf1.tac3$PropObl.OstAdHoc, xlab="UTF1 Expression", ylab="Proportion of Osteoblasts (ost ad hoc)", pch=c(rep(19,7),rep(1,7)))
+abline(lm(utf1.tac3$PropObl.OstAdHoc~utf1.tac3$UTF1), col="red")
+text(x=0.75, y=0.02, labels="r = -0.32", col="red")
+cor(utf1.tac3$TAC3, utf1.tac3$PropObl.OstAdHoc, method="pearson") #pearson correlation = -0.04
+plot(utf1.tac3$TAC3, utf1.tac3$PropObl.OstAdHoc, xlab="TAC3 Expression", ylab="Proportion of Osteoblasts (ost ad hoc)", pch=c(rep(19,7),rep(1,7)))
+abline(lm(utf1.tac3$PropObl.OstAdHoc~utf1.tac3$TAC3), col="red")
+text(x=0.09, y=0.02, labels="r = -0.03", col="red")
+
+par(mfrow=c(1,2))
+cor(utf1.tac3$UTF1, utf1.tac3$PropEmb.OstAdHoc, method="pearson") #pearson correlation = -0.44
+plot(utf1.tac3$UTF1, utf1.tac3$PropEmb.OstAdHoc, xlab="UTF1 Expression", ylab="Proportion of Embedding Osteoblasts (ost ad hoc)", pch=c(rep(19,7),rep(1,7)))
+abline(lm(utf1.tac3$PropEmb.OstAdHoc~utf1.tac3$UTF1), col="red")
+text(x=0.75, y=0.5, labels="r = -0.44", col="red")
+cor(utf1.tac3$TAC3, utf1.tac3$PropEmb.OstAdHoc, method="pearson") #pearson correlation = 0.02
+plot(utf1.tac3$TAC3, utf1.tac3$PropEmb.OstAdHoc, xlab="TAC3 Expression", ylab="Proportion of Embedding Osteoblasts (ost ad hoc)", pch=c(rep(19,7),rep(1,7)))
+abline(lm(utf1.tac3$PropEmb.OstAdHoc~utf1.tac3$TAC3), col="red")
+text(x=0.09, y=0.62, labels="r = 0.02", col="red")
+
+par(mfrow=c(1,2))
+cor(utf1.tac3$UTF1, utf1.tac3$PropOst1.Cluster, method="pearson") #pearson correlation = 0.18
+plot(utf1.tac3$UTF1, utf1.tac3$PropOst1.Cluster, xlab="UTF1 Expression", ylab="Proportion of Osteogenic Cluster 1", pch=c(rep(19,7),rep(1,7)))
+abline(lm(utf1.tac3$PropOst1.Cluster~utf1.tac3$UTF1), col="red")
+text(x=0.75, y=0.6, labels="r = 0.18", col="red")
+cor(utf1.tac3$TAC3, utf1.tac3$PropOst1.Cluster, method="pearson") #pearson correlation = 0.79
+plot(utf1.tac3$TAC3, utf1.tac3$PropOst1.Cluster, xlab="TAC3 Expression", ylab="Proportion of Osteogenic Cluster 1", pch=c(rep(19,7),rep(1,7)))
+abline(lm(utf1.tac3$PropOst1.Cluster~utf1.tac3$TAC3), col="red")
+text(x=0.08, y=0.75, labels="r = 0.79", col="red")
+
+par(mfrow=c(1,2))
+cor(utf1.tac3$UTF1, utf1.tac3$PropOst2.Cluster, method="pearson") #pearson correlation = -0.13
+plot(utf1.tac3$UTF1, utf1.tac3$PropOst2.Cluster, xlab="UTF1 Expression", ylab="Proportion of Osteogenic Cluster 2", pch=c(rep(19,7),rep(1,7)))
+abline(lm(utf1.tac3$PropOst2.Cluster~utf1.tac3$UTF1), col="red")
+text(x=0.75, y=0.35, labels="r = -0.13", col="red")
+cor(utf1.tac3$TAC3, utf1.tac3$PropOst2.Cluster, method="pearson") #pearson correlation = -0.56
+plot(utf1.tac3$TAC3, utf1.tac3$PropOst2.Cluster, xlab="TAC3 Expression", ylab="Proportion of Osteogenic Cluster 2", pch=c(rep(19,7),rep(1,7)))
+abline(lm(utf1.tac3$PropOst2.Cluster~utf1.tac3$TAC3), col="red")
+text(x=0.09, y=0.2, labels="r = -0.56", col="red")
+
+par(mfrow=c(1,2))
+cor(utf1.tac3$UTF1, utf1.tac3$PropOst3.Cluster, method="pearson") #pearson correlation = -0.13
+plot(utf1.tac3$UTF1, utf1.tac3$PropOst3.Cluster, xlab="UTF1 Expression", ylab="Proportion of Osteogenic Cluster 3", pch=c(rep(19,7),rep(1,7)))
+abline(lm(utf1.tac3$PropOst3.Cluster~utf1.tac3$UTF1), col="red")
+text(x=0.75, y=0.1, labels="r = -0.13", col="red")
+cor(utf1.tac3$TAC3, utf1.tac3$PropOst3.Cluster, method="pearson") #pearson correlation = -0.30
+plot(utf1.tac3$TAC3, utf1.tac3$PropOst3.Cluster, xlab="TAC3 Expression", ylab="Proportion of Osteogenic Cluster 3", pch=c(rep(19,7),rep(1,7)))
+abline(lm(utf1.tac3$PropOst3.Cluster~utf1.tac3$TAC3), col="red")
+text(x=0.08, y=0.05, labels="r = -0.30", col="red")
+
+```
 

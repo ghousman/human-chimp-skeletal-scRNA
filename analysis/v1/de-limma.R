@@ -116,6 +116,14 @@ saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-
 lmma <- runLIMMA(subset(data,subset=seurat_clusters==5), genes.no.ribo)
 saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.o3.rds"))
 
+#Find differentially expressed genes using ad hoc definitions
+lmma <- runLIMMA(subset(data,subset=AdHoc.Assign=="iPSC"), genes.no.ribo)
+saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.hoci.rds"))
+lmma <- runLIMMA(subset(data,subset=AdHoc.Assign=="MSC"), genes.no.ribo)
+saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.hocm.rds"))
+lmma <- runLIMMA(subset(data,subset=AdHoc.Assign=="Osteoblast"), genes.no.ribo)
+saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.hoco.rds"))
+
 #Find differentially expressed genes using osteogenic ad hoc definitions
 lmma <- runLIMMA(subset(data,subset=OstAdHoc.Assign=="preosteoblast"), genes.no.ribo)
 saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.pre.rds"))
@@ -126,7 +134,7 @@ saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-
 #lmma <- runLIMMA(subset(data,subset=OstAdHoc.Assign=="mineralizing osteocyte"), genes.no.ribo)
 #saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.min.rds"))
 #lmma <- runLIMMA(subset(data,subset=OstAdHoc.Assign=="mature osteocyte"), genes.no.ribo)
-#saveRDS(lmma.mat, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.mat.rds"))
+#saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.mat.rds"))
 
 #Find differentially expressed genes using grade of membership definitions
 lmma <- runLIMMA(subset(data,subset=GoM.Assign=="iPSC"), genes.no.ribo)

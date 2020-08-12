@@ -1,13 +1,11 @@
 
-R version 3.4.3 (2017-11-30) -- "Kite-Eating Tree"
-Copyright (C) 2017 The R Foundation for Statistical Computing
+R version 3.6.1 (2019-07-05) -- "Action of the Toes"
+Copyright (C) 2019 The R Foundation for Statistical Computing
 Platform: x86_64-pc-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
 You are welcome to redistribute it under certain conditions.
 Type 'license()' or 'licence()' for distribution details.
-
-  Natural language support but running in an English locale
 
 R is a collaborative project with many contributors.
 Type 'contributors()' for more information and
@@ -21,13 +19,13 @@ Type 'q()' to quit R.
 > library(Seurat)
 > library(dplyr)
 
-Attaching package: ‘dplyr’
+Attaching package: 'dplyr'
 
-The following objects are masked from ‘package:stats’:
+The following objects are masked from 'package:stats':
 
     filter, lag
 
-The following objects are masked from ‘package:base’:
+The following objects are masked from 'package:base':
 
     intersect, setdiff, setequal, union
 
@@ -364,6 +362,68 @@ NotSig         7718
 Up               15
 > saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.o3.rds"))
 > 
+> #Find differentially expressed genes using ad hoc definitions
+> lmma <- runLIMMA(subset(data,subset=AdHoc.Assign=="iPSC"), genes.no.ribo)
+[1] "All DE Genes"
+[1] 3234    6
+
+FALSE  TRUE 
+  267  2967 
+       speciesHuman
+Down           1791
+NotSig          267
+Up             1176
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 3234    5
+
+FALSE  TRUE 
+ 2928   306 
+       speciesHuman
+Down            153
+NotSig         2928
+Up              153
+> saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.hoci.rds"))
+> lmma <- runLIMMA(subset(data,subset=AdHoc.Assign=="MSC"), genes.no.ribo)
+[1] "All DE Genes"
+[1] 3375    6
+
+FALSE  TRUE 
+  213  3162 
+       speciesHuman
+Down           1635
+NotSig          213
+Up             1527
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 3375    5
+
+FALSE  TRUE 
+ 2756   619 
+       speciesHuman
+Down            308
+NotSig         2756
+Up              311
+> saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.hocm.rds"))
+> lmma <- runLIMMA(subset(data,subset=AdHoc.Assign=="Osteoblast"), genes.no.ribo)
+[1] "All DE Genes"
+[1] 1927    6
+
+FALSE  TRUE 
+  162  1765 
+       speciesHuman
+Down           1190
+NotSig          162
+Up              575
+[1] "DE Genes with log2(1.2) Fold Change"
+[1] 1927    5
+
+FALSE  TRUE 
+ 1575   352 
+       speciesHuman
+Down            228
+NotSig         1575
+Up              124
+> saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.hoco.rds"))
+> 
 > #Find differentially expressed genes using osteogenic ad hoc definitions
 > lmma <- runLIMMA(subset(data,subset=OstAdHoc.Assign=="preosteoblast"), genes.no.ribo)
 [1] "All DE Genes"
@@ -428,7 +488,7 @@ Up              123
 > #lmma <- runLIMMA(subset(data,subset=OstAdHoc.Assign=="mineralizing osteocyte"), genes.no.ribo)
 > #saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.min.rds"))
 > #lmma <- runLIMMA(subset(data,subset=OstAdHoc.Assign=="mature osteocyte"), genes.no.ribo)
-> #saveRDS(lmma.mat, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.mat.rds"))
+> #saveRDS(lmma, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/de.limma-compare.mat.rds"))
 > 
 > #Find differentially expressed genes using grade of membership definitions
 > lmma <- runLIMMA(subset(data,subset=GoM.Assign=="iPSC"), genes.no.ribo)
@@ -496,4 +556,4 @@ Up               60
 > 
 > proc.time()
     user   system  elapsed 
-1537.959  255.034 1798.027 
+1488.071  252.466 1745.611 

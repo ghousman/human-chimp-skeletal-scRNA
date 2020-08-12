@@ -9,5 +9,5 @@
 #SBATCH --ntasks-per-node=4
 #SBATCH --mem-per-cpu=83400
 
-module load R/3.4.3
+module load R/3.6.1
 R CMD BATCH --no-save --no-restore de-edgeR.R de-edgeR.out
