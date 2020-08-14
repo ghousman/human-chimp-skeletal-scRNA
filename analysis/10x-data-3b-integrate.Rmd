@@ -1,43 +1,484 @@
 ---
-title: "temp-code"
+title: "10x-data-integrate"
 author: "Genevieve Housman"
-date: "8/11/2020"
+date: "August 2020"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Temporary storage of code that needs to be moved to different .Rmd files.
+## 10X Data Cellranger Analysis - Integrate Data
 
-```{r process scRNA data - filter out mitochondrial genes from data}
+For each sample, normalization, variance stabilization, and regression of unwanted variation were performed. Following this, samples were integrated using shared highly variable genes.
 
-### NO LONGER NEED TO REMOVE MITO GENES FOR ORTHO-EXON V2 ###
+For the first...
+
+Another question was how should the data be subsetted before normalization. The following subsets were assessed:
+
+* separate species and cell types (n=6) (EX: Human iPSCs)
+* separate human-chimp pairs and cell types (n=21) (EX: H1+C1 iPSCs)
+* separate individuals and cell types (n=42) (EX: H1 iPSCs)
+* separate species but keep all cell types together (n=2) (EX: Human iPSCs+MSCs+Osteoblasts)
+* separate human-chimp pairs but keep all cell types together (n=7) (EX: H1+C1 iPSCs+MSCs+Osteoblasts)
+* separate individuals but keep all cell types together (n=14) (EX: H1 iPSCs+MSCs+Osteoblasts)
+
+What I used:
+
+* separate individuals and cell types (n=42) (EX: H1 iPSCs)
+* separate individuals but keep all cell types together
+
+**Step 1 - Normalization**
+
+In Seurat the main normalization methods are:
+
+1. Log Normalization
+    + Within a cell, gene counts are divided by the total counts, multiplied by a scale.factor (10000), and natural-log transformed using log1p.
+2. SCTransform
+    + Alternative workflow that perfoms log normalization, variable feature identification, and data scaling in one command.
+
+Because data are more difficult to manipulate with SCTransform, standard log normalization is used here.
+Also, because 
+
+**Step 2 - Calculate Cell Cycle Score**
+
+**Step 3 - Variance Stabilization**
+
+**Step 4 - Regression of Unwanted Variation**
+
+**Step 5 - Data Integration**
+
+
+
+
+
+**References**
+
+* https://hbctraining.github.io/scRNA-seq/lessons/06_SC_SCT_and_integration.html
+* See the following scripts for previous trial runs:
+  + ./analysis/v1/v1-10x-data-normalize-log.Rmd
+  + ./analysis/v1/v1-10x-data-normalize-sct.Rmd
+
+
+```{bash, eval=FALSE, echo=TRUE}
+
+### PROBABLY DO NOT NEED TO RUN ON CLUSTER THIS WAY
+
+sinteractive --mem=24g --time=12:00:00 --partition=broadwl
+module load R/3.6.1
+export PYTHONUSERBASE=$HOME/.local/python
+R
+```
+
+
+### Normalize Data & Find Variable Features
+
+```{r prepare scRNA data for merging/integration - separate individuals and cell types}
+
+#BASHSCRIPT: prep.l_indv-cell.sh (or prep.filter.l_indv-cell.sh / prep.filterMT.l_indv-cell.sh)
+
+##!/bin/bash
+##SBATCH --job-name=prep.l_indv-cell
+##SBATCH --output=prep.l_indv-cell.out
+##SBATCH --error=prep.l_indv-cell.err
+##SBATCH --time=03:00:00
+##SBATCH --partition=bigmem2
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=25600
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R CMD BATCH --no-save --no-restore prep.l_indv-cell.R prep.l_indv-cell.out
+
+#RSCRIPT: prep.l_indv-cell.R (or prep.filter.l_indv-cell.R / prep.filterMT.l_indv-cell.R)
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
 
 #Read in files
-data <- readRDS("./data/cellranger-data-full/data.rds")
+data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.rds"))
 
-#Remove mitochondrial genes
-mito <- c("MT-ATP6","MT-ATP8","MT-CO1","MT-CO2","MT-CO3","MT-CYB","MT-ND1","MT-ND2","MT-ND3","MT-ND4","MT-ND4L","MT-ND5")
+#Separate human and chimp data within each collection into separate objects
 objects <- list()
-for (i in 1:length(data))
+idx <- 1
+for (i in 1:length(batch$Sample_Name_at_Core))
 {
-  print(i)
-  genes <- which(!(data[[i]]@assays$RNA@counts@Dimnames[[1]] %in% mito))
-  obj <- subset(data[[i]], features=genes)
-  objects[[i]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  obj <- subset(data[[i]], species=='Human')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
+  obj <- subset(data[[i]], species=='Chimp')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
 }
 rm(data,obj)
 
+#Perform log normalization on each individual and cell type
+for (i in 1:length(objects)) {
+  print(i)
+  objects[[i]] <- NormalizeData(objects[[i]], verbose=FALSE)
+  objects[[i]] <- FindVariableFeatures(objects[[i]], selection.method="vst", nfeatures=3000, verbose=FALSE)
+}
+
 #Save data
-saveRDS(objects, file="./data/cellranger-data-full/data.rds")
+saveRDS(objects, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.rds"))
+
+```
+
+```{r prepare scRNA data for merging/integration - separate individuals but keep all cell types together}
+
+#BASHSCRIPT: prep.l_indv.sh  (or prep.filter.l_indv.sh / prep.filterMT.l_indv.sh)
+
+##!/bin/bash
+##SBATCH --job-name=prep.l_indv
+##SBATCH --output=prep.l_indv.out
+##SBATCH --error=prep.l_indv.err
+##SBATCH --time=03:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R CMD BATCH --no-save --no-restore prep.l_indv.R prep.l_indv.out
+
+#RSCRIPT: prep.l_indv.R (or prep.filter.l_indv.R / prep.filterMT.l_indv.R)
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Read in files
+data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.rds"))
+
+#Separate human and chimp data within each collection into separate objects
+objects <- list()
+idx <- 1
+for (i in 1:length(batch$Sample_Name_at_Core))
+{
+  obj <- subset(data[[i]], species=='Human')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
+  obj <- subset(data[[i]], species=='Chimp')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
+}
+rm(data,obj)
+
+#Merge all cell types in each individual
+h1 <- merge(objects[[1]], y=c(objects[[3]],objects[[5]]),add.cell.ids=c("H1.I","H1.M","H1.O"))
+h1r2 <- merge(objects[[7]], y=c(objects[[9]],objects[[11]]),add.cell.ids=c("H1r2.I","H1r2.M","H1r2.O"))
+h2 <- merge(objects[[13]], y=c(objects[[15]],objects[[17]]),add.cell.ids=c("H2.I","H2.M","H2.O"))
+h3 <- merge(objects[[19]], y=c(objects[[21]],objects[[23]]),add.cell.ids=c("H3.I","H3.M","H3.O"))
+h4 <- merge(objects[[25]], y=c(objects[[27]],objects[[29]]),add.cell.ids=c("H4.I","H4.M","H4.O"))
+h5 <- merge(objects[[31]], y=c(objects[[33]],objects[[35]]),add.cell.ids=c("H5.I","H5.M","H5.O"))
+h6 <- merge(objects[[37]], y=c(objects[[39]],objects[[41]]),add.cell.ids=c("H6.I","H6.M","H6.O"))
+c1 <- merge(objects[[2]], y=c(objects[[4]],objects[[6]]),add.cell.ids=c("C1.I","C1.M","C1.O"))
+c1r2 <- merge(objects[[8]], y=c(objects[[10]],objects[[12]]),add.cell.ids=c("C1r2.I","C1r2.M","C1r2.O"))
+c2 <- merge(objects[[14]], y=c(objects[[16]],objects[[18]]),add.cell.ids=c("C2.I","C2.M","C2.O"))
+c3 <- merge(objects[[20]], y=c(objects[[22]],objects[[24]]),add.cell.ids=c("C3.I","C3.M","C3.O"))
+c4 <- merge(objects[[26]], y=c(objects[[28]],objects[[30]]),add.cell.ids=c("C4.I","C4.M","C4.O"))
+c5 <- merge(objects[[32]], y=c(objects[[34]],objects[[36]]),add.cell.ids=c("C5.I","C5.M","C5.O"))
+c6 <- merge(objects[[38]], y=c(objects[[40]],objects[[42]]),add.cell.ids=c("C6.I","C6.M","C6.O"))
+
+objects <- list(h1,h1r2,h2,h3,h4,h5,h6,c1,c1r2,c2,c3,c4,c5,c6)
+
+#Perform log normalization on each collection
+for (i in 1:length(objects)) {
+  print(i)
+  objects[[i]] <- NormalizeData(objects[[i]], verbose=FALSE)
+  objects[[i]] <- FindVariableFeatures(objects[[i]], selection.method="vst", nfeatures=3000, verbose=FALSE)
+}
+
+#Save data
+saveRDS(objects, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv.log.rds"))
+
+```
+
+### Cell Cycle Scoring
+
+References
+
+* https://hbctraining.github.io/scRNA-seq/lessons/cell_cycle_scoring.html
+
+```{r cell cycle}
+
+#cc_file <- getURL("https://raw.githubusercontent.com/hbc/tinyatlas/master/cell_cycle/Homo_sapiens.csv") 
+#cell_cycle_genes <- read.csv(text = cc_file)
+
+#cell cycle markers (Tirosh et al, 2015) - loaded with seurat
+s.genes <- cc.genes$s.genes
+g2m.genes <- cc.genes$g2m.genes
+
+#score cell cycle phases
+indv <- CellCycleScoring(indv, s.features=s.genes, g2m.features=g2m.genes, set.ident=TRUE)
+
+#view cell cycle scores and phase assignments
+head(indv[[]])
+
+#plot cell cycle scores
+CombinePlots(plots=list((DimPlot(indv,
+                                 group.by="Phase",
+                                 reduction="pca",
+                                 dims=c(1,2)) +
+                           labs(x="PC1",y="PC2")),
+                        (DimPlot(indv,
+                                 group.by="Phase",
+                                 reduction="pca",
+                                 dims=c(3,4)) +
+                           labs(x="PC3",y="PC4")),
+                        (DimPlot(indv,
+                                 group.by="Phase",
+                                 reduction="pca",
+                                 dims=c(5,6)) +
+                           labs(x="PC5",y="PC6")),
+                        (DimPlot(indv,
+                                 group.by="Phase",
+                                 reduction="pca",
+                                 dims=c(7,8)) +
+                           labs(x="PC7",y="PC8")),
+                        (DimPlot(indv,
+                                 group.by="Phase",
+                                 reduction="pca",
+                                 dims=c(9,10)) +
+                           labs(x="PC9",y="PC10"))), ncol=5)
+CombinePlots(plots=list((DimPlot(subset(indv,subset=species=="Human"),
+                                 group.by="Phase",
+                                 reduction="umap") +
+                           labs(x="UMAP1",y="UMAP2")),
+                        (DimPlot(subset(indv,subset=species=="Chimp"),
+                                 group.by="Phase",
+                                 reduction="umap") +
+                           labs(x="UMAP1",y="UMAP2"))), ncol=1)
+CombinePlots(plots=list((DimPlot(subset(indv,subset=Phase=="G1"),
+                                 group.by="Cell.Type",
+                                 reduction="umap",
+                                 cols=c("pink","mediumorchid","dodgerblue")) +
+                           labs(x="UMAP1",y="UMAP2")),
+                        (DimPlot(subset(indv,subset=Phase=="G2M"),
+                                 group.by="Cell.Type",
+                                 reduction="umap",
+                                 cols=c("pink","mediumorchid","dodgerblue")) +
+                           labs(x="UMAP1",y="UMAP2")),
+                        (DimPlot(subset(indv,subset=Phase=="S"),
+                                 group.by="Cell.Type",
+                                 reduction="umap",
+                                 cols=c("pink","mediumorchid","dodgerblue")) +
+                           labs(x="UMAP1",y="UMAP2"))), ncol=3)
+
+
+```
+
+### Data Integration
+
+What I used:
+
+* separate individuals and cells types
+* separate individuals but keep all cell types together
+* merge data without integration
+
+...something about merging datasets using the intersect of the 6000 most variable genes in humans and chimpanzees
+
+```{r integrate scRNA data - separate individuals and cells types}
+
+#BASHSCRIPT: rpca.l_indv-cell.sh (or rpca.filter.l_indv-cell.sh / rpca.l.filterMT.l_indv-cell.sh)
+
+##!/bin/bash
+##SBATCH --job-name=rpca.l_indv-cell
+##SBATCH --output=rpca.l_indv-cell.out
+##SBATCH --error=rpca.l_indv-cell.err
+##SBATCH --time=03:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R CMD BATCH --no-save --no-restore rpca.l_indv-cell.R rpca.l_indv-cell.out
+
+#RSCRIPT: rpca.l_indv-cell.R (or rpca.filter.l_indv-cell.R / rpca.filterMT.l_indv-cell.R)
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Load objects
+objects <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/v1/data.indv-cell.log.rds"))
+
+#Define list subset
+#Select features for downstream integration (keeping at 1000 for now)
+#Identify anchors (used references + RPCA reduction method) #ALL OTHER METHODS CRASH
+#Integrate datasets
+#Reduce dimensionality
+#Save data
+
+#combine ipscs from all samples
+obj.ipsc  <- list(objects[[1]],objects[[2]],objects[[7]],objects[[8]],objects[[13]],objects[[14]],objects[[19]],objects[[20]],
+                  objects[[25]],objects[[26]],objects[[31]],objects[[32]],objects[[37]],objects[[38]])
+obj.ipsc.features <- SelectIntegrationFeatures(object.list=obj.ipsc, nfeatures=1000)
+reference_dataset <- c(3:4) #H1C1-r2 differentiated the best
+obj.ipsc <- lapply(X=obj.ipsc, FUN=function(x) {
+    x <- ScaleData(x, features=obj.ipsc.features, verbose=FALSE)
+    x <- RunPCA(x, features=obj.ipsc.features, verbose=FALSE)
+})
+obj.ipsc.anchors <- FindIntegrationAnchors(object.list=obj.ipsc, normalization.method="LogNormalize", anchor.features=obj.ipsc.features,
+                                           reference=reference_dataset, reduction="rpca")
+int.ipsc <- IntegrateData(anchorset=obj.ipsc.anchors, normalization.method="LogNormalize")
+int.ipsc <- ScaleData(int.ipsc, verbose=FALSE)
+int.ipsc <- RunPCA(object=int.ipsc, npcs=100, verbose=FALSE)
+pva <- int.ipsc@reductions$pca@stdev^2/int.ipsc@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+int.ipsc <- RunUMAP(int.ipsc, dims=1:100)
+saveRDS(int.ipsc, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.ipsc.rds"))
+rm(obj.ipsc,int.ipsc)
+
+#combine mscs from all samples
+obj.msc   <- list(objects[[3]],objects[[4]],objects[[9]],objects[[10]],objects[[15]],objects[[16]],objects[[21]],objects[[22]],
+                  objects[[27]],objects[[28]],objects[[33]],objects[[34]],objects[[39]],objects[[40]])
+obj.msc.features <- SelectIntegrationFeatures(object.list=obj.msc, nfeatures=1000)
+reference_dataset <- c(3:4) #H1C1-r2 differentiated the best
+obj.msc <- lapply(X=obj.msc, FUN=function(x) {
+    x <- ScaleData(x, features=obj.msc.features, verbose=FALSE)
+    x <- RunPCA(x, features=obj.msc.features, verbose=FALSE)
+})
+obj.msc.anchors <- FindIntegrationAnchors(object.list=obj.msc, normalization.method="LogNormalize", anchor.features=obj.msc.features,
+                                           reference=reference_dataset, reduction="rpca")
+int.msc <- IntegrateData(anchorset=obj.msc.anchors, normalization.method="LogNormalize")
+int.msc <- ScaleData(int.msc, verbose=FALSE)
+int.msc <- RunPCA(object=int.msc, npcs=100, verbose=FALSE)
+pva <- int.msc@reductions$pca@stdev^2/int.msc@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+int.msc <- RunUMAP(int.msc, dims=1:100)
+saveRDS(int.msc, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.msc.rds"))
+rm(obj.msc,int.msc)
+
+#combine osteoblasts from all samples
+obj.osteo <- list(objects[[5]],objects[[6]],objects[[11]],objects[[12]],objects[[17]],objects[[18]],objects[[23]],objects[[24]],
+                  objects[[29]],objects[[30]],objects[[35]],objects[[36]],objects[[41]],objects[[42]])
+obj.osteo.features <- SelectIntegrationFeatures(object.list=obj.osteo, nfeatures=1000)
+reference_dataset <- c(3:4) #H1C1-r2 differentiated the best
+obj.osteo <- lapply(X=obj.osteo, FUN=function(x) {
+    x <- ScaleData(x, features=obj.osteo.features, verbose=FALSE)
+    x <- RunPCA(x, features=obj.osteo.features, verbose=FALSE)
+})
+obj.osteo.anchors <- FindIntegrationAnchors(object.list=obj.osteo, normalization.method="LogNormalize", anchor.features=obj.osteo.features,
+                                           reference=reference_dataset, reduction="rpca")
+int.osteo <- IntegrateData(anchorset=obj.osteo.anchors, normalization.method="LogNormalize")
+int.osteo <- ScaleData(int.osteo, verbose=FALSE)
+int.osteo <- RunPCA(object=int.osteo, npcs=100, verbose=FALSE)
+pva <- int.osteo@reductions$pca@stdev^2/int.osteo@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+int.osteo <- RunUMAP(int.osteo, dims=1:100)
+saveRDS(int.osteo, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.int.osteo.rds"))
+rm(obj.osteo,int.osteo)
+
+```
+
+```{r integrate scRNA data - separate individuals but keep all cell types together}
+
+#BASHSCRIPT: rpca.l_indv.sh (or rpca.filter.l_indv.sh / rpca.filterMT.l_indv.sh)
+
+##!/bin/bash
+##SBATCH --job-name=rpca.l_indv
+##SBATCH --output=rpca.l_indv.out
+##SBATCH --error=rpca.l_indv.err
+##SBATCH --time=03:00:00
+##SBATCH --partition=bigmem2
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=12800
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R CMD BATCH --no-save --no-restore rpca.l_indv.R rpca.l_indv.out
+
+#RSCRIPT: rpca.l_indv.R (or rpca.filter.l_indv.R / rpca.filterMT.l_indv.R)
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+
+#Load batch info
+batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+
+#Load objects
+objects <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv.log.rds"))
+
+#Select features for downstream integration (keeping at 1000 for now)
+#Identify anchors (used references + RPCA reduction method) #ALL OTHER METHODS CRASH
+objects.features <- SelectIntegrationFeatures(object.list=objects, nfeatures=1000)
+reference_dataset <- c(2,9) #make H1-r2 and C1-r2 the references
+objects <- lapply(X=objects, FUN=function(x) {
+    x <- ScaleData(x, features=objects.features, verbose=FALSE)
+    x <- RunPCA(x, features=objects.features, verbose=FALSE)
+})
+objects.anchors <- FindIntegrationAnchors(object.list=objects, normalization.method="LogNormalize", anchor.features=objects.features,
+                                          reference=reference_dataset, reduction="rpca")
+
+#Integrate datasets
+integrate <- IntegrateData(anchorset=objects.anchors, normalization.method="LogNormalize")
+integrate <- ScaleData(integrate, verbose=FALSE)
+
+#Reduce dimensionality
+integrate <- RunPCA(object=integrate, npcs=100, verbose=FALSE)
+pva <- integrate@reductions$pca@stdev^2/integrate@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001)) #keep all dims that explaim more than 0.1% of variance
+print(ndim)
+integrate <- RunUMAP(integrate, dims=1:100)
+
+#Save data
+saveRDS(integrate, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv.log.int.rds"))
+rm(objects,integrate)
 
 ```
 
 ```{r examine batch effects - merged data vs. integrated data}
-
-### SHOULD BE INCORPORATED TO DATA QC AFTER MERGING AND INTEGRATING DATA ###
 
 #Load libraries
 library(Seurat)
@@ -377,3 +818,4 @@ rm(data, spps, pair, indv)
 #NOTES:  UMI and gene counts are higher in humans than chimps
 
 ```
+

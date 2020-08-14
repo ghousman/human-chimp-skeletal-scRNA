@@ -1,0 +1,243 @@
+---
+title: "10x-data-merge"
+author: "Genevieve Housman"
+date: "August 2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 10X Data Cellranger Analysis - Merge Data
+
+Filtered 10X data are merged together for easy access to raw data for downstream differential expression analysis. For each group of merged cells, gene counts are normalized, variance is stabilized, and dimensionality reduction is performed. No regression of unwanted variation or data integration was performed.
+
+Merged datasets include:
+
+* all cells from Time 0 collections
+* all cells from Time 1 collections
+* all cells from Time 2 collections
+* all cells from all collections
+
+```{bash, eval=FALSE}
+
+#BASHSCRIPT: merge.l.sh
+
+##!/bin/bash
+##SBATCH --job-name=merge.l
+##SBATCH --output=merge.l.out
+##SBATCH --error=merge.err
+##SBATCH --time=03:00:00
+##SBATCH --partition=broadwl
+##SBATCH --nodes=1
+##SBATCH --ntasks-per-node=8
+##SBATCH --mem-per-cpu=6400
+#module load R/3.5.1
+#export PYTHONUSERBASE=$HOME/.local/python
+#R CMD BATCH --no-save --no-restore merge.l.R merge.l.out
+
+#RSCRIPT: merge.l.R
+
+```
+
+```{bash, eval=FALSE, echo=TRUE}
+#easties to run these scripts on the cluster
+sinteractive --mem=24g --time=12:00:00 --partition=broadwl
+module load R/3.6.1
+export PYTHONUSERBASE=$HOME/.local/python
+R
+```
+
+```{r}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+
+```
+
+```{r}
+
+#Read in files
+data <- readRDS("./data/cellranger-data-full/data.filter.rds")
+
+```
+
+### Combine all cells from Time 0 collections
+
+```{r}
+
+combo.t0    <- merge(data[[1]],
+                     y=c(data[[4]],data[[7]],data[[10]],data[[13]],data[[16]],data[[19]]),
+                     add.cell.ids=c("H1C1.I","H1C1-r2.I","H2C2.I","H3C3.I","H4C4.I","H5C5.I","H6C6.I"))
+
+combo.t0 <- NormalizeData(combo.t0,
+                          verbose=FALSE,
+                          normalization.method="LogNormalize",
+                          scale.factor=10000)
+
+combo.t0 <- FindVariableFeatures(combo.t0,
+                                 selection.method="vst",
+                                 nfeatures=3000,
+                                 verbose=FALSE)
+
+combo.t0 <- ScaleData(combo.t0,
+                      vars.to.regress = NULL,
+                      verbose=FALSE)
+
+combo.t0 <- RunPCA(combo.t0,
+                   npcs=100,
+                   verbose=FALSE)
+
+#keep all dims that explaim more than 0.1% of variance
+pva <- combo.t0@reductions$pca@stdev^2/combo.t0@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001))
+ndim
+
+combo.t0 <- RunUMAP(combo.t0,
+                    dims=1:ndim)
+
+saveRDS(combo.t0, file="./data/cellranger-data-full/data.filter.merge.log.t0.rds")
+
+rm(combo.t0)
+
+```
+
+### Combine all cells from Time 1 collections
+
+```{r}
+
+combo.t1    <- merge(data[[2]],
+                     y=c(data[[5]],data[[8]],data[[11]],data[[14]],data[[17]],data[[20]]),
+                     add.cell.ids=c("H1C1.M","H1C1-r2.M","H2C2.M","H3C3.M","H4C4.M","H5C5.M","H6C6.M"))
+
+combo.t1 <- NormalizeData(combo.t1,
+                          verbose=FALSE,
+                          normalization.method="LogNormalize",
+                          scale.factor=10000)
+
+combo.t1 <- FindVariableFeatures(combo.t1,
+                                 selection.method="vst",
+                                 nfeatures=3000, verbose=FALSE)
+
+combo.t1 <- ScaleData(combo.t1,
+                      vars.to.regress = NULL,
+                      verbose=FALSE)
+
+combo.t1 <- RunPCA(combo.t1,
+                   npcs=100,
+                   verbose=FALSE)
+
+#keep all dims that explaim more than 0.1% of variance
+pva <- combo.t1@reductions$pca@stdev^2/combo.t1@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001))
+ndim
+
+combo.t1 <- RunUMAP(combo.t1,
+                    dims=1:ndim)
+
+saveRDS(combo.t1, file="./data/cellranger-data-full/data.filter.merge.log.t1.rds")
+
+rm(combo.t1)
+
+```
+
+### Combine all cells from Time 2 collections
+
+```{r}
+
+combo.t2    <- merge(data[[3]],
+                     y=c(data[[6]],data[[9]],data[[12]],data[[15]],data[[18]],data[[21]]),
+                     add.cell.ids=c("H1C1.O","H1C1-r2.O","H2C2.O","H3C3.O","H4C4.O","H5C5.O","H6C6.O"))
+
+combo.t2 <- NormalizeData(combo.t2,
+                          verbose=FALSE,
+                          normalization.method="LogNormalize",
+                          scale.factor=10000)
+
+combo.t2 <- FindVariableFeatures(combo.t2,
+                                 selection.method="vst",
+                                 nfeatures=3000,
+                                 verbose=FALSE)
+
+combo.t2 <- ScaleData(combo.t2,
+                      vars.to.regress = NULL,
+                      verbose=FALSE)
+
+combo.t2 <- RunPCA(combo.t2,
+                   npcs=100,
+                   verbose=FALSE)
+
+#keep all dims that explaim more than 0.1% of variance
+pva <- combo.t2@reductions$pca@stdev^2/combo.t2@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001))
+ndim
+
+combo.t2 <- RunUMAP(combo.t2,
+                    dims=1:ndim)
+
+saveRDS(combo.t2, file="./data/cellranger-data-full/data.filter.merge.log.t2.rds")
+
+rm(combo.t2)
+
+```
+
+### Combine all cells from all collections
+
+```{r}
+
+combo.tot  <- merge(data[[1]],
+                    y=c(data[[2]],data[[3]],
+                        data[[4]],data[[5]],data[[6]],
+                        data[[7]],data[[8]],data[[9]],
+                        data[[10]],data[[11]],data[[12]],
+                        data[[13]],data[[14]],data[[15]],
+                        data[[16]],data[[17]],data[[18]],
+                        data[[19]],data[[20]],data[[21]]),
+                    add.cell.ids=c("H1C1.I","H1C1.M","H1C1.O",
+                                   "H1C1-r2.I","H1C1-r2.M","H1C1-r2.O",
+                                   "H2C2.I","H2C2.M","H2C2.O",
+                                   "H3C3.I","H3C3.M","H3C3.O",
+                                   "H4C4.I","H4C4.M","H4C4.O",
+                                   "H5C5.I","H5C5.M","H5C5.O",
+                                   "H6C6.I","H6C6.M","H6C6.O"))
+
+combo.tot <- NormalizeData(combo.tot,
+                           verbose=FALSE,
+                           normalization.method="LogNormalize",
+                           scale.factor=10000)
+
+combo.tot <- FindVariableFeatures(combo.tot,
+                                  selection.method="vst",
+                                  nfeatures=3000,
+                                  verbose=FALSE)
+
+combo.tot <- ScaleData(combo.tot,
+                       vars.to.regress = NULL,
+                       verbose=FALSE)
+
+combo.tot <- RunPCA(combo.tot,
+                    npcs=100,
+                    verbose=FALSE)
+
+#keep all dims that explaim more than 0.1% of variance
+pva <- combo.tot@reductions$pca@stdev^2/combo.tot@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001))
+ndim
+
+combo.tot <- RunUMAP(combo.tot,
+                     dims=1:ndim)
+
+saveRDS(combo.tot, file="./data/cellranger-data-full/data.filter.merge.log.tot.rds")
+
+rm(combo.tot)
+
+```
