@@ -41,13 +41,24 @@ In Seurat the main normalization methods are:
     + Alternative workflow that perfoms log normalization, variable feature identification, and data scaling in one command.
 
 Because data are more difficult to manipulate with SCTransform, standard log normalization is used here.
-Also, because 
 
 **Step 2 - Calculate Cell Cycle Score**
 
+Cell cycle scores are assigned to cells based on G2/M and S phase markers in each cell. The calculation depends on average gene expression levels across cells in a seurat object, so merging or subsetting data can affect these scores. We calculate these scores within separate samples (n=42, each individual and cell type separated) rather than after different samples are merged together.
+
+Possible Cell Cycle Assignments
+
+* G1: beginning of interphase
+* S: synthesis phase
+* G2: end of interphase prior to mitosis
+
 **Step 3 - Variance Stabilization**
 
+Identifying variable genes depends on expression patterns across cells in a seurat object, so merging or subsetting data can affect which genes are identified as variable.
+
 **Step 4 - Regression of Unwanted Variation**
+
+We do not regress out unwanted variation in our data subsets.
 
 **Step 5 - Data Integration**
 
@@ -57,43 +68,14 @@ Also, because
 
 **References**
 
+* https://satijalab.org/seurat/v3.2/integration.html
 * https://hbctraining.github.io/scRNA-seq/lessons/06_SC_SCT_and_integration.html
+* https://hbctraining.github.io/scRNA-seq/lessons/cell_cycle_scoring.html
 * See the following scripts for previous trial runs:
   + ./analysis/v1/v1-10x-data-normalize-log.Rmd
   + ./analysis/v1/v1-10x-data-normalize-sct.Rmd
 
-
-```{bash, eval=FALSE, echo=TRUE}
-
-### PROBABLY DO NOT NEED TO RUN ON CLUSTER THIS WAY
-
-sinteractive --mem=24g --time=12:00:00 --partition=broadwl
-module load R/3.6.1
-export PYTHONUSERBASE=$HOME/.local/python
-R
-```
-
-
-### Normalize Data & Find Variable Features
-
-```{r prepare scRNA data for merging/integration - separate individuals and cell types}
-
-#BASHSCRIPT: prep.l_indv-cell.sh (or prep.filter.l_indv-cell.sh / prep.filterMT.l_indv-cell.sh)
-
-##!/bin/bash
-##SBATCH --job-name=prep.l_indv-cell
-##SBATCH --output=prep.l_indv-cell.out
-##SBATCH --error=prep.l_indv-cell.err
-##SBATCH --time=03:00:00
-##SBATCH --partition=bigmem2
-##SBATCH --nodes=1
-##SBATCH --ntasks-per-node=8
-##SBATCH --mem-per-cpu=25600
-#module load R/3.5.1
-#export PYTHONUSERBASE=$HOME/.local/python
-#R CMD BATCH --no-save --no-restore prep.l_indv-cell.R prep.l_indv-cell.out
-
-#RSCRIPT: prep.l_indv-cell.R (or prep.filter.l_indv-cell.R / prep.filterMT.l_indv-cell.R)
+```{r}
 
 #Load libraries
 library(Seurat)
@@ -104,142 +86,169 @@ library(ggplot2)
 library(colorspace)
 library(RColorBrewer)
 
-#Define main directory
-dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
-
-#Load batch info
-batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
-
-#Read in files
-data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.rds"))
-
-#Separate human and chimp data within each collection into separate objects
-objects <- list()
-idx <- 1
-for (i in 1:length(batch$Sample_Name_at_Core))
-{
-  obj <- subset(data[[i]], species=='Human')
-  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
-  idx <- idx+1
-  obj <- subset(data[[i]], species=='Chimp')
-  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
-  idx <- idx+1
-}
-rm(data,obj)
-
-#Perform log normalization on each individual and cell type
-for (i in 1:length(objects)) {
-  print(i)
-  objects[[i]] <- NormalizeData(objects[[i]], verbose=FALSE)
-  objects[[i]] <- FindVariableFeatures(objects[[i]], selection.method="vst", nfeatures=3000, verbose=FALSE)
-}
-
-#Save data
-saveRDS(objects, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv-cell.log.rds"))
-
 ```
 
-```{r prepare scRNA data for merging/integration - separate individuals but keep all cell types together}
+### Load and Prepare Data
 
-#BASHSCRIPT: prep.l_indv.sh  (or prep.filter.l_indv.sh / prep.filterMT.l_indv.sh)
+Prepare filtered 10X data by separating each individual and cell type into seperate datasets.
 
-##!/bin/bash
-##SBATCH --job-name=prep.l_indv
-##SBATCH --output=prep.l_indv.out
-##SBATCH --error=prep.l_indv.err
-##SBATCH --time=03:00:00
-##SBATCH --partition=broadwl
-##SBATCH --nodes=1
-##SBATCH --ntasks-per-node=8
-##SBATCH --mem-per-cpu=6400
-#module load R/3.5.1
-#export PYTHONUSERBASE=$HOME/.local/python
-#R CMD BATCH --no-save --no-restore prep.l_indv.R prep.l_indv.out
-
-#RSCRIPT: prep.l_indv.R (or prep.filter.l_indv.R / prep.filterMT.l_indv.R)
-
-#Load libraries
-library(Seurat)
-library(dplyr)
-library(stringi)
-library(stringr)
-library(ggplot2)
-library(colorspace)
-library(RColorBrewer)
-
-#Define main directory
-dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+```{r}
 
 #Load batch info
-batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
+batch <- read.csv(file='./data/scrna-batch.csv', header=TRUE, sep=",")
 
 #Read in files
-data <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.rds"))
+data <- readRDS("./data/cellranger-data-full/data.filter.rds")
 
-#Separate human and chimp data within each collection into separate objects
-objects <- list()
-idx <- 1
-for (i in 1:length(batch$Sample_Name_at_Core))
-{
-  obj <- subset(data[[i]], species=='Human')
-  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
-  idx <- idx+1
-  obj <- subset(data[[i]], species=='Chimp')
-  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
-  idx <- idx+1
-}
-rm(data,obj)
-
-#Merge all cell types in each individual
-h1 <- merge(objects[[1]], y=c(objects[[3]],objects[[5]]),add.cell.ids=c("H1.I","H1.M","H1.O"))
-h1r2 <- merge(objects[[7]], y=c(objects[[9]],objects[[11]]),add.cell.ids=c("H1r2.I","H1r2.M","H1r2.O"))
-h2 <- merge(objects[[13]], y=c(objects[[15]],objects[[17]]),add.cell.ids=c("H2.I","H2.M","H2.O"))
-h3 <- merge(objects[[19]], y=c(objects[[21]],objects[[23]]),add.cell.ids=c("H3.I","H3.M","H3.O"))
-h4 <- merge(objects[[25]], y=c(objects[[27]],objects[[29]]),add.cell.ids=c("H4.I","H4.M","H4.O"))
-h5 <- merge(objects[[31]], y=c(objects[[33]],objects[[35]]),add.cell.ids=c("H5.I","H5.M","H5.O"))
-h6 <- merge(objects[[37]], y=c(objects[[39]],objects[[41]]),add.cell.ids=c("H6.I","H6.M","H6.O"))
-c1 <- merge(objects[[2]], y=c(objects[[4]],objects[[6]]),add.cell.ids=c("C1.I","C1.M","C1.O"))
-c1r2 <- merge(objects[[8]], y=c(objects[[10]],objects[[12]]),add.cell.ids=c("C1r2.I","C1r2.M","C1r2.O"))
-c2 <- merge(objects[[14]], y=c(objects[[16]],objects[[18]]),add.cell.ids=c("C2.I","C2.M","C2.O"))
-c3 <- merge(objects[[20]], y=c(objects[[22]],objects[[24]]),add.cell.ids=c("C3.I","C3.M","C3.O"))
-c4 <- merge(objects[[26]], y=c(objects[[28]],objects[[30]]),add.cell.ids=c("C4.I","C4.M","C4.O"))
-c5 <- merge(objects[[32]], y=c(objects[[34]],objects[[36]]),add.cell.ids=c("C5.I","C5.M","C5.O"))
-c6 <- merge(objects[[38]], y=c(objects[[40]],objects[[42]]),add.cell.ids=c("C6.I","C6.M","C6.O"))
-
-objects <- list(h1,h1r2,h2,h3,h4,h5,h6,c1,c1r2,c2,c3,c4,c5,c6)
-
-#Perform log normalization on each collection
-for (i in 1:length(objects)) {
-  print(i)
-  objects[[i]] <- NormalizeData(objects[[i]], verbose=FALSE)
-  objects[[i]] <- FindVariableFeatures(objects[[i]], selection.method="vst", nfeatures=3000, verbose=FALSE)
-}
-
-#Save data
-saveRDS(objects, file=paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv.log.rds"))
-
-```
-
-### Cell Cycle Scoring
-
-References
-
-* https://hbctraining.github.io/scRNA-seq/lessons/cell_cycle_scoring.html
-
-```{r cell cycle}
-
-#cc_file <- getURL("https://raw.githubusercontent.com/hbc/tinyatlas/master/cell_cycle/Homo_sapiens.csv") 
-#cell_cycle_genes <- read.csv(text = cc_file)
-
-#cell cycle markers (Tirosh et al, 2015) - loaded with seurat
+#Load cell cycle markers (Tirosh et al., 2016 Science) with seurat
 s.genes <- cc.genes$s.genes
 g2m.genes <- cc.genes$g2m.genes
 
-#score cell cycle phases
-indv <- CellCycleScoring(indv, s.features=s.genes, g2m.features=g2m.genes, set.ident=TRUE)
+#Separate human and chimp data within each collection into separate objects
+objects <- list()
+idx <- 1
+for (i in 1:length(batch$Sample_Name_at_Core))
+{
+  obj <- subset(data[[i]], Species=='Human')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
+  obj <- subset(data[[i]], Species=='Chimp')
+  objects[[idx]] <- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx <- idx+1
+}
+rm(data,obj,idx)
 
-#view cell cycle scores and phase assignments
-head(indv[[]])
+```
+
+### Normalize Data and Score Cell Cycle
+
+Because cell cycle score depends on average gene expression levels across cells in a seurat object, it is probably best to calculate these scores within separate samples (n=42, each individual and cell type separated) rather than after different samples are merged together.
+
+```{r}
+
+#Perform log normalization and cell cycle scoring on each individual and cell type
+for (i in 1:length(objects)) {
+  print(i)
+  objects[[i]] <- NormalizeData(objects[[i]], normalization.method="LogNormalize", scale.factor=10000, verbose=FALSE)
+  objects[[i]] <- CellCycleScoring(objects[[i]], s.features=s.genes, g2m.features=g2m.genes, set.ident=FALSE)
+}
+rm(s.genes,g2m.genes,i)
+
+```
+
+### Merge Data into Different Subsets
+
+Datasets include:
+
+* cells separated by individual and cell type (n=42)
+* cells separated by individual (n=14)
+* all cells from Time 0 collections (n=1)
+* all cells from Time 1 collections (n=1)
+* all cells from Time 2 collections (n=1)
+* all cells from all collections (n=1)
+
+```{r}
+
+#keep collections separated by individual and cell type (.log.indv-cell)
+#objects
+
+#merge T0, T1, and T2 collections within each individual (.log.indv)
+objects[[43]] <- merge(objects[[1]], y=c(objects[[3]],objects[[5]]),add.cell.ids=c("H1.I","H1.M","H1.O"))
+objects[[44]] <- merge(objects[[7]], y=c(objects[[9]],objects[[11]]),add.cell.ids=c("H1r2.I","H1r2.M","H1r2.O"))
+objects[[45]] <- merge(objects[[13]], y=c(objects[[15]],objects[[17]]),add.cell.ids=c("H2.I","H2.M","H2.O"))
+objects[[46]] <- merge(objects[[19]], y=c(objects[[21]],objects[[23]]),add.cell.ids=c("H3.I","H3.M","H3.O"))
+objects[[47]] <- merge(objects[[25]], y=c(objects[[27]],objects[[29]]),add.cell.ids=c("H4.I","H4.M","H4.O"))
+objects[[48]] <- merge(objects[[31]], y=c(objects[[33]],objects[[35]]),add.cell.ids=c("H5.I","H5.M","H5.O"))
+objects[[49]] <- merge(objects[[37]], y=c(objects[[39]],objects[[41]]),add.cell.ids=c("H6.I","H6.M","H6.O"))
+objects[[50]] <- merge(objects[[2]], y=c(objects[[4]],objects[[6]]),add.cell.ids=c("C1.I","C1.M","C1.O"))
+objects[[51]] <- merge(objects[[8]], y=c(objects[[10]],objects[[12]]),add.cell.ids=c("C1r2.I","C1r2.M","C1r2.O"))
+objects[[52]] <- merge(objects[[14]], y=c(objects[[16]],objects[[18]]),add.cell.ids=c("C2.I","C2.M","C2.O"))
+objects[[53]] <- merge(objects[[20]], y=c(objects[[22]],objects[[24]]),add.cell.ids=c("C3.I","C3.M","C3.O"))
+objects[[54]] <- merge(objects[[26]], y=c(objects[[28]],objects[[30]]),add.cell.ids=c("C4.I","C4.M","C4.O"))
+objects[[55]] <- merge(objects[[32]], y=c(objects[[34]],objects[[36]]),add.cell.ids=c("C5.I","C5.M","C5.O"))
+objects[[56]] <- merge(objects[[38]], y=c(objects[[40]],objects[[42]]),add.cell.ids=c("C6.I","C6.M","C6.O"))
+
+#merge all T0 collections (.log.t0)
+objects[[57]] <- merge(objects[[1]],
+                        y=c(objects[[7]],objects[[13]],objects[[19]],objects[[25]],objects[[31]],objects[[37]],
+                            objects[[2]],objects[[8]],objects[[14]],objects[[20]],objects[[26]],objects[[32]],objects[[38]]),
+                        add.cell.ids=c("H1.I","H1r2.I","H2.I","H3.I","H4.I","H5.I","H6.I",
+                                       "C1.I","C1r2.I","C2.I","C3.I","C4.I","C5.I","C6.I"))
+
+#merge all T1 collections (.log.t1)
+objects[[58]] <- merge(objects[[3]],
+                        y=c(objects[[9]],objects[[15]],objects[[21]],objects[[27]],objects[[33]],objects[[39]],
+                            objects[[4]],objects[[10]],objects[[16]],objects[[22]],objects[[28]],objects[[34]],objects[[40]]),
+                        add.cell.ids=c("H1.M","H1r2.M","H2.M","H3.M","H4.M","H5.M","H6.M",
+                                       "C1.M","C1r2.M","C2.M","C3.M","C4.M","C5.M","C6.M"))
+
+#merge all T2 collections (.log.t2)
+objects[[59]] <- merge(objects[[5]],
+                        y=c(objects[[11]],objects[[17]],objects[[23]],objects[[29]],objects[[35]],objects[[41]],
+                            objects[[6]],objects[[12]],objects[[18]],objects[[24]],objects[[30]],objects[[36]],objects[[42]]),
+                        add.cell.ids=c("H1.O","H1r2.O","H2.O","H3.O","H4.O","H5.O","H6.O",
+                                       "C1.O","C1r2.O","C2.O","C3.O","C4.O","C5.O","C6.O"))
+
+#merge all collections (.log.tot)
+objects[[60]] <- merge(objects[[1]],
+                        y=c(objects[[7]],objects[[13]],objects[[19]],objects[[25]],objects[[31]],objects[[37]],
+                            objects[[2]],objects[[8]],objects[[14]],objects[[20]],objects[[26]],objects[[32]],objects[[38]],
+                            objects[[3]],objects[[9]],objects[[15]],objects[[21]],objects[[27]],objects[[33]],objects[[39]],
+                            objects[[4]],objects[[10]],objects[[16]],objects[[22]],objects[[28]],objects[[34]],objects[[40]],
+                            objects[[5]],objects[[11]],objects[[17]],objects[[23]],objects[[29]],objects[[35]],objects[[41]],
+                            objects[[6]],objects[[12]],objects[[18]],objects[[24]],objects[[30]],objects[[36]],objects[[42]]),
+                        add.cell.ids=c("H1.I","H1r2.I","H2.I","H3.I","H4.I","H5.I","H6.I",
+                                       "C1.I","C1r2.I","C2.I","C3.I","C4.I","C5.I","C6.I",
+                                       "H1.M","H1r2.M","H2.M","H3.M","H4.M","H5.M","H6.M",
+                                       "C1.M","C1r2.M","C2.M","C3.M","C4.M","C5.M","C6.M",
+                                       "H1.O","H1r2.O","H2.O","H3.O","H4.O","H5.O","H6.O",
+                                       "C1.O","C1r2.O","C2.O","C3.O","C4.O","C5.O","C6.O"))
+
+```
+
+### Find Variable Features, Stabilize Variance, and Reduce Data Dimensionality
+
+Which variable features are identified depends on which samples are included into the seurat object. This is why we first compile different sets of merged data before assessing variable feature in the merged dataset.
+
+When scaling the data, no variables are regressed out at this time.
+
+To QC each data subset, we also do dimensional reduction for each dataset
+
+```{r}
+
+#Identify variable feature for each individual and cell type
+for (i in 1:length(objects)) {
+  print(i)
+  objects[[i]] <- FindVariableFeatures(objects[[i]], selection.method="vst", nfeatures=3000, verbose=FALSE)
+  objects[[i]] <- ScaleData(objects[[i]], vars.to.regress=NULL, verbose=FALSE)
+  objects[[i]] <- RunPCA(objects[[i]], npcs=100, verbose=FALSE)
+  #keep all dims that explaim more than 0.1% of variance
+  pva <- objects[[i]]@reductions$pca@stdev^2/objects[[i]]@reductions$pca@misc$total.variance
+  ndim <- length(which(pva>=0.001))
+  objects[[i]] <- RunUMAP(objects[[i]], dims=1:ndim)
+}
+rm(pva,ndim,i)
+
+```
+
+### Save Data Subsets
+
+```{r}
+
+#Save data
+saveRDS(objects[1:42], file="./data/cellranger-data-full/data.filter.log.indv-cell.rds")
+saveRDS(objects[43:56], file="./data/cellranger-data-full/data.filter.log.indv.rds")
+saveRDS(objects[57], file="./data/cellranger-data-full/data.filter.log.merge-t0.rds")
+saveRDS(objects[57], file="./data/cellranger-data-full/data.filter.log.merge-t1.rds")
+saveRDS(objects[57], file="./data/cellranger-data-full/data.filter.log.merge-t2.rds")
+saveRDS(objects[57], file="./data/cellranger-data-full/data.filter.log.merge-tot.rds")
+
+```
+
+### QC of Data Subsets
+
+```{r cell cycle}
+
 
 #plot cell cycle scores
 CombinePlots(plots=list((DimPlot(indv,
@@ -306,37 +315,7 @@ What I used:
 
 ```{r integrate scRNA data - separate individuals and cells types}
 
-#BASHSCRIPT: rpca.l_indv-cell.sh (or rpca.filter.l_indv-cell.sh / rpca.l.filterMT.l_indv-cell.sh)
 
-##!/bin/bash
-##SBATCH --job-name=rpca.l_indv-cell
-##SBATCH --output=rpca.l_indv-cell.out
-##SBATCH --error=rpca.l_indv-cell.err
-##SBATCH --time=03:00:00
-##SBATCH --partition=broadwl
-##SBATCH --nodes=1
-##SBATCH --ntasks-per-node=8
-##SBATCH --mem-per-cpu=6400
-#module load R/3.5.1
-#export PYTHONUSERBASE=$HOME/.local/python
-#R CMD BATCH --no-save --no-restore rpca.l_indv-cell.R rpca.l_indv-cell.out
-
-#RSCRIPT: rpca.l_indv-cell.R (or rpca.filter.l_indv-cell.R / rpca.filterMT.l_indv-cell.R)
-
-#Load libraries
-library(Seurat)
-library(dplyr)
-library(stringi)
-library(stringr)
-library(ggplot2)
-library(colorspace)
-library(RColorBrewer)
-
-#Define main directory
-dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
-
-#Load batch info
-batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
 
 #Load objects
 objects <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/v1/data.indv-cell.log.rds"))
@@ -414,38 +393,6 @@ rm(obj.osteo,int.osteo)
 ```
 
 ```{r integrate scRNA data - separate individuals but keep all cell types together}
-
-#BASHSCRIPT: rpca.l_indv.sh (or rpca.filter.l_indv.sh / rpca.filterMT.l_indv.sh)
-
-##!/bin/bash
-##SBATCH --job-name=rpca.l_indv
-##SBATCH --output=rpca.l_indv.out
-##SBATCH --error=rpca.l_indv.err
-##SBATCH --time=03:00:00
-##SBATCH --partition=bigmem2
-##SBATCH --nodes=1
-##SBATCH --ntasks-per-node=8
-##SBATCH --mem-per-cpu=12800
-#module load R/3.5.1
-#export PYTHONUSERBASE=$HOME/.local/python
-#R CMD BATCH --no-save --no-restore rpca.l_indv.R rpca.l_indv.out
-
-#RSCRIPT: rpca.l_indv.R (or rpca.filter.l_indv.R / rpca.filterMT.l_indv.R)
-
-#Load libraries
-library(Seurat)
-library(dplyr)
-library(stringi)
-library(stringr)
-library(ggplot2)
-library(colorspace)
-library(RColorBrewer)
-
-#Define main directory
-dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
-
-#Load batch info
-batch <- read.csv(file=paste0(dir,'human-chimp-skeletal-scRNA/data/scrna-batch.csv'), header=TRUE, sep=",")
 
 #Load objects
 objects <- readRDS(paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full/data.indv.log.rds"))
