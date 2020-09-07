@@ -11,6 +11,38 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Temporary storage of code that needs to be moved to different .Rmd files.
 
+```{r loop for de analysis}
+for (i in subset.list) {
+  
+  for (j in i) {
+    
+    cell.assign <- str_split(j,"-")[[1]][1]
+    cell.subset <- str_split(j,"-")[[1]][2]
+    
+    #print(cell.assign)
+    
+    if (str_count(cell.subset,"_")>=1){
+      
+      #print(length(str_split(cell.subset,"_")[[1]]))
+
+      if (length(str_split(cell.subset,"_")[[1]])==2) {
+        print(str_split(cell.subset,"_")[[1]][1])
+        print(str_split(cell.subset,"_")[[1]][2])
+      }
+      else {
+        print(str_split(cell.subset,"_")[[1]][1])
+        print(str_split(cell.subset,"_")[[1]][2])
+        print(str_split(cell.subset,"_")[[1]][3])
+      }
+    }
+
+    else {
+      #print(j)
+    }
+  }
+}
+```
+
 ```{r process scRNA data - filter out mitochondrial genes from data}
 
 ### NO LONGER NEED TO REMOVE MITO GENES FOR ORTHO-EXON V2 ###

@@ -1,0 +1,170 @@
+---
+title: "asbmr2020-plots"
+author: "Genevieve Housman"
+date: "8/31/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r load libraries}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(grid)
+library(gbm)
+library(colorspace)
+library(RColorBrewer)
+library(edgeR)
+library(scran)
+library(SingleCellExperiment)
+
+```
+
+```{r}
+
+#Load data
+scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.assign.rds" #integrate across individuals - total (15k genes)
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-tot.assign.rds" #integrate across individuals - total
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-t0.assign.rds" #integrate across individuals - Time 0
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-t1.assign.rds" #integrate across individuals - Time 1
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-t2.assign.rds" #integrate across individuals - Time 2
+data <- readRDS(scrna)
+
+data
+
+```
+
+```{r plots for BoG presentation}
+
+#cell counts
+ggplot(data@meta.data, aes(x=Stage, fill=Stage)) +
+  geom_bar() +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+ggplot(data@meta.data, aes(x=Stage, fill=Stage)) +
+  geom_bar() +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  ylim(0,20000) +
+  facet_wrap(~Species, ncol=2) +
+  theme(axis.text=element_text(size=8), axis.title=element_text(size=8), legend.text=element_text(size=8))
+
+#umi counts
+ggplot(data@meta.data, aes(x=Stage, y=nCount_RNA, fill=Stage)) +
+  geom_violin() +
+  labs(y="UMIs per Cell", x="") +
+  scale_fill_manual(name="", values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+ggplot(data@meta.data, aes(x=Stage, y=nCount_RNA, fill=Stage)) +
+  geom_violin() +
+  labs(y="UMIs per Cell", x="") +
+  scale_fill_manual(name="", values=c("pink","mediumorchid","dodgerblue")) +
+  ylim(0,110000) +
+  facet_wrap(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+#gene counts
+ggplot(data@meta.data, aes(x=Stage, y=nFeature_RNA, fill=Stage)) +
+  geom_violin() +
+  labs(y="Genes per Cell", x="") +
+  scale_fill_manual(name="", values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+ggplot(data@meta.data, aes(x=Stage, y=nFeature_RNA, fill=Stage)) +
+  geom_violin() +
+  labs(y="Genes per Cell", x="") +
+  scale_fill_manual(name="", values=c("pink","mediumorchid","dodgerblue")) +
+  ylim(0,8500) +
+  facet_wrap(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+#stage of differentiation
+DimPlot(data, group.by="Stage", reduction="umap", cols=c("pink","mediumorchid","dodgerblue")) + labs(x="UMAP1",y="UMAP2")
+DimPlot(data, group.by="Stage", split.by="Species", reduction="umap", cols=c("pink","mediumorchid","dodgerblue")) + labs(x="UMAP1",y="UMAP2")
+VlnPlot(data, features=c("POU5F1","CD44","COL1A1"), group.by="Stage", cols=c("pink","mediumorchid","dodgerblue"), pt.size=0)
+VlnPlot(subset(data,subset=Species=="Human"), features=c("POU5F1","CD44","COL1A1"), group.by="Stage", cols=c("pink","mediumorchid","dodgerblue"), pt.size=0)
+VlnPlot(subset(data,subset=Species=="Chimp"), features=c("POU5F1","CD44","COL1A1"), group.by="Stage", cols=c("pink","mediumorchid","dodgerblue"), pt.size=0)
+
+#unsupervised clustering
+DimPlot(data, group.by="Cluster", reduction="umap", cols=c("pink","pink3","pink4","mediumorchid","dodgerblue","dodgerblue4")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(data, group.by="Cluster", split.by="Species", reduction="umap", cols=c("pink","pink3","pink4","mediumorchid","dodgerblue4")) +
+  labs(x="UMAP1",y="UMAP2")
+VlnPlot(data, features=c("POU5F1","CD44","COL1A1"), group.by="Cluster",
+        cols=c("pink","pink3","pink4","mediumorchid","dodgerblue","dodgerblue3","dodgerblue4"), pt.size=0)
+VlnPlot(subset(data,subset=Species=="Human"), features=c("POU5F1","CD44","COL1A1"), group.by="Cluster",
+        cols=c("pink","pink3","pink4","mediumorchid","dodgerblue","dodgerblue3","dodgerblue4"), pt.size=0)
+VlnPlot(subset(data,subset=Species=="Chimp"), features=c("POU5F1","CD44","COL1A1"), group.by="Cluster",
+        cols=c("pink","pink3","pink4","mediumorchid","dodgerblue","dodgerblue3","dodgerblue4"), pt.size=0)
+
+#ad hoc cell assignments
+DimPlot(data, group.by="AdHoc.Assign", reduction="umap", cols=c("lightgrey","pink","dodgerblue","mediumorchid"), order=c("MSC","Osteoblast","iPSC","other")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(data, group.by="AdHoc.Assign", split.by="Species", reduction="umap", cols=c("lightgrey","pink","dodgerblue","mediumorchid"),
+        order=c("MSC","Osteoblast","iPSC","other")) +
+  labs(x="UMAP1",y="UMAP2")
+VlnPlot(data, features=c("POU5F1","CD44","COL1A1"), group.by="AdHoc.Assign",
+        cols=c("pink","mediumorchid","dodgerblue","lightgrey"), pt.size=0)
+VlnPlot(subset(data,subset=Species=="Human"), features=c("POU5F1","CD44","COL1A1"), group.by="AdHoc.Assign",
+        cols=c("pink","mediumorchid","dodgerblue","lightgrey"), pt.size=0)
+VlnPlot(subset(data,subset=Species=="Chimp"), features=c("POU5F1","CD44","COL1A1"), group.by="AdHoc.Assign",
+        cols=c("pink","mediumorchid","dodgerblue","lightgrey"), pt.size=0)
+
+#ad hoc osteogenic cell assignments
+DimPlot(data, group.by="Stage", reduction="umap", cols=c("lightgrey","lightgrey","dodgerblue")) + labs(x="UMAP1",y="UMAP2")
+DimPlot(data, group.by="Stage", split.by="OstAdHoc.Assign", reduction="umap", cols=c("lightgrey","lightgrey","dodgerblue")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(data,
+        group.by="OstAdHoc.Assign",
+        split.by="OstAdHoc.Assign",
+        reduction="umap",
+        cols=c("dodgerblue","dodgerblue3","dodgerblue4","black","lightgrey"),
+        ncol=5) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(data,
+        group.by="OstAdHoc.Assign",
+        split.by="OstAdHoc.Assign",
+        reduction="umap",
+        cols=c("dodgerblue","dodgerblue3","dodgerblue4","black","lightgrey"),
+        ncol=1) +
+  labs(x="UMAP1",y="UMAP2")
+#DimPlot(data, group.by="OstAdHoc.Assign", reduction="umap", cols=c("dodgerblue","dodgerblue3","dodgerblue4","black","lightgrey")) +
+#  labs(x="UMAP1",y="UMAP2")
+VlnPlot(data,
+        features=c("RUNX2","BGLAP","CAPG","MEPE"),
+        group.by="OstAdHoc.Assign",
+        cols=c("dodgerblue","dodgerblue3","dodgerblue4","black","lightgrey"),
+        pt.size=0,
+        ncol=4)
+VlnPlot(subset(data,subset=Species=="Human"),
+        features=c("RUNX2","BGLAP","CAPG","MEPE"),
+        group.by="OstAdHoc.Assign",
+        cols=c("dodgerblue","dodgerblue3","dodgerblue4","black","lightgrey"),
+        pt.size=0,
+        ncol=4)
+VlnPlot(subset(data,subset=Species=="Chimp"),
+        features=c("RUNX2","BGLAP","CAPG","MEPE"),
+        group.by="OstAdHoc.Assign",
+        cols=c("dodgerblue","dodgerblue3","dodgerblue4","black","lightgrey"),
+        pt.size=0,
+        ncol=4)
+#VlnPlot(subset(data,subset=Species=="Human"), features=c("POU5F1","CD44","COL1A1"), group.by="OstAdHoc.Assign", pt.size=0)
+#VlnPlot(subset(data,subset=Species=="Chimp"), features=c("POU5F1","CD44","COL1A1"), group.by="OstAdHoc.Assign", pt.size=0)
+
+```
