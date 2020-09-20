@@ -274,6 +274,7 @@ Active assay: integrated (19377 features)
 +   tt$table$comparison <- rep(tt$comparison, dim(tt$table)[1])
 +   tt$table$test <- rep(tt$test, dim(tt$table)[1])
 +   tt$table$adjust.method <- rep(tt$adjust.method, dim(tt$table)[1])
++   tt$table$gene <- rownames(tt$table)
 + 
 +   return(tt$table)
 + 
@@ -366,7 +367,7 @@ FALSE  TRUE
 Down           1742
 NotSig         3304
 Up             1940
-[1] 6986   14
+[1] 6986   15
 [1] "cluster-iPSC.c2"
 [1] "common dispersion: 0.0745347044782612"
 [1] "All DE Genes"
@@ -378,7 +379,7 @@ FALSE  TRUE
 Down            275
 NotSig         1637
 Up              293
-[1] 9191   14
+[1] 9191   15
 [1] "cluster-iPSC.c3"
 [1] "common dispersion: 0.120353015212672"
 [1] "All DE Genes"
@@ -390,7 +391,7 @@ FALSE  TRUE
 Down            213
 NotSig         5741
 Up              340
-[1] 15485    14
+[1] 15485    15
 [1] "cluster-MSC.c1"
 [1] "common dispersion: 0.191742338421487"
 [1] "All DE Genes"
@@ -402,7 +403,7 @@ FALSE  TRUE
 Down           2252
 NotSig         3101
 Up             1593
-[1] 22431    14
+[1] 22431    15
 [1] "cluster-Osteoblast.c1"
 [1] "common dispersion: 0.276850578408015"
 [1] "All DE Genes"
@@ -414,7 +415,7 @@ FALSE  TRUE
 Down           1688
 NotSig         3332
 Up             1562
-[1] 29013    14
+[1] 29013    15
 [1] "cluster-Osteoblast.c2"
 [1] "common dispersion: 0.419411641752196"
 [1] "All DE Genes"
@@ -426,7 +427,7 @@ FALSE  TRUE
 Down            387
 NotSig          728
 Up              326
-[1] 30454    14
+[1] 30454    15
 [1] "cluster-iPSC.c1_iPSC.c2_iPSC.c3"
 [1] "common dispersion: 0.0784632320615437"
 [1] "All DE Genes"
@@ -438,7 +439,7 @@ FALSE  TRUE
 Down           1702
 NotSig         3149
 Up             1739
-[1] 37044    14
+[1] 37044    15
 [1] "cluster-Osteoblast.c1_Osteoblast.c2"
 [1] "common dispersion: 0.307400411136651"
 [1] "All DE Genes"
@@ -450,10 +451,10 @@ FALSE  TRUE
 Down           1622
 NotSig         2552
 Up             1127
-[1] 42345    14
+[1] 42345    15
 > 
 > 
 > 
 > proc.time()
       user     system    elapsed 
-136772.105   3703.948 140851.798 
+135667.408   3871.218 139862.815 

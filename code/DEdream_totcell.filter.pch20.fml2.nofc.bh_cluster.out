@@ -1,0 +1,626 @@
+
+R version 3.6.1 (2019-07-05) -- "Action of the Toes"
+Copyright (C) 2019 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> #Read in command line arguments as list of character vectors
+> args=(commandArgs(TRUE))
+> 
+> #Check if arguments are passed and cycle through to evaluate each element
+> if(length(args)==0){
++   print("No arguments supplied.")
++   #supply default values
++   name="noarg"
++   assign="all"
++   filter.arg=TRUE
++   filter.type="pch"
++   filter.param=0.2
++   fml=formula1
++   lfc=FALSE
++   fdr="BH"
++ }else{
++   for(i in 1:length(args)){
++     eval(parse(text=args[[i]]))
++   }
++ }
+> print(paste0("file tag: ",name))
+[1] "file tag: totcell.filter.pch20.fml2.nofc.bh"
+> print(paste0("cell assignment: ",assign))
+[1] "cell assignment: cluster"
+> print(paste0("filter genes: ",filter.arg))
+[1] "filter genes: TRUE"
+> print(paste0("filter type: ",filter.type))
+[1] "filter type: pch"
+> print(paste0("gene filter.param: ",filter.param))
+[1] "gene filter.param: 0.2"
+> print(paste0("adjuste logFC in test: ",lfc))
+[1] "adjuste logFC in test: FALSE"
+> print(paste0("fdr method: ",fdr))
+[1] "fdr method: BH"
+> 
+> #Load libraries
+> library(Seurat)
+> library(dplyr)
+
+Attaching package: 'dplyr'
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+> library(stringi)
+> library(stringr)
+> library(ggplot2)
+> library(grid)
+> library(gbm)
+Loaded gbm 2.1.5
+> library(colorspace)
+> library(RColorBrewer)
+> library(edgeR)
+Loading required package: limma
+> library(scran)
+Loading required package: SingleCellExperiment
+Loading required package: SummarizedExperiment
+Loading required package: GenomicRanges
+Loading required package: stats4
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: 'BiocGenerics'
+
+The following objects are masked from 'package:parallel':
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following object is masked from 'package:limma':
+
+    plotMA
+
+The following objects are masked from 'package:dplyr':
+
+    combine, intersect, setdiff, union
+
+The following objects are masked from 'package:stats':
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from 'package:base':
+
+    Filter, Find, Map, Position, Reduce, anyDuplicated, append,
+    as.data.frame, basename, cbind, colnames, dirname, do.call,
+    duplicated, eval, evalq, get, grep, grepl, intersect, is.unsorted,
+    lapply, mapply, match, mget, order, paste, pmax, pmax.int, pmin,
+    pmin.int, rank, rbind, rownames, sapply, setdiff, sort, table,
+    tapply, union, unique, unsplit, which, which.max, which.min
+
+Loading required package: S4Vectors
+
+Attaching package: 'S4Vectors'
+
+The following objects are masked from 'package:dplyr':
+
+    first, rename
+
+The following object is masked from 'package:base':
+
+    expand.grid
+
+Loading required package: IRanges
+
+Attaching package: 'IRanges'
+
+The following objects are masked from 'package:dplyr':
+
+    collapse, desc, slice
+
+Loading required package: GenomeInfoDb
+Loading required package: Biobase
+Welcome to Bioconductor
+
+    Vignettes contain introductory material; view with
+    'browseVignettes()'. To cite Bioconductor, see
+    'citation("Biobase")', and for packages 'citation("pkgname")'.
+
+Loading required package: DelayedArray
+Loading required package: matrixStats
+
+Attaching package: 'matrixStats'
+
+The following objects are masked from 'package:Biobase':
+
+    anyMissing, rowMedians
+
+The following object is masked from 'package:dplyr':
+
+    count
+
+Loading required package: BiocParallel
+
+Attaching package: 'DelayedArray'
+
+The following objects are masked from 'package:matrixStats':
+
+    colMaxs, colMins, colRanges, rowMaxs, rowMins, rowRanges
+
+The following objects are masked from 'package:base':
+
+    aperm, apply, rowsum
+
+
+Attaching package: 'SummarizedExperiment'
+
+The following object is masked from 'package:Seurat':
+
+    Assays
+
+
+Attaching package: 'SingleCellExperiment'
+
+The following object is masked from 'package:edgeR':
+
+    cpm
+
+> library(SingleCellExperiment)
+> library(limma)
+> library(variancePartition)
+Loading required package: foreach
+Loading required package: scales
+
+Attaching package: 'variancePartition'
+
+The following object is masked from 'package:limma':
+
+    classifyTestsF
+
+> 
+> #detectCores()
+> param = SnowParam(4, "SOCK", progressbar=TRUE)
+> register(param)
+> 
+> #Load data (integrate across individuals - total (15k genes))
+> scrna <- "./../data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.assign.rds"
+> data <- readRDS(scrna)
+> data
+An object of class Seurat 
+38754 features across 101534 samples within 2 assays 
+Active assay: integrated (19377 features)
+ 1 other assay present: RNA
+ 2 dimensional reductions calculated: pca, umap
+> 
+> #Isolate mitochondrial and ribosomal genes
+> genes <- rownames(data@assays$RNA@counts)
+> genes.mito <- c("MT-ATP6","MT-ATP8","MT-CO1","MT-CO2","MT-CO3","MT-CYB","MT-ND1","MT-ND2","MT-ND3","MT-ND4","MT-ND4L","MT-ND5")
+> genes.ribo <- grep('^RP',genes,value=T)
+> genes.no.mito.ribo <- genes[which(!(genes %in% c(genes.mito,genes.ribo)))]
+> rm(genes,genes.mito,genes.ribo)
+> 
+> #Define Limma Voom (Dream) Function
+> runDREAM <- function(dataSub, cell.assign, cell.subset, genes.no.mito.ribo, filter.arg, filter.type, filter.param, fml) {
++ 
++   #count matrix
++   counts <- as.matrix(GetAssayData(dataSub, assay="RNA", slot="counts"))
++ 
++   #remove mitochodrial and ribosomal genes
++   counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
++ 
++   #metadata
++   metadata <- dataSub@meta.data[,c("Species","Individual","Replicate","Collection","percent.mt","Phase")]
++   metadata <- metadata[colnames(counts),]
++ 
++   #make edgeR object
++   dge <- DGEList(counts)
++   meta_dge <- dge$samples[,c("lib.size","norm.factors")]
++   meta_dge <- cbind(meta_dge, metadata)
++   dge$samples <- meta_dge
++   rm(dataSub,counts,metadata,meta_dge)
++ 
++   #filter genes
++   if (filter.arg==TRUE){
++     if (filter.type=="min.count"){
++       keep <- filterByExpr(dge, group=dge$samples$Species, min.count=filter.param, min.total.count=15)
++       table(keep)
++       dge <- dge[keep, , keep.lib.sizes=FALSE]
++       rm(keep)
++     }
++     if (filter.type=="pch"){
++       dge$counts <- dge$counts[rowSums(dge$counts!=0)>=(filter.param*dim(dge$counts)[2]),]
++     }
++   }
++ 
++   #normalize data
++   dge <- calcNormFactors(dge, method="TMM")
++   summary(dge$samples$norm.factors)
++ 
++   #calculate cellular detection rate
++   #cdr <- scale(colMeans(dge$count > 0))
++ 
++   #prep design matrix variables
++   dge$samples$Individual <- as.factor(dge$samples$Individual)
++   dge$samples$Replicate <- as.factor(as.character(dge$samples$Replicate))
++   dge$samples$Species <- as.factor(dge$samples$Species)
++   dge$samples$Collection <- as.factor(as.numeric(dge$samples$Collection))
++   dge$samples$Phase <- as.factor(dge$samples$Phase)
++ 
++   #design matrix
++   if (fml=="formula1") {
++     model <- "~Species+(1|Individual)+(1|Replicate)"
++     formula <- ~Species+(1|Individual)+(1|Replicate)
++   }
++   if (fml=="formula2") {
++     model <- "~Species+Collection+percent.mt+Phase+(1|Individual)"
++     formula <- ~Species+Collection+percent.mt+Phase+(1|Individual)
++   }
++   if (fml=="formula3") {
++     model <- "~Species+percent.mt+Phase+(1|Sample)"
++     formula <- ~Species+percent.mt+Phase+(1|Sample)
++   }
++ 
++   #estimate weights using linear mixed model of dream (voom)
++   vobjDream = voomWithDreamWeights(counts=dge, formula=formula, data=dge$samples)
++ 
++   #define contrasts
++   #L = getContrast(vobjDream, formula, dge$samples, coefficient="SpeciesHuman")
++   #plotContrasts(L)
++ 
++   #fit dream model on each gene
++   fitmm = dream(vobjDream, formula, dge$samples)
++ 
++   #assess differential expression output for particular contrast
++   tt <- topTable(fitmm, n=Inf, coef='SpeciesHuman', adjust.method="BH", p.value=1)
++   print("All DE Genes")
++   print(dim(tt))
++   print(table(tt$adj.P.Val<0.05))
++   print(summary(decideTests(fitmm, adjust.method=fdr, p.value=0.05)))
++ 
++   #add details to output
++   tt$data <- rep(scrna, dim(tt)[1])
++   tt$cell.assign <- rep(cell.assign, dim(tt)[1])
++   tt$cell.subset <- rep(cell.subset, dim(tt)[1])
++   tt$gene.filter <- rep(filter.arg, dim(tt)[1])
++   tt$gene.filter.args <- rep(paste0("filter.param=",filter.param), dim(tt)[1])
++   tt$model <- rep(model, dim(tt)[1])
++   tt$comparison <- rep(tt$comparison, dim(tt)[1])
++   tt$test <- rep(tt$test, dim(tt)[1])
++   tt$adjust.method <- rep(tt$adjust.method, dim(tt)[1])
++   tt$gene <- rownames(tt)
++ 
++   return(tt)
++ 
++ }
+> 
+> #Find differentially expressed genes for different cell assignment subtypes
+> if (assign=="all") {
++   subset.list <- list(stage=list("stage-Time 0","stage-Time 1","stage-Time 2"),
++                       clust=list("cluster-iPSC.c1","cluster-iPSC.c2","cluster-iPSC.c3","cluster-MSC.c1","cluster-Osteoblast.c1","cluster-Osteoblast.c2"),
++                       combI=c("cluster-iPSC.c1_iPSC.c2_iPSC.c3"),
++                       combO=c("cluster-Osteoblast.c1_Osteoblast.c2"),
++                       adhoc=list("adhoc-iPSC","adhoc-MSC","adhoc-Osteoblast"),
++                       ostadhoc=list("ostadhoc-preosteoblast","ostadhoc-embedding osteoblast"))
++ }
+> if (assign=="stage") {
++   subset.list <- list(stage=list("stage-Time 0","stage-Time 1","stage-Time 2"))
++ }
+> if (assign=="cluster") {
++   subset.list <- list(clust=list("cluster-iPSC.c1","cluster-iPSC.c2","cluster-iPSC.c3","cluster-MSC.c1","cluster-Osteoblast.c1","cluster-Osteoblast.c2"),
++                       combI=c("cluster-iPSC.c1_iPSC.c2_iPSC.c3"),
++                       combO=c("cluster-Osteoblast.c1_Osteoblast.c2"))
++ }
+> if (assign=="adhoc") {
++   subset.list <- list(adhoc=list("adhoc-iPSC","adhoc-MSC","adhoc-Osteoblast"))
++ }
+> if (assign=="ostadhoc") {
++   subset.list <- list(ostadhoc=list("ostadhoc-preosteoblast","ostadhoc-embedding osteoblast"))
++ }
+> 
+> DEgene.total <- data.frame()
+> 
+> for (i in subset.list) {
++ 
++   for (j in i) {
++ 
++     print(j)
++ 
++     #define cell assignment and subtype of interest
++     cell.assign <- str_split(j,"-")[[1]][1]
++     cell.subset <- str_split(j,"-")[[1]][2]
++ 
++     #define data subset
++     if (str_count(cell.subset,"_")>=1){
++ 
++       if (length(str_split(cell.subset,"_")[[1]])==2) {
++         dataSub <- subset(data,
++                           subset=Cluster==str_split(cell.subset,"_")[[1]][1]|
++                             Cluster==str_split(cell.subset,"_")[[1]][2])
++       }
++       else {
++         dataSub <- subset(data,
++                           subset=Cluster==str_split(cell.subset,"_")[[1]][1]|
++                             Cluster==str_split(cell.subset,"_")[[1]][2]|
++                             Cluster==str_split(cell.subset,"_")[[1]][3])
++       }
++     }
++ 
++     else {
++       if(cell.assign=="stage") { dataSub <- subset(data,subset=Stage==cell.subset) }
++       if(cell.assign=="cluster") { dataSub <- subset(data,subset=Cluster==cell.subset) }
++       if(cell.assign=="adhoc") { dataSub <- subset(data,subset=AdHoc.Assign==cell.subset) }
++       if(cell.assign=="ostadhoc") { dataSub <- subset(data,subset=OstAdHoc.Assign==cell.subset) }
++     }
++ 
++     #de analysis
++     DEgene <- runDREAM(dataSub=dataSub,
++                        cell.assign=cell.assign,
++                        cell.subset=cell.subset,
++                        genes.no.mito.ribo=genes.no.mito.ribo,
++                        filter.arg=filter.arg,
++                        filter.type=filter.type,
++                        filter.param=filter.param,
++                        fml=fml)
++ 
++     DEgene.total <- rbind(DEgene.total,DEgene)
++ 
++     print(dim(DEgene.total))
++ 
++     saveRDS(DEgene.total, file=paste0("./../data/de-data/DEdream.",name,".",assign,".rds"))
++ 
++   }
++ 
++ }
+[1] "cluster-iPSC.c1"
+Memory usage to store result: > 19.7 Gb 
+Dividing work into 100 chunks...
+iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
+
+Total: 1964 s
+Dividing work into 100 chunks...
+iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
+
+Total: 4608 s
+[1] "All DE Genes"
+[1] 6986    6
+
+FALSE  TRUE 
+ 3670  3316 
+       (Intercept) SpeciesHuman Collection4 Collection7 Collection10
+Down             0         2420        1941           4            1
+NotSig           0         3670         451        6975         6985
+Up            6986          896        4594           7            0
+       Collection13 Collection16 Collection19 percent.mt PhaseG2M PhaseS
+Down              2            1            5       1764     4037   2632
+NotSig         6984         6980         6974        281     1551   1693
+Up                0            5            7       4941     1398   2661
+[1] 6986   13
+[1] "cluster-iPSC.c2"
+Memory usage to store result: > 821.1 Mb 
+Dividing work into 100 chunks...
+iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
+
+Total: 124 s
+Dividing work into 100 chunks...
+iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
+
+Total: 224 s
+[1] "All DE Genes"
+[1] 2205    6
+
+FALSE  TRUE 
+ 1992   213 
+       (Intercept) SpeciesHuman Collection4 Collection7 Collection10
+Down             0          150         435          33            5
+NotSig           0         1992        1443        2168         2197
+Up            2205           63         327           4            3
+       Collection13 Collection16 Collection19 Collection20 percent.mt PhaseG2M
+Down             27            2            9           13          8       72
+NotSig         2175         2200         2195         2189       2155     2003
+Up                3            3            1            3         42      130
+       PhaseS
+Down       83
+NotSig   1994
+Up        128
+[1] 9191   13
+[1] "cluster-iPSC.c3"
+Memory usage to store result: > 409.4 Mb 
+Dividing work into 100 chunks...
+iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
+
+Total: 87 s
+Dividing work into 100 chunks...
+iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
+
+Total: 208 s
+[1] "All DE Genes"
+[1] 6294    6
+
+FALSE  TRUE 
+ 5683   611 
+       (Intercept) SpeciesHuman Collection4 Collection7 Collection13
+Down             0          419          52          87           24
+NotSig         210         5683        6170        6079         6236
+Up            6084          192          72         128           34
+       Collection16 Collection19 percent.mt PhaseG2M PhaseS
+Down             60          285          0      568    222
+NotSig         6141         5930       6294     5295   5684
+Up               93           79          0      431    388
+[1] 15485    13
+[1] "cluster-MSC.c1"
+Memory usage to store result: > 22.8 Gb 
+Dividing work into 100 chunks...
+iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
+
+Total: 2351 s
+Dividing work into 100 chunks...
+iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
+
+Total: 5571 s
+[1] "All DE Genes"
+[1] 6946    6
+
+FALSE  TRUE 
+ 4254  2692 
+       (Intercept) SpeciesHuman Collection3 Collection5 Collection6 Collection7
+Down             0         2099        1492        2621         139          18
+NotSig           0         4254        3634         962        6713        6908
+Up            6946          593        1820        3363          94          20
+       Collection8 Collection9 Collection11 Collection12 Collection13
+Down            12          13            0           16           12
+NotSig        6928        6914         6946         6929         6931
+Up               6          19            0            1            3
+       Collection14 Collection15 Collection17 Collection18 Collection20
+Down              0          188            0          488            1
+NotSig         6946         6747         6945         3906         6943
+Up                0           11            1         2552            2
+       Collection21 percent.mt PhaseG2M PhaseS
+Down            188       1624     2947   3000
+NotSig         6369        287     1008   1374
+Up              389       5035     2991   2572
+[1] 22431    13
+[1] "cluster-Osteoblast.c1"
+Memory usage to store result: > 11.4 Gb 
+Dividing work into 100 chunks...
+iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
+
+Total: 1193 s
+Dividing work into 100 chunks...
+iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
+
+Total: 2897 s
+[1] "All DE Genes"
+[1] 6582    6
+
+FALSE  TRUE 
+ 4470  2112 
+       (Intercept) SpeciesHuman Collection3 Collection5 Collection6 Collection7
+Down             0         1350        2185          18        1614          71
+NotSig           0         4470        2464        6537        3079        6507
+Up            6582          762        1933          27        1889           4
+       Collection8 Collection9 Collection11 Collection12 Collection14
+Down             0          68            3           30           24
+NotSig        6582        6476         6579         6421         6550
+Up               0          38            0          131            8
+       Collection15 Collection17 Collection18 Collection20 Collection21
+Down             35           66           83            6          159
+NotSig         6490         6482         6424         6571         6220
+Up               57           34           75            5          203
+       percent.mt PhaseG2M PhaseS
+Down         1687     1430   2470
+NotSig        255     4146   2749
+Up           4640     1006   1363
+[1] 29013    13
+[1] "cluster-Osteoblast.c2"
+Memory usage to store result: > 1.2 Gb 
+Dividing work into 100 chunks...
+iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
+
+Total: 171 s
+Dividing work into 100 chunks...
+iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
+
+Total: 351 s
+[1] "All DE Genes"
+[1] 1441    6
+
+FALSE  TRUE 
+ 1412    29 
+       (Intercept) SpeciesHuman Collection3 Collection5 Collection6 Collection7
+Down             0            6         491         353         464           0
+NotSig           0         1412         563         794         509        1441
+Up            1441           23         387         294         468           0
+       Collection8 Collection9 Collection11 Collection12 Collection14
+Down             4          81            2           21           78
+NotSig        1428        1283         1432         1398         1288
+Up               9          77            7           22           75
+       Collection15 Collection17 Collection18 Collection20 Collection21
+Down             52           68           84            9          100
+NotSig         1340         1262         1279         1411         1179
+Up               49          111           78           21          162
+       percent.mt PhaseG2M PhaseS
+Down          896      276    228
+NotSig        201      650    832
+Up            344      515    381
+[1] 30454    13
+[1] "cluster-iPSC.c1_iPSC.c2_iPSC.c3"
+Memory usage to store result: > 21.4 Gb 
+Dividing work into 100 chunks...
+iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
+
+Total: 2224 s
+Dividing work into 100 chunks...
+iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
+
+Total: 5087 s
+[1] "All DE Genes"
+[1] 6590    6
+
+FALSE  TRUE 
+ 5621   969 
+       (Intercept) SpeciesHuman Collection4 Collection7 Collection10
+Down             0          609        1988           0            0
+NotSig           0         5621         632        6590         6590
+Up            6590          360        3970           0            0
+       Collection13 Collection16 Collection19 Collection20 percent.mt PhaseG2M
+Down              0            0            0          216       4580     4258
+NotSig         6590         6589         6590         4877        679     1083
+Up                0            1            0         1497       1331     1249
+       PhaseS
+Down     4093
+NotSig   1310
+Up       1187
+[1] 37044    13
+[1] "cluster-Osteoblast.c1_Osteoblast.c2"
+Memory usage to store result: > 13.5 Gb 
+Dividing work into 100 chunks...
+iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
+
+Total: 1463 s
+Dividing work into 100 chunks...
+iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
+
+Total: 3503 s
+[1] "All DE Genes"
+[1] 5301    6
+
+FALSE  TRUE 
+ 5170   131 
+       (Intercept) SpeciesHuman Collection3 Collection5 Collection6 Collection7
+Down             0           65        1102        2151        1043           0
+NotSig           0         5170        2626        2656        2306        5301
+Up            5301           66        1573         494        1952           0
+       Collection8 Collection9 Collection11 Collection12 Collection14
+Down            11         332           22           13          335
+NotSig        5287        4786         5279         5285         4948
+Up               3         183            0            3           18
+       Collection15 Collection17 Collection18 Collection20 Collection21
+Down             14           11           33           72           38
+NotSig         5239         5234         5233         5224         5138
+Up               48           56           35            5          125
+       percent.mt PhaseG2M PhaseS
+Down         1391     1009   2492
+NotSig        243     1178   1651
+Up           3667     3114   1158
+[1] 42345    13
+Warning message:
+In regularize.values(x, y, ties, missing(ties)) :
+  collapsing to unique 'x' values
+> 
+> 
+> ./../data/de-data/DEdream.",name,".",assign,".rds"))
+Error: unexpected string constant in "./../data/de-data/DEdream.",name,""
+Execution halted

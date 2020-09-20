@@ -39,11 +39,9 @@ library(classtpx)
 ```{r}
 
 #Load data
-scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.rds" #integrate across individuals - total (15k genes)
-#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-tot.rds" #integrate across individuals - total
-#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-t0.rds" #integrate across individuals - Time 0
-#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-t1.rds" #integrate across individuals - Time 1
-scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-t2.rds" #integrate across individuals - Time 2
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.rds" #integrate across individuals - total (19k genes + regress out UMI/mito)
+scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.rds" #integrate across individuals - total (19k genes)
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-tot.rds" #integrate across individuals - total (10k genes)
 data <- readRDS(scrna)
 
 data

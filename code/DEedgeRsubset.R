@@ -9,6 +9,8 @@ if(length(args)==0){
   filter.arg=FALSE
   filter.type="pch"
   filter.param=0.2
+  subset.rep="NULL"
+  subset.num=FALSE
   lfc=FALSE
   fdr="BH"
 }else{
@@ -51,7 +53,7 @@ genes.no.mito.ribo <- genes[which(!(genes %in% c(genes.mito,genes.ribo)))]
 rm(genes,genes.mito,genes.ribo)
 
 #Define EDGER Function
-runEDGER <- function(dataSub, cell.assign, cell.subset, genes.no.mito.ribo, filter.arg, filter.param) {
+runEDGER <- function(dataSub, cell.assign, cell.subset, genes.no.mito.ribo, filter.arg, filter.param, subset.rep) {
 
   #count matrix
   counts <- as.matrix(GetAssayData(dataSub, assay="RNA", slot="counts"))
@@ -125,6 +127,7 @@ runEDGER <- function(dataSub, cell.assign, cell.subset, genes.no.mito.ribo, filt
   tt$table$cell.subset <- rep(cell.subset, dim(tt$table)[1])
   tt$table$gene.filter <- rep(filter.arg, dim(tt$table)[1])
   tt$table$gene.filter.args <- rep(paste0("filter.param=",filter.param), dim(tt$table)[1])
+  tt$table$subset.rep <- rep(subset.rep, dim(tt$table)[1])
   tt$table$model <- rep(model, dim(tt$table)[1])
   tt$table$comparison <- rep(tt$comparison, dim(tt$table)[1])
   tt$table$test <- rep(tt$test, dim(tt$table)[1])
@@ -171,7 +174,7 @@ for (i in subset.list) {
     cell.assign <- str_split(j,"-")[[1]][1]
     cell.subset <- str_split(j,"-")[[1]][2]
 
-    #define data subset
+    #define data subset based on cell assignment criteria
     if (str_count(cell.subset,"_")>=1){
 
       if (length(str_split(cell.subset,"_")[[1]])==2) {
@@ -194,13 +197,37 @@ for (i in subset.list) {
       if(cell.assign=="ostadhoc") { dataSub <- subset(data,subset=OstAdHoc.Assign==cell.subset) }
     }
 
+    #further define data subsampling based on sample replicates
+    if(subset.rep=="keepRep1") {
+      print(subset.rep)
+      dataSub <- subset(dataSub,subset=Sample!="H1-I")
+      dataSub <- subset(dataSub,subset=Sample!="C1-I")
+    }
+    if(subset.rep=="keepRep2") {
+      print(subset.rep)
+      dataSub <- subset(dataSub,subset=Sample!="H1-I-r2")
+      dataSub <- subset(dataSub,subset=Sample!="C1-I-r2")
+    }
+
+    #further define data subsampling based on number of cells to sample for DE analysis
+    if(subset.num==TRUE) {
+      human.cells <- rownames(dataSub@meta.data)[which(dataSub@meta.data$Species=="Human")]
+      chimp.cells <- rownames(dataSub@meta.data)[which(dataSub@meta.data$Species=="Chimp")]
+      min.cell.count <- min(c(length(human.cells),length(chimp.cells)))
+      print(paste0("Minimum number of cells in comparative groups: ",min.cell.count))
+      h.cell.sub <- human.cells[sample(1:length(human.cells), min.cell.count, replace=FALSE)]
+      c.cell.sub <- chimp.cells[sample(1:length(chimp.cells), min.cell.count, replace=FALSE)]
+      dataSub <- subset(dataSub,cells=c(h.cell.sub,c.cell.sub))
+    }
+
     #de analysis
     edgr <- runEDGER(dataSub=dataSub,
                      cell.assign=cell.assign,
                      cell.subset=cell.subset,
                      genes.no.mito.ribo=genes.no.mito.ribo,
                      filter.arg=filter.arg,
-                     filter.param=filter.param)
+                     filter.param=filter.param,
+                     subset.rep=subset.rep)
 
     edgr.total <- rbind(edgr.total,edgr)
 

@@ -274,6 +274,7 @@ Active assay: integrated (19377 features)
 +   tt$table$comparison <- rep(tt$comparison, dim(tt$table)[1])
 +   tt$table$test <- rep(tt$test, dim(tt$table)[1])
 +   tt$table$adjust.method <- rep(tt$adjust.method, dim(tt$table)[1])
++   tt$table$gene <- rownames(tt$table)
 + 
 +   return(tt$table)
 + 
@@ -366,7 +367,7 @@ FALSE  TRUE
 Down           1623
 NotSig         3495
 Up             1721
-[1] 6839   14
+[1] 6839   15
 [1] "adhoc-MSC"
 [1] "common dispersion: 0.187919425752273"
 [1] "All DE Genes"
@@ -378,7 +379,7 @@ FALSE  TRUE
 Down           2110
 NotSig         3371
 Up             1779
-[1] 14099    14
+[1] 14099    15
 [1] "adhoc-Osteoblast"
 [1] "common dispersion: 0.290557349181571"
 [1] "All DE Genes"
@@ -390,10 +391,10 @@ FALSE  TRUE
 Down           1725
 NotSig         3113
 Up             1240
-[1] 20177    14
+[1] 20177    15
 > 
 > 
 > 
 > proc.time()
      user    system   elapsed 
-77533.215  1949.217 79738.890 
+76740.634  1999.761 78937.063 

@@ -23,9 +23,13 @@ Type 'q()' to quit R.
 +   print("No arguments supplied.")
 +   #supply default values
 +   name="noarg"
-+   filter.arg=FALSE
++   data.source="tot"
++   assign="all"
++   data.type="sc"
++   filter.arg=TRUE
 +   filter.type="pch"
 +   filter.param=0.2
++   fml="formula1"
 +   lfc=FALSE
 +   fdr="BH"
 + }else{
@@ -34,7 +38,11 @@ Type 'q()' to quit R.
 +   }
 + }
 > print(paste0("file tag: ",name))
-[1] "file tag: totcell.filter.pch20.fc.bh"
+[1] "file tag: totcell.filter.pch20.fml5.nofc.bh"
+> print(paste0("data source: ",data.source))
+[1] "data source: tot"
+> print(paste0("data type: ",data.type))
+[1] "data type: sc"
 > print(paste0("cell assignment: ",assign))
 [1] "cell assignment: ostadhoc"
 > print(paste0("filter genes: ",filter.arg))
@@ -44,7 +52,7 @@ Type 'q()' to quit R.
 > print(paste0("gene filter.param: ",filter.param))
 [1] "gene filter.param: 0.2"
 > print(paste0("adjuste logFC in test: ",lfc))
-[1] "adjuste logFC in test: TRUE"
+[1] "adjuste logFC in test: FALSE"
 > print(paste0("fdr method: ",fdr))
 [1] "fdr method: BH"
 > 
@@ -177,10 +185,45 @@ The following object is masked from 'package:edgeR':
     cpm
 
 > library(SingleCellExperiment)
+> library(limma)
+> library(variancePartition)
+Loading required package: foreach
+Loading required package: scales
+
+Attaching package: 'variancePartition'
+
+The following object is masked from 'package:limma':
+
+    classifyTestsF
+
+> 
+> #detectCores()
+> param = SnowParam(4, "SOCK", progressbar=TRUE)
+> register(param)
 > 
 > #Load data (integrate across individuals - total (15k genes))
-> scrna <- "./../data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.assign.rds"
-> data <- readRDS(scrna)
+> if (data.source=="tot") {
++   #data.dir <- "./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds"
++   data.dir <- "./../data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.assign.rds"
++   data <- readRDS(data.dir)
++ }
+> if (data.source=="t0") {
++   #data.dir <- "./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t0.assign.rds"
++   data.dir <- "./../data/cellranger-data-full/data.filter.log.indv-cell.int19k-t0.assign.rds"
++   data <- readRDS(data.dir)
++ }
+> if (data.source=="t1") {
++   #data.dir <- "./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t1.assign.rds"
++   data.dir <- "./../data/cellranger-data-full/data.filter.log.indv-cell.int19k-t1.assign.rds"
++   data <- readRDS(data.dir)
++ }
+> if (data.source=="t2") {
++   #data.dir <- "./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.assign.rds"
++   data.dir <- "./../data/cellranger-data-full/data.filter.log.indv-cell.int19k-t2.assign.rds"
++   data <- readRDS(data.dir)
++ }
+> print(data.dir)
+[1] "./../data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.assign.rds"
 > data
 An object of class Seurat 
 38754 features across 101534 samples within 2 assays 
@@ -195,18 +238,46 @@ Active assay: integrated (19377 features)
 > genes.no.mito.ribo <- genes[which(!(genes %in% c(genes.mito,genes.ribo)))]
 > rm(genes,genes.mito,genes.ribo)
 > 
-> #Define EDGER Function
-> runEDGER <- function(dataSub, cell.assign, cell.subset, genes.no.mito.ribo, filter.arg, filter.param) {
+> #Define Limma Voom (Dream) Function
+> runDREAM <- function(dataSub, data.dir, cell.assign, cell.subset, genes.no.mito.ribo, data.type, filter.arg, filter.type, filter.param, fml) {
 + 
-+   #count matrix
-+   counts <- as.matrix(GetAssayData(dataSub, assay="RNA", slot="counts"))
++   #make count matrix and metadata for edgeR object
++   if (data.type=="pseudo") {
++     counts <- c()
++     metadata <- c()
++     labels <- c()
++     for (i in unique(dataSub@meta.data$Sample)) {
++       x.lab <- i
++       w <- which(dataSub@meta.data$Sample==i)
++       if (length(w)>0) {
++         x.spp <- dataSub@meta.data$Species[w][1]
++         x.col <- dataSub@meta.data$Collection[w][1]
++         x.ind <- dataSub@meta.data$Individual[w][1]
++         x.rep <- dataSub@meta.data$Replicate[w][1]
++         if (length(w)==1) {
++           x.cnt <- dataSub@assays$RNA@counts[,w]
++         } else {
++           x.cnt <- Matrix::rowSums(dataSub@assays$RNA@counts[,w])
++         }
++         counts <- cbind(counts, x.cnt)
++         metadata <- rbind(metadata, c(x.lab, x.spp, x.col, x.ind, x.rep))
++         labels <- c(labels, x.lab)
++       }
++     }
++     colnames(counts) <- labels
++     rownames(metadata) <- labels
++     colnames(metadata) <- c("Sample","Species","Collection","Individual","Replicate")
++     metadata <- as.data.frame(metadata)
++     rm(labels)
++   }
++   if (data.type=="sc") {
++     counts <- as.matrix(GetAssayData(dataSub, assay="RNA", slot="counts"))
++     metadata <- dataSub@meta.data[,c("Species","Individual","Replicate","Collection","percent.mt","Phase","Sample")]
++     metadata <- metadata[colnames(counts),]
++   }
 + 
 +   #remove mitochodrial and ribosomal genes
 +   counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
-+ 
-+   #metadata
-+   metadata <- dataSub@meta.data[,c("Species","Collection","nCount_RNA","percent.mt","Phase")]
-+   metadata <- metadata[colnames(counts),]
 + 
 +   #make edgeR object
 +   dge <- DGEList(counts)
@@ -232,51 +303,69 @@ Active assay: integrated (19377 features)
 +   dge <- calcNormFactors(dge, method="TMM")
 +   summary(dge$samples$norm.factors)
 + 
-+   #calculate cellular detection rate
-+   cdr <- scale(colMeans(dge$count > 0))
++   #prep design matrix variables
++   dge$samples$Individual <- as.factor(dge$samples$Individual)
++   dge$samples$Replicate <- as.factor(as.character(dge$samples$Replicate))
++   dge$samples$Species <- as.factor(dge$samples$Species)
++   dge$samples$Collection <- as.factor(as.numeric(dge$samples$Collection))
++   if (data.type=="sc") {
++     dge$samples$Phase <- as.factor(dge$samples$Phase)
++     dge$samples$Sample <- as.factor(dge$samples$Sample)
++   }
 + 
 +   #design matrix
-+   dge$samples$Collection <- as.factor(as.numeric(dge$samples$Collection))
-+   dge$samples$Phase <- as.factor(dge$samples$Phase)
-+   dge$samples$Species <- as.factor(as.character(dge$samples$Species))
-+   model <- "~Collection+cdr+nCount_RNA+percent.mt+Phase+Species"
-+   design <- model.matrix(~Collection+cdr+nCount_RNA+percent.mt+Phase+Species, data=dge$samples)
-+ 
-+   dge <- estimateDisp(dge, design=design)
-+   print(paste0("common dispersion: ",dge$common.dispersion))
-+ 
-+   #QLF model fit (quasi-likelihood ratio test) - reflects uncertainty in estimating dispersion for each gene
-+   fit <- glmQLFit(dge, design=design, robust=TRUE)
-+   head(fit$coefficients)
-+ 
-+   #differential expression between species
-+   if(lfc==TRUE) {
-+     qlf <- glmTreat(fit, coef=dim(design)[2], lfc=log2(1.2))
++   if (fml=="formula1") {
++     model <- "~Species+(1|Individual)+(1|Replicate)"
++     formula <- ~Species+(1|Individual)+(1|Replicate)
 +   }
-+   if(lfc==FALSE) {
-+     qlf <- glmQLFTest(fit, coef=dim(design)[2], poisson.bound=TRUE)
++   if (fml=="formula2") {
++     model <- "~Species+Collection+percent.mt+Phase+(1|Individual)"
++     formula <- ~Species+Collection+percent.mt+Phase+(1|Individual)
++   }
++   if (fml=="formula3") {
++     model <- "~Species+percent.mt+Phase+(1|Sample)"
++     formula <- ~Species+percent.mt+Phase+(1|Sample)
++   }
++   if (fml=="formula4") {
++     model <- "~Species+percent.mt+Phase+(1|Individual)+(1|Replicate)"
++     formula <- ~Species+percent.mt+Phase+(1|Individual)+(1|Replicate)
++   }
++   if (fml=="formula5") {
++     model <- "~Species+percent.mt+Phase+(1|Individual)"
++     formula <- ~Species+percent.mt+Phase+(1|Individual)
 +   }
 + 
-+   #assess output
-+   tt <- topTags(qlf, n=Inf, adjust.method=fdr, p.value=1)
++   #estimate weights using linear mixed model of dream (voom)
++   vobjDream = voomWithDreamWeights(counts=dge, formula=formula, data=dge$samples)
++ 
++   #define contrasts
++   #L = getContrast(vobjDream, formula, dge$samples, coefficient="SpeciesHuman")
++   #plotContrasts(L)
++ 
++   #fit dream model on each gene
++   fitmm = dream(vobjDream, formula, dge$samples)
++ 
++   #assess differential expression output for particular contrast
++   tt <- topTable(fitmm, n=Inf, coef='SpeciesHuman', adjust.method="BH", p.value=1)
 +   print("All DE Genes")
-+   print(dim(tt$table))
-+   print(table(tt$table$FDR<0.01))
-+   print(summary(decideTests(qlf, adjust.method=fdr, p.value=0.01)))
++   print(dim(tt))
++   print(table(tt$adj.P.Val<0.05))
++   print(summary(decideTests(fitmm, adjust.method=fdr, p.value=0.05)))
 + 
 +   #add details to output
-+   tt$table$data <- rep(scrna, dim(tt$table)[1])
-+   tt$table$cell.assign <- rep(cell.assign, dim(tt$table)[1])
-+   tt$table$cell.subset <- rep(cell.subset, dim(tt$table)[1])
-+   tt$table$gene.filter <- rep(filter.arg, dim(tt$table)[1])
-+   tt$table$gene.filter.args <- rep(paste0("filter.param=",filter.param), dim(tt$table)[1])
-+   tt$table$model <- rep(model, dim(tt$table)[1])
-+   tt$table$comparison <- rep(tt$comparison, dim(tt$table)[1])
-+   tt$table$test <- rep(tt$test, dim(tt$table)[1])
-+   tt$table$adjust.method <- rep(tt$adjust.method, dim(tt$table)[1])
-+   tt$table$gene <- rownames(tt$table)
++   tt$data <- rep(data.dir, dim(tt)[1])
++   tt$data.type <- rep(data.type, dim(tt)[1])
++   tt$cell.assign <- rep(cell.assign, dim(tt)[1])
++   tt$cell.subset <- rep(cell.subset, dim(tt)[1])
++   tt$gene.filter <- rep(filter.arg, dim(tt)[1])
++   tt$gene.filter.args <- rep(paste0("filter.param=",filter.param), dim(tt)[1])
++   tt$model <- rep(model, dim(tt)[1])
++   tt$comparison <- rep(tt$comparison, dim(tt)[1])
++   tt$test <- rep(tt$test, dim(tt)[1])
++   tt$adjust.method <- rep(tt$adjust.method, dim(tt)[1])
++   tt$gene <- rownames(tt)
 + 
-+   return(tt$table)
++   return(tt)
 + 
 + }
 > 
@@ -304,7 +393,7 @@ Active assay: integrated (19377 features)
 +   subset.list <- list(ostadhoc=list("ostadhoc-preosteoblast","ostadhoc-embedding osteoblast"))
 + }
 > 
-> edgr.total <- data.frame()
+> DEgene.total <- data.frame()
 > 
 > for (i in subset.list) {
 + 
@@ -340,49 +429,72 @@ Active assay: integrated (19377 features)
 +     }
 + 
 +     #de analysis
-+     edgr <- runEDGER(dataSub=dataSub,
-+                      cell.assign=cell.assign,
-+                      cell.subset=cell.subset,
-+                      genes.no.mito.ribo=genes.no.mito.ribo,
-+                      filter.arg=filter.arg,
-+                      filter.param=filter.param)
++     DEgene <- runDREAM(dataSub=dataSub,
++                        data.dir=data.dir,
++                        cell.assign=cell.assign,
++                        cell.subset=cell.subset,
++                        genes.no.mito.ribo=genes.no.mito.ribo,
++                        data.type=data.type,
++                        filter.arg=filter.arg,
++                        filter.type=filter.type,
++                        filter.param=filter.param,
++                        fml=fml)
 + 
-+     edgr.total <- rbind(edgr.total,edgr)
++     DEgene.total <- rbind(DEgene.total,DEgene)
 + 
-+     print(dim(edgr.total))
++     print(dim(DEgene.total))
 + 
-+     saveRDS(edgr.total, file=paste0("./../data/de-data/DEedgeR.",name,".",assign,".rds"))
++     saveRDS(DEgene.total, file=paste0("./../data/de-data/DEdream.",name,".",assign,".rds"))
 + 
 +   }
 + 
 + }
 [1] "ostadhoc-preosteoblast"
-[1] "common dispersion: 0.262680790709429"
+Memory usage to store result: > 547.3 Mb 
+Dividing work into 100 chunks...
+iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
+
+Total: 90 s
+Dividing work into 100 chunks...
+iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
+
+Total: 193 s
 [1] "All DE Genes"
-[1] 5767    5
+[1] 5767    6
 
 FALSE  TRUE 
- 4535  1232 
-       SpeciesHuman
-Down            663
-NotSig         4535
-Up              569
-[1] 5767   15
+ 5657   110 
+       (Intercept) SpeciesHuman percent.mt PhaseG2M PhaseS
+Down             0           22       1300       87    107
+NotSig           1         5657       2149     5654   5632
+Up            5766           88       2318       26     28
+[1] 5767   14
 [1] "ostadhoc-embedding osteoblast"
-[1] "common dispersion: 0.278336540644297"
+Memory usage to store result: > 9.7 Gb 
+Dividing work into 100 chunks...
+iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
+
+Total: 951 s
+Dividing work into 100 chunks...
+iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
+
+Total: 2126 s
 [1] "All DE Genes"
-[1] 6527    5
+[1] 6527    6
 
 FALSE  TRUE 
- 3372  3155 
-       SpeciesHuman
-Down           1902
-NotSig         3372
-Up             1253
-[1] 12294    15
+ 4352  2175 
+       (Intercept) SpeciesHuman percent.mt PhaseG2M PhaseS
+Down             0         1601       1570     1386   1589
+NotSig           0         4352        366     1771   3419
+Up            6527          574       4591     3370   1519
+[1] 12294    14
+Warning message:
+In regularize.values(x, y, ties, missing(ties)) :
+  collapsing to unique 'x' values
 > 
 > 
 > 
 > proc.time()
-     user    system   elapsed 
-19267.906   501.606 19816.969 
+    user   system  elapsed 
+2412.903  441.940 4075.219 

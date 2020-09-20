@@ -807,6 +807,92 @@ ggplot(fcs, aes(x=Species_Details, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage, fil
 
 ```
 
+```{r}
+
+#FIGURE FOR PAPER
+
+fcs.temp <- fcs[which(fcs$Sample_Details!="iPSC - control"),]
+fcs.temp$Species <- "Chimp"
+fcs.temp$Species[which(grep("Human",fcs.temp$Species_Details)>=1)] <- "Human"
+fcs.temp$Species <- factor(fcs.temp$Species,
+                           levels=c("Human","Chimp"),
+                           labels=c("Human","Chimp"))
+fcs.temp$Stage <- "Time 0"
+fcs.temp$Stage[which(fcs.temp$Cell_Type=="MSC")] <- "Time 1"
+fcs.temp$Stage <- factor(fcs.temp$Stage,
+                         levels=c("Time 0","Time 1"),
+                         labels=c("Time 0","Time 1"))
+
+p1 <- ggplot(fcs.temp, aes(x=Stage, y=CD90_Percentage, fill=Stage)) +
+        geom_boxplot() +
+        scale_fill_manual(values=c("pink","mediumorchid")) +
+        labs(title="CD90", x="", y="Proportion of Cells Expressing Marker") +
+        theme_classic() +
+        theme(legend.title=element_blank(), text=element_text(size=18)) +
+        facet_wrap(~Species, nrow=2, strip.position="left") +
+        stat_signif(comparisons=list(c("Time 1","Time 0"),
+                                     c("Time 1","Time 0")),
+                    test = "wilcox.test",
+                    test.args=list(alternative="two.sided", exact=FALSE),
+                    map_signif_level=c("**"=0.001, "*"=0.01),
+                    tip_length=0.01,
+                    y_position=1.05,
+                    textsize=3)
+
+p2 <- ggplot(fcs.temp, aes(x=Stage, y=CD73_Percentage, fill=Stage)) +
+        geom_boxplot() +
+        scale_fill_manual(values=c("pink","mediumorchid")) +
+        labs(title="CD73", x="", y="") +
+        theme_classic() +
+        theme(legend.title=element_blank(), text=element_text(size=18)) +
+        facet_wrap(~Species, nrow=2, strip.position="left") +
+        stat_signif(comparisons=list(c("Time 1","Time 0"),
+                                     c("Time 1","Time 0")),
+                    test = "wilcox.test",
+                    test.args=list(alternative="two.sided", exact=FALSE),
+                    map_signif_level=c("**"=0.001, "*"=0.01),
+                    tip_length=0.01,
+                    y_position=1.05,
+                    textsize=3)
+
+p3 <- ggplot(fcs.temp, aes(x=Stage, y=CD105_Percentage, fill=Stage)) +
+        geom_boxplot() +
+        scale_fill_manual(values=c("pink","mediumorchid")) +
+        labs(title="CD105", x="", y="") +
+        theme_classic() +
+        theme(legend.title=element_blank(), text=element_text(size=18)) +
+        facet_wrap(~Species, nrow=2, strip.position="left") +
+        stat_signif(comparisons=list(c("Time 1","Time 0"),
+                                     c("Time 1","Time 0")),
+                    test = "wilcox.test",
+                    test.args=list(alternative="two.sided", exact=FALSE),
+                    map_signif_level=c("**"=0.001, "*"=0.01),
+                    tip_length=0.01,
+                    y_position=1.05,
+                    textsize=3)
+
+p4 <- ggplot(fcs.temp, aes(x=Stage, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage, fill=Stage)) +
+        geom_boxplot() +
+        scale_fill_manual(values=c("pink","mediumorchid")) +
+        labs(title="Controls", x="", y="") +
+        theme_classic() +
+        theme(legend.title=element_blank(), text=element_text(size=18)) +
+        facet_wrap(~Species, nrow=2, strip.position="left") +
+        stat_signif(comparisons=list(c("Time 1","Time 0"),
+                                     c("Time 1","Time 0")),
+                    test = "wilcox.test",
+                    test.args=list(alternative="two.sided", exact=FALSE),
+                    map_signif_level=c("**"=0.001, "*"=0.01),
+                    tip_length=0.01,
+                    y_position=1.05,
+                    textsize=3)
+
+CombinePlots(list(p1,p2,p3,p4),ncol=4,legend="none")
+
+```
+
+
+
 #### Comparison across full sample set
 
 ```{r, eval=FALSE, echo=FALSE}

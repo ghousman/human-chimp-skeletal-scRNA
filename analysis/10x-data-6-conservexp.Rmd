@@ -1,7 +1,7 @@
 ---
 title: "10x-data-conservexp"
 author: "Genevieve Housman"
-date: "August 2020"
+date: "September 2020"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -14,7 +14,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ## 10X Data Cellranger Analysis - Conserved Expression
 
 Identify expression patterns that are conserved between humans and chimpanzees within different cell classifications.
-
 
 ```{r load libraries}
 
@@ -33,47 +32,154 @@ library(UpSetR)
 library(reshape2)
 library(CountClust)
 library(classtpx)
+library(edgeR)
+library(matrixStats)
 
 ```
 
 ```{r load data}
 
 #Load data
-scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-tot.rds" #integrate across individuals - total
-#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-t0.rds" #integrate across individuals - Time 0
-#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-t1.rds" #integrate across individuals - Time 1
-#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-t2.rds" #integrate across individuals - Time 2
-indv <- readRDS(scrna)
+scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.assign.rds" #integrate across individuals - total (15k genes)
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-tot.assign.rds" #integrate across individuals - total
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-t0.assign.rds" #integrate across individuals - Time 0
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-t1.assign.rds" #integrate across individuals - Time 1
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-t2.assign.rds" #integrate across individuals - Time 2
+data <- readRDS(scrna)
+data
 
-indv
-head(indv@meta.data)
+#Load DE results
+compare1 <- readRDS("./data/de-data/DEedgeR.totcell.filter.pch20.fc.bh.stage.rds")
+compare2 <- readRDS("./data/de-data/DEedgeR.totcell.filter.pch20.fc.bh.cluster.rds")
+compare3 <- readRDS("./data/de-data/DEedgeR.totcell.filter.pch20.fc.bh.adhoc.rds")
+compare4 <- readRDS("./data/de-data/DEedgeR.totcell.filter.pch20.fc.bh.ostadhoc.rds")
+DEdata <- rbind(compare1,compare2,compare3,compare4)
+rm(compare1,compare2,compare3,compare4)
+
+```
+
+Define genes of interest: all except mitochondrial genes and ribosomal genes
+
+```{r}
+
+genes <- rownames(data@assays$RNA@counts)
+genes.mito <- c("MT-ATP6","MT-ATP8","MT-CO1","MT-CO2","MT-CO3","MT-CYB","MT-ND1","MT-ND2","MT-ND3","MT-ND4","MT-ND4L","MT-ND5")
+genes.ribo <- grep('^RP',genes,value=T)
+genes.no.mito.ribo <- genes[which(!(genes %in% c(genes.mito,genes.ribo)))]
+rm(genes,genes.mito,genes.ribo)
+
+```
+
+```{r}
+
+#Define parameters for data processing
+subset.list <- list(stage=list("stage-Time 0","stage-Time 1","stage-Time 2"),
+                    clust=list("cluster-iPSC.c1","cluster-iPSC.c2","cluster-iPSC.c3","cluster-MSC.c1","cluster-Osteoblast.c1","cluster-Osteoblast.c2"),
+                    combI=c("cluster-iPSC.c1_iPSC.c2_iPSC.c3"),
+                    combO=c("cluster-Osteoblast.c1_Osteoblast.c2"),
+                    adhoc=list("adhoc-iPSC","adhoc-MSC","adhoc-Osteoblast"),
+                    ostadhoc=list("ostadhoc-preosteoblast","ostadhoc-embedding osteoblast"))
+filter.arg==TRUE
+filter.type=="pch"
+filter.param=0.2
+
+#Get normalized gene count data
+CEdata <- tibble()
+
+for (i in subset.list) {
+  
+  for (j in i) {
+    
+    print(j)
+
+    #define cell assignment and subtype of interest
+    cell.assign <- str_split(j,"-")[[1]][1]
+    cell.subset <- str_split(j,"-")[[1]][2]
+
+    #define data subset
+    if (str_count(cell.subset,"_")>=1){
+      if (length(str_split(cell.subset,"_")[[1]])==2) {
+        dataSub <- subset(data,
+                          subset=Cluster==str_split(cell.subset,"_")[[1]][1]|
+                            Cluster==str_split(cell.subset,"_")[[1]][2])
+      }
+      else {
+        dataSub <- subset(data,
+                          subset=Cluster==str_split(cell.subset,"_")[[1]][1]|
+                            Cluster==str_split(cell.subset,"_")[[1]][2]|
+                            Cluster==str_split(cell.subset,"_")[[1]][3])
+      }
+    }
+    else {
+      if(cell.assign=="stage") { dataSub <- subset(data,subset=Stage==cell.subset) }
+      if(cell.assign=="cluster") { dataSub <- subset(data,subset=Cluster==cell.subset) }
+      if(cell.assign=="adhoc") { dataSub <- subset(data,subset=AdHoc.Assign==cell.subset) }
+      if(cell.assign=="ostadhoc") { dataSub <- subset(data,subset=OstAdHoc.Assign==cell.subset) }
+    }
+
+    #compile data for CE genes
+    
+    #count matrix
+    counts <- as.matrix(GetAssayData(dataSub, assay="RNA", slot="counts"))
+  
+    #remove mitochodrial and ribosomal genes
+    counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
+
+    #metadata
+    metadata <- dataSub@meta.data[,c("Species","Stage","Cluster","AdHoc.Assign","OstAdHoc.Assign")]
+    metadata <- metadata[colnames(counts),]
+    
+    #make edgeR object
+    dge <- DGEList(counts)
+    meta_dge <- dge$samples[,c("lib.size","norm.factors")]
+    meta_dge <- cbind(meta_dge, metadata)
+    dge$samples <- meta_dge
+    rm(dataSub,counts,metadata,meta_dge)
+  
+    #filter genes
+    if (filter.arg==TRUE){
+      if (filter.type=="min.count"){
+        keep <- filterByExpr(dge, group=dge$samples$Species, min.count=filter.param, min.total.count=15)
+        table(keep)
+        dge <- dge[keep, , keep.lib.sizes=FALSE]
+        rm(keep)
+      }
+      if (filter.type=="pch"){
+        dge$counts <- dge$counts[rowSums(dge$counts!=0)>=(filter.param*dim(dge$counts)[2]),]
+      }
+    }
+    
+    #normalize data
+    dge <- calcNormFactors(dge, method="TMM")
+    summary(dge$samples$norm.factors)
+    
+    data.cpm <- cpm(dge, normalized.lib.sizes=TRUE, log=TRUE, prior=2)
+    data.meta <- dge$samples[,c("Species","Stage","Cluster","AdHoc.Assign","OstAdHoc.Assign")]
+    
+    CEtemp <- tibble(Gene=rownames(data.cpm),
+                     cell.assign=rep(cell.assign, dim(data.cpm)[1]),
+                     cell.subset=rep(cell.subset, dim(data.cpm)[1]),
+                     HumanSumCount=rowSums(data.cpm[,which(data.meta$Species=="Human")]),
+                     ChimpSumCount=rowSums(data.cpm[,which(data.meta$Species=="Chimp")]),
+                     HumanAvgCount=rowMeans(data.cpm[,which(data.meta$Species=="Human")]),
+                     ChimpAvgCount=rowMeans(data.cpm[,which(data.meta$Species=="Chimp")]),
+                     HumanVarCount=rowVars(as.matrix(data.cpm[,which(data.meta$Species=="Human")])),
+                     ChimpVarCount=rowVars(as.matrix(data.cpm[,which(data.meta$Species=="Chimp")])))
+    CEtemp$AbsDiffAvg <- abs(CEtemp$HumanAvgCount - CEtemp$ChimpAvgCount)
+    CEtemp$AbsDiffVar <- abs(CEtemp$HumanVarCount - CEtemp$ChimpVarCount)
+    
+    CEdata = rbind(CEdata,CEtemp)
+
+  }
+}
+
 
 ```
 
 
+
+
 ```{r expression patterns that are shared}
-
-library(edgeR)
-library(matrixStats)
-
-#Define main directory
-dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
-dir2 <- paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full")
-
-#Load data
-indv <- readRDS(paste0(dir2,"/data.filterMT.regMT.indv.log.10k.int.rds" ))
-indv@meta.data$Collection <- as.factor(indv@meta.data$Collection)
-data <- readRDS(paste0(dir2,"/data.filterMT.merge.l-TEMP.rds"))
-data@meta.data$Collection <- as.factor(data@meta.data$Collection)
-
-#Find differentially expressed genes between humans and chimpanzees
-Idents(indv) <- factor(indv@meta.data$species, levels=c("Chimp","Human"))
-Idents(data) <- factor(data@meta.data$species, levels=c("Chimp","Human"))
-
-#Isolate ribosomal genes
-genes <- rownames(data@assays$RNA@counts)
-genes.ribo <- grep('^RP',genes,value=T)
-genes.no.ribo <- genes[which(!(genes %in% genes.ribo))]
 
 #Get normalized gene count data
 ips.cnts <- as.matrix(GetAssayData(subset(data,subset=Cell.Type=="iPSC"), assay="RNA", slot="counts"))
@@ -148,55 +254,7 @@ ost.norm <- tibble(Gene=rownames(data.ost),
 ost.norm$AbsDiffAvg <- abs(ost.norm$HumanAvgCount - ost.norm$ChimpAvgCount)
 ost.norm$AbsDiffVar <- abs(ost.norm$HumanVarCount - ost.norm$ChimpVarCount)
 
-##########
-#groups.raw <- indv@meta.data[,c("species","Stage","Cluster","AdHoc.Assign","OstAdHoc.Assign","GoM.Assign")]
-#data.raw <- as.data.frame(indv@assays$RNA@counts[,match(rownames(groups),colnames(indv@assays$RNA@counts))])
-#ips <- data.frame(Gene=rownames(data),
-#                  HumanSumCount=rowSums(data[,which(groups$Stage=="Time 0" & groups$species=="Human")]),
-#                  ChimpSumCount=rowSums(data[,which(groups$Stage=="Time 0" & groups$species=="Chimp")]),
-#                  HumanAvgCount=rowMeans(data[,which(groups$Stage=="Time 0" & groups$species=="Human")]),
-#                  ChimpAvgCount=rowMeans(data[,which(groups$Stage=="Time 0" & groups$species=="Chimp")]),
-#                  HumanVarCount=rowVars(as.matrix(data[,which(groups$Stage=="Time 0" & groups$species=="Human")])),
-#                  ChimpVarCount=rowVars(as.matrix(data[,which(groups$Stage=="Time 0" & groups$species=="Chimp")])))
-##########
 
-#Get raw gene count data
-raw.ips <- as.data.frame(data@assays$RNA@counts[match(rownames(data.ips),rownames(data@assays$RNA@counts)),
-                                                match(colnames(data.ips),colnames(data@assays$RNA@counts))])
-raw.msc <- as.data.frame(data@assays$RNA@counts[match(rownames(data.msc),rownames(data@assays$RNA@counts)),
-                                                match(colnames(data.msc),colnames(data@assays$RNA@counts))])
-raw.ost <- as.data.frame(data@assays$RNA@counts[match(rownames(data.ost),rownames(data@assays$RNA@counts)),
-                                                match(colnames(data.ost),colnames(data@assays$RNA@counts))])
-
-ips.raw <- tibble(Gene=rownames(raw.ips),
-                  HumanSumCount=rowSums(raw.ips[,which(ips.meta$species=="Human")]),
-                  ChimpSumCount=rowSums(raw.ips[,which(ips.meta$species=="Chimp")]),
-                  HumanAvgCount=rowMeans(raw.ips[,which(ips.meta$species=="Human")]),
-                  ChimpAvgCount=rowMeans(raw.ips[,which(ips.meta$species=="Chimp")]),
-                  HumanVarCount=rowVars(as.matrix(raw.ips[,which(ips.meta$species=="Human")])),
-                  ChimpVarCount=rowVars(as.matrix(raw.ips[,which(ips.meta$species=="Chimp")])))
-ips.raw$AbsDiffAvg <- abs(ips.raw$HumanAvgCount - ips.raw$ChimpAvgCount)
-ips.raw$AbsDiffVar <- abs(ips.raw$HumanVarCount - ips.raw$ChimpVarCount)
-
-msc.raw <- tibble(Gene=rownames(raw.msc),
-                  HumanSumCount=rowSums(raw.msc[,which(msc.meta$species=="Human")]),
-                  ChimpSumCount=rowSums(raw.msc[,which(msc.meta$species=="Chimp")]),
-                  HumanAvgCount=rowMeans(raw.msc[,which(msc.meta$species=="Human")]),
-                  ChimpAvgCount=rowMeans(raw.msc[,which(msc.meta$species=="Chimp")]),
-                  HumanVarCount=rowVars(as.matrix(raw.msc[,which(msc.meta$species=="Human")])),
-                  ChimpVarCount=rowVars(as.matrix(raw.msc[,which(msc.meta$species=="Chimp")])))
-msc.raw$AbsDiffAvg <- abs(msc.raw$HumanAvgCount - msc.raw$ChimpAvgCount)
-msc.raw$AbsDiffVar <- abs(msc.raw$HumanVarCount - msc.raw$ChimpVarCount)
-
-ost.raw <- tibble(Gene=rownames(raw.ost),
-                  HumanSumCount=rowSums(raw.ost[,which(ost.meta$species=="Human")]),
-                  ChimpSumCount=rowSums(raw.ost[,which(ost.meta$species=="Chimp")]),
-                  HumanAvgCount=rowMeans(raw.ost[,which(ost.meta$species=="Human")]),
-                  ChimpAvgCount=rowMeans(raw.ost[,which(ost.meta$species=="Chimp")]),
-                  HumanVarCount=rowVars(as.matrix(raw.ost[,which(ost.meta$species=="Human")])),
-                  ChimpVarCount=rowVars(as.matrix(raw.ost[,which(ost.meta$species=="Chimp")])))
-ost.raw$AbsDiffAvg <- abs(ost.raw$HumanAvgCount - ost.raw$ChimpAvgCount)
-ost.raw$AbsDiffVar <- abs(ost.raw$HumanVarCount - ost.raw$ChimpVarCount)
 
 rm(data.ips,data.msc,data.ost,ips.cnts,ips.meta,ips.dge,msc.cnts,msc.meta,msc.dge,ost.cnts,ost.meta,ost.dge)
 rm(meta_dge,keep,genes,genes.ribo,genes.no.ribo)
@@ -254,20 +312,20 @@ intersect(msc.genes$Gene, ost.genes$Gene) #shared genes: none
 
 ips.genes <- ips.norm %>% 
                 dplyr::filter(AbsDiffAvg<0.05 & AbsDiffVar<0.01) %>% 
-                dplyr::filter(Gene %in% rownames(indv@assays$integrated))
+                dplyr::filter(Gene %in% rownames(data@assays$integrated))
 msc.genes <- msc.norm %>% 
                 dplyr::filter(AbsDiffAvg<0.05 & AbsDiffVar<0.01) %>% 
-                dplyr::filter(Gene %in% rownames(indv@assays$integrated))
+                dplyr::filter(Gene %in% rownames(data@assays$integrated))
 ost.genes <- ost.norm %>% 
                 dplyr::filter(AbsDiffAvg<0.05 & AbsDiffVar<0.01) %>% 
-                dplyr::filter(Gene %in% rownames(indv@assays$integrated))
+                dplyr::filter(Gene %in% rownames(data@assays$integrated))
 
-VlnPlot(subset(indv,subset=Stage=="Time 0"), assay="integrated", slot="data", features=ips.genes$Gene[1:3], pt.size=0)
-VlnPlot(subset(indv,subset=Stage=="Time 1"), assay="integrated", slot="data", features=msc.genes$Gene[1:3], pt.size=0)
-VlnPlot(subset(indv,subset=Stage=="Time 2"), assay="integrated", slot="data", features=ost.genes$Gene[1:3], pt.size=0)
+VlnPlot(subset(data,subset=Stage=="Time 0"), assay="integrated", slot="data", features=ips.genes$Gene[1:3], pt.size=0)
+VlnPlot(subset(data,subset=Stage=="Time 1"), assay="integrated", slot="data", features=msc.genes$Gene[1:3], pt.size=0)
+VlnPlot(subset(data,subset=Stage=="Time 2"), assay="integrated", slot="data", features=ost.genes$Gene[1:3], pt.size=0)
 
-VlnPlot(subset(indv,subset=Stage=="Time 0"), assay="integrated", slot="data", features=c("DEK","SEC11C","WDR33"), pt.size=0)
-VlnPlot(subset(indv,subset=Stage=="Time 1"), assay="integrated", slot="data", features=c("DEK","SEC11C","WDR33"), pt.size=0)
+VlnPlot(subset(data,subset=Stage=="Time 0"), assay="integrated", slot="data", features=c("DEK","SEC11C","WDR33"), pt.size=0)
+VlnPlot(subset(data,subset=Stage=="Time 1"), assay="integrated", slot="data", features=c("DEK","SEC11C","WDR33"), pt.size=0)
 
 
 ```
