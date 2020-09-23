@@ -14,9 +14,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ## 10X Data Cellranger Analysis - Differential Expression
 
 Test for differential expression between humans and chimpanzees within different cell classifications.
+https://combine-australia.github.io/RNAseq-R/06-rnaseq-day1.html
 
-
-```{r load libraries}
+```{r, message=FALSE}
 
 #Load libraries
 library(Seurat)
@@ -41,6 +41,7 @@ library(org.Hs.eg.db)
 library(Rgraphviz)
 library(enrichplot)
 library(viridis)
+library(RUVSeq)
 
 ```
 
@@ -67,6 +68,63 @@ genes.mito <- c("MT-ATP6","MT-ATP8","MT-CO1","MT-CO2","MT-CO3","MT-CYB","MT-ND1"
 genes.ribo <- grep('^RP',genes,value=T)
 genes.no.mito.ribo <- genes[which(!(genes %in% c(genes.mito,genes.ribo)))]
 rm(genes,genes.mito,genes.ribo)
+
+```
+
+Define data subsets for testing DE methods.
+
+```{r}
+#dataSub <- subset(data,subset=Cluster=="iPSC.c3")
+#dataSub <- subset(data,subset=Cluster=="Osteoblast.c2")
+#dataSub <- subset(data,subset=OstAdHoc.Assign=="embedding osteoblast")
+dataSub <- subset(data,subset=Stage=="Time 2")
+
+#dataSub <- subset(dataSub,subset=Sample!="H1-I")
+#dataSub <- subset(dataSub,subset=Sample!="C1-I")
+#dataSub <- subset(dataSub,subset=Sample!="H1-I-r2")
+#dataSub <- subset(dataSub,subset=Sample!="C1-I-r2")
+
+#human.cells <- rownames(dataSub@meta.data)[which(dataSub@meta.data$Species=="Human")]
+#chimp.cells <- rownames(dataSub@meta.data)[which(dataSub@meta.data$Species=="Chimp")]
+#h.cell.sub <- human.cells[sample(1:length(human.cells), 200, replace=FALSE)]
+#c.cell.sub <- chimp.cells[sample(1:length(chimp.cells), 200, replace=FALSE)]
+#dataSub <- subset(dataSub,cells=c(h.cell.sub,c.cell.sub))
+```
+
+When performing DE analyses with pseudobulk data, use raw counts only as this worked the best.
+
+```{r}
+#make pseudobulk
+dataSub <- subset(data,subset=Stage=="Time 2")
+counts <- c()
+metadata <- c()
+labels <- c()
+for (i in unique(dataSub@meta.data$Sample)) {
+      x.lab <- i
+      w <- which(dataSub@meta.data$Sample==i)
+      if (length(w)>0) {
+        x.spp <- dataSub@meta.data$Species[w][1]
+        x.col <- dataSub@meta.data$Collection[w][1]
+        x.ind <- dataSub@meta.data$Individual[w][1]
+        x.rep <- dataSub@meta.data$Replicate[w][1]
+        if (length(w)==1) {
+          x.cnt <- dataSub@assays$RNA@counts[,w]
+          #x.cnt <- dataSub@assays$RNA@data[,w]
+          #x.cnt <- dataSub@assays$integrated@data[,w]
+        } else {
+          x.cnt <- Matrix::rowSums(dataSub@assays$RNA@counts[,w])
+          #x.cnt <- Matrix::rowSums(dataSub@assays$RNA@data[,w])
+          #x.cnt <- Matrix::rowSums(dataSub@assays$integrated@data[,w])
+        }
+        counts <- cbind(counts, x.cnt)
+        metadata <- rbind(metadata, c(x.lab, x.spp, x.col, x.ind, x.rep))
+        labels <- c(labels, x.lab)
+      }
+}
+colnames(counts) <- labels
+rownames(metadata) <- labels
+colnames(metadata) <- c("Sample","Species","Collection","Individual","Replicate")
+metadata <- as.data.frame(metadata)
 
 ```
 
@@ -143,61 +201,6 @@ Other Notes
 
 WHY DO MY P-VALUES SEEM TO BE INFLATED?
 HOW TO DEAL WITH REPEAT SAMPLES AND DIFFERENT SAMPLE SIZES?
-
-```{r}
-#dataSub <- subset(data,subset=Cluster=="iPSC.c3")
-dataSub <- subset(data,subset=Cluster=="Osteoblast.c2")
-#dataSub <- subset(data,subset=OstAdHoc.Assign=="embedding osteoblast")
-#dataSub <- subset(data,subset=Stage=="Time 2")
-
-#dataSub <- subset(dataSub,subset=Sample!="H1-I")
-#dataSub <- subset(dataSub,subset=Sample!="C1-I")
-#dataSub <- subset(dataSub,subset=Sample!="H1-I-r2")
-#dataSub <- subset(dataSub,subset=Sample!="C1-I-r2")
-
-#human.cells <- rownames(dataSub@meta.data)[which(dataSub@meta.data$Species=="Human")]
-#chimp.cells <- rownames(dataSub@meta.data)[which(dataSub@meta.data$Species=="Chimp")]
-#h.cell.sub <- human.cells[sample(1:length(human.cells), 200, replace=FALSE)]
-#c.cell.sub <- chimp.cells[sample(1:length(chimp.cells), 200, replace=FALSE)]
-#dataSub <- subset(dataSub,cells=c(h.cell.sub,c.cell.sub))
-```
-
-When performing DE analyses with pseudobulk data, use raw counts only as this worked the best.
-
-```{r}
-#make pseudobulk
-dataSub <- subset(data,subset=Stage=="Time 2")
-counts <- c()
-metadata <- c()
-labels <- c()
-for (i in unique(dataSub@meta.data$Sample)) {
-      x.lab <- i
-      w <- which(dataSub@meta.data$Sample==i)
-      if (length(w)>0) {
-        x.spp <- dataSub@meta.data$Species[w][1]
-        x.col <- dataSub@meta.data$Collection[w][1]
-        x.ind <- dataSub@meta.data$Individual[w][1]
-        x.rep <- dataSub@meta.data$Replicate[w][1]
-        if (length(w)==1) {
-          #x.cnt <- dataSub@assays$RNA@counts[,w]
-          #x.cnt <- dataSub@assays$RNA@data[,w]
-          x.cnt <- dataSub@assays$integrated@data[,w]
-        } else {
-          #x.cnt <- Matrix::rowSums(dataSub@assays$RNA@counts[,w])
-          #x.cnt <- Matrix::rowSums(dataSub@assays$RNA@data[,w])
-          x.cnt <- Matrix::rowSums(dataSub@assays$integrated@data[,w])
-        }
-        counts <- cbind(counts, x.cnt)
-        metadata <- rbind(metadata, c(x.lab, x.spp, x.col, x.ind, x.rep))
-        labels <- c(labels, x.lab)
-      }
-}
-colnames(counts) <- labels
-rownames(metadata) <- labels
-colnames(metadata) <- c("Sample","Species","Collection","Individual","Replicate")
-metadata <- as.data.frame(metadata)
-
-```
 
 ```{r}
 
@@ -405,6 +408,10 @@ runDream <- function(dataSub, cell.assign, cell.subset, genes.no.mito.ribo, filt
     if (filter.type=="pch"){
       dge$counts <- dge$counts[rowSums(dge$counts!=0)>=(filter.param*dim(dge$counts)[2]),]
     }
+    if (filter.type=="logcpm"){
+      keep <- rowMeans(edgeR::cpm(dge,log=TRUE,prior.count=0.25))>0
+      dge$counts <- dge$counts[keep,]
+    }
   }
   
   #normalize data
@@ -414,7 +421,7 @@ runDream <- function(dataSub, cell.assign, cell.subset, genes.no.mito.ribo, filt
   #calculate cellular detection rate
   cdr <- scale(colMeans(dge$count > 0))
   
-  #design matrix
+  #prep variables for design matrix
   dge$samples$Collection <- as.factor(as.numeric(dge$samples$Collection))
   dge$samples$Phase <- as.factor(dge$samples$Phase)
   dge$samples$Individual <- as.factor(dge$samples$Individual)
@@ -423,6 +430,26 @@ runDream <- function(dataSub, cell.assign, cell.subset, genes.no.mito.ribo, filt
   dge$samples$Species <- as.factor(dge$samples$Species)
   dge$samples$SequencingBatch <- as.factor(as.numeric(dge$samples$SequencingBatch))
   dge$samples$S.G2M.Diff <- dge$samples$S.Score - dge$samples$G2M.Score
+
+  #calculate RUV factors from replicates - INCLUDING RUVS DOES NOT IMPROVE PSEUDOBULK DATA CLUSTERING BY SPECIES AND INDIVIDUAL
+  tmm <- edgeR::cpm(dge,normalized.lib.sizes=TRUE,log=TRUE,prior.count=0.25)
+  #plotMDS(dge$counts,top=dim(dge)[1],gene.selection="pairwise",col=c(rep("darkgreen",7),rep("darkorange",7)))
+  #plotMDS(tmm,top=dim(dge)[1],gene.selection="pairwise",col=c(rep("darkgreen",7),rep("darkorange",7)))
+  differences <- t(makeGroups(dge$samples$Replicate))
+  tmm.1 <- RUVs(dge$counts, cIdx=rownames(dge$counts), k=1, scIdx=differences)
+  tmm.2 <- RUVs(dge$counts, cIdx=rownames(dge$counts), k=2, scIdx=differences)
+  tmm.3 <- RUVs(dge$counts, cIdx=rownames(dge$counts), k=3, scIdx=differences)
+  tmm.4 <- RUVs(dge$counts, cIdx=rownames(dge$counts), k=4, scIdx=differences)
+  tmm.5 <- RUVs(dge$counts, cIdx=rownames(dge$counts), k=5, scIdx=differences)
+  tmm.6 <- RUVs(dge$counts, cIdx=rownames(dge$counts), k=6, scIdx=differences)
+  tmm.7 <- RUVs(dge$counts, cIdx=rownames(dge$counts), k=7, scIdx=differences)
+  tmm.8 <- RUVs(dge$counts, cIdx=rownames(dge$counts), k=8, scIdx=differences)
+  tmm.9 <- RUVs(dge$counts, cIdx=rownames(dge$counts), k=9, scIdx=differences)
+  tmm.10 <- RUVs(dge$counts, cIdx=rownames(dge$counts), k=10, scIdx=differences)
+  plotMDS(tmm,top=dim(dge)[1],gene.selection="pairwise",col=c(rep("darkgreen",7),rep("darkorange",7)))
+  plotMDS(tmm.10$normalizedCounts,top=dim(dge)[1],gene.selection="pairwise",col=c(rep("darkgreen",7),rep("darkorange",7)))
+  
+  #design matrix
   #model <- "~Collection+nCount_RNA+percent.mt+Phase+(1|Individual)+(1|Replicate)+Species"
   #formula <- ~Collection+nCount_RNA+percent.mt+Phase+(1|Individual)+(1|Replicate)+Species
   
@@ -692,6 +719,11 @@ sbatch ./DEdreamsubset.sh totcell.keepRep1.filter.pch20.fml1.nofc.bh tot keepRep
 sbatch ./DEdreamsubset.sh totcell.keepRep1.filter.pch20.fml1.nofc.bh tot keepRep1 FALSE TRUE pch 0.2 formula1 adhoc
 sbatch ./DEdreamsubset.sh totcell.keepRep1.filter.pch20.fml1.nofc.bh tot keepRep1 FALSE TRUE pch 0.2 formula1 ostadhoc
 
+sbatch ./DEdreamsubset.sh totcell.keepRep1.filter.pch20.fml5.nofc.bh tot keepRep1 FALSE TRUE pch 0.2 formula5 stage
+sbatch ./DEdreamsubset.sh totcell.keepRep1.filter.pch20.fml5.nofc.bh tot keepRep1 FALSE TRUE pch 0.2 formula5 cluster
+sbatch ./DEdreamsubset.sh totcell.keepRep1.filter.pch20.fml5.nofc.bh tot keepRep1 FALSE TRUE pch 0.2 formula5 adhoc
+sbatch ./DEdreamsubset.sh totcell.keepRep1.filter.pch20.fml5.nofc.bh tot keepRep1 FALSE TRUE pch 0.2 formula5 ostadhoc
+
 sbatch ./DEedgeRsubset.sh totcell.keepRep1.filter.pch20.fc.bh TRUE pch 0.2 keepRep1 FALSE TRUE BH stage
 sbatch ./DEedgeRsubset.sh totcell.keepRep1.filter.pch20.fc.bh TRUE pch 0.2 keepRep1 FALSE TRUE BH cluster
 sbatch ./DEedgeRsubset.sh totcell.keepRep1.filter.pch20.fc.bh TRUE pch 0.2 keepRep1 FALSE TRUE BH adhoc
@@ -703,6 +735,11 @@ sbatch ./DEdreamsubset.sh totcell.keepRep2.filter.pch20.fml1.nofc.bh tot keepRep
 sbatch ./DEdreamsubset.sh totcell.keepRep2.filter.pch20.fml1.nofc.bh tot keepRep2 FALSE TRUE pch 0.2 formula1 adhoc
 sbatch ./DEdreamsubset.sh totcell.keepRep2.filter.pch20.fml1.nofc.bh tot keepRep2 FALSE TRUE pch 0.2 formula1 ostadhoc
 
+sbatch ./DEdreamsubset.sh totcell.keepRep2.filter.pch20.fml5.nofc.bh tot keepRep2 FALSE TRUE pch 0.2 formula5 stage
+sbatch ./DEdreamsubset.sh totcell.keepRep2.filter.pch20.fml5.nofc.bh tot keepRep2 FALSE TRUE pch 0.2 formula5 cluster
+sbatch ./DEdreamsubset.sh totcell.keepRep2.filter.pch20.fml5.nofc.bh tot keepRep2 FALSE TRUE pch 0.2 formula5 adhoc
+sbatch ./DEdreamsubset.sh totcell.keepRep2.filter.pch20.fml5.nofc.bh tot keepRep2 FALSE TRUE pch 0.2 formula5 ostadhoc
+
 sbatch ./DEedgeRsubset.sh totcell.keepRep2.filter.pch20.fc.bh TRUE pch 0.2 keepRep2 FALSE TRUE BH stage
 sbatch ./DEedgeRsubset.sh totcell.keepRep2.filter.pch20.fc.bh TRUE pch 0.2 keepRep2 FALSE TRUE BH cluster
 sbatch ./DEedgeRsubset.sh totcell.keepRep2.filter.pch20.fc.bh TRUE pch 0.2 keepRep2 FALSE TRUE BH adhoc
@@ -713,6 +750,11 @@ sbatch ./DEdreamsubset.sh totcell.subNum.filter.pch20.fml1.nofc.bh tot subNum TR
 sbatch ./DEdreamsubset.sh totcell.subNum.filter.pch20.fml1.nofc.bh tot subNum TRUE TRUE pch 0.2 formula1 cluster
 sbatch ./DEdreamsubset.sh totcell.subNum.filter.pch20.fml1.nofc.bh tot subNum TRUE TRUE pch 0.2 formula1 adhoc
 sbatch ./DEdreamsubset.sh totcell.subNum.filter.pch20.fml1.nofc.bh tot subNum TRUE TRUE pch 0.2 formula1 ostadhoc
+
+sbatch ./DEdreamsubset.sh totcell.subNum.filter.pch20.fml5.nofc.bh tot subNum TRUE TRUE pch 0.2 formula5 stage
+sbatch ./DEdreamsubset.sh totcell.subNum.filter.pch20.fml5.nofc.bh tot subNum TRUE TRUE pch 0.2 formula5 cluster
+sbatch ./DEdreamsubset.sh totcell.subNum.filter.pch20.fml5.nofc.bh tot subNum TRUE TRUE pch 0.2 formula5 adhoc
+sbatch ./DEdreamsubset.sh totcell.subNum.filter.pch20.fml5.nofc.bh tot subNum TRUE TRUE pch 0.2 formula5 ostadhoc
 
 sbatch ./DEedgeRsubset.sh totcell.subNum.filter.pch20.fc.bh TRUE pch 0.2 NULL TRUE TRUE BH stage
 sbatch ./DEedgeRsubset.sh totcell.subNum.filter.pch20.fc.bh TRUE pch 0.2 NULL TRUE TRUE BH cluster
@@ -740,10 +782,10 @@ sbatch ./DEedgeRsubset.sh totcell.subNum.filter.pch20.fc.bh TRUE pch 0.2 NULL TR
 
 ```{r}
 
-compare <- readRDS("./data/de-data/DEdream.totcell.filter.pch20.fml3.nofc.bh.stage.rds")
-compare <- readRDS("./data/de-data/DEdream.totcell.filter.pch20.fml3.nofc.bh.cluster.rds")
-compare <- readRDS("./data/de-data/DEdream.totcell.filter.pch20.fml3.nofc.bh.adhoc.rds")
-compare <- readRDS("./data/de-data/DEdream.totcell.filter.pch20.fml3.nofc.bh.ostadhoc.rds")
+compare <- readRDS("./data/de-data/DEdream.totcell.filter.pch20.fml5.nofc.bh.stage.rds")
+compare <- readRDS("./data/de-data/DEdream.totcell.filter.pch20.fml5.nofc.bh.cluster.rds")
+compare <- readRDS("./data/de-data/DEdream.totcell.filter.pch20.fml5.nofc.bh.adhoc.rds")
+compare <- readRDS("./data/de-data/DEdream.totcell.filter.pch20.fml5.nofc.bh.ostadhoc.rds")
 
 compare <- readRDS("./data/de-data/DEdream.totcell.keepRep1.filter.pch20.fml1.nofc.bh.stage.rds")
 compare <- readRDS("./data/de-data/DEdream.totcell.keepRep2.filter.pch20.fml1.nofc.bh.stage.rds")

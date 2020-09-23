@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Identify expression patterns that are conserved between humans and chimpanzees within different cell classifications.
 
-```{r load libraries}
+```{r, message=FALSE}
 
 #Load libraries
 library(Seurat)

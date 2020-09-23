@@ -146,6 +146,14 @@ runDREAM <- function(dataSub, data.dir, subset.rep, cell.assign, cell.subset, ge
     model <- "~Species+percent.mt+Phase+(1|Sample)"
     formula <- ~Species+percent.mt+Phase+(1|Sample)
   }
+  if (fml=="formula4") {
+    model <- "~Species+percent.mt+Phase+(1|Individual)+(1|Replicate)"
+    formula <- ~Species+percent.mt+Phase+(1|Individual)+(1|Replicate)
+  }
+  if (fml=="formula5") {
+    model <- "~Species+percent.mt+Phase+(1|Individual)"
+    formula <- ~Species+percent.mt+Phase+(1|Individual)
+  }
 
   #estimate weights using linear mixed model of dream (voom)
   vobjDream = voomWithDreamWeights(counts=dge, formula=formula, data=dge$samples)

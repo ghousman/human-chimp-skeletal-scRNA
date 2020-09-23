@@ -1,0 +1,475 @@
+---
+title: "10x-data-variance-tot"
+author: "Genevieve Housman"
+date: "September 2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 10X Data Cellranger Analysis - Variance in Gene Expression
+
+Examine whether variance in gene expression differs across time points in humans and chimpanzees.
+
+```{r, message=FALSE}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(grid)
+library(gbm)
+library(colorspace)
+library(RColorBrewer)
+library(edgeR)
+library(scran)
+library(SingleCellExperiment)
+library(reshape2)
+
+```
+
+```{r}
+
+#Load data
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.rds" #integrate across individuals - total (19k genes + regress out UMI/mito)
+scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.rds" #integrate across individuals - total (19k genes)
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-tot.rds" #integrate across individuals - total (10k genes)
+data <- readRDS(scrna)
+
+data
+
+```
+
+Define genes of interest: all except mitochondrial genes and ribosomal genes.
+
+```{r}
+
+genes <- rownames(data@assays$RNA@counts)
+genes.mito <- c("MT-ATP6","MT-ATP8","MT-CO1","MT-CO2","MT-CO3","MT-CYB","MT-ND1","MT-ND2","MT-ND3","MT-ND4","MT-ND4L","MT-ND5")
+genes.ribo <- grep('^RP',genes,value=T)
+genes.no.mito.ribo <- genes[which(!(genes %in% c(genes.mito,genes.ribo)))]
+rm(genes,genes.mito,genes.ribo)
+
+```
+
+Examine variance in log2cpm (single-cell resolution)
+
+```{r}
+
+# Cormotif: Species vs. Stages (filter genes across full dataset, pch=0.2)
+
+# Compile log2 normalized gene expression data
+#make count matrix and metadata for edgeR object
+counts <- as.matrix(GetAssayData(data, assay="RNA", slot="counts"))
+metadata <- data@meta.data[,c("Sample","Species","Collection","Individual","Replicate","Stage")]
+metadata <- metadata[colnames(counts),]
+#remove mitochodrial and ribosomal genes
+counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
+#make edgeR object
+dge <- DGEList(counts)
+meta_dge <- dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, metadata)
+dge$samples <- meta_dge
+rm(counts,metadata,meta_dge)
+#filter genes
+dge$counts <- dge$counts[rowSums(dge$counts!=0)>=(0.2*dim(dge$counts)[2]),]
+#normalize data
+dge <- calcNormFactors(dge, method="TMM")
+#log2 transformed cpm
+tmm <- edgeR::cpm(dge,normalized.lib.sizes=TRUE,log=TRUE,prior.count=0.25)
+
+# Compile group labels of each species
+groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$Stage,function(x)sub(" ","",x)),sep = "."),
+                      levels=c("Human.Time0","Human.Time1","Human.Time2","Chimp.Time0","Chimp.Time1","Chimp.Time2"))
+
+# Calculate log2cpm means within species - mean increases in time 1 and decreases in time 2
+HC.mean <- data.frame(matrix(,nrow=dim(tmm)[1],ncol=0))
+HC.mean["gene"] <- rownames(tmm)
+HC.mean["Human.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human.Time0")],1, mean))
+HC.mean["Human.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human.Time1")],1, mean))
+HC.mean["Human.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human.Time2")],1, mean))
+HC.mean["Chimp.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp.Time0")],1, mean))
+HC.mean["Chimp.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp.Time1")],1, mean))
+HC.mean["Chimp.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp.Time2")],1, mean))
+HC.mean.melt <- melt(HC.mean,id.vars="gene",measure.vars=c("Human.Time0","Human.Time1","Human.Time2","Chimp.Time0","Chimp.Time1","Chimp.Time2"))
+HC.mean.melt$species <- sapply(HC.mean.melt$variable,function(x)str_split(x,"[.]")[[1]][1])
+HC.mean.melt$stage <- sapply(HC.mean.melt$variable,function(x)str_split(x,"[.]")[[1]][2])
+
+ggplot(HC.mean.melt, aes(x=species, y=value, fill=stage)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Stage", labels=c("Time 0","Time 1","Time 2"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.mean$Human.Time0,HC.mean$Human.Time1) #p=1.9e-14
+t.test(HC.mean$Human.Time1,HC.mean$Human.Time2) #p<2.2e-16
+t.test(HC.mean$Chimp.Time0,HC.mean$Chimp.Time1) #p=8.4e-09
+t.test(HC.mean$Chimp.Time1,HC.mean$Chimp.Time2) #p<2.2e-16
+
+# Calculate log2cpm variances within species - variance increases in time 1 and time 2
+HC.var <- data.frame(matrix(,nrow=dim(tmm)[1],ncol=0))
+HC.var["gene"] <- rownames(tmm)
+HC.var["Human.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human.Time0")],1, var))
+HC.var["Human.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human.Time1")],1, var))
+HC.var["Human.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human.Time2")],1, var))
+HC.var["Chimp.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp.Time0")],1, var))
+HC.var["Chimp.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp.Time1")],1, var))
+HC.var["Chimp.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp.Time2")],1, var))
+HC.var.melt <- melt(HC.var,id.vars="gene",measure.vars=c("Human.Time0","Human.Time1","Human.Time2","Chimp.Time0","Chimp.Time1","Chimp.Time2"))
+HC.var.melt$species <- sapply(HC.var.melt$variable,function(x)str_split(x,"[.]")[[1]][1])
+HC.var.melt$stage <- sapply(HC.var.melt$variable,function(x)str_split(x,"[.]")[[1]][2])
+
+ggplot(HC.var.melt, aes(x=species, y=value, fill=stage)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 variance in gene expression') +
+  scale_fill_manual(name="Stage", labels=c("Time 0","Time 1","Time 2"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.var$Human.Time0,HC.var$Human.Time1) #p=8.9e-10
+t.test(HC.var$Human.Time1,HC.var$Human.Time2) #p<2.2e-16
+t.test(HC.var$Chimp.Time0,HC.var$Chimp.Time1) #p<2.2e-16
+t.test(HC.var$Chimp.Time1,HC.var$Chimp.Time2) #p<2.2e-16
+
+# Compile group labels of each individual
+groupFactor <- factor(paste(dge$samples$Individual,sapply(dge$samples$Stage,function(x)sub(" ","",x)),sep = "."),
+                      levels=c("H1.Time0","H1.Time1","H1.Time2",
+                               "H2.Time0","H2.Time1","H2.Time2",
+                               "H3.Time0","H3.Time1","H3.Time2",
+                               "H4.Time0","H4.Time1","H4.Time2",
+                               "H5.Time0","H5.Time1","H5.Time2",
+                               "H6.Time0","H6.Time1","H6.Time2",
+                               "C1.Time0","C1.Time1","C1.Time2",
+                               "C2.Time0","C2.Time1","C2.Time2",
+                               "C3.Time0","C3.Time1","C3.Time2",
+                               "C4.Time0","C4.Time1","C4.Time2",
+                               "C5.Time0","C5.Time1","C5.Time2",
+                               "C6.Time0","C6.Time1","C6.Time2"))
+
+# Calculate log2cpm means within individuals - generally mean increases in time 1 (except C4, C5, H5) and decreases in time 2
+HC.mean <- data.frame(matrix(,nrow=dim(tmm)[1],ncol=0))
+HC.mean["gene"] <- rownames(tmm)
+HC.mean["H1.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.Time0")],1, mean))
+HC.mean["H1.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.Time1")],1, mean))
+HC.mean["H1.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.Time2")],1, mean))
+HC.mean["H2.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.Time0")],1, mean))
+HC.mean["H2.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.Time1")],1, mean))
+HC.mean["H2.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.Time2")],1, mean))
+HC.mean["H3.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.Time0")],1, mean))
+HC.mean["H3.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.Time1")],1, mean))
+HC.mean["H3.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.Time2")],1, mean))
+HC.mean["H4.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.Time0")],1, mean))
+HC.mean["H4.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.Time1")],1, mean))
+HC.mean["H4.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.Time2")],1, mean))
+HC.mean["H5.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.Time0")],1, mean))
+HC.mean["H5.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.Time1")],1, mean))
+HC.mean["H5.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.Time2")],1, mean))
+HC.mean["H6.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.Time0")],1, mean))
+HC.mean["H6.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.Time1")],1, mean))
+HC.mean["H6.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.Time2")],1, mean))
+HC.mean["C1.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.Time0")],1, mean))
+HC.mean["C1.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.Time1")],1, mean))
+HC.mean["C1.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.Time2")],1, mean))
+HC.mean["C2.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.Time0")],1, mean))
+HC.mean["C2.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.Time1")],1, mean))
+HC.mean["C2.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.Time2")],1, mean))
+HC.mean["C3.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.Time0")],1, mean))
+HC.mean["C3.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.Time1")],1, mean))
+HC.mean["C3.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.Time2")],1, mean))
+HC.mean["C4.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.Time0")],1, mean))
+HC.mean["C4.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.Time1")],1, mean))
+HC.mean["C4.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.Time2")],1, mean))
+HC.mean["C5.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.Time0")],1, mean))
+HC.mean["C5.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.Time1")],1, mean))
+HC.mean["C5.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.Time2")],1, mean))
+HC.mean["C6.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.Time0")],1, mean))
+HC.mean["C6.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.Time1")],1, mean))
+HC.mean["C6.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.Time2")],1, mean))
+HC.mean.melt <- melt(HC.mean,
+                     id.vars="gene",
+                     measure.vars=c("H1.Time0","H1.Time1","H1.Time2",
+                                    "H2.Time0","H2.Time1","H2.Time2",
+                                    "H3.Time0","H3.Time1","H3.Time2",
+                                    "H4.Time0","H4.Time1","H4.Time2",
+                                    "H5.Time0","H5.Time1","H5.Time2",
+                                    "H6.Time0","H6.Time1","H6.Time2",
+                                    "C1.Time0","C1.Time1","C1.Time2",
+                                    "C2.Time0","C2.Time1","C2.Time2",
+                                    "C3.Time0","C3.Time1","C3.Time2",
+                                    "C4.Time0","C4.Time1","C4.Time2",
+                                    "C5.Time0","C5.Time1","C5.Time2",
+                                    "C6.Time0","C6.Time1","C6.Time2"))
+HC.mean.melt$individual <- sapply(HC.mean.melt$variable,function(x)str_split(x,"[.]")[[1]][1])
+HC.mean.melt$stage <- sapply(HC.mean.melt$variable,function(x)str_split(x,"[.]")[[1]][2])
+
+ggplot(HC.mean.melt, aes(x=individual, y=value, fill=stage)) +
+  geom_boxplot(width=0.4) +
+  xlab("Individual") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Stage", labels=c("Time 0","Time 1","Time 2"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.mean$H1.Time0,HC.mean$H1.Time1) #p<2.2e-16
+t.test(HC.mean$H1.Time1,HC.mean$H1.Time2) #p<2.2e-16
+t.test(HC.mean$H2.Time0,HC.mean$H2.Time1) #p<2.2e-16
+t.test(HC.mean$H2.Time1,HC.mean$H2.Time2) #p<2.2e-16
+t.test(HC.mean$H3.Time0,HC.mean$H3.Time1) #p=5.0e-05
+t.test(HC.mean$H3.Time1,HC.mean$H3.Time2) #p<2.2e-16
+t.test(HC.mean$H4.Time0,HC.mean$H4.Time1) #p<2.2e-16
+t.test(HC.mean$H4.Time1,HC.mean$H4.Time2) #p<2.2e-16
+t.test(HC.mean$H5.Time0,HC.mean$H5.Time1) #p=4.0e-09
+t.test(HC.mean$H5.Time1,HC.mean$H5.Time2) #p<2.2e-16
+t.test(HC.mean$H6.Time0,HC.mean$H6.Time1) #p=1.0e-09
+t.test(HC.mean$H6.Time1,HC.mean$H6.Time2) #p<2.2e-16
+t.test(HC.mean$C1.Time0,HC.mean$C1.Time1) #p=2.2e-11
+t.test(HC.mean$C1.Time1,HC.mean$C1.Time2) #p<2.2e-16
+t.test(HC.mean$C2.Time0,HC.mean$C2.Time1) #p<2.2e-16
+t.test(HC.mean$C2.Time1,HC.mean$C2.Time2) #p<2.2e-16
+t.test(HC.mean$C3.Time0,HC.mean$C3.Time1) #p<2.2e-16
+t.test(HC.mean$C3.Time1,HC.mean$C3.Time2) #p<2.2e-16
+t.test(HC.mean$C4.Time0,HC.mean$C4.Time1) #p=0.01698
+t.test(HC.mean$C4.Time1,HC.mean$C4.Time2) #p<2.2e-16
+t.test(HC.mean$C5.Time0,HC.mean$C5.Time1) #p=0.02207
+t.test(HC.mean$C5.Time1,HC.mean$C5.Time2) #p<2.2e-16
+t.test(HC.mean$C6.Time0,HC.mean$C6.Time1) #p<2.2e-16
+t.test(HC.mean$C6.Time1,HC.mean$C6.Time2) #p<2.2e-16
+
+# Calculate log2cpm variances within species - variance increases in time 1 (except C2, C3, H1, H2, H4) and time 2
+HC.var <- data.frame(matrix(,nrow=dim(tmm)[1],ncol=0))
+HC.var["gene"] <- rownames(tmm)
+HC.var["H1.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.Time0")],1, var))
+HC.var["H1.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.Time1")],1, var))
+HC.var["H1.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.Time2")],1, var))
+HC.var["H2.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.Time0")],1, var))
+HC.var["H2.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.Time1")],1, var))
+HC.var["H2.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.Time2")],1, var))
+HC.var["H3.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.Time0")],1, var))
+HC.var["H3.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.Time1")],1, var))
+HC.var["H3.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.Time2")],1, var))
+HC.var["H4.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.Time0")],1, var))
+HC.var["H4.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.Time1")],1, var))
+HC.var["H4.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.Time2")],1, var))
+HC.var["H5.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.Time0")],1, var))
+HC.var["H5.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.Time1")],1, var))
+HC.var["H5.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.Time2")],1, var))
+HC.var["H6.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.Time0")],1, var))
+HC.var["H6.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.Time1")],1, var))
+HC.var["H6.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.Time2")],1, var))
+HC.var["C1.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.Time0")],1, var))
+HC.var["C1.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.Time1")],1, var))
+HC.var["C1.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.Time2")],1, var))
+HC.var["C2.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.Time0")],1, var))
+HC.var["C2.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.Time1")],1, var))
+HC.var["C2.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.Time2")],1, var))
+HC.var["C3.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.Time0")],1, var))
+HC.var["C3.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.Time1")],1, var))
+HC.var["C3.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.Time2")],1, var))
+HC.var["C4.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.Time0")],1, var))
+HC.var["C4.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.Time1")],1, var))
+HC.var["C4.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.Time2")],1, var))
+HC.var["C5.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.Time0")],1, var))
+HC.var["C5.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.Time1")],1, var))
+HC.var["C5.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.Time2")],1, var))
+HC.var["C6.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.Time0")],1, var))
+HC.var["C6.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.Time1")],1, var))
+HC.var["C6.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.Time2")],1, var))
+HC.var.melt <- melt(HC.var,
+                     id.vars="gene",
+                     measure.vars=c("H1.Time0","H1.Time1","H1.Time2",
+                                    "H2.Time0","H2.Time1","H2.Time2",
+                                    "H3.Time0","H3.Time1","H3.Time2",
+                                    "H4.Time0","H4.Time1","H4.Time2",
+                                    "H5.Time0","H5.Time1","H5.Time2",
+                                    "H6.Time0","H6.Time1","H6.Time2",
+                                    "C1.Time0","C1.Time1","C1.Time2",
+                                    "C2.Time0","C2.Time1","C2.Time2",
+                                    "C3.Time0","C3.Time1","C3.Time2",
+                                    "C4.Time0","C4.Time1","C4.Time2",
+                                    "C5.Time0","C5.Time1","C5.Time2",
+                                    "C6.Time0","C6.Time1","C6.Time2"))
+HC.var.melt$individual <- sapply(HC.var.melt$variable,function(x)str_split(x,"[.]")[[1]][1])
+HC.var.melt$stage <- sapply(HC.var.melt$variable,function(x)str_split(x,"[.]")[[1]][2])
+
+ggplot(HC.var.melt, aes(x=individual, y=value, fill=stage)) +
+  geom_boxplot(width=0.4) +
+  xlab("Individual") +
+  ylab('log2 variance in gene expression') +
+  scale_fill_manual(name="Stage", labels=c("Time 0","Time 1","Time 2"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.var$H1.Time0,HC.var$H1.Time1) #p=0.00024
+t.test(HC.var$H1.Time1,HC.var$H1.Time2) #p<2.2e-16
+t.test(HC.var$H2.Time0,HC.var$H2.Time1) #p=0.00028
+t.test(HC.var$H2.Time1,HC.var$H2.Time2) #p<2.2e-16
+t.test(HC.var$H3.Time0,HC.var$H3.Time1) #p=2.8e-07
+t.test(HC.var$H3.Time1,HC.var$H3.Time2) #p=2.4e-10
+t.test(HC.var$H4.Time0,HC.var$H4.Time1) #p=0.87340
+t.test(HC.var$H4.Time1,HC.var$H4.Time2) #p=7.0e-12
+t.test(HC.var$H5.Time0,HC.var$H5.Time1) #p<2.2e-16
+t.test(HC.var$H5.Time1,HC.var$H5.Time2) #p<2.2e-16
+t.test(HC.var$H6.Time0,HC.var$H6.Time1) #p<2.2e-16
+t.test(HC.var$H6.Time1,HC.var$H6.Time2) #p<2.2e-16
+t.test(HC.var$C1.Time0,HC.var$C1.Time1) #p<2.2e-16
+t.test(HC.var$C1.Time1,HC.var$C1.Time2) #p<2.2e-16
+t.test(HC.var$C2.Time0,HC.var$C2.Time1) #p=1.5e-11
+t.test(HC.var$C2.Time1,HC.var$C2.Time2) #p<2.2e-16
+t.test(HC.var$C3.Time0,HC.var$C3.Time1) #p=0.18280
+t.test(HC.var$C3.Time1,HC.var$C3.Time2) #p<2.2e-16
+t.test(HC.var$C4.Time0,HC.var$C4.Time1) #p<2.2e-16
+t.test(HC.var$C4.Time1,HC.var$C4.Time2) #p<2.2e-16
+t.test(HC.var$C5.Time0,HC.var$C5.Time1) #p<2.2e-16
+t.test(HC.var$C5.Time1,HC.var$C5.Time2) #p=3.1e-11
+t.test(HC.var$C6.Time0,HC.var$C6.Time1) #p<2.2e-16
+t.test(HC.var$C6.Time1,HC.var$C6.Time2) #p<2.2e-16
+
+```
+
+Examine variance in log2cpm (pseudobulk resolution)
+
+```{r}
+
+# Cormotif: Species vs. Stages (filter genes across full dataset)
+
+# Compile log2 normalized gene expression data
+#make count matrix and metadata for edgeR object - pseudobulk
+counts <- c()
+metadata <- c()
+labels <- c()
+for (i in unique(data@meta.data$Sample)) {
+  x.lab <- i
+  w <- which(data@meta.data$Sample==i)
+  if (length(w)>0) {
+    x.spp <- data@meta.data$Species[w][1]
+    x.col <- data@meta.data$Collection[w][1]
+    x.ind <- data@meta.data$Individual[w][1]
+    x.rep <- data@meta.data$Replicate[w][1]
+    x.stg <- data@meta.data$Stage[w][1]
+    if (length(w)==1) {
+      x.cnt <- data@assays$RNA@counts[,w]
+    } else {
+      x.cnt <- Matrix::rowSums(data@assays$RNA@counts[,w])
+    }
+    counts <- cbind(counts, x.cnt)
+    metadata <- rbind(metadata, c(x.lab, x.spp, x.col, x.ind, x.rep, x.stg))
+    labels <- c(labels, x.lab)
+  }
+}
+colnames(counts) <- labels
+rownames(metadata) <- labels
+colnames(metadata) <- c("Sample","Species","Collection","Individual","Replicate","Stage")
+metadata <- as.data.frame(metadata)
+rm(labels)
+#remove mitochodrial and ribosomal genes
+counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
+#make edgeR object
+dge <- DGEList(counts)
+meta_dge <- dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, metadata)
+dge$samples <- meta_dge
+rm(counts,metadata,meta_dge)
+#filter genes
+keep <- rowMeans(edgeR::cpm(dge,log=TRUE,prior.count=0.25))>0
+dge$counts <- dge$counts[keep,]
+#normalize data
+dge <- calcNormFactors(dge, method="TMM")
+#log2 transformed cpm
+tmm <- edgeR::cpm(dge,normalized.lib.sizes=TRUE,log=TRUE,prior.count=0.25)
+
+# Compile group labels of each species
+groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$Stage,function(x)sub(" ","",x)),sep = "."),
+                      levels=c("Human.Time0","Human.Time1","Human.Time2","Chimp.Time0","Chimp.Time1","Chimp.Time2"))
+
+# Calculate log2cpm means within species - mean is constant across time points
+HC.mean <- data.frame(matrix(,nrow=dim(tmm)[1],ncol=0))
+HC.mean["gene"] <- rownames(tmm)
+HC.mean["Human.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human.Time0")],1, mean))
+HC.mean["Human.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human.Time1")],1, mean))
+HC.mean["Human.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human.Time2")],1, mean))
+HC.mean["Chimp.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp.Time0")],1, mean))
+HC.mean["Chimp.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp.Time1")],1, mean))
+HC.mean["Chimp.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp.Time2")],1, mean))
+HC.mean.melt <- melt(HC.mean,id.vars="gene",measure.vars=c("Human.Time0","Human.Time1","Human.Time2","Chimp.Time0","Chimp.Time1","Chimp.Time2"))
+HC.mean.melt$species <- sapply(HC.mean.melt$variable,function(x)str_split(x,"[.]")[[1]][1])
+HC.mean.melt$stage <- sapply(HC.mean.melt$variable,function(x)str_split(x,"[.]")[[1]][2])
+
+ggplot(HC.mean.melt, aes(x=species, y=value, fill=stage)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Stage", labels=c("Time 0","Time 1","Time 2"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.mean$Human.Time0,HC.mean$Human.Time1) #p=0.19
+t.test(HC.mean$Human.Time1,HC.mean$Human.Time2) #p=0.08
+t.test(HC.mean$Chimp.Time0,HC.mean$Chimp.Time1) #p=0.84
+t.test(HC.mean$Chimp.Time1,HC.mean$Chimp.Time2) #p=0.09
+
+# Calculate log2cpm variances within species - variance increases in time 1 and time 2
+HC.var <- data.frame(matrix(,nrow=dim(tmm)[1],ncol=0))
+HC.var["gene"] <- rownames(tmm)
+HC.var["Human.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human.Time0")],1, var))
+HC.var["Human.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human.Time1")],1, var))
+HC.var["Human.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human.Time2")],1, var))
+HC.var["Chimp.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp.Time0")],1, var))
+HC.var["Chimp.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp.Time1")],1, var))
+HC.var["Chimp.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp.Time2")],1, var))
+HC.var.melt <- melt(HC.var,id.vars="gene",measure.vars=c("Human.Time0","Human.Time1","Human.Time2","Chimp.Time0","Chimp.Time1","Chimp.Time2"))
+HC.var.melt$species <- sapply(HC.var.melt$variable,function(x)str_split(x,"[.]")[[1]][1])
+HC.var.melt$stage <- sapply(HC.var.melt$variable,function(x)str_split(x,"[.]")[[1]][2])
+
+ggplot(HC.var.melt, aes(x=species, y=value, fill=stage)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 variance in gene expression') +
+  scale_fill_manual(name="Stage", labels=c("Time 0","Time 1","Time 2"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.var$Human.Time0,HC.var$Human.Time1) #p<2.2e-16
+t.test(HC.var$Human.Time1,HC.var$Human.Time2) #p=3.1e-13
+t.test(HC.var$Chimp.Time0,HC.var$Chimp.Time1) #p<2.2e-16
+t.test(HC.var$Chimp.Time1,HC.var$Chimp.Time2) #p<2.2e-16
+
+# Compile group labels of each individual
+# Calculate log2cpm means within individuals
+# Calculate log2cpm variances within species
+# NOT POSSIBLE FOR PSEUDOBULK (ONLY H1 AND C1 HAVE REPLICATES)
+
+```
+
+Define DE genes of interest.
+
+```{r}
+
+compare1 <- readRDS("./data/de-data/DEdream.totcell.filter.pch20.fml5.nofc.bh.stage.rds")
+compare2 <- readRDS("./data/de-data/DEdream.totcell.filter.pch20.fml5.nofc.bh.cluster.rds")
+compare3 <- readRDS("./data/de-data/DEdream.totcell.filter.pch20.fml5.nofc.bh.adhoc.rds")
+compare4 <- readRDS("./data/de-data/DEdream.totcell.filter.pch20.fml5.nofc.bh.ostadhoc.rds")
+DEdata <- rbind(compare1,compare2,compare3,compare4)
+colnames(DEdata)[5] <- "FDR"
+DEdata <- as_tibble(DEdata)
+DEdataSig <- DEdata %>% dplyr::filter(FDR<=0.05)
+DEgenes <- DEdataSig %>% dplyr::filter(cell.assign=="stage") %>% dplyr::select(cell.subset,gene,logFC)
+rm(compare1,compare2,compare3,compare4)
+
+# Examine absoute logFC of DE genes
+
+ggplot(DEgenes, aes(y=abs(logFC), fill=cell.subset)) +
+  geom_boxplot(width=0.4) +
+  ylab('absolute log2 fold change in DE genes') +
+  scale_fill_manual(name="Stage", labels=c("Time 0","Time 1","Time 2"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 0")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 1")])) #p=0.05835
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 1")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 2")])) #p=4.4e-09
+
+```
+
+

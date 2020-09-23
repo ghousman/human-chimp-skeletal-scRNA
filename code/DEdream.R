@@ -140,6 +140,10 @@ runDREAM <- function(dataSub, data.dir, cell.assign, cell.subset, genes.no.mito.
     if (filter.type=="pch"){
       dge$counts <- dge$counts[rowSums(dge$counts!=0)>=(filter.param*dim(dge$counts)[2]),]
     }
+    if (filter.type=="logcpm"){
+      keep <- rowMeans(edgeR::cpm(dge,log=TRUE,prior.count=0.25))>0
+      dge$counts <- dge$counts[keep,]
+    }
   }
 
   #normalize data

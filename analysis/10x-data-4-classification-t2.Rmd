@@ -1,0 +1,1439 @@
+---
+title: "10x-data-classification"
+author: "Genevieve Housman"
+date: "September 2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 10X Data Cellranger Analysis - Cell Classification
+
+Define and assign cell type classifications.
+
+
+```{r, message=FALSE}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(grid)
+library(gbm)
+library(colorspace)
+library(RColorBrewer)
+library(tidyr)
+library(UpSetR)
+library(reshape2)
+library(CountClust)
+library(classtpx)
+
+```
+
+```{r}
+
+#Load data
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.rds" #integrate across individuals - time 2 (19k genes + regress out UMI/mito)
+scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t2.rds" #integrate across individuals - time 2 (19k genes)
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-t2.rds" #integrate across individuals - time 2 (10k genes)
+data <- readRDS(scrna)
+
+data
+head(data@meta.data)
+
+DimPlot(data,
+        group.by="Stage",
+        reduction="umap",
+        cols=c("dodgerblue")) +
+  labs(x="UMAP1",y="UMAP2")
+
+```
+
+### Seurat Clustering
+
+                               t2.19k | t2.19k.reg
+data, k=40, res=1.00 clusters:     17 |
+data, k=40, res=0.75 clusters:     14 |
+data, k=40, res=0.50 clusters:     12 |
+data, k=40, res=0.25 clusters:      8 |
+data, k=40, res=0.10 clusters:      5 |
+data, k=40, res=0.05 clusters:      3 |
+
+cell counts per cluster:      0 |     1 |    2 |    3 |    4 |    5 |    6 |    7 |    8 |    9 |   10 |  11 |  12 |  13 |  14 |  15 |  16 |
+t2.19k.res.1               4018 |  3004 | 2776 | 2531 | 2443 | 2423 | 1618 | 1299 | 1263 | 1207 | 1097 | 839 | 605 | 580 | 530 | 486 | 432 |  
+t2.19k.res.0.75            4644 |  4362 | 3117 | 3084 | 2939 | 2490 | 1410 | 1345 | 1341 |  605 |  530 | 439 | 438 | 407 | 
+t2.19k.res.0.5             4730 |  3954 | 3684 | 3430 | 3311 | 2828 | 1747 | 1430 |  603 |  530 |  483 | 421 |  
+t2.19k.res.0.25            9479 |  6941 | 4806 | 2874 | 1675 |  530 |  425 |  421 | 
+t2.19k.res.0.1            12641 |  6940 | 6620 |  530 |  420 |  
+t2.19k.res.0.05           18333 |  8288 |  530 |  
+t2.19k.reg.res.1          |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+t2.19k.reg.res.0.75       |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+t2.19k.reg.res.0.5        |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+t2.19k.reg.res.0.25       |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+t2.19k.reg.res.0.1        |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+t2.19k.reg.res.0.05       |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+
+
+```{r}
+
+#use dims that explaim more than 0.1% of variance
+pva <- data@reductions$pca@stdev^2/data@reductions$pca@misc$total.variance
+ndim <- length(which(pva>=0.001))
+print(ndim)
+
+#Identify Clusters (increased resolution identifies greater number of clusters)
+data <- FindNeighbors(data, k.param=40, dims=1:ndim)
+data <- FindClusters(data, resolution=1.00)
+data <- FindClusters(data, resolution=0.75)
+data <- FindClusters(data, resolution=0.50)
+data <- FindClusters(data, resolution=0.25)
+data <- FindClusters(data, resolution=0.10)
+data <- FindClusters(data, resolution=0.05)
+
+table(data@meta.data$integrated_snn_res.1)
+table(data@meta.data$integrated_snn_res.0.75)
+table(data@meta.data$integrated_snn_res.0.5)
+table(data@meta.data$integrated_snn_res.0.25)
+table(data@meta.data$integrated_snn_res.0.1)
+table(data@meta.data$integrated_snn_res.0.05)
+table(data@meta.data$seurat_clusters)
+
+rm(pva,ndim)
+
+```
+
+Quickly check clusters.
+
+```{r}
+
+x <- "integrated_snn_res.0.1"
+
+CombinePlots(plots=list((DimPlot(data, group.by=x, reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (DimPlot(data, group.by=x, reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (DimPlot(data, group.by=x, reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (DimPlot(data, group.by=x, reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (DimPlot(data, group.by=x, reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+
+DimPlot(data, group.by=x, reduction="umap") + labs(x="UMAP1",y="UMAP2")
+
+CombinePlots(plots=list((DimPlot(subset(data,subset=Species=="Human"), group.by=x, split.by=x, reduction="umap") + labs(x="UMAP1",y="UMAP2")),
+                        (DimPlot(subset(data,subset=Species=="Chimp"), group.by=x, split.by=x, reduction="umap") + labs(x="UMAP1",y="UMAP2"))),
+             ncol=1)
+
+```
+
+Define new metadata label for clusters (resolution=0.1).
+
+```{r}
+
+data <- AddMetaData(data, rep(NA,length(rownames(data@meta.data))), col.name="Cluster")
+data$Cluster[which(data$integrated_snn_res.0.1=="0")] <- "Osteoblast.c1"
+data$Cluster[which(data$integrated_snn_res.0.1=="2")] <- "Osteoblast.c2"
+data$Cluster[which(data$integrated_snn_res.0.1=="1")] <- "Osteoblast.c3"
+data$Cluster[which(data$integrated_snn_res.0.1=="4")] <- "Osteoblast.c4"
+data$Cluster[which(data$integrated_snn_res.0.1=="3")] <- "Osteoblast.c5"
+
+```
+
+Calculate numbers of cells in each cluster given particular parameters.
+
+tot19k.res.0.05  Osteoblast.c1 | Osteoblast.c2 | Osteoblast.c3 | Osteoblast.c4 | Osteoblast.c5 |
+Human:                    4847 |          3060 |          3966 |           162 |           530 |
+Chimp:                    7794 |          3560 |          2974 |           258 |             0 |
+
+```{r}
+
+table(subset(data,subset=Species=="Human")@meta.data$Cluster)
+table(subset(data,subset=Species=="Chimp")@meta.data$Cluster)
+
+```
+
+Make nicer plots of clusters.
+
+```{r}
+
+DimPlot(data,
+        group.by="Cluster",
+        reduction="umap",
+        cols=c("deepskyblue","dodgerblue2","dodgerblue4","black","grey")) +
+  labs(x="UMAP1",y="UMAP2")
+
+CombinePlots(plots=list((DimPlot(data,
+                                 group.by="Cluster",
+                                 reduction="pca",
+                                 dims=c(1,2),
+                                 cols=c("deepskyblue","dodgerblue2","dodgerblue4","black","grey")) +
+                           labs(x="PC1",y="PC2")),
+                        (DimPlot(data,
+                                 group.by="Cluster",
+                                 reduction="pca",
+                                 dims=c(3,4),
+                                 cols=c("deepskyblue","dodgerblue2","dodgerblue4","black","grey")) +
+                           labs(x="PC3",y="PC4")),
+                        (DimPlot(data,
+                                 group.by="Cluster",
+                                 reduction="pca",
+                                 dims=c(5,6),
+                                 cols=c("deepskyblue","dodgerblue2","dodgerblue4","black","grey")) +
+                           labs(x="PC5",y="PC6")),
+                        (DimPlot(data,
+                                 group.by="Cluster",
+                                 reduction="pca",
+                                 dims=c(7,8),
+                                 cols=c("deepskyblue","dodgerblue2","dodgerblue4","black","grey")) +
+                           labs(x="PC7",y="PC8")),
+                        (DimPlot(data,
+                                 group.by="Cluster",
+                                 reduction="pca",
+                                 dims=c(9,10),
+                                 cols=c("deepskyblue","dodgerblue2","dodgerblue4","black","grey")) +
+                           labs(x="PC9",y="PC10"))), ncol=5)
+
+CombinePlots(plots=list((DimPlot(subset(data,subset=Species=="Human"),
+                                 group.by="Cluster",
+                                 reduction="umap",
+                                 cols=c("deepskyblue","dodgerblue2","dodgerblue4","black","grey")) +
+                           labs(x="UMAP1",y="UMAP2")),
+                        (DimPlot(subset(data,subset=Species=="Chimp"),
+                                 group.by="Cluster",
+                                 reduction="umap",
+                                 cols=c("deepskyblue","dodgerblue2","dodgerblue4","black","grey")) +
+                           labs(x="UMAP1",y="UMAP2"))), ncol=2)
+
+```
+
+Identify markers defining each cluster.
+
+```{r, eval=FALSE}
+
+Idents(data) <- data@meta.data$Cluster
+
+#Find markers for every cluster compared to all remaining cells, report only the positive ones
+markers <- FindAllMarkers(data, only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)
+markers %>% group_by(cluster) %>% top_n(n=5, wt=avg_logFC)
+top5 <- markers %>% group_by(cluster) %>% top_n(n=5, wt=avg_logFC)
+DoHeatmap(data, features=top5$gene) + NoLegend()
+saveRDS(markers, file="./output/markers.data.filter.log.indv-cell.int19k-t2.rds")
+#saveRDS(markers, file="./output/markers.data.filter.log.indv-cell.int19k.reg-t2.rds")
+
+VlnPlot(data, features=top5$gene[1:5], group.by="Cluster", slot="data", pt.size=0, ncol=5)   #H3-3B, PSMB1, GDF15, HERPUD1, KRT10
+VlnPlot(data, features=top5$gene[6:10], group.by="Cluster", slot="data", pt.size=0, ncol=5)  #PAPPA, COL1A1, ITGA11, FN1, FBN1
+VlnPlot(data, features=top5$gene[11:15], group.by="Cluster", slot="data", pt.size=0, ncol=5) #MTRNR2L8, CCND1, MT2A, RAB13, ANP32B
+VlnPlot(data, features=top5$gene[16:20], group.by="Cluster", slot="data", pt.size=0, ncol=5) #H2AZ1, TUBA1B, STMN1, CENPF, PTTG1
+VlnPlot(data, features=top5$gene[21:25], group.by="Cluster", slot="data", pt.size=0, ncol=5) #DCN, GPC3, CXCL1, TAGLN2, KRT18
+
+```
+
+### Ad Hoc Assignments
+
+```{r, eval=FALSE}
+
+#Look at candidate genes
+
+#Time 0
+#diagnostic: POU5F1 (OCT4), TDGF1, SOX2, EPCAM
+#additional: NANOG, ALPL, STAT3, PROM1 (CD133), PODXL (TRA-1-60R), LIN28A, ZFP42, UTF1, MYC, BMP4, FGF2, TGFB1, DNMT3B, SALL4
+#if needed: FOXD3, FUT4 (SSEA-1), KLF2, KLF4, KLF5, INHBA (Activin A), LIF, PRDM14
+genes <- c("POU5F1","TDGF1","SOX2","EPCAM","NANOG","ALPL","STAT3","PROM1","PODXL","LIN28A","ZFP42","UTF1","MYC","BMP4","FGF2","TGFB1","DNMT3B",
+           "SALL4","FOXD3","FUT4","KLF2","KLF4","KLF5","INHBA","LIF","PRDM14")
+data@assays$integrated[genes,1:5]
+FeaturePlot(data, features=genes[1:4], reduction="umap", pt.size=0.5, order=TRUE) + labs(x="UMAP1",y="UMAP2")
+CombinePlots(plots=list((FeaturePlot(data, features=genes[1], reduction="pca", pt.size=0.5, order=TRUE, dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (FeaturePlot(data, features=genes[1], reduction="pca", pt.size=0.5, order=TRUE, dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (FeaturePlot(data, features=genes[1], reduction="pca", pt.size=0.5, order=TRUE, dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (FeaturePlot(data, features=genes[1], reduction="pca", pt.size=0.5, order=TRUE, dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (FeaturePlot(data, features=genes[1], reduction="pca", pt.size=0.5, order=TRUE, dims=c(9,10)) + labs(x="PC1",y="PC10"))), ncol=4)
+
+#Time 1
+#diagnostic: THY1 (CD90), NT5E (CD73), ENG (CD105), CD44
+#additional: ANPEP (CD13), NGFR (CD271), ITGB1 (CD29), NCAM1 (CD56)
+#if needed: CD9, CD14, MME (CD10), ITGAL (CD11A), ITGAX (CD11C)*, CD36, ITGA3 (CD49C), ITGA4 (CD49D), ITGAV (CD51), ICAM1 (CD54), CD55, CD59, TFRC (CD71), VCAM1 (CD106), KIT (CD117), TNFRSF1A (CD120a), PDGFRB (CD140B), CDH5 (CD144), MCAM (CD146), ALCAM (CD166), ERBB2 (CD340)
+#negative controls: ITGAM (CD11B), CD14, PECAM1 (CD31), CD34, PTPRC (CD45), CD79A, HLA-DRA (HLA-DR)
+genes <- c("THY1","NT5E","ENG","CD44","ANPEP","NGFR","ITGB1","NCAM1","CD9","CD14","MME","ITGAL","ITGAX","CD36","ITGA3","ITGA4","ITGAV","ICAM1","CD55",
+          "CD59","TFRC","VCAM1","KIT","TNFRSF1A","PDGFRB","CDH5","MCAM","ALCAM","ERBB2","ITGAM","CD14","PECAM1","CD34","PTPRC","CD79A","HLA-DRA")
+data@assays$integrated[genes,1:5]
+FeaturePlot(data, features=genes[1:4], reduction="umap", pt.size=0.5, order=TRUE) + labs(x="UMAP1",y="UMAP2")
+CombinePlots(plots=list((FeaturePlot(data, features=genes[1], reduction="pca", pt.size=0.5, order=TRUE, dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (FeaturePlot(data, features=genes[1], reduction="pca", pt.size=0.5, order=TRUE, dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (FeaturePlot(data, features=genes[1], reduction="pca", pt.size=0.5, order=TRUE, dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (FeaturePlot(data, features=genes[1], reduction="pca", pt.size=0.5, order=TRUE, dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (FeaturePlot(data, features=genes[1], reduction="pca", pt.size=0.5, order=TRUE, dims=c(9,10)) + labs(x="PC1",y="PC10"))), ncol=4)
+
+#Time 2
+#diagnostic: RUNX2, BGLAP, CAPG, [DMP1], [PHEX], MEPE, [SOST], [HYOU1]
+#additional: COL1A1, COL1A2, ALPL, TNFRSF11B (OPG), TNFSF11 (RANKL), CSF1 (M-CSF), DKK1, SFRP1, PTGES2, PTGS2, SPP1 (OPN), SPARC (ONT)
+#if needed: E11*
+# * not in ortho-exon (osteo)
+genes <- c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1",
+           "COL1A1","COL1A2","ALPL","TNFRSF11B","TNFSF11",
+           "CSF1","DKK1","SFRP1","PTGES2","PTGS2","SPP1","SPARC")
+data@assays$integrated[genes,1:5]
+FeaturePlot(data, features=genes[1:8], reduction="umap", pt.size=0.5, order=TRUE) + labs(x="UMAP1",y="UMAP2")
+CombinePlots(plots=list((FeaturePlot(data, features=genes[1], reduction="pca", pt.size=0.5, order=TRUE, dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (FeaturePlot(data, features=genes[1], reduction="pca", pt.size=0.5, order=TRUE, dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (FeaturePlot(data, features=genes[1], reduction="pca", pt.size=0.5, order=TRUE, dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (FeaturePlot(data, features=genes[1], reduction="pca", pt.size=0.5, order=TRUE, dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (FeaturePlot(data, features=genes[1], reduction="pca", pt.size=0.5, order=TRUE, dims=c(9,10)) + labs(x="PC1",y="PC10"))), ncol=5)
+FeaturePlot(data, features=genes[9:20], reduction="umap", pt.size=0.5, order=TRUE) + labs(x="UMAP1",y="UMAP2")
+CombinePlots(plots=list((FeaturePlot(subset(data,subset=Species=="Human"), features="COL1A1", reduction="umap", pt.size=0.5, order=TRUE, split.by="Sample") +
+                           labs(x="UMAP1",y="UMAP2")),
+                        (FeaturePlot(subset(data,subset=Species=="Chimp"), features="COL1A1", reduction="umap", pt.size=0.5, order=TRUE, split.by="Sample") +
+                           labs(x="UMAP1",y="UMAP2"))), ncol=1)
+#markers that differentiated BM osteoblasts in Anastasia Tikhonova's research (ASBMR2020)
+FeaturePlot(data, features=c("COL11A2","SPARC","SOX9","COMP","CHAD","COL10A1""EDIL3","MMP14","OSTN","COL12A1","ANGPTL2","COL16A1"), reduction="umap", pt.size=0.5, order=TRUE)
+#markers used to differentiate different stages of osteogenic differentiation (BGLAP=preosteoblast,TNC=intermediate,PDPN+FBLN7=osteocytes) from Jialiang Wang's research (ASBMR2020)
+FeaturePlot(data, features=c("BGLAP","TNC","PDPN","FBLN7"), reduction="umap", pt.size=0.5, order=TRUE) + labs(x="UMAP1",y="UMAP2")
+
+#chondrocyte diagnostic: ACAN, COL2A1, SOX9, COL10A1, COL11A1, SOX5, SOX6
+#adipocyte diagnostic: FABP4, PPARG, EBF2, PDGFRA, FGF10, FGF16, FGF19, SLC7A10, SLC36A2, MYF5, P2RX5
+genes <- c("ACAN","COL2A1","SOX9","FABP4","PPARG","EBF2",
+           "COL10A1","COL11A1","SOX5","SOX6",
+           "PDGFRA","FGF10","FGF16","FGF19","SLC7A10","SLC36A2","P2RX5","MYF5")
+data@assays$integrated[genes,1:5]
+FeaturePlot(data, features=genes[c(1,4,2,5,3,6)], reduction="umap", pt.size=0.5, order=TRUE) + labs(x="UMAP1",y="UMAP2")
+
+```
+
+```{r}
+
+#Isolate genes of interest
+genes <- c("POU5F1","TDGF1","SOX2","EPCAM",
+           "THY1","NT5E","ENG","CD44",
+           "RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1",
+           "COL1A1","COL1A2","ALPL",
+           "ACAN","COL2A1","SOX9",
+           "FABP4","PPARG","EBF2",
+           "TNC","PDPN","FBLN7")
+tot.genes <- cbind(as.data.frame(t(as.matrix(data@assays$integrated@data[genes,]))),data@meta.data[,c("Species","Stage","Sample")])
+
+```
+
+```{r}
+
+#Define functions for setting ad hoc thresholds
+
+chk.thres.manual <- function(data, genes, thres) {
+  assignments <- data
+  i=1
+  while(i <= length(genes)) {
+    assignments[,genes[i]] <- ifelse(data[,genes[i]] > thres[i], 1, 0)
+    i=i+1
+  }
+  return(assignments)
+}
+
+chk.thres.median <- function(data, genes, cutoff) {
+  assignments <- data
+  i=1
+  while(i <= length(genes)) {
+    if(is.na(cutoff)) { thres <- median(data[,genes[i]]) }
+    else { thres <- median(data[,genes[i]][data[,genes[i]]<cutoff]) }
+    assignments[,genes[i]] <- ifelse(data[,genes[i]] > thres, 1, 0)
+    i=i+1
+  }
+  return(assignments)
+}
+
+chk.thres.mean <- function(data, genes, cutoff) {
+  assignments <- data
+  i=1
+  while(i <= length(genes)) {
+    if(is.na(cutoff)) { thres <- mean(data[,genes[i]]) }
+    else { thres <- mean(data[,genes[i]][data[,genes[i]]<cutoff]) }
+    assignments[,genes[i]] <- ifelse(data[,genes[i]] > thres, 1, 0)
+    i=i+1
+  }
+  return(assignments)
+}
+
+chk.thres.meansd <- function(data, genes, cutoff) {
+  assignments <- data
+  i=1
+  while(i <= length(genes)) {
+    if(is.na(cutoff)) { thres <- sum(mean(data[,genes[i]]),sd(data[,genes[i]])) }
+    else { thres <- sum(mean(data[,genes[i]][data[,genes[i]]<cutoff]),sd(data[,genes[i]][data[,genes[i]]<cutoff])) }
+    assignments[,genes[i]] <- ifelse(data[,genes[i]] > thres, 1, 0)
+    i=i+1
+  }
+  return(assignments)
+}
+
+```
+
+```{r}
+
+#Define functions for making upsetr plots
+
+plot.upset.HCcellcompare <- function(data, genes, ymax) {
+  plot.ls <- list(
+    T2.Human = upset(data[which(data$Species=="Human"),genes],
+                     nintersects=NA, empty.intersections="on", keep.order=TRUE, order.by="degree", decreasing=TRUE, sets=genes, mainbar.y.max=ymax),
+    T2.Chimp = upset(data[which(data$Species=="Chimp"),genes],
+                     nintersects=NA, empty.intersections="on", keep.order=TRUE, order.by="degree", decreasing=TRUE, sets=genes, mainbar.y.max=ymax))
+  for (v in names(plot.ls)) {
+    print(plot.ls[[v]])
+    grid.text(v, x=0.65, y=0.97, gp=gpar(fontsize=10))
+    grid.edit('arrange', name=v)
+    vp <- grid.grab()
+    plot.ls[[v]] <- vp
+  }
+  return(grid.arrange(grobs=plot.ls, ncol=1))
+}
+
+plot.upset.sub.HCcellcompare <- function(data, genes, intersections, ymax) {
+  plot.ls <- list(
+    T2.Human = upset(data[which(data$Species=="Human"),genes],
+                     nintersects=NA, empty.intersections="on", keep.order=TRUE, order.by="degree", decreasing=TRUE,
+                     sets=genes, intersections=intersections, mainbar.y.max=ymax),
+    T2.Chimp = upset(data[which(data$Species=="Chimp"),genes],
+                     nintersects=NA, empty.intersections="on", keep.order=TRUE, order.by="degree", decreasing=TRUE,
+                     sets=genes, intersections=intersections, mainbar.y.max=ymax))
+  for (v in names(plot.ls)) {
+    print(plot.ls[[v]])
+    grid.text(v, x=0.65, y=0.97, gp=gpar(fontsize=10))
+    grid.edit('arrange', name=v)
+    vp <- grid.grab()
+    plot.ls[[v]] <- vp
+  }
+  return(grid.arrange(grobs=plot.ls, ncol=1))
+}
+
+```
+
+Calculate if genes reach expression thresholds. Start with several threshold limits.
+
+```{r}
+
+assign.thresh0 <- chk.thres.manual(tot.genes, genes, thres=c(rep(0,length(genes))))
+assign.thresh0.01 <- chk.thres.manual(tot.genes, genes, thres=c(rep(0.01,length(genes))))
+assign.thresh0.05 <- chk.thres.manual(tot.genes, genes, thres=c(rep(0.05,length(genes))))
+assign.thresh0.1 <- chk.thres.manual(tot.genes, genes, thres=c(rep(0.1,length(genes))))
+assign.thresh0.3 <- chk.thres.manual(tot.genes, genes, thres=c(rep(0.3,length(genes))))
+assign.thresh0.5 <- chk.thres.manual(tot.genes, genes, thres=c(rep(0.5,length(genes))))
+assign.thresh0.7 <- chk.thres.manual(tot.genes, genes, thres=c(rep(0.7,length(genes))))
+assign.thresh0.9 <- chk.thres.manual(tot.genes, genes, thres=c(rep(0.9,length(genes))))
+assign.thresh1 <- chk.thres.manual(tot.genes, genes, thres=c(rep(1,length(genes))))
+assign.median <- chk.thres.median(tot.genes, genes, cutoff=NA)
+assign.median1 <- chk.thres.median(tot.genes, genes, cutoff=1)
+assign.mean <- chk.thres.mean(tot.genes, genes, cutoff=NA)
+assign.mean1 <- chk.thres.mean(tot.genes, genes, cutoff=1)
+assign.meansd <- chk.thres.meansd(tot.genes, genes, cutoff=NA)
+assign.meansd1 <- chk.thres.meansd(tot.genes, genes, cutoff=1)
+assign.threshMulti01 <- chk.thres.manual(tot.genes, genes, thres=c(rep(0.1,8),rep(0.01,8),rep(0.1,9),rep(0.01,3)))
+assign.threshMulti0 <- chk.thres.manual(tot.genes, genes, thres=c(rep(0.1,8),rep(0,8),rep(0.1,9),rep(0,3)))
+
+```
+
+Look at which cells meet threshold cutoffs.
+
+Takeaways regarding assignment cutoffs:
+
+* best cutoff for iPSC markers is manual threshold = 0.1 or 0.05
+  + increases the threshold does not change the assignment
+* best cutoff for MSC markers is manual threshold = 0.05
+  + manual threshold = 0.1 is comparable (slightly fewer MSCs found with and without ALP included)
+* best cutoff for osteogenic markers is manual threshold = hard to tell
+
+Takeaways regarding marker genes:
+
+* No cells express all iPSC markers (POU5F1 + TDGF1 + SOX2 + EPCAM) come from Time 0 (good markers)
+* Highest proportion of cells expressing MSC markers (THY1 + NT5E + ENG + CD44) come from Time 1 (okay markers)
+    + relatively high proportion in Time 2 cells as well
+    + better able to distinguish between Time 1 and Time 2 by including ALP
+* Highest proportion of cells expressing general osteogenic markers (COL1A1 + COL1A2 + ALPL) come from Time 2 (okay markers)
+    + relatively high proportion in Time 0 cells as well
+    + better able to distinguish between Time 0 and Time 2 by including POU5F1
+* Proportion of cells expressing more specific osteogenic markers (RUNX2 + BGLAP + CAPG + DMP1 + PHEX + MEPE + SOST + HYOU1) hard to discern (bad markers)
+* No cells express all chondrogenic markers (ACAN + COL2A1 + SOX9)
+* No cells express all adipogenic markers (FABP4 + PPARG + EBF2)
+
+```{r}
+
+assignments <- assign.thresh0
+assignments <- assign.thresh0.01
+assignments <- assign.thresh0.05
+assignments <- assign.thresh0.1
+assignments <- assign.thresh0.3
+assignments <- assign.thresh0.5
+assignments <- assign.thresh0.7
+assignments <- assign.thresh0.9
+assignments <- assign.thresh1
+assignments <- assign.median
+assignments <- assign.median1
+assignments <- assign.mean
+assignments <- assign.mean1
+assignments <- assign.meansd
+assignments <- assign.meansd1
+
+#ipsc candidate genes
+plot.upset.HCcellcompare(assignments,genes[1:4],20000)
+
+#msc candidate genes
+plot.upset.HCcellcompare(assignments,genes[5:8],20000)
+plot.upset.HCcellcompare(assignments,genes[c(19,5:8)],20000) #include osteo marker to better distinguish time 1 and time 2
+
+#osteogenic candidate genes
+plot.upset.HCcellcompare(assignments,genes[17:19],20000)
+plot.upset.HCcellcompare(assignments,genes[c(1,17:19)],20000) #include ipsc marker to better distinguish time 2
+
+#more specific osteogenic candidate genes
+plot.upset.HCcellcompare(assignments,genes[9:16],20000)
+plot.upset.HCcellcompare(assignments[which(assignments$COL1A1==1 & assignments$COL1A2==1 & assignments$ALPL==1),],genes[9:16],20000)
+
+#chondrogenic candidate genes
+plot.upset.HCcellcompare(assignments,genes[20:22],20000)
+
+#adipogenic candidate genes
+plot.upset.HCcellcompare(assignments,genes[23:25],20000)
+
+```
+
+Quickly look at possible ad hoc classification systems.
+
+This one looks good for general ad hoc assignment:
+
+```{r}
+
+assignments <- assign.thresh0.1
+
+#general ad hoc classification system
+CombinePlots(list((DimPlot(data, group.by="Stage", reduction="umap") +
+                      labs(x="UMAP1",y="UMAP2",title="All Cells")),
+                  (DimPlot(data, group.by="Species", reduction="umap", cols=c("grey","black"),
+                          cells=rownames(assignments[which(assignments$POU5F1==1 & assignments$TDGF1==1 & assignments$SOX2==1 & assignments$EPCAM==1),])) +
+                    labs(x="UMAP1",y="UMAP2",title="iPSCs (ad hoc)")),
+                  (DimPlot(data, group.by="Species", reduction="umap", cols=c("grey","black"),
+                          cells=rownames(assignments[which(assignments$THY1==1 & assignments$NT5E==1 & assignments$ENG==1 & assignments$CD44==1 & assignments$ALPL==0),])) +
+                    labs(x="UMAP1",y="UMAP2",title="MSCs (ad hoc)")),
+                  (DimPlot(data, group.by="Species", reduction="umap", cols=c("grey","black"),
+                          cells=rownames(assignments[which(assignments$COL1A1==1 & assignments$COL1A2==1 & assignments$ALPL==1 & assignments$POU5F1==0),])) +
+                    labs(x="UMAP1",y="UMAP2",title="Osteoblasts (ad hoc)"))), ncol=4)
+
+```
+
+```{r, eval=FALSE}
+
+assignments <- assign.thresh0.1
+assignments <- assign.threshMulti01
+assignments <- assign.threshMulti0
+
+#osteogenic specific assignments
+#cell assignments according to Dallas et al. 2013
+upset(assignments[,9:16], keep.order=TRUE,
+      sets=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+      order.by="degree", nintersects=100)
+upset(assignments[,9:16], keep.order=TRUE, empty.intersections="on",
+      sets=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+      intersections=list(list("RUNX2"),
+                         list("RUNX2","BGLAP"),
+                         list("BGLAP","CAPG","DMP1","PHEX"),
+                         list("BGLAP","CAPG","DMP1","PHEX","MEPE"),
+                         list("CAPG","DMP1","PHEX","MEPE","SOST","HYOU1")),
+      order.by="freq")
+plot.upset.sub.HCcellcompare(data=assignments,
+                             genes=genes[9:16],
+                             intersections=list(list("RUNX2"),
+                                                list("RUNX2","BGLAP"),
+                                                list("BGLAP","CAPG","DMP1","PHEX"),
+                                                list("BGLAP","CAPG","DMP1","PHEX","MEPE"),
+                                                list("CAPG","DMP1","PHEX","MEPE","SOST","HYOU1")),
+                             ymax=20000)
+
+#assign.thresh0.1     - few preosteoblasts
+#assign.threshMulti01 - few preosteoblasts
+#assign.threshMulti0  - few preosteoblasts
+#(notes: too many marker genes, they distract from cell type definition)
+
+```
+
+```{r, eval=FALSE}
+
+assignments <- assign.thresh0.1
+assignments <- assign.threshMulti01
+assignments <- assign.threshMulti0
+
+#osteogenic specific assignments
+#cell assignments according to Dallas et al. 2013 (excluding DMP1)
+#(notes: DMP1 excluded because it is not expressed in any cell)
+upset(assignments[,c(9:11,13:16)], keep.order=TRUE,
+      sets=c("RUNX2","BGLAP","CAPG","PHEX","MEPE","SOST","HYOU1"),
+      order.by="degree", nintersects=100)
+upset(assignments[,c(9:11,13:16)], keep.order=TRUE, empty.intersections="on",
+      sets=c("RUNX2","BGLAP","CAPG","PHEX","MEPE","SOST","HYOU1"),
+      intersections=list(list("RUNX2"),
+                         list("RUNX2","BGLAP"),
+                         list("BGLAP","CAPG","PHEX"),
+                         list("BGLAP","CAPG","PHEX","MEPE"),
+                         list("CAPG","PHEX","MEPE","SOST","HYOU1")),
+      order.by="freq")
+plot.upset.sub.HCcellcompare(data=assignments,
+                             genes=genes[c(9:11,13:16)],
+                             intersections=list(list("RUNX2"),
+                                                list("RUNX2","BGLAP"),
+                                                list("BGLAP","CAPG","PHEX"),
+                                                list("BGLAP","CAPG","PHEX","MEPE"),
+                                                list("CAPG","PHEX","MEPE","SOST","HYOU1")),
+                             ymax=20000)
+
+#assign.thresh0.1     - few preosteoblasts
+#assign.threshMulti01 - few preosteoblasts, couple osteoblasts, couple embedding osteoblasts
+#assign.threshMulti0  - couple preosteoblasts, couple osteoblasts, few embedding osteoblasts
+#(notes: too many marker genes, they distract from cell type definition)
+
+```
+
+```{r, eval=FALSE}
+
+assignments <- assign.thresh0.1
+assignments <- assign.threshMulti01
+assignments <- assign.threshMulti0
+
+#osteogenic specific assignments
+#cell assignments according to Dallas et al. 2013 (excluding DMP1 + SOST) - few preosteoblasts and osteoblasts, some embedding osteoblasts, few mineralizing osteocytes
+#(notes: DMP1 excluded because it is not expressed in any cell)
+#(notes: SOST excluded because it is only expressed in 1 cell)
+upset(assignments[,c(9:11,13:14,16)], keep.order=TRUE,
+      sets=c("RUNX2","BGLAP","CAPG","PHEX","MEPE","HYOU1"),
+      order.by="degree", nintersects=100)
+upset(assignments[which(assignments$COL1A1==1 & assignments$COL1A2==1 & assignments$ALPL==1 & assignments$POU5F1==0),c(9:11,13:14,16)], keep.order=TRUE,
+      sets=c("RUNX2","BGLAP","CAPG","PHEX","MEPE","HYOU1"),
+      order.by="degree", nintersects=100)
+upset(assignments[,c(9:11,13:14,16)], keep.order=TRUE, empty.intersections="on",
+      sets=c("RUNX2","BGLAP","CAPG","PHEX","MEPE","HYOU1"),
+      intersections=list(list("RUNX2"),
+                         list("RUNX2","BGLAP"),
+                         list("BGLAP","CAPG","PHEX"),
+                         list("BGLAP","CAPG","PHEX","MEPE"),
+                         list("CAPG","PHEX","MEPE","HYOU1")),
+      order.by="freq")
+plot.upset.sub.HCcellcompare(data=assignments,
+                             genes=genes[c(9:11,13:14,16)],
+                             intersections=list(list("RUNX2"),
+                                                list("RUNX2","BGLAP"),
+                                                list("BGLAP","CAPG","PHEX"),
+                                                list("BGLAP","CAPG","PHEX","MEPE"),
+                                                list("CAPG","PHEX","MEPE","HYOU1")),
+                             ymax=2000)
+
+#assign.thresh0.1     - few preosteoblasts
+#assign.threshMulti01 - few preosteoblasts, couple osteoblasts, couple embedding osteoblasts
+#assign.threshMulti0  - couple preosteoblasts, couple osteoblasts, few embedding osteoblasts, few mineralizing osteoblasts
+#(notes: starting to get close on the number of marker genes but worried about HYOU1)
+
+```
+
+##### This one looks good!
+
+```{r}
+
+#assignments <- assign.thresh0.1
+#assignments <- assign.threshMulti01
+assignments <- assign.threshMulti0
+
+#osteogenic specific assignments
+#cell assignments according to Dallas et al. 2013 (excluding DMP1 + SOST + HYOU1) - few preosteoblasts and osteoblasts present
+#(notes: DMP1 excluded because it is not expressed in any cell)
+#(notes: SOST excluded because it is only expressed in 1 cell)
+#(notes: HYOU1 excluded because it is a heat shock protein and may get turned on for any number of reasons aside from osteogenic differentiation)
+upset(assignments[,c(9:11,13:14)], keep.order=TRUE, empty.intersections="on",
+      sets=c("RUNX2","BGLAP","CAPG","PHEX","MEPE"),
+      order.by="degree", nintersects=100)
+upset(assignments[which(assignments$COL1A1==1 & assignments$COL1A2==1 & assignments$ALPL==1 & assignments$POU5F1==0),c(9:11,13:14)], keep.order=TRUE,
+      sets=c("RUNX2","BGLAP","CAPG","PHEX","MEPE"),
+      order.by="degree", nintersects=100)
+upset(assignments[,c(9:11,13:14)], keep.order=TRUE, empty.intersections="on",
+      sets=c("RUNX2","BGLAP","CAPG","PHEX","MEPE"),
+      intersections=list(list("RUNX2"),
+                         list("RUNX2","BGLAP"),
+                         list("BGLAP","CAPG","PHEX"),
+                         list("BGLAP","CAPG","PHEX","MEPE"),
+                         list("CAPG","PHEX","MEPE")),
+      order.by="freq")
+upset(assignments[which(assignments$COL1A1==1 & assignments$COL1A2==1 & assignments$ALPL==1 & assignments$POU5F1==0),c(9:11,13:14)], keep.order=TRUE, empty.intersections="on",
+      sets=c("RUNX2","BGLAP","CAPG","PHEX","MEPE"),
+      intersections=list(list("RUNX2"),
+                         list("RUNX2","BGLAP"),
+                         list("BGLAP","CAPG","PHEX"),
+                         list("BGLAP","CAPG","PHEX","MEPE"),
+                         list("CAPG","PHEX","MEPE")))
+plot.upset.sub.HCcellcompare(data=assignments,
+                             genes=genes[c(9:11,13:14)],
+                             intersections=list(list("RUNX2"),
+                                                list("RUNX2","BGLAP"),
+                                                list("BGLAP","CAPG","PHEX"),
+                                                list("BGLAP","CAPG","PHEX","MEPE"),
+                                                list("CAPG","PHEX","MEPE")),
+                             ymax=2000)
+
+upset(assignments[which(assignments$COL1A1==1 & assignments$COL1A2==1 & assignments$ALPL==1 & assignments$POU5F1==0),c(9:11,13:14)],
+      keep.order=TRUE,
+      empty.intersections="on",
+      sets=c("RUNX2","BGLAP","CAPG","PHEX","MEPE"),
+      intersections=list(#preosteoblasts
+                         list("RUNX2"),
+                         #osteoblasts
+                         list("RUNX2","BGLAP"),
+                         list("BGLAP"),
+                         #embedding osteblasts
+                         list("BGLAP","CAPG","PHEX"),
+                         list("CAPG"),
+                         list("PHEX"),
+                         list("RUNX2","CAPG"),
+                         list("RUNX2","PHEX"),
+                         list("BGLAP","CAPG"),
+                         list("BGLAP","PHEX"),
+                         list("CAPG","PHEX"),
+                         list("RUNX2","BGLAP","CAPG"),
+                         list("RUNX2","BGLAP","PHEX"),
+                         list("RUNX2","CAPG","PHEX"),
+                         list("RUNX2","BGLAP","CAPG","PHEX"),
+                         #mineralizing osteoblasts
+                         list("BGLAP","CAPG","PHEX","MEPE"),
+                         list("RUNX2","MEPE"),
+                         list("BGLAP","MEPE"),
+                         list("RUNX2","BGLAP","MEPE"),
+                         list("RUNX2","CAPG","MEPE"),
+                         list("RUNX2","PHEX","MEPE"),
+                         list("BGLAP","CAPG","MEPE"),
+                         list("BGLAP","PHEX","MEPE"),
+                         list("RUNX2","BGLAP","CAPG","MEPE"),
+                         list("RUNX2","BGLAP","PHEX","MEPE"),
+                         list("RUNX2","CAPG","PHEX","MEPE"),
+                         list("RUNX2","BGLAP","CAPG","PHEX","MEPE"),
+                         #mature osteocytes
+                         list("CAPG","PHEX","MEPE"),
+                         list("MEPE"),
+                         list("CAPG","MEPE"),
+                         list("PHEX","MEPE")))
+
+#assign.thresh0.1     - several preosteoblasts
+#assign.threshMulti01 - several preosteoblasts, couple osteoblasts, couple embedding osteoblasts
+#assign.threshMulti0  - few preosteoblasts, couple osteoblasts, several embedding osteoblasts, couple mineralizing osteoblasts, few maturing osteocytes
+
+```
+
+##### This one looks good!
+
+```{r}
+
+#assignments <- assign.thresh0.1
+#assignments <- assign.threshMulti01
+assignments <- assign.threshMulti0
+
+#osteogenic specific assignments
+#cell assignments according to Dallas et al. 2013 (excluding DMP1 + SOST + HYOU1 + CAPG)
+#(notes: DMP1 excluded because it is not expressed in any cell)
+#(notes: SOST excluded because it is only expressed in 1 cell)
+#(notes: HYOU1 excluded because it is a heat shock protein and may get turned on for any number of reasons aside from osteogenic differentiation)
+#(notes: CAPG excluded because it is a concerning marker)
+upset(assignments[,c(9:10,13:14)], keep.order=TRUE,
+      sets=c("RUNX2","BGLAP","PHEX","MEPE"),
+      order.by="degree", nintersects=100)
+upset(assignments[which(assignments$COL1A1==1 & assignments$COL1A2==1 & assignments$ALPL==1 & assignments$POU5F1==0),c(9:10,13:14)], keep.order=TRUE,
+      sets=c("RUNX2","BGLAP","PHEX","MEPE"),
+      order.by="degree", nintersects=100)
+upset(assignments[,c(9:10,13:14)], keep.order=TRUE, empty.intersections="on",
+      sets=c("RUNX2","BGLAP","PHEX","MEPE"),
+      intersections=list(list("RUNX2"),
+                         list("RUNX2","BGLAP"),
+                         list("BGLAP","PHEX"),
+                         list("BGLAP","PHEX","MEPE"),
+                         list("PHEX","MEPE")),
+      order.by="freq")
+upset(assignments[which(assignments$COL1A1==1 & assignments$COL1A2==1 & assignments$ALPL==1 & assignments$POU5F1==0),c(9:10,13:14)], keep.order=TRUE, empty.intersections="on",
+      sets=c("RUNX2","BGLAP","PHEX","MEPE"),
+      intersections=list(list("RUNX2"),
+                         list("RUNX2","BGLAP"),
+                         list("BGLAP","PHEX"),
+                         list("BGLAP","PHEX","MEPE"),
+                         list("PHEX","MEPE")))
+plot.upset.sub.HCcellcompare(data=assignments,
+                             genes=genes[c(9:10,13:14)],
+                             intersections=list(list("RUNX2"),
+                                                list("RUNX2","BGLAP"),
+                                                list("BGLAP","PHEX"),
+                                                list("BGLAP","PHEX","MEPE"),
+                                                list("PHEX","MEPE")),
+                             ymax=5000)
+
+upset(assignments[which(assignments$COL1A1==1 & assignments$COL1A2==1 & assignments$ALPL==1 & assignments$POU5F1==0),c(9:10,13:14)],
+      keep.order=TRUE,
+      empty.intersections="on",
+      sets=c("RUNX2","BGLAP","PHEX","MEPE"),
+      intersections=list(#preosteoblasts
+                         list("RUNX2"),
+                         #osteoblasts
+                         list("RUNX2","BGLAP"),
+                         list("BGLAP"),
+                         #embedding osteblasts
+                         list("BGLAP","PHEX"),
+                         list("PHEX"),
+                         list("RUNX2","PHEX"),
+                         list("BGLAP","PHEX"),
+                         list("RUNX2","BGLAP","PHEX"),
+                         #mineralizing osteoblasts
+                         list("BGLAP","PHEX","MEPE"),
+                         list("RUNX2","MEPE"),
+                         list("BGLAP","MEPE"),
+                         list("RUNX2","BGLAP","MEPE"),
+                         list("RUNX2","PHEX","MEPE"),
+                         list("BGLAP","PHEX","MEPE"),
+                         list("RUNX2","BGLAP","PHEX","MEPE"),
+                         #mature osteocytes
+                         list("PHEX","MEPE"),
+                         list("MEPE"),
+                         list("PHEX","MEPE")))
+
+#assign.thresh0.1     - thousands of preosteoblasts, few osteoblasts
+#assign.threshMulti01 - thousands of preosteoblasts, several osteoblasts
+#assign.threshMulti0  - thousands of preosteoblasts, thousands of osteoblasts, thousands of embedding osteoblasts, few mineralizing osteoblasts, few maturing osteocytes
+
+```
+
+##### This one looks good!
+
+```{r}
+
+#assignments <- assign.thresh0.1
+#assignments <- assign.threshMulti01
+assignments <- assign.threshMulti0
+
+#osteogenic specific assignments
+#cell assignments according to Dallas et al. 2013 (excluding DMP1 + SOST + HYOU1 + PHEX)
+#(notes: DMP1 excluded because it is not expressed in any cell)
+#(notes: SOST excluded because it is only expressed in 1 cell)
+#(notes: HYOU1 excluded because it is a heat shock protein and may get turned on for any number of reasons aside from osteogenic differentiation)
+#(notes: PHEX excluded as a comparison to removing CAPG, see above)
+upset(assignments[,c(9:11,14)], keep.order=TRUE, empty.intersections="on",
+      sets=c("RUNX2","BGLAP","CAPG","MEPE"),
+      order.by="degree", nintersects=100)
+upset(assignments[which(assignments$COL1A1==1 & assignments$COL1A2==1 & assignments$ALPL==1 & assignments$POU5F1==0),c(9:11,14)], keep.order=TRUE,
+      sets=c("RUNX2","BGLAP","CAPG","MEPE"),
+      order.by="degree", nintersects=100)
+upset(assignments[,c(9:11,14)], keep.order=TRUE, empty.intersections="on",
+      sets=c("RUNX2","BGLAP","CAPG","MEPE"),
+      intersections=list(list("RUNX2"),
+                         list("RUNX2","BGLAP"),
+                         list("BGLAP","CAPG"),
+                         list("BGLAP","CAPG","MEPE"),
+                         list("CAPG","MEPE")),
+      order.by="freq")
+upset(assignments[which(assignments$COL1A1==1 & assignments$COL1A2==1 & assignments$ALPL==1 & assignments$POU5F1==0),c(9:11,14)], keep.order=TRUE, empty.intersections="on",
+      sets=c("RUNX2","BGLAP","CAPG","MEPE"),
+      intersections=list(list("RUNX2"),
+                         list("RUNX2","BGLAP"),
+                         list("BGLAP","CAPG"),
+                         list("BGLAP","CAPG","MEPE"),
+                         list("CAPG","MEPE")))
+plot.upset.sub.HCcellcompare(data=assignments,
+                             genes=genes[c(9:11,14)],
+                             intersections=list(list("RUNX2"),
+                                                list("RUNX2","BGLAP"),
+                                                list("BGLAP","CAPG"),
+                                                list("BGLAP","CAPG","MEPE"),
+                                                list("CAPG","MEPE")),
+                             ymax=2000)
+
+upset(assignments[which(assignments$COL1A1==1 & assignments$COL1A2==1 & assignments$ALPL==1 & assignments$POU5F1==0),c(9:11,14)],
+      keep.order=TRUE,
+      empty.intersections="on",
+      sets=c("RUNX2","BGLAP","CAPG","MEPE"),
+      intersections=list(#preosteoblasts
+                         list("RUNX2"),
+                         #osteoblasts
+                         list("RUNX2","BGLAP"),
+                         list("BGLAP"),
+                         #embedding osteblasts
+                         list("BGLAP","CAPG"),
+                         list("CAPG"),
+                         list("RUNX2","CAPG"),
+                         list("BGLAP","CAPG"),
+                         list("RUNX2","BGLAP","CAPG"),
+                         #mineralizing osteoblasts
+                         list("BGLAP","CAPG","MEPE"),
+                         list("RUNX2","MEPE"),
+                         list("BGLAP","MEPE"),
+                         list("RUNX2","BGLAP","MEPE"),
+                         list("RUNX2","CAPG","MEPE"),
+                         list("BGLAP","CAPG","MEPE"),
+                         list("RUNX2","BGLAP","CAPG","MEPE"),
+                         #mature osteocytes
+                         list("CAPG","MEPE"),
+                         list("MEPE"),
+                         list("CAPG","MEPE")))
+
+#assign.thresh0.1     - hundreds of preosteoblasts, couple osteoblasts, few embedding osteoblasts, couple maturing osteocytes
+#assign.threshMulti01 - hundreds of preosteoblasts, couple osteoblasts, few embedding osteoblasts, couple maturing osteocytes
+#assign.threshMulti0  - few preosteoblasts, hundreds of osteoblasts, thousands of embedding osteoblasts, couple mineralizing osteoblasts, few maturing osteocytes
+
+```
+
+#### Ad Hoc Assignment (general)
+
+Assign cell type labels based on ad hoc cutoffs.
+
+How to classify cells:
+
+* iPSCs = express POU5F1 + TDGF1 + SOX2 + EPCAM (but do not express NT5E + ENG + CD44)
+* MSCs = express THY1 + NT5E + ENG + CD44 (but do not express ALPL)
+* Osteogenic Cells = express COL1A1 + COL1A2 + ALPL (but do not express POU5F1)
+
+[use integrated expression > 0.1 threshold for ad hoc cell assignment]
+
+```{r}
+
+#assign cell type labels based on ad hoc cutoffs
+hoc.assign <- assign.thresh0.1
+
+hoc.assign$assign <- "other"
+i=1
+while(i <= length(rownames(hoc.assign))) {
+  if(hoc.assign$POU5F1[i] == 1 & hoc.assign$TDGF1[i] == 1 & hoc.assign$SOX2[i] == 1 & hoc.assign$EPCAM[i] == 1 &
+     hoc.assign$NT5E[i] == 0 & hoc.assign$ENG[i] == 0 & hoc.assign$CD44[i] == 0) {hoc.assign$assign[i] <- "iPSC"}
+  if(hoc.assign$THY1[i] == 1 & hoc.assign$NT5E[i] == 1 & hoc.assign$ENG[i] == 1 & hoc.assign$CD44[i] == 1 &
+     hoc.assign$ALPL[i] == 0) {hoc.assign$assign[i] <- "MSC"}
+  if(hoc.assign$POU5F1[i] == 0 & hoc.assign$COL1A1[i] == 1 & hoc.assign$COL1A2[i] == 1 & hoc.assign$ALPL[i] == 1) {hoc.assign$assign[i] <- "Osteoblast"}
+  i=i+1
+}
+table(hoc.assign$assign)
+
+data@meta.data$AdHoc.Assign <- hoc.assign$assign
+
+```
+
+              iPSC | MSC | Osteoblast | other
+tot19k:          0 | 660 |      21944 |  4547
+tot19k Human:    0 | 639 |       8097 |  3829
+tot19k Chimp:    0 |  21 |      13847 |   718
+
+```{r}
+
+table(subset(data,subset=Species=="Human")@meta.data$AdHoc.Assign)
+table(subset(data,subset=Species=="Chimp")@meta.data$AdHoc.Assign)
+
+```
+
+```{r}
+
+CombinePlots(plots=list((DimPlot(data,
+                                 group.by="Species",
+                                 split.by="AdHoc.Assign",
+                                 reduction="pca",
+                                 dims=c(1,2),
+                                 cols=c("grey","black")) +
+                           labs(x="PC1",y="PC2")),
+                        (DimPlot(data,
+                                 group.by="Species",
+                                 split.by="AdHoc.Assign",
+                                 reduction="pca",
+                                 dims=c(3,4),
+                                 cols=c("grey","black")) +
+                           labs(x="PC3",y="PC4")),
+                        (DimPlot(data,
+                                 group.by="Species",
+                                 split.by="AdHoc.Assign",
+                                 reduction="pca",
+                                 dims=c(5,6),
+                                 cols=c("grey","black")) +
+                           labs(x="PC5",y="PC6")),
+                        (DimPlot(data,
+                                 group.by="Species",
+                                 split.by="AdHoc.Assign",
+                                 reduction="pca",
+                                 dims=c(7,8),
+                                 cols=c("grey","black")) +
+                           labs(x="PC7",y="PC8")),
+                        (DimPlot(data,
+                                 group.by="Species",
+                                 split.by="AdHoc.Assign",
+                                 reduction="pca",
+                                 dims=c(9,10),
+                                 cols=c("grey","black")) +
+                           labs(x="PC9",y="PC10"))), ncol=1)
+
+DimPlot(data,
+        group.by="Species",
+        split.by="AdHoc.Assign",
+        reduction="umap",
+        cols=c("grey","black")) +
+  labs(x="UMAP1",y="UMAP2")
+
+```
+
+### Ad Hoc Assignment (osteogenic)
+
+Assign cell type labels based on ad hoc cutoffs.
+
+How to classify cells (using 5 genes):
+
+* not osteogenic = do not express COL1A1 + COL1A2 + ALPL
+* osteogenic = express COL1A1 + COL1A2 + ALPL (but do not express POU5F1)
+  + unknown osteogenic = do not express RUNX2 + BGLAP + CAPG + PHEX + MEPE
+  + preosteoblasts = express RUNX2 (but do not express BGLAP + CAPG + PHEX + MEPE)
+  + osteoblasts = express RUNX2 + BGLAP (but do not express CAPG + PHEX + MEPE)
+  + embedding osteoblasts = express BGLAP + CAPG + PHEX (but do not express RUNX2 + MEPE)
+  + mineralizing osteoblasts = express BGLAP + CAPG + PHEX + MEPE (but do not express RUNX2)
+  + maturing osteoblasts = express CAPG + PHEX + MEPE (but do not express RUNX2 + BGLAP)
+
+How to classify cells (using 4 genes - option A):
+
+* not osteogenic = do not express COL1A1 + COL1A2 + ALPL
+* osteogenic = express COL1A1 + COL1A2 + ALPL (but do not express POU5F1)
+  + unknown osteogenic = do not express RUNX2 + BGLAP + PHEX + MEPE
+  + preosteoblasts = express RUNX2 (but do not express BGLAP + PHEX + MEPE)
+  + osteoblasts = express RUNX2 + BGLAP (but do not express PHEX + MEPE)
+  + embedding osteoblasts = express BGLAP + PHEX (but do not express RUNX2 + MEPE)
+  + mineralizing osteoblasts = express BGLAP + PHEX + MEPE (but do not express RUNX2)
+  + maturing osteoblasts = express PHEX + MEPE (but do not express RUNX2 + BGLAP)
+
+How to classify cells (using 4 genes - option B):
+
+* not osteogenic = do not express COL1A1 + COL1A2 + ALPL
+* osteogenic = express COL1A1 + COL1A2 + ALPL (but do not express POU5F1)
+  + unknown osteogenic = do not express RUNX2 + BGLAP + CAPG + MEPE
+  + preosteoblasts = express RUNX2 (but do not express BGLAP + CAPG + MEPE)
+  + osteoblasts = express RUNX2 + BGLAP (but do not express CAPG + MEPE)
+  + embedding osteoblasts = express BGLAP + CAPG (but do not express RUNX2 + MEPE)
+  + mineralizing osteoblasts = express BGLAP + CAPG + MEPE (but do not express RUNX2)
+  + maturing osteoblasts = express CAPG + MEPE (but do not express RUNX2 + BGLAP)
+
+For each classification, other gene expression combinations may produce potentially similar cell types, so tentative labels are provided for these.
+
+[use integrated expression > 0.1 threshold for most genes and integrated expression > 0 threshold for osteogenic-specific genes (RUNX2 + BGLAP + CAPG + PHEX + MEPE)]
+
+```{r}
+
+#assign osteogenic cell sub-type labels based on ad hoc cutoffs (using 5 genes)
+ost.assign <- assign.threshMulti0
+
+ost.assign$assign <- "other"
+i=1
+while(i <= length(rownames(ost.assign))) {
+
+  if(ost.assign$COL1A1[i]==0 & ost.assign$COL1A2[i]==0 & ost.assign$ALPL[i]==0) {ost.assign$assign[i] <- "not osteogenic"}
+
+  if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0) {
+    
+    #strict criteria
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==0 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "unknown osteogenic"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==0 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "preosteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==0 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==1 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==1 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==1 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "maturing osteocyte"}
+    
+    #lenient criteria
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==0 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==1 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==0 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==1 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==0 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==1 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==0 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==1 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==1 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==0 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==1 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==1 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==0 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==0 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==0 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==1 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==0 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==1 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==0 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==1 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==0 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==1 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==1 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==0 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.maturing osteocyte"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==1 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.maturing osteocyte"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==0 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.maturing osteocyte"}
+    
+  }
+
+  i=i+1
+}
+table(ost.assign$assign)
+
+data@meta.data$OstAdHoc.Assign.5gene <- ost.assign$assign
+data@meta.data$OstAdHoc.Assign.5gene <- factor(data@meta.data$OstAdHoc.Assign.5gene,
+                                               levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+                                                        "x.osteoblast","x.embedding osteoblast","x.mineralizing osteoblast","x.maturing osteocyte",
+                                                        "unknown osteogenic","not osteogenic","other"),
+                                               labels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+                                                        "x.osteoblast","x.embedding osteoblast","x.mineralizing osteoblast","x.maturing osteocyte",
+                                                        "unknown osteogenic","not osteogenic","other"))
+
+```
+
+#####THESE ARE NOT THE SAME NUMBERS AS THE UPSETR PLOTS ABOVE
+              pre | obl |  emb | min | mat | x.obl | x.emb | x.min | x.mat | unk.ost | not.ost | other
+tot19k:       110 |  53 | 1841 |  81 | 147 |     2 | 18547 |  1085 |    16 |      62 |      57 |  5150
+tot19k Human:  39 |   2 |  393 |   3 |   1 |     2 |  7550 |    45 |     4 |      58 |      57 |  4411
+tot19k Chimp:  71 |  51 | 1448 |  78 | 146 |     0 | 10997 |  1040 |    12 |       4 |       0 |   739
+
+```{r}
+
+table(data@meta.data$OstAdHoc.Assign.5gene)
+table(subset(data,subset=Species=="Human")@meta.data$OstAdHoc.Assign.5gene)
+table(subset(data,subset=Species=="Chimp")@meta.data$OstAdHoc.Assign.5gene)
+
+```
+
+```{r}
+
+CombinePlots(plots=list((DimPlot(data,
+                                 group.by="Species",
+                                 split.by="OstAdHoc.Assign.5gene",
+                                 reduction="pca",
+                                 dims=c(1,2),
+                                 cols=c("grey","black")) +
+                           labs(x="PC1",y="PC2")),
+                        (DimPlot(data,
+                                 group.by="Species",
+                                 split.by="OstAdHoc.Assign.5gene",
+                                 reduction="pca",
+                                 dims=c(3,4),
+                                 cols=c("grey","black")) +
+                           labs(x="PC3",y="PC4")),
+                        (DimPlot(data,
+                                 group.by="Species",
+                                 split.by="OstAdHoc.Assign.5gene",
+                                 reduction="pca",
+                                 dims=c(5,6),
+                                 cols=c("grey","black")) +
+                           labs(x="PC5",y="PC6")),
+                        (DimPlot(data,
+                                 group.by="Species",
+                                 split.by="OstAdHoc.Assign.5gene",
+                                 reduction="pca",
+                                 dims=c(7,8),
+                                 cols=c("grey","black")) +
+                           labs(x="PC7",y="PC8")),
+                        (DimPlot(data,
+                                 group.by="Species",
+                                 split.by="OstAdHoc.Assign.5gene",
+                                 reduction="pca",
+                                 dims=c(9,10),
+                                 cols=c("grey","black")) +
+                           labs(x="PC9",y="PC10"))), ncol=1)
+
+DimPlot(data,
+        group.by="Species",
+        split.by="OstAdHoc.Assign.5gene",
+        reduction="umap",
+        cols=c("grey","black")) +
+  labs(x="UMAP1",y="UMAP2")
+
+```
+
+```{r}
+
+#assign osteogenic cell sub-type labels based on ad hoc cutoffs (using 4 genes - option A)
+ost.assign <- assign.threshMulti0
+
+ost.assign$assign <- "other"
+i=1
+while(i <= length(rownames(ost.assign))) {
+
+  if(ost.assign$COL1A1[i]==0 & ost.assign$COL1A2[i]==0 & ost.assign$ALPL[i]==0) {ost.assign$assign[i] <- "not osteogenic"}
+
+  if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0) {
+    
+    #strict criteria
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "unknown osteogenic"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==0 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "preosteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==1 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "maturing osteocyte"}
+    
+    #lenient criteria
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==0 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==1 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==0 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==1 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==0 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==1 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.maturing osteocyte"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.maturing osteocyte"}
+    
+  }
+
+  i=i+1
+}
+table(ost.assign$assign)
+
+data@meta.data$OstAdHoc.Assign.4geneA <- ost.assign$assign
+data@meta.data$OstAdHoc.Assign.4geneA <- factor(data@meta.data$OstAdHoc.Assign.4geneA,
+                                                levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+                                                         "x.osteoblast","x.embedding osteoblast","x.mineralizing osteoblast","x.maturing osteocyte",
+                                                         "unknown osteogenic","not osteogenic","other"),
+                                                labels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+                                                         "x.osteoblast","x.embedding osteoblast","x.mineralizing osteoblast","x.maturing osteocyte",
+                                                         "unknown osteogenic","not osteogenic","other"))
+
+```
+
+```{r, eval=FALSE}
+
+#assign osteogenic cell sub-type labels based on ad hoc cutoffs (using 4 genes - option A)
+ost.assign <- assign.threshMulti0
+
+ost.assign$assign <- "other"
+i=1
+while(i <= length(rownames(ost.assign))) {
+
+  if(ost.assign$COL1A1[i]==0 & ost.assign$COL1A2[i]==0 & ost.assign$ALPL[i]==0) {ost.assign$assign[i] <- "not osteogenic"}
+
+    #strict criteria
+    if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0 &
+       ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "unknown osteogenic"}
+    if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0 &
+       ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==0 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "preosteoblast"}
+    if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0 &
+       ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==1 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "osteoblast"}
+    if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0 &
+       ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "embedding osteoblast"}
+    if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0 &
+       ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "mineralizing osteoblast"}
+    if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0 &
+       ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "maturing osteocyte"}
+    
+    #lenient criteria
+    if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0 &
+       ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.osteoblast"}
+    if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0 &
+       ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0 &
+       ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==0 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0 &
+       ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0 &
+       ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==1 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0 &
+       ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==0 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0 &
+       ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0 &
+       ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==1 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0 &
+       ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==0 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0 &
+       ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0 &
+       ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==1 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0 &
+       ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$PHEX[i]==0 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.maturing osteocyte"}
+    if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0 &
+       ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$PHEX[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.maturing osteocyte"}
+
+  i=i+1
+}
+table(ost.assign$assign)
+
+data@meta.data$OstAdHoc.Assign.4geneA <- ost.assign$assign
+data@meta.data$OstAdHoc.Assign.4geneA <- factor(data@meta.data$OstAdHoc.Assign.4geneA,
+                                                levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+                                                         "x.osteoblast","x.embedding osteoblast","x.mineralizing osteoblast","x.maturing osteocyte",
+                                                         "unknown osteogenic","not osteogenic","other"),
+                                                labels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+                                                         "x.osteoblast","x.embedding osteoblast","x.mineralizing osteoblast","x.maturing osteocyte",
+                                                         "unknown osteogenic","not osteogenic","other"))
+
+```
+
+#####THESE ARE NOT THE SAME NUMBERS AS THE UPSETR PLOTS ABOVE
+               pre |  obl |  emb | min | mat | x.obl | x.emb | x.min | x.mat | unk.ost | not.ost | other
+tot19k:       2503 | 1468 |    0 |   0 |   0 |   262 | 15658 |  1166 |   163 |     724 |      57 |  5150      
+tot19k Human: 
+tot19k Chimp: 
+
+```{r}
+
+table(data@meta.data$OstAdHoc.Assign.4geneA)
+table(subset(data,subset=Species=="Human")@meta.data$OstAdHoc.Assign.4geneA)
+table(subset(data,subset=Species=="Chimp")@meta.data$OstAdHoc.Assign.4geneA)
+
+```
+
+```{r}
+
+CombinePlots(plots=list((DimPlot(data,
+                                 group.by="Species",
+                                 split.by="OstAdHoc.Assign.4geneA",
+                                 reduction="pca",
+                                 dims=c(1,2),
+                                 cols=c("grey","black")) +
+                           labs(x="PC1",y="PC2")),
+                        (DimPlot(data,
+                                 group.by="Species",
+                                 split.by="OstAdHoc.Assign.4geneA",
+                                 reduction="pca",
+                                 dims=c(3,4),
+                                 cols=c("grey","black")) +
+                           labs(x="PC3",y="PC4")),
+                        (DimPlot(data,
+                                 group.by="Species",
+                                 split.by="OstAdHoc.Assign.4geneA",
+                                 reduction="pca",
+                                 dims=c(5,6),
+                                 cols=c("grey","black")) +
+                           labs(x="PC5",y="PC6")),
+                        (DimPlot(data,
+                                 group.by="Species",
+                                 split.by="OstAdHoc.Assign.4geneA",
+                                 reduction="pca",
+                                 dims=c(7,8),
+                                 cols=c("grey","black")) +
+                           labs(x="PC7",y="PC8")),
+                        (DimPlot(data,
+                                 group.by="Species",
+                                 split.by="OstAdHoc.Assign.4geneA",
+                                 reduction="pca",
+                                 dims=c(9,10),
+                                 cols=c("grey","black")) +
+                           labs(x="PC9",y="PC10"))), ncol=1)
+
+DimPlot(data,
+        group.by="Species",
+        split.by="OstAdHoc.Assign.4geneA",
+        reduction="umap",
+        cols=c("grey","black")) +
+  labs(x="UMAP1",y="UMAP2")
+
+```
+
+```{r}
+
+#assign osteogenic cell sub-type labels based on ad hoc cutoffs (using 4 genes - option B)
+ost.assign <- assign.threshMulti0
+
+ost.assign$assign <- "other"
+i=1
+while(i <= length(rownames(ost.assign))) {
+
+  if(ost.assign$COL1A1[i]==0 & ost.assign$COL1A2[i]==0 & ost.assign$ALPL[i]==0) {ost.assign$assign[i] <- "not osteogenic"}
+
+  if(ost.assign$COL1A1[i]==1 & ost.assign$COL1A2[i]==1 & ost.assign$ALPL[i]==1 & ost.assign$POU5F1[i]==0) {
+    
+    #strict criteria
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==0 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "unknown osteogenic"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==0 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "preosteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==0 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "maturing osteocyte"}
+    
+    #lenient criteria
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==0 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==1 & ost.assign$MEPE[i]==0) {ost.assign$assign[i] <- "x.embedding osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==0 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==0 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==0 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==1 & ost.assign$BGLAP[i]==1 & ost.assign$CAPG[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.mineralizing osteoblast"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==0 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.maturing osteocyte"}
+    if(ost.assign$RUNX2[i]==0 & ost.assign$BGLAP[i]==0 & ost.assign$CAPG[i]==1 & ost.assign$MEPE[i]==1) {ost.assign$assign[i] <- "x.maturing osteocyte"}
+    
+  }
+
+  i=i+1
+}
+table(ost.assign$assign)
+
+data@meta.data$OstAdHoc.Assign.4geneB <- ost.assign$assign
+data@meta.data$OstAdHoc.Assign.4geneB <- factor(data@meta.data$OstAdHoc.Assign.4geneB,
+                                                levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+                                                         "x.osteoblast","x.embedding osteoblast","x.mineralizing osteoblast","x.maturing osteocyte",
+                                                         "unknown osteogenic","not osteogenic","other"),
+                                                labels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+                                                         "x.osteoblast","x.embedding osteoblast","x.mineralizing osteoblast","x.maturing osteocyte",
+                                                         "unknown osteogenic","not osteogenic","other"))
+
+```
+
+#####THESE ARE NOT THE SAME NUMBERS AS THE UPSETR PLOTS ABOVE
+              pre | obl | emb | min | mat | x.obl | x.emb | x.min | x.mat | unk.ost | not.ost | other
+tot19k:       355 | 899 |   0 |   0 |   0 |   286 | 18921 |  1166 |   163 |     154 |      57 |  5150
+tot19k Human: 
+tot19k Chimp: 
+
+```{r}
+
+table(data@meta.data$OstAdHoc.Assign.4geneB)
+table(subset(data,subset=Species=="Human")@meta.data$OstAdHoc.Assign.4geneB)
+table(subset(data,subset=Species=="Chimp")@meta.data$OstAdHoc.Assign.4geneB)
+
+```
+
+```{r}
+
+CombinePlots(plots=list((DimPlot(data,
+                                 group.by="Species",
+                                 split.by="OstAdHoc.Assign.4geneB",
+                                 reduction="pca",
+                                 dims=c(1,2),
+                                 cols=c("grey","black")) +
+                           labs(x="PC1",y="PC2")),
+                        (DimPlot(data,
+                                 group.by="Species",
+                                 split.by="OstAdHoc.Assign.4geneB",
+                                 reduction="pca",
+                                 dims=c(3,4),
+                                 cols=c("grey","black")) +
+                           labs(x="PC3",y="PC4")),
+                        (DimPlot(data,
+                                 group.by="Species",
+                                 split.by="OstAdHoc.Assign.4geneB",
+                                 reduction="pca",
+                                 dims=c(5,6),
+                                 cols=c("grey","black")) +
+                           labs(x="PC5",y="PC6")),
+                        (DimPlot(data,
+                                 group.by="Species",
+                                 split.by="OstAdHoc.Assign.4geneB",
+                                 reduction="pca",
+                                 dims=c(7,8),
+                                 cols=c("grey","black")) +
+                           labs(x="PC7",y="PC8")),
+                        (DimPlot(data,
+                                 group.by="Species",
+                                 split.by="OstAdHoc.Assign.4geneB",
+                                 reduction="pca",
+                                 dims=c(9,10),
+                                 cols=c("grey","black")) +
+                           labs(x="PC9",y="PC10"))), ncol=1)
+
+DimPlot(data,
+        group.by="Species",
+        split.by="OstAdHoc.Assign.4geneB",
+        reduction="umap",
+        cols=c("grey","black")) +
+  labs(x="UMAP1",y="UMAP2")
+
+```
+
+```{r}
+
+#saveRDS(data, file="./data/cellranger-data-full/data.filter.log.indv-cell.int-t2.assign.rds")
+saveRDS(data, file="./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t2.assign.rds")
+#saveRDS(data, file="./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.assign.rds")
+
+```

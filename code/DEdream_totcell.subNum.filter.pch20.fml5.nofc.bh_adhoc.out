@@ -24,12 +24,13 @@ Type 'q()' to quit R.
 +   #supply default values
 +   name="noarg"
 +   data.source="tot"
++   subset.rep="NULL"
++   subset.num=FALSE
 +   assign="all"
-+   data.type="sc"
 +   filter.arg=TRUE
 +   filter.type="pch"
 +   filter.param=0.2
-+   fml="formula1"
++   fml=formula1
 +   lfc=FALSE
 +   fdr="BH"
 + }else{
@@ -38,13 +39,11 @@ Type 'q()' to quit R.
 +   }
 + }
 > print(paste0("file tag: ",name))
-[1] "file tag: totcell.filter.pch20.fml5.nofc.bh"
+[1] "file tag: totcell.subNum.filter.pch20.fml5.nofc.bh"
 > print(paste0("data source: ",data.source))
 [1] "data source: tot"
-> print(paste0("data type: ",data.type))
-[1] "data type: sc"
 > print(paste0("cell assignment: ",assign))
-[1] "cell assignment: stage"
+[1] "cell assignment: adhoc"
 > print(paste0("filter genes: ",filter.arg))
 [1] "filter genes: TRUE"
 > print(paste0("filter type: ",filter.type))
@@ -239,45 +238,17 @@ Active assay: integrated (19377 features)
 > rm(genes,genes.mito,genes.ribo)
 > 
 > #Define Limma Voom (Dream) Function
-> runDREAM <- function(dataSub, data.dir, cell.assign, cell.subset, genes.no.mito.ribo, data.type, filter.arg, filter.type, filter.param, fml) {
+> runDREAM <- function(dataSub, data.dir, subset.rep, cell.assign, cell.subset, genes.no.mito.ribo, filter.arg, filter.type, filter.param, fml) {
 + 
-+   #make count matrix and metadata for edgeR object
-+   if (data.type=="pseudo") {
-+     counts <- c()
-+     metadata <- c()
-+     labels <- c()
-+     for (i in unique(dataSub@meta.data$Sample)) {
-+       x.lab <- i
-+       w <- which(dataSub@meta.data$Sample==i)
-+       if (length(w)>0) {
-+         x.spp <- dataSub@meta.data$Species[w][1]
-+         x.col <- dataSub@meta.data$Collection[w][1]
-+         x.ind <- dataSub@meta.data$Individual[w][1]
-+         x.rep <- dataSub@meta.data$Replicate[w][1]
-+         if (length(w)==1) {
-+           x.cnt <- dataSub@assays$RNA@counts[,w]
-+         } else {
-+           x.cnt <- Matrix::rowSums(dataSub@assays$RNA@counts[,w])
-+         }
-+         counts <- cbind(counts, x.cnt)
-+         metadata <- rbind(metadata, c(x.lab, x.spp, x.col, x.ind, x.rep))
-+         labels <- c(labels, x.lab)
-+       }
-+     }
-+     colnames(counts) <- labels
-+     rownames(metadata) <- labels
-+     colnames(metadata) <- c("Sample","Species","Collection","Individual","Replicate")
-+     metadata <- as.data.frame(metadata)
-+     rm(labels)
-+   }
-+   if (data.type=="sc") {
-+     counts <- as.matrix(GetAssayData(dataSub, assay="RNA", slot="counts"))
-+     metadata <- dataSub@meta.data[,c("Species","Individual","Replicate","Collection","percent.mt","Phase","Sample")]
-+     metadata <- metadata[colnames(counts),]
-+   }
++   #count matrix
++   counts <- as.matrix(GetAssayData(dataSub, assay="RNA", slot="counts"))
 + 
 +   #remove mitochodrial and ribosomal genes
 +   counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
++ 
++   #metadata
++   metadata <- dataSub@meta.data[,c("Species","Individual","Replicate","Collection","percent.mt","Phase","Sample")]
++   metadata <- metadata[colnames(counts),]
 + 
 +   #make edgeR object
 +   dge <- DGEList(counts)
@@ -303,20 +274,25 @@ Active assay: integrated (19377 features)
 +   dge <- calcNormFactors(dge, method="TMM")
 +   summary(dge$samples$norm.factors)
 + 
++   #calculate cellular detection rate
++   #cdr <- scale(colMeans(dge$count > 0))
++ 
 +   #prep design matrix variables
 +   dge$samples$Individual <- as.factor(dge$samples$Individual)
 +   dge$samples$Replicate <- as.factor(as.character(dge$samples$Replicate))
 +   dge$samples$Species <- as.factor(dge$samples$Species)
 +   dge$samples$Collection <- as.factor(as.numeric(dge$samples$Collection))
-+   if (data.type=="sc") {
-+     dge$samples$Phase <- as.factor(dge$samples$Phase)
-+     dge$samples$Sample <- as.factor(dge$samples$Sample)
-+   }
++   dge$samples$Phase <- as.factor(dge$samples$Phase)
++   dge$samples$Sample <- as.factor(dge$samples$Sample)
 + 
 +   #design matrix
 +   if (fml=="formula1") {
 +     model <- "~Species+(1|Individual)+(1|Replicate)"
 +     formula <- ~Species+(1|Individual)+(1|Replicate)
++   }
++   if (fml=="formula1" && subset.rep %in% c("keepRep1","keepRep2")) {
++     model <- "~Species+(1|Individual)"
++     formula <- ~Species+(1|Individual)
 +   }
 +   if (fml=="formula2") {
 +     model <- "~Species+Collection+percent.mt+Phase+(1|Individual)"
@@ -354,11 +330,11 @@ Active assay: integrated (19377 features)
 + 
 +   #add details to output
 +   tt$data <- rep(data.dir, dim(tt)[1])
-+   tt$data.type <- rep(data.type, dim(tt)[1])
 +   tt$cell.assign <- rep(cell.assign, dim(tt)[1])
 +   tt$cell.subset <- rep(cell.subset, dim(tt)[1])
 +   tt$gene.filter <- rep(filter.arg, dim(tt)[1])
 +   tt$gene.filter.args <- rep(paste0("filter.param=",filter.param), dim(tt)[1])
++   tt$subset.rep <- rep(subset.rep, dim(tt)[1])
 +   tt$model <- rep(model, dim(tt)[1])
 +   tt$comparison <- rep(tt$comparison, dim(tt)[1])
 +   tt$test <- rep(tt$test, dim(tt)[1])
@@ -428,13 +404,36 @@ Active assay: integrated (19377 features)
 +       if(cell.assign=="ostadhoc") { dataSub <- subset(data,subset=OstAdHoc.Assign==cell.subset) }
 +     }
 + 
++     #further define data subsampling based on sample replicates
++     if(subset.rep=="keepRep1") {
++       print(subset.rep)
++       dataSub <- subset(dataSub,subset=Sample!="H1-I")
++       dataSub <- subset(dataSub,subset=Sample!="C1-I")
++     }
++     if(subset.rep=="keepRep2") {
++       print(subset.rep)
++       dataSub <- subset(dataSub,subset=Sample!="H1-I-r2")
++       dataSub <- subset(dataSub,subset=Sample!="C1-I-r2")
++     }
++ 
++     #further define data subsampling based on number of cells to sample for DE analysis
++     if(subset.num==TRUE) {
++       human.cells <- rownames(dataSub@meta.data)[which(dataSub@meta.data$Species=="Human")]
++       chimp.cells <- rownames(dataSub@meta.data)[which(dataSub@meta.data$Species=="Chimp")]
++       min.cell.count <- min(c(length(human.cells),length(chimp.cells)))
++       print(paste0("Minimum number of cells in comparative groups: ",min.cell.count))
++       h.cell.sub <- human.cells[sample(1:length(human.cells), min.cell.count, replace=FALSE)]
++       c.cell.sub <- chimp.cells[sample(1:length(chimp.cells), min.cell.count, replace=FALSE)]
++       dataSub <- subset(dataSub,cells=c(h.cell.sub,c.cell.sub))
++     }
++ 
 +     #de analysis
 +     DEgene <- runDREAM(dataSub=dataSub,
 +                        data.dir=data.dir,
++                        subset.rep=subset.rep,
 +                        cell.assign=cell.assign,
 +                        cell.subset=cell.subset,
 +                        genes.no.mito.ribo=genes.no.mito.ribo,
-+                        data.type=data.type,
 +                        filter.arg=filter.arg,
 +                        filter.type=filter.type,
 +                        filter.param=filter.param,
@@ -449,69 +448,72 @@ Active assay: integrated (19377 features)
 +   }
 + 
 + }
-[1] "stage-Time 0"
-Memory usage to store result: > 21.4 Gb 
+[1] "adhoc-iPSC"
+[1] "Minimum number of cells in comparative groups: 10307"
+Memory usage to store result: > 12.7 Gb 
 Dividing work into 100 chunks...
 iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
 
-Total: 2035 s
+Total: 1238 s
 Dividing work into 100 chunks...
 iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
 
-Total: 4674 s
+Total: 2766 s
 [1] "All DE Genes"
-[1] 6590    6
+[1] 6876    6
 
 FALSE  TRUE 
- 5631   959 
+ 5218  1658 
        (Intercept) SpeciesHuman percent.mt PhaseG2M PhaseS
-Down             0          477       5202     4353   4429
-NotSig           0         5631        471     1023   1085
-Up            6590          482        917     1214   1076
-[1] 6590   14
-[1] "stage-Time 1"
-Memory usage to store result: > 23.1 Gb 
+Down             0         1213       2779     4375   3900
+NotSig           0         5218       1868     1433   1835
+Up            6876          445       2229     1068   1141
+[1] 6876   14
+[1] "adhoc-MSC"
+[1] "Minimum number of cells in comparative groups: 9720"
+Memory usage to store result: > 12.6 Gb 
 Dividing work into 100 chunks...
 iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
 
-Total: 2165 s
+Total: 1220 s
 Dividing work into 100 chunks...
 iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
 
-Total: 4837 s
+Total: 2665 s
 [1] "All DE Genes"
-[1] 6774    6
+[1] 7274    6
 
 FALSE  TRUE 
- 4838  1936 
+ 5103  2171 
        (Intercept) SpeciesHuman percent.mt PhaseG2M PhaseS
-Down             0         1445       1667     2885   2709
-NotSig           0         4838        331      998   1325
-Up            6774          491       4776     2891   2740
-[1] 13364    14
-[1] "stage-Time 2"
-Memory usage to store result: > 13.5 Gb 
+Down             0         1507       1678     3249   2809
+NotSig           0         5103        649     1458   2076
+Up            7274          664       4947     2567   2389
+[1] 14150    14
+[1] "adhoc-Osteoblast"
+[1] "Minimum number of cells in comparative groups: 8375"
+Memory usage to store result: > 9.3 Gb 
 Dividing work into 100 chunks...
 iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
 
-Total: 1205 s
+Total: 896 s
 Dividing work into 100 chunks...
 iteration: 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
 
-Total: 2756 s
+Total: 2075 s
 [1] "All DE Genes"
-[1] 5541    6
+[1] 6177    6
 
 FALSE  TRUE 
- 5275   266 
+ 4700  1477 
        (Intercept) SpeciesHuman percent.mt PhaseG2M PhaseS
-Down             0           34       1285     1001   3551
-NotSig           0         5275        221     1470   1134
-Up            5541          232       4035     3070    856
-[1] 18905    14
+Down             0          880       1652     1389   2469
+NotSig           0         4700        355     1876   2708
+Up            6177          597       4170     2912   1000
+[1] 20327    14
 > 
 > 
 > 
 > proc.time()
-    user   system  elapsed 
-10938.45  2237.39 19201.19 
+     user    system   elapsed 
+ 7063.700  1360.253 12168.471 
