@@ -39,9 +39,9 @@ library(classtpx)
 ```{r}
 
 #Load data
-#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.rds" #integrate across individuals - time 2 (19k genes + regress out UMI/mito)
-scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t2.rds" #integrate across individuals - time 2 (19k genes)
 #scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-t2.rds" #integrate across individuals - time 2 (10k genes)
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t2.rds" #integrate across individuals - time 2 (19k genes)
+scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.rds" #integrate across individuals - time 2 (19k genes + regress out UMI/mito)
 data <- readRDS(scrna)
 
 data
@@ -65,20 +65,19 @@ data, k=40, res=0.25 clusters:      8 |
 data, k=40, res=0.10 clusters:      5 |
 data, k=40, res=0.05 clusters:      3 |
 
-cell counts per cluster:      0 |     1 |    2 |    3 |    4 |    5 |    6 |    7 |    8 |    9 |   10 |  11 |  12 |  13 |  14 |  15 |  16 |
-t2.19k.res.1               4018 |  3004 | 2776 | 2531 | 2443 | 2423 | 1618 | 1299 | 1263 | 1207 | 1097 | 839 | 605 | 580 | 530 | 486 | 432 |  
-t2.19k.res.0.75            4644 |  4362 | 3117 | 3084 | 2939 | 2490 | 1410 | 1345 | 1341 |  605 |  530 | 439 | 438 | 407 | 
-t2.19k.res.0.5             4730 |  3954 | 3684 | 3430 | 3311 | 2828 | 1747 | 1430 |  603 |  530 |  483 | 421 |  
-t2.19k.res.0.25            9479 |  6941 | 4806 | 2874 | 1675 |  530 |  425 |  421 | 
-t2.19k.res.0.1            12641 |  6940 | 6620 |  530 |  420 |  
-t2.19k.res.0.05           18333 |  8288 |  530 |  
-t2.19k.reg.res.1          |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-t2.19k.reg.res.0.75       |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-t2.19k.reg.res.0.5        |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-t2.19k.reg.res.0.25       |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-t2.19k.reg.res.0.1        |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-t2.19k.reg.res.0.05       |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-
+cell counts per cluster:      0 |    1 |    2 |    3 |    4 |    5 |    6 |    7 |    8 |    9 |   10 |  11 |  12 |  13 |  14 |  15 |  16 |
+t2.19k.res.1               4018 | 3004 | 2776 | 2531 | 2443 | 2423 | 1618 | 1299 | 1263 | 1207 | 1097 | 839 | 605 | 580 | 530 | 486 | 432 |  
+t2.19k.res.0.75            4644 | 4362 | 3117 | 3084 | 2939 | 2490 | 1410 | 1345 | 1341 |  605 |  530 | 439 | 438 | 407 | 
+t2.19k.res.0.5             4730 | 3954 | 3684 | 3430 | 3311 | 2828 | 1747 | 1430 |  603 |  530 |  483 | 421 |  
+t2.19k.res.0.25            9479 | 6941 | 4806 | 2874 | 1675 |  530 |  425 |  421 | 
+t2.19k.res.0.1            12641 | 6940 | 6620 |  530 |  420 |  
+t2.19k.res.0.05           18333 | 8288 |  530 |  
+t2.19k.reg.res.1           2835 | 2825 | 2715 | 2672 | 2545 | 2224 | 2208 | 1777 | 1660 | 1413 | 1046 | 839 | 534 | 531 | 471 | 429 | 427 | 
+t2.19k.reg.res.0.75        3466 | 3304 | 3139 | 2935 | 2645 | 2340 | 2258 | 1872 | 1813 |  948 |  546 | 531 | 471 | 458 | 425 | 
+t2.19k.reg.res.0.5         4557 | 4203 | 3600 | 3455 | 2670 | 2409 | 2270 | 1096 |  934 |  540 |  530 | 470 | 417 | 
+t2.19k.reg.res.0.25       11248 | 6690 | 6118 | 1347 |  530 |  451 |  409 |  358 | 
+t2.19k.reg.res.0.1        13156 | 6694 | 6367 |  530 |  404 | 
+t2.19k.reg.res.0.05       19305 | 6674 |  530 |  450 |  192 | 
 
 ```{r}
 
@@ -96,6 +95,12 @@ data <- FindClusters(data, resolution=0.25)
 data <- FindClusters(data, resolution=0.10)
 data <- FindClusters(data, resolution=0.05)
 
+rm(pva,ndim)
+
+```
+
+```{r, eval=FALSE}
+
 table(data@meta.data$integrated_snn_res.1)
 table(data@meta.data$integrated_snn_res.0.75)
 table(data@meta.data$integrated_snn_res.0.5)
@@ -104,21 +109,19 @@ table(data@meta.data$integrated_snn_res.0.1)
 table(data@meta.data$integrated_snn_res.0.05)
 table(data@meta.data$seurat_clusters)
 
-rm(pva,ndim)
-
 ```
 
-Quickly check clusters.
+Quickly check cluster distribution.
 
 ```{r}
 
 x <- "integrated_snn_res.0.1"
 
-CombinePlots(plots=list((DimPlot(data, group.by=x, reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
-                        (DimPlot(data, group.by=x, reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
-                        (DimPlot(data, group.by=x, reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
-                        (DimPlot(data, group.by=x, reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
-                        (DimPlot(data, group.by=x, reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+#CombinePlots(plots=list((DimPlot(data, group.by=x, reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+#                        (DimPlot(data, group.by=x, reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+#                        (DimPlot(data, group.by=x, reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+#                        (DimPlot(data, group.by=x, reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+#                        (DimPlot(data, group.by=x, reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
 
 DimPlot(data, group.by=x, reduction="umap") + labs(x="UMAP1",y="UMAP2")
 
@@ -128,24 +131,128 @@ CombinePlots(plots=list((DimPlot(subset(data,subset=Species=="Human"), group.by=
 
 ```
 
+Check expression of osteogenic gene markers in each cluster. Using these levels of expression, clusters are assigned to stages of osteogenic differentiation.
+
+* t2.19k.res.0.05
+  + c0 - early osteogenic (extra markers agree with these cells being osteogenic)
+  + c2 - late osteogenic (extra markers do not clarify assignment)
+  + c1 - alternative osteogenic (extra markers suggest that these cells may possibly somewhere between osteogenesis or adipogenesis)
+  
+* t2.19k.res.0.1
+  + c2 - early osteogenic (preosteoblast, osteoblast) (extra markers agree with these cells being osteogenic)
+  + c0 - intermediate osteogenic (embedding, mineralizing)
+  + c4 - intermediate osteogenic (embedding, mineralizing)
+  + c3 - late osteogenic (possibly maturing or possibly not osteogenic)
+  + c1 - alternative osteogenic (possibly somewhere between osteogenesis or adipogenesis)
+  
+* t2.19k.res.0.25
+  + c3 - early osteogenic
+  + c2 - early osteogenic
+  + c4 - early osteogenic
+  + c0 - early osteogenic
+  + c7 - int osteogenic
+  + c6 - int osteogenic
+  + c5 - late osteogenic
+  + c1 - alternative osteogenic
+  
+* t2.19k.reg.res.0.05
+  + c0 - early osteogenic (extra markers agree with these cells being osteogenic)
+  + c3 - intermediate osteogenic
+  + c4 - intermediate osteogenic
+  + c2 - late osteogenic
+  + c1 - alternative osteogenic
+  
+* t2.19k.reg.res.0.1
+  + c2 - early osteogenic (extra markers agree with these cells being osteogenic)
+  + c0 - intermediate osteogenic (embedding)
+  + c4 - intermediate osteogenic (mineralizing)
+  + c3 - late osteogenic
+  + c1 - alternative osteogenic (maybe moviing towards adipogenesis)
+  + [notes: this clustering is the most interpretable]
+
+* t2.19k.reg.res.0.25
+  + c7 - early osteogenic
+  + c0 - early osteogenic
+  + c2 - early osteogenic
+  + c3 - int osteogenic
+  + c5 - int osteogenic
+  + c6 - int osteogenic
+  + c4 - late osteogenic
+  + c1 - alternative osteogenic
+  
+```{r}
+
+#(notes: DMP1 excluded because it is not expressed in any cell)
+#(notes: SOST excluded because it is only expressed in 1 cell)
+#(notes: HYOU1 excluded because it is a heat shock protein and may get turned on for any number of reasons aside from osteogenic differentiation)
+
+#x <- "integrated_snn_res.0.25"
+x <- "integrated_snn_res.0.1"
+#x <- "integrated_snn_res.0.05"
+
+DotPlot(data, group.by=x, dot.scale=12, col.min=-2.5, col.max=2.5,
+        features=c("MEPE","PHEX","BGLAP","RUNX2"))
+RidgePlot(data, group.by=x, features=c("RUNX2","BGLAP","PHEX","MEPE"), ncol=4)
+
+DotPlot(data, group.by=x, dot.scale=12, col.min=-2.5, col.max=2.5,
+        features=c("MEPE","PHEX","CAPG","BGLAP","RUNX2"))
+RidgePlot(data, group.by=x, features=c("RUNX2","BGLAP","CAPG","PHEX","MEPE"), ncol=5)
+
+#COL1A1, COL1A2, ALPL - other osteogenic markers
+DotPlot(data, group.by=x, dot.scale=12, col.min=-2.5, col.max=2.5,
+        features=c("PDPN","ACP5","FGF23","MEPE","PHEX","CAPG","BGLAP","RUNX2","ALPL","COL1A2","COL1A1"))
+RidgePlot(data, group.by=x, features=c("COL1A1","COL1A2","ALPL","RUNX2","BGLAP","CAPG","PHEX","MEPE"), ncol=8)
+
+#CD44, ENG, NT5E, THY1 - MSC markers
+#PDPN, FGF23 - other osteogenic markers
+#FABP4, PPARG - adipogenic marker
+#S100A4, COL3A1 - fibroblast marker
+DotPlot(data, group.by=x, dot.scale=12, col.min=-2.5, col.max=2.5,
+        features=c("COL3A1","S100A4","PPARG","FABP4","PDPN","ACP5","FGF23","MEPE","PHEX","CAPG","BGLAP","RUNX2","ALPL","COL1A2","COL1A1","CD44","ENG","NT5E","THY1"))
+RidgePlot(data, group.by=x, features=c("THY1","NT5E","ENG","CD44","COL1A1","COL1A2","ALPL","RUNX2","BGLAP","CAPG","PHEX","MEPE","FABP4","PPARG","COL3A1","S100A4"), ncol=8)
+
+#other osteogenic markers
+DotPlot(data, group.by=x, dot.scale=12, col.min=-2.5, col.max=2.5,
+        features=c("TNFRSF11B","TNFSF11","TNC","PDPN","FBLN7","CTSK","NFKB1","CSF1","DKK1","SFRP1","PTGES2","PTGS2","SPP1","SPARC","SP7"))
+RidgePlot(data, group.by=x, features=c("TNFRSF11B","TNFSF11","TNC","PDPN","FBLN7","CTSK","NFKB1","CSF1","DKK1","SFRP1","PTGES2","PTGS2","SPP1","SPARC","SP7"), ncol=8)
+
+```
+
 Define new metadata label for clusters (resolution=0.1).
 
 ```{r}
 
 data <- AddMetaData(data, rep(NA,length(rownames(data@meta.data))), col.name="Cluster")
-data$Cluster[which(data$integrated_snn_res.0.1=="0")] <- "Osteoblast.c1"
-data$Cluster[which(data$integrated_snn_res.0.1=="2")] <- "Osteoblast.c2"
-data$Cluster[which(data$integrated_snn_res.0.1=="1")] <- "Osteoblast.c3"
-data$Cluster[which(data$integrated_snn_res.0.1=="4")] <- "Osteoblast.c4"
-data$Cluster[which(data$integrated_snn_res.0.1=="3")] <- "Osteoblast.c5"
+
+if(scrna=="./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t2.rds"){
+  data$Cluster[which(data$integrated_snn_res.0.1=="2")] <- "Osteoblast.c1"
+  data$Cluster[which(data$integrated_snn_res.0.1=="0")] <- "Osteoblast.c2"
+  data$Cluster[which(data$integrated_snn_res.0.1=="4")] <- "Osteoblast.c3"
+  data$Cluster[which(data$integrated_snn_res.0.1=="3")] <- "Osteoblast.c4"
+  data$Cluster[which(data$integrated_snn_res.0.1=="1")] <- "Osteoblast.c5"  
+}
+
+if(scrna=="./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.rds"){
+  data$Cluster[which(data$integrated_snn_res.0.1=="2")] <- "Osteoblast.c1"
+  data$Cluster[which(data$integrated_snn_res.0.1=="0")] <- "Osteoblast.c2"
+  data$Cluster[which(data$integrated_snn_res.0.1=="4")] <- "Osteoblast.c3"
+  data$Cluster[which(data$integrated_snn_res.0.1=="3")] <- "Osteoblast.c4"
+  data$Cluster[which(data$integrated_snn_res.0.1=="1")] <- "Osteoblast.c5"   
+}
 
 ```
 
 Calculate numbers of cells in each cluster given particular parameters.
 
-tot19k.res.0.05  Osteoblast.c1 | Osteoblast.c2 | Osteoblast.c3 | Osteoblast.c4 | Osteoblast.c5 |
-Human:                    4847 |          3060 |          3966 |           162 |           530 |
-Chimp:                    7794 |          3560 |          2974 |           258 |             0 |
+### NEED TO FIX THESE NUMBERS
+tot19k.res.0.05      Osteoblast.c1 | Osteoblast.c2 | Osteoblast.c3 | Osteoblast.c4 | Osteoblast.c5 |
+Human:                        4847 |          3060 |          3966 |           162 |           530 |
+Chimp:                        7794 |          3560 |          2974 |           258 |             0 |
+
+tot19k.reg.res.0.05  Osteoblast.c1 | Osteoblast.c2 | Osteoblast.c3 | Osteoblast.c4 | Osteoblast.c5 |
+Human:                        2927 |          5049 |           145 |           529 |          3915 |
+Chimp:                        3440 |          8107 |           259 |             1 |          2779 |
+
 
 ```{r}
 
@@ -219,8 +326,9 @@ markers <- FindAllMarkers(data, only.pos=TRUE, min.pct=0.25, logfc.threshold=0.2
 markers %>% group_by(cluster) %>% top_n(n=5, wt=avg_logFC)
 top5 <- markers %>% group_by(cluster) %>% top_n(n=5, wt=avg_logFC)
 DoHeatmap(data, features=top5$gene) + NoLegend()
-saveRDS(markers, file="./output/markers.data.filter.log.indv-cell.int19k-t2.rds")
-#saveRDS(markers, file="./output/markers.data.filter.log.indv-cell.int19k.reg-t2.rds")
+
+#saveRDS(markers, file="./output/markers.data.filter.log.indv-cell.int19k-t2.rds")
+saveRDS(markers, file="./output/markers.data.filter.log.indv-cell.int19k.reg-t2.rds")
 
 VlnPlot(data, features=top5$gene[1:5], group.by="Cluster", slot="data", pt.size=0, ncol=5)   #H3-3B, PSMB1, GDF15, HERPUD1, KRT10
 VlnPlot(data, features=top5$gene[6:10], group.by="Cluster", slot="data", pt.size=0, ncol=5)  #PAPPA, COL1A1, ITGA11, FN1, FBN1
@@ -311,6 +419,10 @@ genes <- c("POU5F1","TDGF1","SOX2","EPCAM",
            "FABP4","PPARG","EBF2",
            "TNC","PDPN","FBLN7")
 tot.genes <- cbind(as.data.frame(t(as.matrix(data@assays$integrated@data[genes,]))),data@meta.data[,c("Species","Stage","Sample")])
+
+#Renormalize integrated gene expression to range from 0 to 1
+z.tot.genes <- as.data.frame(apply(tot.genes[,1:28], MARGIN=2, FUN=function(X)(X-min(X))/diff(range(X))))
+z.tot.genes <- cbind(z.tot.genes,data@meta.data[,c("Species","Stage","Sample")])
 
 ```
 
@@ -428,6 +540,24 @@ assign.meansd1 <- chk.thres.meansd(tot.genes, genes, cutoff=1)
 assign.threshMulti01 <- chk.thres.manual(tot.genes, genes, thres=c(rep(0.1,8),rep(0.01,8),rep(0.1,9),rep(0.01,3)))
 assign.threshMulti0 <- chk.thres.manual(tot.genes, genes, thres=c(rep(0.1,8),rep(0,8),rep(0.1,9),rep(0,3)))
 
+z.assign.thresh0 <- chk.thres.manual(z.tot.genes, genes, thres=c(rep(0,length(genes))))
+z.assign.thresh0.01 <- chk.thres.manual(z.tot.genes, genes, thres=c(rep(0.01,length(genes))))
+z.assign.thresh0.05 <- chk.thres.manual(z.tot.genes, genes, thres=c(rep(0.05,length(genes))))
+z.assign.thresh0.1 <- chk.thres.manual(z.tot.genes, genes, thres=c(rep(0.1,length(genes))))
+z.assign.thresh0.3 <- chk.thres.manual(z.tot.genes, genes, thres=c(rep(0.3,length(genes))))
+z.assign.thresh0.5 <- chk.thres.manual(z.tot.genes, genes, thres=c(rep(0.5,length(genes))))
+z.assign.thresh0.7 <- chk.thres.manual(z.tot.genes, genes, thres=c(rep(0.7,length(genes))))
+z.assign.thresh0.9 <- chk.thres.manual(z.tot.genes, genes, thres=c(rep(0.9,length(genes))))
+z.assign.thresh1 <- chk.thres.manual(z.tot.genes, genes, thres=c(rep(1,length(genes))))
+z.assign.median <- chk.thres.median(z.tot.genes, genes, cutoff=NA)
+z.assign.median1 <- chk.thres.median(z.tot.genes, genes, cutoff=1)
+z.assign.mean <- chk.thres.mean(z.tot.genes, genes, cutoff=NA)
+z.assign.mean1 <- chk.thres.mean(z.tot.genes, genes, cutoff=1)
+z.assign.meansd <- chk.thres.meansd(z.tot.genes, genes, cutoff=NA)
+z.assign.meansd1 <- chk.thres.meansd(z.tot.genes, genes, cutoff=1)
+z.assign.threshMulti01 <- chk.thres.manual(z.tot.genes, genes, thres=c(rep(0.1,8),rep(0.01,8),rep(0.1,9),rep(0.01,3)))
+z.assign.threshMulti0 <- chk.thres.manual(z.tot.genes, genes, thres=c(rep(0.1,8),rep(0,8),rep(0.1,9),rep(0,3)))
+
 ```
 
 Look at which cells meet threshold cutoffs.
@@ -466,10 +596,26 @@ assignments <- assign.thresh0.9
 assignments <- assign.thresh1
 assignments <- assign.median
 assignments <- assign.median1
-assignments <- assign.mean
+assignments <- assign.mean #best
 assignments <- assign.mean1
 assignments <- assign.meansd
 assignments <- assign.meansd1
+
+assignments <- z.assign.thresh0
+assignments <- z.assign.thresh0.01
+assignments <- z.assign.thresh0.05
+assignments <- z.assign.thresh0.1
+assignments <- z.assign.thresh0.3
+assignments <- z.assign.thresh0.5
+assignments <- z.assign.thresh0.7
+assignments <- z.assign.thresh0.9
+assignments <- z.assign.thresh1
+assignments <- z.assign.median
+assignments <- z.assign.median1
+assignments <- z.assign.mean #best
+assignments <- z.assign.mean1
+assignments <- z.assign.meansd
+assignments <- z.assign.meansd1
 
 #ipsc candidate genes
 plot.upset.HCcellcompare(assignments,genes[1:4],20000)
@@ -523,6 +669,8 @@ assignments <- assign.thresh0.1
 assignments <- assign.threshMulti01
 assignments <- assign.threshMulti0
 
+assignments <- z.assign.thresh0.1 #best
+
 #osteogenic specific assignments
 #cell assignments according to Dallas et al. 2013
 upset(assignments[,9:16], keep.order=TRUE,
@@ -557,6 +705,8 @@ plot.upset.sub.HCcellcompare(data=assignments,
 assignments <- assign.thresh0.1
 assignments <- assign.threshMulti01
 assignments <- assign.threshMulti0
+
+assignments <- z.assign.thresh0.1 #best
 
 #osteogenic specific assignments
 #cell assignments according to Dallas et al. 2013 (excluding DMP1)
@@ -593,6 +743,8 @@ plot.upset.sub.HCcellcompare(data=assignments,
 assignments <- assign.thresh0.1
 assignments <- assign.threshMulti01
 assignments <- assign.threshMulti0
+
+assignments <- z.assign.thresh0.1 #best
 
 #osteogenic specific assignments
 #cell assignments according to Dallas et al. 2013 (excluding DMP1 + SOST) - few preosteoblasts and osteoblasts, some embedding osteoblasts, few mineralizing osteocytes
@@ -635,6 +787,9 @@ plot.upset.sub.HCcellcompare(data=assignments,
 #assignments <- assign.thresh0.1
 #assignments <- assign.threshMulti01
 assignments <- assign.threshMulti0
+assignments <- assign.mean
+
+assignments <- z.assign.thresh0.1 #best
 
 #osteogenic specific assignments
 #cell assignments according to Dallas et al. 2013 (excluding DMP1 + SOST + HYOU1) - few preosteoblasts and osteoblasts present
@@ -725,6 +880,15 @@ upset(assignments[which(assignments$COL1A1==1 & assignments$COL1A2==1 & assignme
 #assignments <- assign.thresh0.1
 #assignments <- assign.threshMulti01
 assignments <- assign.threshMulti0
+assignments <- assign.mean
+assignments <- assign.meansd
+
+assignments <- z.assign.thresh0.1
+#assignments <- z.assign.threshMulti0
+assignments <- z.assign.meansd1
+assignments <- z.assign.mean #best
+
+
 
 #osteogenic specific assignments
 #cell assignments according to Dallas et al. 2013 (excluding DMP1 + SOST + HYOU1 + CAPG)
@@ -803,6 +967,8 @@ upset(assignments[which(assignments$COL1A1==1 & assignments$COL1A2==1 & assignme
 #assignments <- assign.thresh0.1
 #assignments <- assign.threshMulti01
 assignments <- assign.threshMulti0
+
+assignments <- assign.mean
 
 #osteogenic specific assignments
 #cell assignments according to Dallas et al. 2013 (excluding DMP1 + SOST + HYOU1 + PHEX)
@@ -890,6 +1056,7 @@ How to classify cells:
 
 #assign cell type labels based on ad hoc cutoffs
 hoc.assign <- assign.thresh0.1
+hoc.assign <- assign.mean
 
 hoc.assign$assign <- "other"
 i=1
@@ -1011,6 +1178,7 @@ For each classification, other gene expression combinations may produce potentia
 
 #assign osteogenic cell sub-type labels based on ad hoc cutoffs (using 5 genes)
 ost.assign <- assign.threshMulti0
+ost.assign <- assign.mean
 
 ost.assign$assign <- "other"
 i=1
@@ -1432,8 +1600,8 @@ DimPlot(data,
 
 ```{r}
 
+saveRDS(data, file="./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.assign.rds")
+#saveRDS(data, file="./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t2.assign.rds")
 #saveRDS(data, file="./data/cellranger-data-full/data.filter.log.indv-cell.int-t2.assign.rds")
-saveRDS(data, file="./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t2.assign.rds")
-#saveRDS(data, file="./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.assign.rds")
 
 ```
