@@ -409,3 +409,53 @@ rm(data, spps, pair, indv)
 #NOTES:  UMI and gene counts are higher in humans than chimps
 
 ```
+
+```{r old ost ad hoc assignments}
+
+hoc.assign.5 <- function(assignments) {
+  assignments$assign <- "other"
+  i=1
+  while(i <= length(rownames(assignments))) {
+    if(assignments$COL1A1[i]==0 & assignments$COL1A2[i]==0 & assignments$ALPL[i]==0) {assignments$assign[i] <- "not osteogenic"}
+    if(assignments$COL1A1[i]==1 & assignments$COL1A2[i]==1 & assignments$ALPL[i]==1 & assignments$POU5F1[i]==0) {
+      #strict criteria
+      if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==0 & assignments$CAPG[i]==0 & assignments$PHEX[i]==0 & assignments$MEPE[i]==0) {assignments$assign[i] <- "unknown osteogenic"}
+      if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==0 & assignments$CAPG[i]==0 & assignments$PHEX[i]==0 & assignments$MEPE[i]==0) {assignments$assign[i] <- "preosteoblast"}
+      if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==1 & assignments$CAPG[i]==0 & assignments$PHEX[i]==0 & assignments$MEPE[i]==0) {assignments$assign[i] <- "osteoblast"}
+      if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==1 & assignments$CAPG[i]==1 & assignments$PHEX[i]==1 & assignments$MEPE[i]==0) {assignments$assign[i] <- "embedding osteoblast"}
+      if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==1 & assignments$CAPG[i]==1 & assignments$PHEX[i]==1 & assignments$MEPE[i]==1) {assignments$assign[i] <- "mineralizing osteoblast"}
+      if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==0 & assignments$CAPG[i]==1 & assignments$PHEX[i]==1 & assignments$MEPE[i]==1) {assignments$assign[i] <- "maturing osteocyte"}
+      #lenient criteria
+      if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==1 & assignments$CAPG[i]==0 & assignments$PHEX[i]==0 & assignments$MEPE[i]==0) {assignments$assign[i] <- "x.osteoblast"}
+      if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==0 & assignments$CAPG[i]==1 & assignments$PHEX[i]==0 & assignments$MEPE[i]==0) {assignments$assign[i] <- "x.embedding osteoblast"}
+      if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==0 & assignments$CAPG[i]==0 & assignments$PHEX[i]==1 & assignments$MEPE[i]==0) {assignments$assign[i] <- "x.embedding osteoblast"}
+      if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==0 & assignments$CAPG[i]==1 & assignments$PHEX[i]==0 & assignments$MEPE[i]==0) {assignments$assign[i] <- "x.embedding osteoblast"}
+      if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==0 & assignments$CAPG[i]==0 & assignments$PHEX[i]==1 & assignments$MEPE[i]==0) {assignments$assign[i] <- "x.embedding osteoblast"}
+      if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==1 & assignments$CAPG[i]==1 & assignments$PHEX[i]==0 & assignments$MEPE[i]==0) {assignments$assign[i] <- "x.embedding osteoblast"}
+      if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==1 & assignments$CAPG[i]==0 & assignments$PHEX[i]==1 & assignments$MEPE[i]==0) {assignments$assign[i] <- "x.embedding osteoblast"}
+      if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==0 & assignments$CAPG[i]==1 & assignments$PHEX[i]==1 & assignments$MEPE[i]==0) {assignments$assign[i] <- "x.embedding osteoblast"}
+      if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==1 & assignments$CAPG[i]==1 & assignments$PHEX[i]==0 & assignments$MEPE[i]==0) {assignments$assign[i] <- "x.embedding osteoblast"}
+      if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==1 & assignments$CAPG[i]==0 & assignments$PHEX[i]==1 & assignments$MEPE[i]==0) {assignments$assign[i] <- "x.embedding osteoblast"}
+      if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==0 & assignments$CAPG[i]==1 & assignments$PHEX[i]==1 & assignments$MEPE[i]==0) {assignments$assign[i] <- "x.embedding osteoblast"}
+      if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==1 & assignments$CAPG[i]==1 & assignments$PHEX[i]==1 & assignments$MEPE[i]==0) {assignments$assign[i] <- "x.embedding osteoblast"}
+      if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==0 & assignments$CAPG[i]==0 & assignments$PHEX[i]==0 & assignments$MEPE[i]==1) {assignments$assign[i] <- "x.mineralizing osteoblast"}
+      if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==1 & assignments$CAPG[i]==0 & assignments$PHEX[i]==0 & assignments$MEPE[i]==1) {assignments$assign[i] <- "x.mineralizing osteoblast"}
+      if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==1 & assignments$CAPG[i]==0 & assignments$PHEX[i]==0 & assignments$MEPE[i]==1) {assignments$assign[i] <- "x.mineralizing osteoblast"}
+      if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==0 & assignments$CAPG[i]==1 & assignments$PHEX[i]==0 & assignments$MEPE[i]==1) {assignments$assign[i] <- "x.mineralizing osteoblast"}
+      if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==0 & assignments$CAPG[i]==0 & assignments$PHEX[i]==1 & assignments$MEPE[i]==1) {assignments$assign[i] <- "x.mineralizing osteoblast"}
+      if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==1 & assignments$CAPG[i]==1 & assignments$PHEX[i]==0 & assignments$MEPE[i]==1) {assignments$assign[i] <- "x.mineralizing osteoblast"}
+      if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==1 & assignments$CAPG[i]==0 & assignments$PHEX[i]==1 & assignments$MEPE[i]==1) {assignments$assign[i] <- "x.mineralizing osteoblast"}
+      if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==1 & assignments$CAPG[i]==1 & assignments$PHEX[i]==0 & assignments$MEPE[i]==1) {assignments$assign[i] <- "x.mineralizing osteoblast"}
+      if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==1 & assignments$CAPG[i]==0 & assignments$PHEX[i]==1 & assignments$MEPE[i]==1) {assignments$assign[i] <- "x.mineralizing osteoblast"}
+      if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==0 & assignments$CAPG[i]==1 & assignments$PHEX[i]==1 & assignments$MEPE[i]==1) {assignments$assign[i] <- "x.mineralizing osteoblast"}
+      if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==1 & assignments$CAPG[i]==1 & assignments$PHEX[i]==1 & assignments$MEPE[i]==1) {assignments$assign[i] <- "x.mineralizing osteoblast"}
+      if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==0 & assignments$CAPG[i]==0 & assignments$PHEX[i]==0 & assignments$MEPE[i]==1) {assignments$assign[i] <- "x.maturing osteocyte"}
+      if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==0 & assignments$CAPG[i]==1 & assignments$PHEX[i]==0 & assignments$MEPE[i]==1) {assignments$assign[i] <- "x.maturing osteocyte"}
+      if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==0 & assignments$CAPG[i]==0 & assignments$PHEX[i]==1 & assignments$MEPE[i]==1) {assignments$assign[i] <- "x.maturing osteocyte"}
+    }
+    i=i+1
+  }
+  return(as.data.frame(assignments$assign, row.names=rownames(assignments)))
+}
+
+```
