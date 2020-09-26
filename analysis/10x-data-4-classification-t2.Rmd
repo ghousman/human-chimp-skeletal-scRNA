@@ -582,6 +582,7 @@ assign.mean1 <- chk.thres.mean(tot.genes, genes, cutoff=1)
 assign.meansd <- chk.thres.meansd(tot.genes, genes, cutoff=NA)
 assign.meansd1 <- chk.thres.meansd(tot.genes, genes, cutoff=1)
 assign.multi.q1median <- cbind(assign.q1[,1:8],assign.median[,9:16],assign.q1[,17:31])
+assign.multi.medianq1 <- cbind(assign.median[,1:8],assign.q1[,9:16],assign.median[,17:31])
 
 ```
 
@@ -611,6 +612,7 @@ d.assign.mean1 <- chk.thres.mean(d.tot.genes, genes, cutoff=1)
 d.assign.meansd <- chk.thres.meansd(d.tot.genes, genes, cutoff=NA)
 d.assign.meansd1 <- chk.thres.meansd(d.tot.genes, genes, cutoff=1)
 d.assign.multi.q1median <- cbind(d.assign.q1[,1:8],d.assign.median[,9:16],d.assign.q1[,17:31])
+d.assign.multi.medianq1 <- cbind(d.assign.median[,1:8],d.assign.q1[,9:16],d.assign.median[,17:31])
 
 ```
 
@@ -643,7 +645,7 @@ z.assign.threshMulti0 <- chk.thres.manual(z.tot.genes, genes, thres=c(rep(0.1,8)
 
 ```
 
-While several thresholds were tested, using the first quartile or median as an expression level cutoff makes the most sense given gene distributions.
+While several thresholds were tested, using the median or the first quartile as an expression level cutoff makes the most sense given gene distributions.
 
 ```{r}
 
@@ -1401,7 +1403,9 @@ How to classify cells:
 * MSCs = express THY1 + NT5E + ENG + CD44 (but do not express ALPL)
 * Osteogenic Cells = express ALPL or COL1A1 + COL1A2
 
-[use first quartile of integrated and scaled expression as the cutoff for genes]
+Note: While a q1 cutoff increases the number of osteogenic cells, there may be many false positives. Using a median cutoff produces numbers more comparable to those determined in the total dataset.
+
+[use median of integrated and scaled expression as the cutoff for genes]
 
 ```{r}
 
@@ -1574,8 +1578,9 @@ Overall findings:
   + this is due to BGLAP, PHEX, MEPE having a narrow distribution of expression levels across cells
   + to be thorough, we consider both q1 and q1median results for the specific osteogenic markers moving forward
 
-[use first quartile of integrated and scaled expression as the cutoff for all genes]
-[use first quartile of integrated and scaled expression as the cutoff for general marker genes and median of integrated and scaled expression as the cutoff for specific markers]
+Note: While a q1 cutoff or a multi.q1median cutoff increases the number of osteogenic cells, there may be many false positives. Using a median cutoff produces numbers more comparable to those determined in the total dataset.
+
+[use median of integrated and scaled expression as the cutoff for genes]
 
 ```{r}
 
@@ -1718,6 +1723,21 @@ data@meta.data$OstAdHoc.Assign.5gene.q1median <- factor(data@meta.data$OstAdHoc.
                                                         levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
                                                                  "unknown osteogenic","not osteogenic","other"))
 
+#assign osteogenic cell sub-type labels based on ad hoc cutoffs (using 5 genes) (median for general genes / q1 for osteo specific genes)
+#ad.hoc.assign <- hoc.assign.x.5(assign.multi.medianq1)
+#table(ad.hoc.assign$`assignments$assign`)
+#data@meta.data$OstAdHoc.Assign.x.5gene.medianq1 <- ad.hoc.assign$`assignments$assign`
+#data@meta.data$OstAdHoc.Assign.x.5gene.medianq1 <- factor(data@meta.data$OstAdHoc.Assign.x.5gene.medianq1,
+#                                                          levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+#                                                                   "x.osteoblast","x.embedding osteoblast","x.mineralizing osteoblast","x.maturing osteocyte",
+#                                                                   "unknown osteogenic","not osteogenic","other"))
+#ad.hoc.assign <- hoc.assign.5(assign.multi.medianq1)
+#table(ad.hoc.assign$`assignments$assign`)
+#data@meta.data$OstAdHoc.Assign.5gene.medianq1 <- ad.hoc.assign$`assignments$assign`
+#data@meta.data$OstAdHoc.Assign.5gene.medianq1 <- factor(data@meta.data$OstAdHoc.Assign.5gene.medianq1,
+#                                                        levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+#                                                                 "unknown osteogenic","not osteogenic","other"))
+
 ```
 
 [either ALPL or COL1A1+COL1A2 expression required for osteogenic classification]
@@ -1735,6 +1755,8 @@ data@meta.data$OstAdHoc.Assign.5gene.q1median <- factor(data@meta.data$OstAdHoc.
 [q1median] tot19k.reg:       799 | 578 | 1154 |  445 | 386 |   291 |  9581 |  7307 |  2562 |     499 |    3549 |     0
 [q1median] tot19k.reg Human: 403 | 185 |  288 |  201 | 132 |   160 |  3309 |  3252 |  1551 |     308 |    2776 |     0
 [q1median] tot19k.reg Chimp: 396 | 393 |  866 |  244 | 254 |   131 |  6272 |  4055 |  1011 |     191 |     773 |     0
+
+[medianq1] tot19k.reg:         7 |  18 |  689 |  711 | 367 |    12 |  4273 | 10515 |   542 |       1 |   10016 |     0
 
 [q1]       tot19k:             2 |  77 |  739 |  895 | 517 |     5 |  5883 | 14798 |   411 |       0 |    3824 |     0
 [q1]       tot19k Human:       1 |  22 |   55 |  474 | 286 |     3 |  1208 |  7618 |   289 |       0 |    2609 |     0
@@ -1763,6 +1785,8 @@ data@meta.data$OstAdHoc.Assign.5gene.q1median <- factor(data@meta.data$OstAdHoc.
 [q1median] tot19k.reg:       724 | 529 | 1063 |  348 | 315 |   230 |  8639 |  6218 |  1860 |     437 |    6788 |     0
 [q1median] tot19k.reg Human: 330 | 138 |  200 |  141 |  78 |   101 |  2398 |  2305 |   900 |     246 |    5728 |     0
 [q1median] tot19k.reg Chimp: 394 | 391 |  863 |  207 | 237 |   129 |  6241 |  3913 |   960 |     191 |    1060 |     0
+
+[medianq1] tot19k.reg:         6 |  15 |  639 |  426 | 257 |     9 |  3988 |  7851 |   383 |       1 |   13576 |     0
 
 [q1]       tot19k:             2 |  70 |  714 |  692 | 391 |     4 |  5656 | 12514 |   320 |       0 |    6788 |     0
 [q1]       tot19k Human:       1 |  15 |   30 |  302 | 167 |     2 |   985 |  5544 |   200 |       0 |    5319 |     0

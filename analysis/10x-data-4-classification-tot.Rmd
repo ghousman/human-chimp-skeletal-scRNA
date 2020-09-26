@@ -557,6 +557,7 @@ assign.mean1 <- chk.thres.mean(tot.genes, genes, cutoff=1)
 assign.meansd <- chk.thres.meansd(tot.genes, genes, cutoff=NA)
 assign.meansd1 <- chk.thres.meansd(tot.genes, genes, cutoff=1)
 assign.multi.q1median <- cbind(assign.q1[,1:8],assign.median[,9:16],assign.q1[,17:31])
+assign.multi.medianq1 <- cbind(assign.median[,1:8],assign.q1[,9:16],assign.median[,17:31])
 
 ```
 
@@ -1045,7 +1046,7 @@ How to classify cells:
 
 * iPSCs = express POU5F1 + TDGF1 + SOX2 + EPCAM (but do not express NT5E + ENG + CD44 + COL1A1 + COL1A2 + ALPL)
 * MSCs = express THY1 + NT5E + ENG + CD44 (but do not express ALPL)
-* Osteogenic Cells = express ALPL (but do not express POU5F1 + TDGF1 + SOX2 + EPCAM)
+* Osteogenic Cells = express ALPL (but do not express POU5F1 + TDGF1 + SOX2 + EPCAM) or COL1A1 + COL1A2 (but do not express POU5F1 + TDGF1 + SOX2 + EPCAM) 
 
 [use median of integrated and scaled expression as the cutoff for genes]
 
@@ -1060,8 +1061,10 @@ hoc.assign <- function(assignments) {
        assignments$NT5E[i] == 0 & assignments$ENG[i] == 0 & assignments$CD44[i] == 0 &
        assignments$COL1A1[i] == 0 & assignments$COL1A2[i] == 0 & assignments$ALPL[i] == 0) {assignments$assign[i] <- "iPSC"}
     if(assignments$THY1[i] == 1 & assignments$NT5E[i] == 1 & assignments$ENG[i] == 1 & assignments$CD44[i] == 1 & assignments$ALPL[i] == 0) {assignments$assign[i] <- "MSC"}
-    if(assignments$ALPL[i] == 1 & assignments$POU5F1[i] == 0 & assignments$TDGF1[i] == 0 & assignments$SOX2[i] == 0 & assignments$EPCAM[i] == 0) {assignments$assign[i] <- "Osteogenic"}
-    #if(assignments$ALPL[i] == 1 | (assignments$COL1A1[i] == 1 & assignments$COL1A2[i] == 1)) {assignments$assign[i] <- "Osteogenic"}
+    #if(assignments$ALPL[i] == 1 & assignments$POU5F1[i] == 0 & assignments$TDGF1[i] == 0 & assignments$SOX2[i] == 0 & assignments$EPCAM[i] == 0) {assignments$assign[i] <- "Osteogenic"}
+    if((assignments$ALPL[i] == 1 & assignments$POU5F1[i] == 0 & assignments$TDGF1[i] == 0 & assignments$SOX2[i] == 0 & assignments$EPCAM[i] == 0) |
+       (assignments$COL1A1[i] == 1 & assignments$COL1A2[i] == 1 & assignments$POU5F1[i] == 0 & assignments$TDGF1[i] == 0 & assignments$SOX2[i] == 0 & assignments$EPCAM[i] == 0))
+      {assignments$assign[i] <- "Osteogenic"}
     i=i+1
   }
  return(as.data.frame(assignments$assign, row.names=rownames(assignments)))
@@ -1150,8 +1153,8 @@ Assign cell type labels based on ad hoc cutoffs.
 
 How to classify cells (using 5 genes):
 
-* not osteogenic = do not express ALPL
-* osteogenic = express ALPL (but do not express POU5F1 + TDGF1 + SOX2 + EPCAM)
+* not osteogenic = do not express ALPL or do not express COL1A1 + COL1A2
+* osteogenic = express ALPL (but do not express POU5F1 + TDGF1 + SOX2 + EPCAM) or COL1A1 + COL1A2 (but do not express POU5F1 + TDGF1 + SOX2 + EPCAM) 
   + unknown osteogenic = do not express RUNX2 + BGLAP + CAPG + PHEX + MEPE
   + preosteoblasts = express RUNX2 (but do not express BGLAP + CAPG + PHEX + MEPE)
   + osteoblasts = express RUNX2 + BGLAP (but do not express CAPG + PHEX + MEPE)
@@ -1169,7 +1172,9 @@ hoc.assign.x.5 <- function(assignments) {
   assignments$assign <- "not osteogenic"
   i=1
   while(i <= length(rownames(assignments))) {
-    if(assignments$ALPL[i]==1 & assignments$POU5F1[i]==0 & assignments$TDGF1[i]==0 & assignments$SOX2[i]==0 & assignments$EPCAM[i]==0) {
+    #if(assignments$ALPL[i]==1 & assignments$POU5F1[i]==0 & assignments$TDGF1[i]==0 & assignments$SOX2[i]==0 & assignments$EPCAM[i]==0) {
+    if((assignments$ALPL[i] == 1 & assignments$POU5F1[i] == 0 & assignments$TDGF1[i] == 0 & assignments$SOX2[i] == 0 & assignments$EPCAM[i] == 0) |
+       (assignments$COL1A1[i] == 1 & assignments$COL1A2[i] == 1 & assignments$POU5F1[i] == 0 & assignments$TDGF1[i] == 0 & assignments$SOX2[i] == 0 & assignments$EPCAM[i] == 0)) {
       #strict criteria
       if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==0 & assignments$CAPG[i]==0 & assignments$PHEX[i]==0 & assignments$MEPE[i]==0) {assignments$assign[i] <- "unknown osteogenic"}
       if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==0 & assignments$CAPG[i]==0 & assignments$PHEX[i]==0 & assignments$MEPE[i]==0) {assignments$assign[i] <- "preosteoblast"}
@@ -1213,7 +1218,9 @@ hoc.assign.5 <- function(assignments) {
   assignments$assign <- "not osteogenic"
   i=1
   while(i <= length(rownames(assignments))) {
-    if(assignments$ALPL[i]==1 & assignments$POU5F1[i]==0 & assignments$TDGF1[i]==0 & assignments$SOX2[i]==0 & assignments$EPCAM[i]==0) {
+    #if(assignments$ALPL[i]==1 & assignments$POU5F1[i]==0 & assignments$TDGF1[i]==0 & assignments$SOX2[i]==0 & assignments$EPCAM[i]==0) {
+    if((assignments$ALPL[i] == 1 & assignments$POU5F1[i] == 0 & assignments$TDGF1[i] == 0 & assignments$SOX2[i] == 0 & assignments$EPCAM[i] == 0) |
+       (assignments$COL1A1[i] == 1 & assignments$COL1A2[i] == 1 & assignments$POU5F1[i] == 0 & assignments$TDGF1[i] == 0 & assignments$SOX2[i] == 0 & assignments$EPCAM[i] == 0)) {
       #strict criteria
       if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==0 & assignments$CAPG[i]==0 & assignments$PHEX[i]==0 & assignments$MEPE[i]==0) {assignments$assign[i] <- "unknown osteogenic"}
       if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==0 & assignments$CAPG[i]==0 & assignments$PHEX[i]==0 & assignments$MEPE[i]==0) {assignments$assign[i] <- "preosteoblast"}

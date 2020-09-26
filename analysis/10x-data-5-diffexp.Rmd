@@ -48,11 +48,15 @@ library(RUVSeq)
 ```{r}
 
 #Load data
-scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.assign.rds" #integrate across individuals - total (15k genes)
-#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-tot.assign.rds" #integrate across individuals - total
-#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-t0.assign.rds" #integrate across individuals - Time 0
-#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-t1.assign.rds" #integrate across individuals - Time 1
-#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int-t2.assign.rds" #integrate across individuals - Time 2
+
+scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds" #integrate across individuals - total (15k genes)
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.assign.rds" #integrate across individuals - total (15k genes)
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t0.assign.rds" #integrate across individuals - total (15k genes)
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t0.assign.rds" #integrate across individuals - total (15k genes)
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t1.assign.rds" #integrate across individuals - total (15k genes)
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t1.assign.rds" #integrate across individuals - total (15k genes)
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.assign.rds" #integrate across individuals - total (15k genes)
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t2.assign.rds" #integrate across individuals - total (15k genes)
 data <- readRDS(scrna)
 
 data
