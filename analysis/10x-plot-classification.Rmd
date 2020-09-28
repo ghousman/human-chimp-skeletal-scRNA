@@ -1,0 +1,106 @@
+---
+title: "10x-plot-classification"
+author: "Genevieve Housman"
+date: "September 2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 10X Data Cellranger Analysis - Visual Cell Classifications
+
+https://cran.r-project.org/web/packages/cvms/vignettes/creating_a_confusion_matrix.html
+
+```{r}
+
+#Load libraries
+library(Seurat)
+library(cvms)
+library(broom)
+library(tibble)
+
+library(dplyr)
+library(stringi)
+library(stringr)
+#library(ggplot2)
+#library(colorspace)
+#library(RColorBrewer)
+#library(ggplot2)
+#library(cowplot)
+#theme_set(theme_cowplot())
+
+
+```
+
+```{r}
+
+#Load data
+scrna.tot <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds" #integrate across individuals - total (19k genes)
+data.tot <- readRDS(scrna.tot)
+data.tot@meta.data$Cell <- rownames(data.tot@meta.data)
+tot <- as_tibble(data.tot@meta.data)
+tot
+
+scrna.t2 <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.assign.rds" #integrate across individuals - time 2 (19k genes)
+data.t2 <- readRDS(scrna.t2)
+x <- sapply(str_split(rownames(data.t2@meta.data),"_"),`[`,1)
+y <- sapply(data.t2@meta.data$Sample, function(x){gsub("-O-","",x)})
+z <- sapply(y, function(x){gsub("-O","",x)})
+data.t2@meta.data$Cell <- paste0(z,".O_",x)
+t2 <- as_tibble(data.t2@meta.data)
+t2
+
+rm(scrna.tot,data.tot,scrna.t2,data.t2,x,y,z)
+
+```
+
+Assess the overlap of general ad hoc assignments between tot and t2:
+
+```{r}
+
+compare <- inner_join(
+  t2 %>%
+    select(Cell,AdHoc.Assign.median),
+  tot %>%
+    filter(Stage=="Time 2") %>% 
+    select(Cell,AdHoc.Assign.median),
+  by="Cell"
+)
+colnames(compare) <- c("cell","t2","tot")
+compare
+
+conf_mat <- confusion_matrix(targets = compare$t2,
+                             predictions = compare$tot)
+
+plot_confusion_matrix(conf_mat$`Confusion Matrix`[[1]],
+                      add_normalized=FALSE)
+
+```
+
+Assess the overlap of osteogenic ad hoc assignments between tot and t2:
+
+```{r}
+
+compare <- inner_join(
+  t2 %>%
+    select(Cell,OstAdHoc.Assign.5gene.median),
+  tot %>%
+    filter(Stage=="Time 2") %>% 
+    select(Cell,OstAdHoc.Assign.5gene.median),
+  by="Cell"
+)
+colnames(compare) <- c("cell","t2","tot")
+compare
+
+conf_mat <- confusion_matrix(targets = compare$t2,
+                             predictions = compare$tot)
+
+plot_confusion_matrix(conf_mat$`Confusion Matrix`[[1]],
+                      add_normalized=FALSE)
+
+```
+

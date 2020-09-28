@@ -37,8 +37,8 @@ library(reshape2)
 ```{r}
 
 #Load data
-#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds" #integrate across individuals - total (19k genes + regress out UMI/mito)
-scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.assign.rds" #integrate across individuals - total (19k genes)
+scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds" #integrate across individuals - total (19k genes + regress out UMI/mito)
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.assign.rds" #integrate across individuals - total (19k genes)
 data <- readRDS(scrna)
 
 data

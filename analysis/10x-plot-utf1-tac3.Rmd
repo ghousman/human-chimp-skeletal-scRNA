@@ -1,7 +1,7 @@
 ---
 title: "10x-plot-utf1-tac3"
 author: "Genevieve Housman"
-date: "August 2020"
+date: "September 2020"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -20,10 +20,12 @@ The analyses here assess this relationship in my human and chimpanzee iPSC-deriv
 References
 * Jerber et al. 2020. Population-scale single-cell RNA-seq profiling across dopaminergic neuron differentiation. bioRxiv
 
-```{r load libraries}
+```{r, message=FALSE}
 
 #Load libraries
 library(Seurat)
+library(dplyr)
+library(ggplot2)
 
 ```
 
@@ -121,6 +123,7 @@ rownames(data@meta.data[which(data@meta.data$Cluster=="iPSC.c2" & data@meta.data
 All cells with ad hoc-based iPSC classifications also have stage-based iPSC classifications.
 
 To be thorough, average UTF1 and TAC3 expression patterns were calculated from cells with each type of iPSC definition:
+
 * Stage-based iPSCs (Time 0)
 * Cluster-based iPSCs (iPSC.c1, iPSC.c2, iPSC.c3)
 * Ad hoc-based iPSCs (iPSC)
@@ -284,13 +287,16 @@ cell.counts.sub.o <- function(data, data.subset, data.condition) {
 ```
 
 Whether a cell is defined as an MSC can vary depending on its:
+
 * [stage]   collected at the Time 1 stage of differentiation (n=36738)
 * [cluster] grouped into one unsupervised MSC cluster (n=36218)
 * [ad hoc]  classified as an MSC based on ad hoc assignment (n=22448)
 
 To be thorough, differentiation efficiency was calculated as:
+
 (a) the proportion of cells with each type of MSC classification that were collected across all sampled cells
 (b) the proportion of cells with each type of MSC classification that were collected at Time 1
+
 * Cluster-based MSCs (MSC.c1)
 * Assign-based MSCs (MSC)
 
@@ -319,6 +325,7 @@ utf1.tac3$PropMSC.AdHoc.b  <- utf1.tac3$NumbMSC.AdHoc.b/utf1.tac3$NumbMTot.AdHoc
 ```
 
 Whether a cell is defined as osteogenic and what stage of osteogenic differentiation can vary depending on its:
+
 * [stage]      collected at the Time 2 stage of differentiation (n=20746)
 * [cluster]    grouped into one of three unsupervised osteogenic clusters (n1=13295, n2=6007, n3=1967)
 * [ad hoc]     classified as osteogenic based on ad hoc assignment (n=17191)
@@ -326,9 +333,11 @@ Whether a cell is defined as osteogenic and what stage of osteogenic differentia
                (n.pre=628, n.obl=578, n.emb=13599, n.min=3, n.mat=5)
 
 To be thorough, differentiation efficiency was calculated as:
+
 (a) the proportion of cells with each type of osteogenic classification across all sampled cells
 (b) the proportion of cells with each type of osteogenic classification that were collected at Time 1
 (c) the proportion of cells with each type of osteogenic classification that were collected at Time 2
+
 * Cluster-based Osteogenic Cells (Osteoblast.c1, Osteoblast.c2)
 * Assign-based (ad hoc) Osteogenic Cells (Osteogenic)
 * Assign-based (ost ad hoc) Osteogenic Cells (Preosteoblast, Osteoblast, Embedding Osteoblast, Mineralizing Osteoblast, Maturing Osteocyte)
@@ -419,12 +428,13 @@ utf1.tac3$PropMat.OstAdHoc.c  <- utf1.tac3$NumbMat.OstAdHoc.c/utf1.tac3$NumbOTot
 ### Assess correlation between iPSC UTF1 and TAC3 expression and Differentiation Efficiency
 
 Expectations:
+
 * negative correlation between UTF1 expression in iPSCs (marker of poor differentiation) and cell differentiation efficiency
 * positive correlation between TAC3 expression in iPSCs (marker of good differentiation) and cell differentiation efficiency
 
 ```{r}
 
-plot.corr <- function(expression, efficiency, detail.exp, detail.eff, text.x, text.y) {
+plot.corr <- function(expression, efficiency, detail.exp, detail.eff) {
   
   par(mfrow=c(1,2))
   
@@ -432,28 +442,27 @@ plot.corr <- function(expression, efficiency, detail.exp, detail.eff, text.x, te
        efficiency,
        xlab=paste0("UTF1 Expression ",detail.exp),
        ylab=paste0("Proportion of ",detail.eff),
-       pch=c(rep(19,7),rep(1,7)))
+       pch=c(rep(1,7),rep(19,7)))
+  abline(lm(efficiency[1:7]~expression[[1]][1:7]), col="grey")
+  abline(lm(efficiency[8:14]~expression[[1]][8:14]), col="black")
   abline(lm(efficiency~expression[[1]]), col="red")
-  text(x=text.x[1],
-       y=text.y[1],
-       col="red",
-       labels=paste0("r = ",round(cor(expression[[1]], efficiency, method="pearson", use="pairwise.complete.obs"),2)))
   
   plot(expression[[2]],
        efficiency,
        xlab=paste0("TAC3 Expression ",detail.exp),
        ylab=paste0("Proportion of ",detail.eff),
-       pch=c(rep(19,7),rep(1,7)))
+       pch=c(rep(1,7),rep(19,7)))
+  abline(lm(efficiency[1:7]~expression[[2]][1:7]), col="grey")
+  abline(lm(efficiency[8:14]~expression[[2]][8:14]), col="black")
   abline(lm(efficiency~expression[[2]]), col="red")
-  text(x=text.x[2],
-       y=text.y[2],
-       col="red",
-       labels=paste0("r = ",round(cor(expression[[2]], efficiency, method="pearson", use="pairwise.complete.obs"),2)))
   
-  print(paste0("Correlation of UTF1 and Differentiation Efficiency: ",
-               round(cor(expression[[1]], efficiency, method="pearson", use="pairwise.complete.obs"),2)))
-  print(paste0("Correlation of TAC3 and Differentiation Efficiency: ",
-               round(cor(expression[[2]], efficiency, method="pearson", use="pairwise.complete.obs"),2)))
+  print(paste0("Correlation of UTF1 in Chimps: ",round(cor(expression[[1]][1:7],efficiency[1:7],method="pearson",use="pairwise.complete.obs"),2)))
+  print(paste0("Correlation of UTF1 in Humans: ",round(cor(expression[[1]][8:14],efficiency[8:14],method="pearson",use="pairwise.complete.obs"),2)))
+  print(paste0("Correlation of UTF1 Overall:   ",round(cor(expression[[1]],efficiency,method="pearson",use="pairwise.complete.obs"),2)))
+  
+  print(paste0("Correlation of TAC3 in Chimps: ",round(cor(expression[[2]][1:7],efficiency[1:7],method="pearson",use="pairwise.complete.obs"),2)))
+  print(paste0("Correlation of TAC3 in Humans: ",round(cor(expression[[2]][8:14],efficiency[8:14],method="pearson",use="pairwise.complete.obs"),2)))
+  print(paste0("Correlation of TAC3 Overall:   ",round(cor(expression[[2]],efficiency,method="pearson",use="pairwise.complete.obs"),2)))
   
 }
 
@@ -472,10 +481,12 @@ utf1.tac3$Species <- c(rep("Chimp",7),rep("Human",7))
 ### MSC Differentiation Efficiencies
 
 When defining MSCs using unsupervised clustering methods:
+
 * low negative correlation between UTF1 expression and differentiation efficiency
 * low positive correlation between TAC3 expression and differentiation efficiency
 
 Correlations do not meet expectations when certain iPSC definitions are used:
+
 * iPSCs defined as unsupervised cluster 2 (condition a + condition b)
 * iPSCs defined as unsupervised cluster 3 (condition b)
 
@@ -486,100 +497,66 @@ These patterns hold whether MSC differentiation efficiency was defined using:
 ```{r}
 
 #condition (a): MSC differentiation efficiency was defined using all sampled cells
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropMSC.Cluster.a,
           detail.exp = "(Time 0)",
-          detail.eff = "MSCs (cluster) (a)",
-          text.x = c(0.72, 0.09),
-          text.y = c(0.95, 0.97))
-
+          detail.eff = "MSCs (cluster) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropMSC.Cluster.a,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "MSCs (cluster) (a)",
-          text.x = c(0.72, 0.09),
-          text.y = c(0.95, 0.97))
-
+          detail.eff = "MSCs (cluster) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropMSC.Cluster.a,
           detail.exp = "(cluster 1)",
-          detail.eff = "MSCs (cluster) (a)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.95, 0.97))
-
+          detail.eff = "MSCs (cluster) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropMSC.Cluster.a,
           detail.exp = "(cluster 2)",
-          detail.eff = "MSCs (cluster) (a)",
-          text.x = c(0.55, 0.07),
-          text.y = c(0.95, 0.97))
-
+          detail.eff = "MSCs (cluster) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropMSC.Cluster.a,
           detail.exp = "(cluster 3)",
-          detail.eff = "MSCs (cluster) (a)",
-          text.x = c(-0.05, 0.09),
-          text.y = c(0.95, 0.97))
-
+          detail.eff = "MSCs (cluster) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropMSC.Cluster.a,
           detail.exp = "(ad hoc)",
-          detail.eff = "MSCs (cluster) (a)",
-          text.x = c(0.8, 0.085),
-          text.y = c(0.95, 0.97))
+          detail.eff = "MSCs (cluster) (a)")
 
 #condition (b): MSC differentiation efficiency was defined using only cells collected at Time 1
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0,utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropMSC.Cluster.b,
           detail.exp = "(Time 0)",
-          detail.eff = "MSCs (cluster) (b)",
-          text.x = c(0.72, 0.09),
-          text.y = c(0.95, 0.97))
-
+          detail.eff = "MSCs (cluster) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropMSC.Cluster.b,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "MSCs (cluster) (b)",
-          text.x = c(0.72, 0.09),
-          text.y = c(0.95, 0.97))
-
+          detail.eff = "MSCs (cluster) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropMSC.Cluster.b,
           detail.exp = "(cluster 1)",
-          detail.eff = "MSCs (cluster) (b)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.95, 0.97))
-
+          detail.eff = "MSCs (cluster) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropMSC.Cluster.b,
           detail.exp = "(cluster 2)",
-          detail.eff = "MSCs (cluster) (b)",
-          text.x = c(0.55, 0.07),
-          text.y = c(0.95, 0.97))
-
+          detail.eff = "MSCs (cluster) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropMSC.Cluster.b,
           detail.exp = "(cluster 3)",
-          detail.eff = "MSCs (cluster) (b)",
-          text.x = c(-0.05, 0.09),
-          text.y = c(0.95, 0.97))
-
+          detail.eff = "MSCs (cluster) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropMSC.Cluster.b,
           detail.exp = "(ad hoc)",
-          detail.eff = "MSCs (cluster) (b)",
-          text.x = c(0.8, 0.085),
-          text.y = c(0.95, 0.97))
+          detail.eff = "MSCs (cluster) (b)")
 
 ```
 
 When defining MSCs using ad hoc cell assignments:
+
 * moderate negative correlation between UTF1 expression and differentiation efficiency
 * moderate postive correlation between TAC3 expression and differentiation efficiency
 
 Correlations decrease when certain iPSC definitions are used:
+
 * iPSCs defined as unsupervised cluster 1
 * iPSCs defined as unsupervised cluster 2
 * iPSCs defined as unsupervised cluster 3
@@ -591,92 +568,56 @@ These patterns hold whether MSC differentiation efficiency was defined using:
 ```{r}
 
 #condition (a): MSC differentiation efficiency was defined using all sampled cells
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropMSC.AdHoc.a,
           detail.exp = "(Time 0)",
-          detail.eff = "MSCs (ad hoc) (a)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.4, 0.60))
-
+          detail.eff = "MSCs (ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropMSC.AdHoc.a,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "MSCs (ad hoc) (a)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.40, 0.60))
-
+          detail.eff = "MSCs (ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropMSC.AdHoc.a,
           detail.exp = "(cluster 1)",
-          detail.eff = "MSCs (ad hoc) (a)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.45, 0.60))
-
+          detail.eff = "MSCs (ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropMSC.AdHoc.a,
           detail.exp = "(cluster 2)",
-          detail.eff = "MSCs (ad hoc) (a)",
-          text.x = c(0.55, 0.08),
-          text.y = c(0.50, 0.60))
-
+          detail.eff = "MSCs (ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropMSC.AdHoc.a,
           detail.exp = "(cluster 3)",
-          detail.eff = "MSCs (ad hoc) (a)",
-          text.x = c(-0.05, 0.30),
-          text.y = c(0.45, 0.55))
-
+          detail.eff = "MSCs (ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropMSC.AdHoc.a,
           detail.exp = "(ad hoc)",
-          detail.eff = "MSCs (ad hoc) (a)",
-          text.x = c(0.80, 0.085),
-          text.y = c(0.40, 0.60))
+          detail.eff = "MSCs (ad hoc) (a)")
 
 #condition (b): MSC differentiation efficiency was defined using only cells collected at Time 1
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0,utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropMSC.AdHoc.b,
           detail.exp = "(Time 0)",
-          detail.eff = "MSCs (ad hoc) (b)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.40, 0.60))
-
+          detail.eff = "MSCs (ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropMSC.AdHoc.b,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "MSCs (ad hoc) (b)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.40, 0.60))
-
+          detail.eff = "MSCs (ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropMSC.AdHoc.b,
           detail.exp = "(cluster 1)",
-          detail.eff = "MSCs (ad hoc) (b)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.45, 0.60))
-
+          detail.eff = "MSCs (ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropMSC.AdHoc.b,
           detail.exp = "(cluster 2)",
-          detail.eff = "MSCs (ad hoc) (b)",
-          text.x = c(0.55, 0.08),
-          text.y = c(0.50, 0.60))
-
+          detail.eff = "MSCs (ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropMSC.AdHoc.b,
           detail.exp = "(cluster 3)",
-          detail.eff = "MSCs (ad hoc) (b)",
-          text.x = c(-0.05, 0.30),
-          text.y = c(0.45, 0.55))
-
+          detail.eff = "MSCs (ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropMSC.AdHoc.b,
           detail.exp = "(ad hoc)",
-          detail.eff = "MSCs (ad hoc) (b)",
-          text.x = c(0.80, 0.085),
-          text.y = c(0.40, 0.60))
+          detail.eff = "MSCs (ad hoc) (b)")
 
 ```
 
@@ -684,10 +625,12 @@ plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
 ### Osteogenic Differentiation Efficiencies
 
 When defining osteogenic cells using all osteogenic clusters (1 and 2) found using unsupervised clustering methods:
+
 * low positive correlation between UTF1 expression and differentiation efficiency
 * low negative correlation between TAC3 expression and differentiation efficiency
 
 Correlations change when certain iPSC definitions are used:
+
 * iPSCs defined as unsupervised cluster 2
 * iPSCs defined as unsupervised cluster 3
 
@@ -701,145 +644,93 @@ However, correlations change when osteogenic differentiation efficiency was defi
 ```{r}
 
 #condition (a): osteogenic differentiation efficiency was defined using all sampled cells
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropOst.Cluster.a,
           detail.exp = "(Time 0)",
-          detail.eff = "Osteogenic Cells (clusters 1 and 2) (a)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.94, 0.97))
-
+          detail.eff = "Osteogenic Cells (clusters 1 and 2) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropOst.Cluster.a,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Osteogenic Cells (clusters 1 and 2) (a)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.94, 0.97))
-
+          detail.eff = "Osteogenic Cells (clusters 1 and 2) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropOst.Cluster.a,
           detail.exp = "(cluster 1)",
-          detail.eff = "Osteogenic Cells (clusters 1 and 2) (a)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.94, 0.97))
-
+          detail.eff = "Osteogenic Cells (clusters 1 and 2) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropOst.Cluster.a,
           detail.exp = "(cluster 2)",
-          detail.eff = "Osteogenic Cells (clusters 1 and 2) (a)",
-          text.x = c(0.55, 0.08),
-          text.y = c(0.87, 0.99))
-
+          detail.eff = "Osteogenic Cells (clusters 1 and 2) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropOst.Cluster.a,
           detail.exp = "(cluster 3)",
-          detail.eff = "Osteogenic Cells (clusters 1 and 2) (a)",
-          text.x = c(-0.10, 0.30),
-          text.y = c(0.96, 0.97))
-
+          detail.eff = "Osteogenic Cells (clusters 1 and 2) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropOst.Cluster.a,
           detail.exp = "(ad hoc)",
-          detail.eff = "Osteogenic Cells (clusters 1 and 2) (a)",
-          text.x = c(0.80, 0.08),
-          text.y = c(0.93, 0.96))
+          detail.eff = "Osteogenic Cells (clusters 1 and 2) (a)")
 
 #condition (b): osteogenic differentiation efficiency was defined using only cells collected at Time 1
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropOst.Cluster.b,
           detail.exp = "(Time 0)",
-          detail.eff = "Osteogenic Cells (clusters 1 and 2) (b)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.05, 0.03))
-
+          detail.eff = "Osteogenic Cells (clusters 1 and 2) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropOst.Cluster.b,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Osteogenic Cells (clusters 1 and 2) (b)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.05, 0.03))
-
+          detail.eff = "Osteogenic Cells (clusters 1 and 2) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropOst.Cluster.b,
           detail.exp = "(cluster 1)",
-          detail.eff = "Osteogenic Cells (clusters 1 and 2) (b)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.05, 0.035))
-
+          detail.eff = "Osteogenic Cells (clusters 1 and 2) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropOst.Cluster.b,
           detail.exp = "(cluster 2)",
-          detail.eff = "Osteogenic Cells (clusters 1 and 2) (b)",
-          text.x = c(0.55, 0.07),
-          text.y = c(0.05, 0.04))
-
+          detail.eff = "Osteogenic Cells (clusters 1 and 2) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropOst.Cluster.b,
           detail.exp = "(cluster 3)",
-          detail.eff = "Osteogenic Cells (clusters 1 and 2) (b)",
-          text.x = c(-0.05, 0.26),
-          text.y = c(0.05, 0.04))
-
+          detail.eff = "Osteogenic Cells (clusters 1 and 2) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropOst.Cluster.b,
           detail.exp = "(ad hoc)",
-          detail.eff = "Osteogenic Cells (clusters 1 and 2) (b)",
-          text.x = c(0.8, 0.085),
-          text.y = c(0.05, 0.03))
+          detail.eff = "Osteogenic Cells (clusters 1 and 2) (b)")
 
 #condition (c): osteogenic differentiation efficiency was defined using only cells collected at Time 2
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropOst.Cluster.c,
           detail.exp = "(Time 0)",
-          detail.eff = "Osteogenic Cells (clusters 1 and 2) (c)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.94, 0.97))
-
+          detail.eff = "Osteogenic Cells (clusters 1 and 2) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropOst.Cluster.c,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Osteogenic Cells (clusters 1 and 2) (c)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.94, 0.97))
-
+          detail.eff = "Osteogenic Cells (clusters 1 and 2) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropOst.Cluster.c,
           detail.exp = "(cluster 1)",
-          detail.eff = "Osteogenic Cells (clusters 1 and 2) (c)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.94, 0.97))
-
+          detail.eff = "Osteogenic Cells (clusters 1 and 2) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropOst.Cluster.c,
           detail.exp = "(cluster 2)",
-          detail.eff = "Osteogenic Cells (clusters 1 and 2) (c)",
-          text.x = c(0.55, 0.08),
-          text.y = c(0.87, 0.99))
-
+          detail.eff = "Osteogenic Cells (clusters 1 and 2) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropOst.Cluster.c,
           detail.exp = "(cluster 3)",
-          detail.eff = "Osteogenic Cells (clusters 1 and 2) (c)",
-          text.x = c(-0.10, 0.30),
-          text.y = c(0.96, 0.97))
-
+          detail.eff = "Osteogenic Cells (clusters 1 and 2) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropOst.Cluster.c,
           detail.exp = "(ad hoc)",
-          detail.eff = "Osteogenic Cells (clusters 1 and 2) (c)",
-          text.x = c(0.80, 0.08),
-          text.y = c(0.93, 0.96))
+          detail.eff = "Osteogenic Cells (clusters 1 and 2) (c)")
 
 ```
 
 When defining osteogenic cells using osteogenic cluster 1 found using unsupervised clustering methods:
+
 * low positive correlation between UTF1 expression and differentiation efficiency
 * moderate positive correlation between TAC3 expression and differentiation efficiency
 
 Correlations change when certain iPSC definitions are used:
 * iPSCs defined as unsupervised cluster 2 - moderately positive correlation with UTF1 expression, low positive correlation with TAC3 expression
+
 * iPSCs defined as unsupervised cluster 3
 
 These patterns hold when osteogenic differentiation efficiency was defined using:
@@ -852,144 +743,92 @@ However, correlations change when osteogenic differentiation efficiency was defi
 ```{r}
 
 #condition (a): osteogenic differentiation efficiency was defined using all sampled cells
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropOst1.Cluster.a,
           detail.exp = "(Time 0)",
-          detail.eff = "Osteogenic Cells (cluster 1) (a)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.70, 0.70))
-
+          detail.eff = "Osteogenic Cells (cluster 1) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropOst1.Cluster.a,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Osteogenic Cells (cluster 1) (a)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.70, 0.70))
-
+          detail.eff = "Osteogenic Cells (cluster 1) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropOst1.Cluster.a,
           detail.exp = "(cluster 1)",
-          detail.eff = "Osteogenic Cells (cluster 1) (a)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.72, 0.72))
-
+          detail.eff = "Osteogenic Cells (cluster 1) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropOst1.Cluster.a,
           detail.exp = "(cluster 2)",
-          detail.eff = "Osteogenic Cells (cluster 1) (a)",
-          text.x = c(0.55, 0.07),
-          text.y = c(0.87, 0.60))
-
+          detail.eff = "Osteogenic Cells (cluster 1) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropOst1.Cluster.a,
           detail.exp = "(cluster 3)",
-          detail.eff = "Osteogenic Cells (cluster 1) (a)",
-          text.x = c(-0.10, 0.30),
-          text.y = c(0.71, 0.72))
-
+          detail.eff = "Osteogenic Cells (cluster 1) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropOst1.Cluster.a,
           detail.exp = "(ad hoc)",
-          detail.eff = "Osteogenic Cells (cluster 1) (a)",
-          text.x = c(0.80, 0.08),
-          text.y = c(0.71, 0.70))
+          detail.eff = "Osteogenic Cells (cluster 1) (a)")
 
 #condition (b): osteogenic differentiation efficiency was defined using only cells collected at Time 1
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropOst1.Cluster.b,
           detail.exp = "(Time 0)",
-          detail.eff = "Osteogenic Cells (cluster 1) (b)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.005, 0.003))
-
+          detail.eff = "Osteogenic Cells (cluster 1) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropOst1.Cluster.b,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Osteogenic Cells (cluster 1) (b)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.005, 0.003))
-
+          detail.eff = "Osteogenic Cells (cluster 1) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropOst1.Cluster.b,
           detail.exp = "(cluster 1)",
-          detail.eff = "Osteogenic Cells (cluster 1) (b)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.005, 0.003))
-
+          detail.eff = "Osteogenic Cells (cluster 1) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropOst1.Cluster.b,
           detail.exp = "(cluster 2)",
-          detail.eff = "Osteogenic Cells (cluster 1) (b)",
-          text.x = c(0.55, 0.07),
-          text.y = c(0.005, 0.004))
-
+          detail.eff = "Osteogenic Cells (cluster 1) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropOst1.Cluster.b,
           detail.exp = "(cluster 3)",
-          detail.eff = "Osteogenic Cells (cluster 1) (b)",
-          text.x = c(-0.05, 0.26),
-          text.y = c(0.006, 0.005))
-
+          detail.eff = "Osteogenic Cells (cluster 1) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropOst1.Cluster.b,
           detail.exp = "(ad hoc)",
-          detail.eff = "Osteogenic Cells (cluster 1) (b)",
-          text.x = c(0.8, 0.085),
-          text.y = c(0.005, 0.003))
+          detail.eff = "Osteogenic Cells (cluster 1) (b)")
 
 #condition (c): osteogenic differentiation efficiency was defined using only cells collected at Time 2
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropOst1.Cluster.c,
           detail.exp = "(Time 0)",
-          detail.eff = "Osteogenic Cells (cluster 1) (c)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.7, 0.70))
-
+          detail.eff = "Osteogenic Cells (cluster 1) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropOst1.Cluster.c,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Osteogenic Cells (cluster 1) (c)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.70, 0.70))
-
+          detail.eff = "Osteogenic Cells (cluster 1) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropOst1.Cluster.c,
           detail.exp = "(cluster 1)",
-          detail.eff = "Osteogenic Cells (cluster 1) (c)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.72, 0.72))
-
+          detail.eff = "Osteogenic Cells (cluster 1) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropOst1.Cluster.c,
           detail.exp = "(cluster 2)",
-          detail.eff = "Osteogenic Cells (cluster 1) (c)",
-          text.x = c(0.55, 0.07),
-          text.y = c(0.87, 0.60))
-
+          detail.eff = "Osteogenic Cells (cluster 1) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropOst1.Cluster.c,
           detail.exp = "(cluster 3)",
-          detail.eff = "Osteogenic Cells (cluster 1) (c)",
-          text.x = c(-0.10, 0.30),
-          text.y = c(0.71, 0.72))
-
+          detail.eff = "Osteogenic Cells (cluster 1) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropOst1.Cluster.c,
           detail.exp = "(ad hoc)",
-          detail.eff = "Osteogenic Cells (cluster 1) (c)",
-          text.x = c(0.80, 0.08),
-          text.y = c(0.71, 0.70))
+          detail.eff = "Osteogenic Cells (cluster 1) (c)")
 
 ```
 
 When defining osteogenic cells using osteogenic cluster 2 found using unsupervised clustering methods:
+
 * moderately positive correlation between UTF1 expression and differentiation efficiency
 * moderately positive correlation between TAC3 expression and differentiation efficiency
 
 Correlations change when certain iPSC definitions are used:
+
 * iPSCs defined as unsupervised cluster 2
 * iPSCs defined as unsupervised cluster 3
 
@@ -1003,144 +842,92 @@ However, correlations both became more positive (UTF1 low positive, TAC3 low neg
 ```{r}
 
 #condition (a): osteogenic differentiation efficiency was defined using all sampled cells
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropOst2.Cluster.a,
           detail.exp = "(Time 0)",
-          detail.eff = "Osteogenic Cells (cluster 2) (a)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.35, 0.30))
-
+          detail.eff = "Osteogenic Cells (cluster 2) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropOst2.Cluster.a,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Osteogenic Cells (cluster 2) (a)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.35, 0.30))
-
+          detail.eff = "Osteogenic Cells (cluster 2) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropOst2.Cluster.a,
           detail.exp = "(cluster 1)",
-          detail.eff = "Osteogenic Cells (cluster 2) (a)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.40, 0.30))
-
+          detail.eff = "Osteogenic Cells (cluster 2) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropOst2.Cluster.a,
           detail.exp = "(cluster 2)",
-          detail.eff = "Osteogenic Cells (cluster 2) (a)",
-          text.x = c(0.55, 0.07),
-          text.y = c(0.30, 0.40))
-
+          detail.eff = "Osteogenic Cells (cluster 2) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropOst2.Cluster.a,
           detail.exp = "(cluster 3)",
-          detail.eff = "Osteogenic Cells (cluster 2) (a)",
-          text.x = c(-0.10, 0.30),
-          text.y = c(0.30, 0.30))
-
+          detail.eff = "Osteogenic Cells (cluster 2) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropOst2.Cluster.a,
           detail.exp = "(ad hoc)",
-          detail.eff = "Osteogenic Cells (cluster 2) (a)",
-          text.x = c(0.80, 0.08),
-          text.y = c(0.30, 0.30))
+          detail.eff = "Osteogenic Cells (cluster 2) (a)")
 
 #condition (b): osteogenic differentiation efficiency was defined using only cells collected at Time 1
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropOst2.Cluster.b,
           detail.exp = "(Time 0)",
-          detail.eff = "Osteogenic Cells (cluster 2) (b)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.05, 0.03))
-
+          detail.eff = "Osteogenic Cells (cluster 2) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropOst2.Cluster.b,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Osteogenic Cells (cluster 2) (b)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.05, 0.03))
-
+          detail.eff = "Osteogenic Cells (cluster 2) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropOst2.Cluster.b,
           detail.exp = "(cluster 1)",
-          detail.eff = "Osteogenic Cells (cluster 2) (b)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.04, 0.03))
-
+          detail.eff = "Osteogenic Cells (cluster 2) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropOst2.Cluster.b,
           detail.exp = "(cluster 2)",
-          detail.eff = "Osteogenic Cells (cluster 2) (b)",
-          text.x = c(0.55, 0.07),
-          text.y = c(0.05, 0.04))
-
+          detail.eff = "Osteogenic Cells (cluster 2) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropOst2.Cluster.b,
           detail.exp = "(cluster 3)",
-          detail.eff = "Osteogenic Cells (cluster 2) (b)",
-          text.x = c(-0.05, 0.26),
-          text.y = c(0.06, 0.05))
-
+          detail.eff = "Osteogenic Cells (cluster 2) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropOst2.Cluster.b,
           detail.exp = "(ad hoc)",
-          detail.eff = "Osteogenic Cells (cluster 2) (b)",
-          text.x = c(0.8, 0.085),
-          text.y = c(0.05, 0.03))
+          detail.eff = "Osteogenic Cells (cluster 2) (b)")
 
 #condition (c): osteogenic differentiation efficiency was defined using only cells collected at Time 2
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropOst2.Cluster.c,
           detail.exp = "(Time 0)",
-          detail.eff = "Osteogenic Cells (cluster 2) (c)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.40, 0.30))
-
+          detail.eff = "Osteogenic Cells (cluster 2) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropOst2.Cluster.c,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Osteogenic Cells (cluster 2) (c)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.40, 0.30))
-
+          detail.eff = "Osteogenic Cells (cluster 2) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropOst2.Cluster.c,
           detail.exp = "(cluster 1)",
-          detail.eff = "Osteogenic Cells (cluster 2) (c)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.40, 0.30))
-
+          detail.eff = "Osteogenic Cells (cluster 2) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropOst2.Cluster.c,
           detail.exp = "(cluster 2)",
-          detail.eff = "Osteogenic Cells (cluster 2) (c)",
-          text.x = c(0.55, 0.07),
-          text.y = c(0.40, 0.30))
-
+          detail.eff = "Osteogenic Cells (cluster 2) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropOst2.Cluster.c,
           detail.exp = "(cluster 3)",
-          detail.eff = "Osteogenic Cells (cluster 2) (c)",
-          text.x = c(-0.10, 0.30),
-          text.y = c(0.30, 0.30))
-
+          detail.eff = "Osteogenic Cells (cluster 2) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropOst2.Cluster.c,
           detail.exp = "(ad hoc)",
-          detail.eff = "Osteogenic Cells (cluster 2) (c)",
-          text.x = c(0.80, 0.08),
-          text.y = c(0.40, 0.30))
+          detail.eff = "Osteogenic Cells (cluster 2) (c)")
 
 ```
 
 When defining osteogenic cells using ad hoc cell assignments:
+
 * low positive correlation between UTF1 expression and differentiation efficiency
 * low positive correlation between TAC3 expression and differentiation efficiency
 
 Correlations change when certain iPSC definitions are used:
+
 * iPSCs defined as unsupervised cluster 2
 * iPSCs defined as unsupervised cluster 3
 * iPSCs defined with ad hoc criteria - correlations match expectations
@@ -1155,144 +942,92 @@ However, correlations change when osteogenic differentiation efficiency was defi
 ```{r}
 
 #condition (a): osteogenic differentiation efficiency was defined using all sampled cells
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropOst.AdHoc.a,
           detail.exp = "(Time 0)",
-          detail.eff = "Osteogenic Cells (ad hoc) (a)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.70, 0.70))
-
+          detail.eff = "Osteogenic Cells (ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropOst.AdHoc.a,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Osteogenic Cells (ad hoc) (a)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.70, 0.70))
-
+          detail.eff = "Osteogenic Cells (ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropOst.AdHoc.a,
           detail.exp = "(cluster 1)",
-          detail.eff = "Osteogenic Cells (ad hoc) (a)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.70, 0.70))
-
+          detail.eff = "Osteogenic Cells (ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropOst.AdHoc.a,
           detail.exp = "(ad hoc)",
-          detail.eff = "Osteogenic Cells (ad hoc) (a)",
-          text.x = c(0.55, 0.07),
-          text.y = c(0.70, 0.70))
-
+          detail.eff = "Osteogenic Cells (ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropOst.AdHoc.a,
           detail.exp = "(cluster 3)",
-          detail.eff = "Osteogenic Cells (ad hoc) (a)",
-          text.x = c(-0.10, 0.30),
-          text.y = c(0.70, 0.70))
-
+          detail.eff = "Osteogenic Cells (ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropOst.AdHoc.a,
           detail.exp = "(ad hoc)",
-          detail.eff = "Osteogenic Cells (ad hoc) (a)",
-          text.x = c(0.80, 0.08),
-          text.y = c(0.70, 0.70))
+          detail.eff = "Osteogenic Cells (ad hoc) (a)")
 
 #condition (b): osteogenic differentiation efficiency was defined using only cells collected at Time 1
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropOst.AdHoc.b,
           detail.exp = "(Time 0)",
-          detail.eff = "Osteogenic Cells (ad hoc) (b)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.05, 0.03))
-
+          detail.eff = "Osteogenic Cells (ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropOst.AdHoc.b,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Osteogenic Cells (ad hoc) (b)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.05, 0.03))
-
+          detail.eff = "Osteogenic Cells (ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropOst.AdHoc.b,
           detail.exp = "(cluster 1)",
-          detail.eff = "Osteogenic Cells (ad hoc) (b)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.05, 0.03))
-
+          detail.eff = "Osteogenic Cells (ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropOst.AdHoc.b,
           detail.exp = "(ad hoc)",
-          detail.eff = "Osteogenic Cells (ad hoc) (b)",
-          text.x = c(0.50, 0.07),
-          text.y = c(0.05, 0.04))
-
+          detail.eff = "Osteogenic Cells (ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropOst.AdHoc.b,
           detail.exp = "(cluster 3)",
-          detail.eff = "Osteogenic Cells (ad hoc) (b)",
-          text.x = c(-0.05, 0.26),
-          text.y = c(0.06, 0.05))
-
+          detail.eff = "Osteogenic Cells (ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropOst.AdHoc.b,
           detail.exp = "(ad hoc)",
-          detail.eff = "Osteogenic Cells (ad hoc) (b)",
-          text.x = c(0.8, 0.085),
-          text.y = c(0.05, 0.02))
+          detail.eff = "Osteogenic Cells (ad hoc) (b)")
 
 #condition (c): osteogenic differentiation efficiency was defined using only cells collected at Time 2
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropOst.AdHoc.c,
           detail.exp = "(Time 0)",
-          detail.eff = "Osteogenic Cells (ad hoc) (c)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.70, 0.70))
-
+          detail.eff = "Osteogenic Cells (ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropOst.AdHoc.c,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Osteogenic Cells (ad hoc) (c)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.70, 0.70))
-
+          detail.eff = "Osteogenic Cells (ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropOst.AdHoc.c,
           detail.exp = "(cluster 1)",
-          detail.eff = "Osteogenic Cells (ad hoc) (c)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.70, 0.70))
-
+          detail.eff = "Osteogenic Cells (ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropOst.AdHoc.c,
           detail.exp = "(ad hoc)",
-          detail.eff = "Osteogenic Cells (ad hoc) (c)",
-          text.x = c(0.55, 0.07),
-          text.y = c(0.70, 0.70))
-
+          detail.eff = "Osteogenic Cells (ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropOst.AdHoc.c,
           detail.exp = "(cluster 3)",
-          detail.eff = "Osteogenic Cells (ad hoc) (c)",
-          text.x = c(-0.10, 0.30),
-          text.y = c(0.70, 0.70))
-
+          detail.eff = "Osteogenic Cells (ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropOst.AdHoc.c,
           detail.exp = "(ad hoc)",
-          detail.eff = "Osteogenic Cells (ad hoc) (c)",
-          text.x = c(0.80, 0.08),
-          text.y = c(0.70, 0.70))
+          detail.eff = "Osteogenic Cells (ad hoc) (c)")
 
 ```
 
 When defining osteogenic cells into a specific stage of osteogenic differentiation (preosteoblast) using ad hoc assignments:
+
 * moderately positive correlation between UTF1 expression and differentiation efficiency
 * low negative correlation between TAC3 expression and differentiation efficiency
 
 Correlations change when certain iPSC definitions are used:
+
 * iPSCs defined as unsupervised cluster 2
 * iPSCs defined as unsupervised cluster 3
 
@@ -1304,144 +1039,92 @@ These patterns hold whether osteogenic differentiation efficiency was defined us
 ```{r}
 
 #condition (a): osteogenic differentiation efficiency was defined using all sampled cells
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropPre.OstAdHoc.a,
           detail.exp = "(Time 0)",
-          detail.eff = "Preosteoblasts (ost ad hoc) (a)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.02, 0.02))
-
+          detail.eff = "Preosteoblasts (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropPre.OstAdHoc.a,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Preosteoblasts (ost ad hoc) (a)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.02, 0.02))
-
+          detail.eff = "Preosteoblasts (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropPre.OstAdHoc.a,
           detail.exp = "(cluster 1)",
-          detail.eff = "Preosteoblasts (ost ad hoc) (a)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.02, 0.02))
-
+          detail.eff = "Preosteoblasts (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropPre.OstAdHoc.a,
           detail.exp = "(cluster 2)",
-          detail.eff = "Preosteoblasts (ost ad hoc) (a)",
-          text.x = c(0.55, 0.07),
-          text.y = c(0.02, 0.02))
-
+          detail.eff = "Preosteoblasts (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropPre.OstAdHoc.a,
           detail.exp = "(cluster 3)",
-          detail.eff = "Preosteoblasts (ost ad hoc) (a)",
-          text.x = c(-0.10, 0.30),
-          text.y = c(0.02, 0.02))
-
+          detail.eff = "Preosteoblasts (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropPre.OstAdHoc.a,
           detail.exp = "(ad hoc)",
-          detail.eff = "Preosteoblasts (ost ad hoc) (a)",
-          text.x = c(0.80, 0.08),
-          text.y = c(0.02, 0.02))
+          detail.eff = "Preosteoblasts (ost ad hoc) (a)")
 
 #condition (b): osteogenic differentiation efficiency was defined using only cells collected at Time 1
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropPre.OstAdHoc.b,
           detail.exp = "(Time 0)",
-          detail.eff = "Preosteoblasts (ost ad hoc) (b)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.005, 0.003))
-
+          detail.eff = "Preosteoblasts (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropPre.OstAdHoc.b,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Preosteoblasts (ost ad hoc) (b)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.005, 0.003))
-
+          detail.eff = "Preosteoblasts (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropPre.OstAdHoc.b,
           detail.exp = "(cluster 1)",
-          detail.eff = "Preosteoblasts (ost ad hoc) (b)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.005, 0.003))
-
+          detail.eff = "Preosteoblasts (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropPre.OstAdHoc.b,
           detail.exp = "(cluster 2)",
-          detail.eff = "Preosteoblasts (ost ad hoc) (b)",
-          text.x = c(0.50, 0.07),
-          text.y = c(0.005, 0.004))
-
+          detail.eff = "Preosteoblasts (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropPre.OstAdHoc.b,
           detail.exp = "(cluster 3)",
-          detail.eff = "Preosteoblasts (ost ad hoc) (b)",
-          text.x = c(-0.05, 0.26),
-          text.y = c(0.006, 0.005))
-
+          detail.eff = "Preosteoblasts (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropPre.OstAdHoc.b,
           detail.exp = "(ad hoc)",
-          detail.eff = "Preosteoblasts (ost ad hoc) (b)",
-          text.x = c(0.8, 0.085),
-          text.y = c(0.005, 0.003))
+          detail.eff = "Preosteoblasts (ost ad hoc) (b)")
 
 #condition (c): osteogenic differentiation efficiency was defined using only cells collected at Time 2
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropPre.OstAdHoc.c,
           detail.exp = "(Time 0)",
-          detail.eff = "Preosteoblasts (ost ad hoc) (c)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.02, 0.02))
-
+          detail.eff = "Preosteoblasts (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropPre.OstAdHoc.c,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Preosteoblasts (ost ad hoc) (c)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.02, 0.02))
-
+          detail.eff = "Preosteoblasts (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropPre.OstAdHoc.c,
           detail.exp = "(cluster 1)",
-          detail.eff = "Preosteoblasts (ost ad hoc) (c)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.02, 0.02))
-
+          detail.eff = "Preosteoblasts (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropPre.OstAdHoc.c,
           detail.exp = "(cluster 2)",
-          detail.eff = "Preosteoblasts (ost ad hoc) (c)",
-          text.x = c(0.55, 0.07),
-          text.y = c(0.02, 0.02))
-
+          detail.eff = "Preosteoblasts (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropPre.OstAdHoc.c,
           detail.exp = "(cluster 3)",
-          detail.eff = "Preosteoblasts (ost ad hoc) (c)",
-          text.x = c(-0.10, 0.30),
-          text.y = c(0.02, 0.02))
-
+          detail.eff = "Preosteoblasts (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropPre.OstAdHoc.c,
           detail.exp = "(ad hoc)",
-          detail.eff = "Preosteoblasts (ost ad hoc) (c)",
-          text.x = c(0.80, 0.08),
-          text.y = c(0.02, 0.02))
+          detail.eff = "Preosteoblasts (ost ad hoc) (c)")
 
 ```
 
 When defining osteogenic cells into a specific stage of osteogenic differentiation (osteoblast) using ad hoc assignments:
+
 * low positive correlation between UTF1 expression and differentiation efficiency
 * low negative correlation between TAC3 expression and differentiation efficiency
 
 Correlations change when certain iPSC definitions are used:
+
 * iPSCs defined as unsupervised cluster 2
 * iPSCs defined as unsupervised cluster 3
 * iPSCs defined with ad hoc criteria - correlations closer to matching expectations
@@ -1454,144 +1137,92 @@ These patterns hold whether osteogenic differentiation efficiency was defined us
 ```{r}
 
 #condition (a): osteogenic differentiation efficiency was defined using all sampled cells
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropObl.OstAdHoc.a,
           detail.exp = "(Time 0)",
-          detail.eff = "Osteoblasts (ost ad hoc) (a)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.02, 0.02))
-
+          detail.eff = "Osteoblasts (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropObl.OstAdHoc.a,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Osteoblasts (ost ad hoc) (a)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.02, 0.02))
-
+          detail.eff = "Osteoblasts (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropObl.OstAdHoc.a,
           detail.exp = "(cluster 1)",
-          detail.eff = "Osteoblasts (ost ad hoc) (a)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.02, 0.02))
-
+          detail.eff = "Osteoblasts (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropObl.OstAdHoc.a,
           detail.exp = "(cluster 2)",
-          detail.eff = "Osteoblasts (ost ad hoc) (a)",
-          text.x = c(0.55, 0.07),
-          text.y = c(0.02, 0.02))
-
+          detail.eff = "Osteoblasts (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropObl.OstAdHoc.a,
           detail.exp = "(cluster 3)",
-          detail.eff = "Osteoblasts (ost ad hoc) (a)",
-          text.x = c(-0.10, 0.30),
-          text.y = c(0.02, 0.02))
-
+          detail.eff = "Osteoblasts (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropObl.OstAdHoc.a,
           detail.exp = "(ad hoc)",
-          detail.eff = "Osteoblasts (ost ad hoc) (a)",
-          text.x = c(0.80, 0.08),
-          text.y = c(0.02, 0.02))
+          detail.eff = "Osteoblasts (ost ad hoc) (a)")
 
 #condition (b): osteogenic differentiation efficiency was defined using only cells collected at Time 1
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropObl.OstAdHoc.b,
           detail.exp = "(Time 0)",
-          detail.eff = "Osteoblasts (ost ad hoc) (b)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.0005, 0.0003))
-
+          detail.eff = "Osteoblasts (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropObl.OstAdHoc.b,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Osteoblasts (ost ad hoc) (b)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.0005, 0.0003))
-
+          detail.eff = "Osteoblasts (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropObl.OstAdHoc.b,
           detail.exp = "(cluster 1)",
-          detail.eff = "Osteoblasts (ost ad hoc) (b)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.0005, 0.0003))
-
+          detail.eff = "Osteoblasts (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropObl.OstAdHoc.b,
           detail.exp = "(cluster 2)",
-          detail.eff = "Osteoblasts (ost ad hoc) (b)",
-          text.x = c(0.50, 0.07),
-          text.y = c(0.0005, 0.0004))
-
+          detail.eff = "Osteoblasts (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropObl.OstAdHoc.b,
           detail.exp = "(cluster 3)",
-          detail.eff = "Osteoblasts (ost ad hoc) (b)",
-          text.x = c(-0.05, 0.26),
-          text.y = c(0.0006, 0.0005))
-
+          detail.eff = "Osteoblasts (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropObl.OstAdHoc.b,
           detail.exp = "(ad hoc)",
-          detail.eff = "Osteoblasts (ost ad hoc) (b)",
-          text.x = c(0.8, 0.085),
-          text.y = c(0.0005, 0.0003))
+          detail.eff = "Osteoblasts (ost ad hoc) (b)")
 
 #condition (c): osteogenic differentiation efficiency was defined using only cells collected at Time 2
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropObl.OstAdHoc.c,
           detail.exp = "(Time 0)",
-          detail.eff = "Osteoblasts (ost ad hoc) (c)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.02, 0.02))
-
+          detail.eff = "Osteoblasts (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropObl.OstAdHoc.c,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Osteoblasts (ost ad hoc) (c)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.02, 0.02))
-
+          detail.eff = "Osteoblasts (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropObl.OstAdHoc.c,
           detail.exp = "(cluster 1)",
-          detail.eff = "Osteoblasts (ost ad hoc) (c)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.02, 0.02))
-
+          detail.eff = "Osteoblasts (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropObl.OstAdHoc.c,
           detail.exp = "(cluster 2)",
-          detail.eff = "Osteoblasts (ost ad hoc) (c)",
-          text.x = c(0.55, 0.07),
-          text.y = c(0.02, 0.02))
-
+          detail.eff = "Osteoblasts (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropObl.OstAdHoc.c,
           detail.exp = "(cluster 3)",
-          detail.eff = "Osteoblasts (ost ad hoc) (c)",
-          text.x = c(-0.10, 0.30),
-          text.y = c(0.02, 0.02))
-
+          detail.eff = "Osteoblasts (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropObl.OstAdHoc.c,
           detail.exp = "(ad hoc)",
-          detail.eff = "Osteoblasts (ost ad hoc) (c)",
-          text.x = c(0.80, 0.08),
-          text.y = c(0.02, 0.02))
+          detail.eff = "Osteoblasts (ost ad hoc) (c)")
 
 ```
 
 When defining osteogenic cells into a specific stage of osteogenic differentiation (embedding osteoblast) using ad hoc assignments:
+
 * low positive correlation between UTF1 expression and differentiation efficiency
 * low positive correlation between TAC3 expression and differentiation efficiency
 
 Correlations change when certain iPSC definitions are used:
+
 * iPSCs defined as unsupervised cluster 2
 * iPSCs defined with ad hoc criteria - correlations match expectations
 
@@ -1605,144 +1236,92 @@ However, correlations change when osteogenic differentiation efficiency was defi
 ```{r}
 
 #condition (a): osteogenic differentiation efficiency was defined using all sampled cells
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropEmb.OstAdHoc.a,
           detail.exp = "(Time 0)",
-          detail.eff = "Embedding Osteoblasts (ost ad hoc) (a)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Embedding Osteoblasts (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropEmb.OstAdHoc.a,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Embedding Osteoblasts (ost ad hoc) (a)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Embedding Osteoblasts (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropEmb.OstAdHoc.a,
           detail.exp = "(cluster 1)",
-          detail.eff = "Embedding Osteoblasts (ost ad hoc) (a)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Embedding Osteoblasts (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropEmb.OstAdHoc.a,
           detail.exp = "(cluster 2)",
-          detail.eff = "Embedding Osteoblasts (ost ad hoc) (a)",
-          text.x = c(0.55, 0.07),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Embedding Osteoblasts (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropEmb.OstAdHoc.a,
           detail.exp = "(cluster 3)",
-          detail.eff = "Embedding Osteoblasts (ost ad hoc) (a)",
-          text.x = c(-0.10, 0.30),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Embedding Osteoblasts (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropEmb.OstAdHoc.a,
           detail.exp = "(ad hoc)",
-          detail.eff = "Embedding Osteoblasts (ost ad hoc) (a)",
-          text.x = c(0.80, 0.08),
-          text.y = c(0.55, 0.50))
+          detail.eff = "Embedding Osteoblasts (ost ad hoc) (a)")
 
 #condition (b): osteogenic differentiation efficiency was defined using only cells collected at Time 1
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropEmb.OstAdHoc.b,
           detail.exp = "(Time 0)",
-          detail.eff = "Embedding Osteoblasts (ost ad hoc) (b)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.05, 0.03))
-
+          detail.eff = "Embedding Osteoblasts (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropEmb.OstAdHoc.b,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Embedding Osteoblasts (ost ad hoc) (b)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.05, 0.03))
-
+          detail.eff = "Embedding Osteoblasts (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropEmb.OstAdHoc.b,
           detail.exp = "(cluster 1)",
-          detail.eff = "Embedding Osteoblasts (ost ad hoc) (b)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.05, 0.03))
-
+          detail.eff = "Embedding Osteoblasts (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropEmb.OstAdHoc.b,
           detail.exp = "(cluster 2)",
-          detail.eff = "Embedding Osteoblasts (ost ad hoc) (b)",
-          text.x = c(0.50, 0.07),
-          text.y = c(0.05, 0.04))
-
+          detail.eff = "Embedding Osteoblasts (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropEmb.OstAdHoc.b,
           detail.exp = "(cluster 3)",
-          detail.eff = "Embedding Osteoblasts (ost ad hoc) (b)",
-          text.x = c(-0.05, 0.26),
-          text.y = c(0.06, 0.05))
-
+          detail.eff = "Embedding Osteoblasts (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropEmb.OstAdHoc.b,
           detail.exp = "(ad hoc)",
-          detail.eff = "Embedding Osteoblasts (ost ad hoc) (b)",
-          text.x = c(0.8, 0.085),
-          text.y = c(0.05, 0.03))
+          detail.eff = "Embedding Osteoblasts (ost ad hoc) (b)")
 
 #condition (c): osteogenic differentiation efficiency was defined using only cells collected at Time 2
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropEmb.OstAdHoc.c,
           detail.exp = "(Time 0)",
-          detail.eff = "Embedding Osteoblasts (ost ad hoc) (c)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Embedding Osteoblasts (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropEmb.OstAdHoc.c,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Embedding Osteoblasts (ost ad hoc) (c)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Embedding Osteoblasts (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropEmb.OstAdHoc.c,
           detail.exp = "(cluster 1)",
-          detail.eff = "Embedding Osteoblasts (ost ad hoc) (c)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Embedding Osteoblasts (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropEmb.OstAdHoc.c,
           detail.exp = "(cluster 2)",
-          detail.eff = "Embedding Osteoblasts (ost ad hoc) (c)",
-          text.x = c(0.55, 0.07),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Embedding Osteoblasts (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropEmb.OstAdHoc.c,
           detail.exp = "(cluster 3)",
-          detail.eff = "Embedding Osteoblasts (ost ad hoc) (c)",
-          text.x = c(-0.10, 0.30),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Embedding Osteoblasts (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropEmb.OstAdHoc.c,
           detail.exp = "(ad hoc)",
-          detail.eff = "Embedding Osteoblasts (ost ad hoc) (c)",
-          text.x = c(0.80, 0.08),
-          text.y = c(0.55, 0.50))
+          detail.eff = "Embedding Osteoblasts (ost ad hoc) (c)")
 
 ```
 
 When defining osteogenic cells into a specific stage of osteogenic differentiation (mineralizing osteoblast) using ad hoc assignments:
+
 * low negative correlation between UTF1 expression and differentiation efficiency
 * no correlation between TAC3 expression and differentiation efficiency
 
 Correlations change when certain iPSC definitions are used:
+
 * iPSCs defined as unsupervised cluster 2
 * iPSCs defined as unsupervised cluster 3
 * iPSCs defined with ad hoc criteria - correlations closer to matching expectations
@@ -1757,144 +1336,92 @@ However, correlations change when osteogenic differentiation efficiency was defi
 ```{r}
 
 #condition (a): osteogenic differentiation efficiency was defined using all sampled cells
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropMin.OstAdHoc.a,
           detail.exp = "(Time 0)",
-          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (a)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropMin.OstAdHoc.a,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (a)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropMin.OstAdHoc.a,
           detail.exp = "(cluster 1)",
-          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (a)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropMin.OstAdHoc.a,
           detail.exp = "(cluster 2)",
-          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (a)",
-          text.x = c(0.55, 0.07),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropMin.OstAdHoc.a,
           detail.exp = "(cluster 3)",
-          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (a)",
-          text.x = c(-0.10, 0.30),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropMin.OstAdHoc.a,
           detail.exp = "(ad hoc)",
-          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (a)",
-          text.x = c(0.80, 0.08),
-          text.y = c(0.55, 0.50))
+          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (a)")
 
 #condition (b): osteogenic differentiation efficiency was defined using only cells collected at Time 1
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropMin.OstAdHoc.b,
           detail.exp = "(Time 0)",
-          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (b)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.05, 0.03))
-
+          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropMin.OstAdHoc.b,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (b)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.05, 0.03))
-
+          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropMin.OstAdHoc.b,
           detail.exp = "(cluster 1)",
-          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (b)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.05, 0.03))
-
+          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropMin.OstAdHoc.b,
           detail.exp = "(cluster 2)",
-          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (b)",
-          text.x = c(0.50, 0.07),
-          text.y = c(0.05, 0.04))
-
+          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropMin.OstAdHoc.b,
           detail.exp = "(cluster 3)",
-          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (b)",
-          text.x = c(-0.05, 0.26),
-          text.y = c(0.06, 0.05))
-
+          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropMin.OstAdHoc.b,
           detail.exp = "(ad hoc)",
-          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (b)",
-          text.x = c(0.8, 0.085),
-          text.y = c(0.05, 0.03))
+          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (b)")
 
 #condition (c): osteogenic differentiation efficiency was defined using only cells collected at Time 2
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropMin.OstAdHoc.c,
           detail.exp = "(Time 0)",
-          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (c)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropMin.OstAdHoc.c,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (c)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropMin.OstAdHoc.c,
           detail.exp = "(cluster 1)",
-          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (c)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropMin.OstAdHoc.c,
           detail.exp = "(cluster 2)",
-          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (c)",
-          text.x = c(0.55, 0.07),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropMin.OstAdHoc.c,
           detail.exp = "(cluster 3)",
-          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (c)",
-          text.x = c(-0.10, 0.30),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropMin.OstAdHoc.c,
           detail.exp = "(ad hoc)",
-          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (c)",
-          text.x = c(0.80, 0.08),
-          text.y = c(0.55, 0.50))
+          detail.eff = "Mineralizing Osteoblasts (ost ad hoc) (c)")
 
 ```
 
 When defining osteogenic cells into a specific stage of osteogenic differentiation (maturing osteocyte) using ad hoc assignments:
+
 * no correlation between UTF1 expression and differentiation efficiency
 * low negative correlation between TAC3 expression and differentiation efficiency
 
 Correlations change when certain iPSC definitions are used:
+
 * iPSCs defined as unsupervised cluster 2
 * iPSCs defined as unsupervised cluster 3
 
@@ -1908,136 +1435,82 @@ However, correlations change when osteogenic differentiation efficiency was defi
 ```{r}
 
 #condition (a): osteogenic differentiation efficiency was defined using all sampled cells
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropMat.OstAdHoc.a,
           detail.exp = "(Time 0)",
-          detail.eff = "Maturing Osteocytes (ost ad hoc) (a)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Maturing Osteocytes (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropMat.OstAdHoc.a,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Maturing Osteocytes (ost ad hoc) (a)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Maturing Osteocytes (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropMat.OstAdHoc.a,
           detail.exp = "(cluster 1)",
-          detail.eff = "Maturing Osteocytes (ost ad hoc) (a)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Maturing Osteocytes (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropMat.OstAdHoc.a,
           detail.exp = "(cluster 2)",
-          detail.eff = "Maturing Osteocytes (ost ad hoc) (a)",
-          text.x = c(0.55, 0.07),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Maturing Osteocytes (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropMat.OstAdHoc.a,
           detail.exp = "(cluster 3)",
-          detail.eff = "Maturing Osteocytes (ost ad hoc) (a)",
-          text.x = c(-0.10, 0.30),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Maturing Osteocytes (ost ad hoc) (a)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropMat.OstAdHoc.a,
           detail.exp = "(ad hoc)",
-          detail.eff = "Maturing Osteocytes (ost ad hoc) (a)",
-          text.x = c(0.80, 0.08),
-          text.y = c(0.55, 0.50))
+          detail.eff = "Maturing Osteocytes (ost ad hoc) (a)")
 
 #condition (b): osteogenic differentiation efficiency was defined using only cells collected at Time 1
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropMat.OstAdHoc.b,
           detail.exp = "(Time 0)",
-          detail.eff = "Maturing Osteocytes (ost ad hoc) (b)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.05, 0.03))
-
+          detail.eff = "Maturing Osteocytes (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropMat.OstAdHoc.b,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Maturing Osteocytes (ost ad hoc) (b)",
-          text.x = c(0.72, 0.085),
-          text.y = c(0.05, 0.03))
-
+          detail.eff = "Maturing Osteocytes (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropMat.OstAdHoc.b,
           detail.exp = "(cluster 1)",
-          detail.eff = "Maturing Osteocytes (ost ad hoc) (b)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.05, 0.03))
-
+          detail.eff = "Maturing Osteocytes (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropMat.OstAdHoc.b,
           detail.exp = "(cluster 2)",
-          detail.eff = "Maturing Osteocytes (ost ad hoc) (b)",
-          text.x = c(0.50, 0.07),
-          text.y = c(0.05, 0.04))
-
+          detail.eff = "Maturing Osteocytes (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropMat.OstAdHoc.b,
           detail.exp = "(cluster 3)",
-          detail.eff = "Maturing Osteocytes (ost ad hoc) (b)",
-          text.x = c(-0.05, 0.26),
-          text.y = c(0.06, 0.05))
-
+          detail.eff = "Maturing Osteocytes (ost ad hoc) (b)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropMat.OstAdHoc.b,
           detail.exp = "(ad hoc)",
-          detail.eff = "Maturing Osteocytes (ost ad hoc) (b)",
-          text.x = c(0.8, 0.085),
-          text.y = c(0.05, 0.03))
+          detail.eff = "Maturing Osteocytes (ost ad hoc) (b)")
 
 #condition (c): osteogenic differentiation efficiency was defined using only cells collected at Time 2
-
 plot.corr(expression = list(utf1.tac3$UTF1.t0, utf1.tac3$TAC3.t0),
           efficiency = utf1.tac3$PropMat.OstAdHoc.c,
           detail.exp = "(Time 0)",
-          detail.eff = "Maturing Osteocytes (ost ad hoc) (c)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Maturing Osteocytes (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c, utf1.tac3$TAC3.c),
           efficiency = utf1.tac3$PropMat.OstAdHoc.c,
           detail.exp = "(clusters 1, 2, and 3)",
-          detail.eff = "Maturing Osteocytes (ost ad hoc) (c)",
-          text.x = c(0.72, 0.08),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Maturing Osteocytes (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c1, utf1.tac3$TAC3.c1),
           efficiency = utf1.tac3$PropMat.OstAdHoc.c,
           detail.exp = "(cluster 1)",
-          detail.eff = "Maturing Osteocytes (ost ad hoc) (c)",
-          text.x = c(0.75, 0.09),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Maturing Osteocytes (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c2, utf1.tac3$TAC3.c2),
           efficiency = utf1.tac3$PropMat.OstAdHoc.c,
           detail.exp = "(cluster 2)",
-          detail.eff = "Maturing Osteocytes (ost ad hoc) (c)",
-          text.x = c(0.55, 0.07),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Maturing Osteocytes (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.c3, utf1.tac3$TAC3.c3),
           efficiency = utf1.tac3$PropMat.OstAdHoc.c,
           detail.exp = "(cluster 3)",
-          detail.eff = "Maturing Osteocytes (ost ad hoc) (c)",
-          text.x = c(-0.10, 0.30),
-          text.y = c(0.55, 0.50))
-
+          detail.eff = "Maturing Osteocytes (ost ad hoc) (c)")
 plot.corr(expression = list(utf1.tac3$UTF1.ad, utf1.tac3$TAC3.ad),
           efficiency = utf1.tac3$PropMat.OstAdHoc.c,
           detail.exp = "(ad hoc)",
-          detail.eff = "Maturing Osteocytes (ost ad hoc) (c)",
-          text.x = c(0.80, 0.08),
-          text.y = c(0.55, 0.50))
+          detail.eff = "Maturing Osteocytes (ost ad hoc) (c)")
 
 ```
 
@@ -2054,7 +1527,7 @@ plot.corr.val <- function(validation.data, efficiency, detail.exp, detail.eff) {
        efficiency,
        xlab=detail.exp,
        ylab=paste0("Proportion of ",detail.eff),
-       pch=c(rep(19,7),rep(1,7)))
+       pch=c(rep(1,7),rep(19,7)))
   abline(lm(efficiency[1:7]~validation.data[1:7]), col="grey")
   abline(lm(efficiency[8:14]~validation.data[8:14]), col="black")
   abline(lm(efficiency~validation.data), col="red")
@@ -2081,10 +1554,6 @@ plot.corr.val(validation.data=vData$Alizarin,
               efficiency=utf1.tac3$PropMSC.Cluster.b,
               detail.exp="Alizarin Stain",
               detail.eff="MSCs (cluster) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
-              efficiency=utf1.tac3$PropMSC.Cluster.c,
-              detail.exp="Alizarin Stain",
-              detail.eff="MSCs (cluster) (c)")
 
 plot.corr.val(validation.data=vData$Alizarin,
               efficiency=utf1.tac3$PropMSC.AdHoc.a,
@@ -2094,10 +1563,6 @@ plot.corr.val(validation.data=vData$Alizarin,
               efficiency=utf1.tac3$PropMSC.AdHoc.b,
               detail.exp="Alizarin Stain",
               detail.eff="MSCs (ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
-              efficiency=utf1.tac3$PropMSC.AdHoc.c,
-              detail.exp="Alizarin Stain",
-              detail.eff="MSCs (ad hoc) (c)")
 
 plot.corr.val(validation.data=vData$Alizarin,
               efficiency=utf1.tac3$PropOst.Cluster.a,
@@ -2224,147 +1689,139 @@ plot.corr.val(validation.data=vData$Alizarin,
 
 vData <- as_tibble(unique(data@meta.data[,c(51,36,30)])) %>% filter(Stage=="Time 1") %>% arrange(Individual.Replicate)
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropMSC.Cluster.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="MSCs (cluster) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropMSC.Cluster.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="MSCs (cluster) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
-              efficiency=utf1.tac3$PropMSC.Cluster.c,
-              detail.exp="Alizarin Stain",
-              detail.eff="MSCs (cluster) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropMSC.AdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="MSCs (ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropMSC.AdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="MSCs (ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
-              efficiency=utf1.tac3$PropMSC.AdHoc.c,
-              detail.exp="Alizarin Stain",
-              detail.eff="MSCs (ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropOst.Cluster.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Osteogenic Cells (clusters 1 and 2) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropOst.Cluster.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Osteogenic Cells (clusters 1 and 2) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropOst.Cluster.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Osteogenic Cells (clusters 1 and 2) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropOst1.Cluster.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Osteogenic Cells (cluster 1) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropOst1.Cluster.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Osteogenic Cells (cluster 1) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropOst1.Cluster.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Osteogenic Cells (cluster 1) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropOst2.Cluster.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Osteogenic Cells (cluster 2) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropOst2.Cluster.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Osteogenic Cells (cluster 2) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropOst2.Cluster.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Osteogenic Cells (cluster 2) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropOst.AdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Osteogenic Cells (ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropOst.AdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Osteogenic Cells (ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropOst.AdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Osteogenic Cells (ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropPre.OstAdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Preosteoblasts (ost ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropPre.OstAdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Preosteoblasts (ost ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropPre.OstAdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Preosteoblasts (ost ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropObl.OstAdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Osteoblasts (ost ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropObl.OstAdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Osteoblasts (ost ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropObl.OstAdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Osteoblasts (ost ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropEmb.OstAdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Embedding Osteoblasts (ost ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropEmb.OstAdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Embedding Osteoblasts (ost ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropEmb.OstAdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Embedding Osteoblasts (ost ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropMin.OstAdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Mineralizing Osteoblasts (ost ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropMin.OstAdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Mineralizing Osteoblasts (ost ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropMin.OstAdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Mineralizing Osteoblasts (ost ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropMat.OstAdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Maturing Osteocytes (ost ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropMat.OstAdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Maturing Osteocytes (ost ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD90,
               efficiency=utf1.tac3$PropMat.OstAdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD90 Expression",
               detail.eff="Maturing Osteocytes (ost ad hoc) (c)")
 
 ```
@@ -2375,147 +1832,139 @@ plot.corr.val(validation.data=vData$Alizarin,
 
 vData <- as_tibble(unique(data@meta.data[,c(51,36,31)])) %>% filter(Stage=="Time 1") %>% arrange(Individual.Replicate)
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropMSC.Cluster.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="MSCs (cluster) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropMSC.Cluster.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="MSCs (cluster) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
-              efficiency=utf1.tac3$PropMSC.Cluster.c,
-              detail.exp="Alizarin Stain",
-              detail.eff="MSCs (cluster) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropMSC.AdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="MSCs (ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropMSC.AdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="MSCs (ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
-              efficiency=utf1.tac3$PropMSC.AdHoc.c,
-              detail.exp="Alizarin Stain",
-              detail.eff="MSCs (ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropOst.Cluster.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Osteogenic Cells (clusters 1 and 2) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropOst.Cluster.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Osteogenic Cells (clusters 1 and 2) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropOst.Cluster.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Osteogenic Cells (clusters 1 and 2) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropOst1.Cluster.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Osteogenic Cells (cluster 1) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropOst1.Cluster.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Osteogenic Cells (cluster 1) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropOst1.Cluster.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Osteogenic Cells (cluster 1) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropOst2.Cluster.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Osteogenic Cells (cluster 2) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropOst2.Cluster.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Osteogenic Cells (cluster 2) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropOst2.Cluster.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Osteogenic Cells (cluster 2) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropOst.AdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Osteogenic Cells (ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropOst.AdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Osteogenic Cells (ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropOst.AdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Osteogenic Cells (ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropPre.OstAdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Preosteoblasts (ost ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropPre.OstAdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Preosteoblasts (ost ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropPre.OstAdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Preosteoblasts (ost ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropObl.OstAdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Osteoblasts (ost ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropObl.OstAdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Osteoblasts (ost ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropObl.OstAdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Osteoblasts (ost ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropEmb.OstAdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Embedding Osteoblasts (ost ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropEmb.OstAdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Embedding Osteoblasts (ost ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropEmb.OstAdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Embedding Osteoblasts (ost ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropMin.OstAdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Mineralizing Osteoblasts (ost ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropMin.OstAdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Mineralizing Osteoblasts (ost ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropMin.OstAdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Mineralizing Osteoblasts (ost ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropMat.OstAdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Maturing Osteocytes (ost ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropMat.OstAdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Maturing Osteocytes (ost ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD73,
               efficiency=utf1.tac3$PropMat.OstAdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD73 Expression",
               detail.eff="Maturing Osteocytes (ost ad hoc) (c)")
 
 ```
@@ -2526,147 +1975,139 @@ plot.corr.val(validation.data=vData$Alizarin,
 
 vData <- as_tibble(unique(data@meta.data[,c(51,36,32)])) %>% filter(Stage=="Time 1") %>% arrange(Individual.Replicate)
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropMSC.Cluster.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="MSCs (cluster) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropMSC.Cluster.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="MSCs (cluster) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
-              efficiency=utf1.tac3$PropMSC.Cluster.c,
-              detail.exp="Alizarin Stain",
-              detail.eff="MSCs (cluster) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropMSC.AdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="MSCs (ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropMSC.AdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="MSCs (ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
-              efficiency=utf1.tac3$PropMSC.AdHoc.c,
-              detail.exp="Alizarin Stain",
-              detail.eff="MSCs (ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropOst.Cluster.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Osteogenic Cells (clusters 1 and 2) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropOst.Cluster.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Osteogenic Cells (clusters 1 and 2) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropOst.Cluster.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Osteogenic Cells (clusters 1 and 2) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropOst1.Cluster.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Osteogenic Cells (cluster 1) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropOst1.Cluster.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Osteogenic Cells (cluster 1) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropOst1.Cluster.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Osteogenic Cells (cluster 1) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropOst2.Cluster.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Osteogenic Cells (cluster 2) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropOst2.Cluster.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Osteogenic Cells (cluster 2) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropOst2.Cluster.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Osteogenic Cells (cluster 2) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropOst.AdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Osteogenic Cells (ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropOst.AdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Osteogenic Cells (ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropOst.AdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Osteogenic Cells (ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropPre.OstAdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Preosteoblasts (ost ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropPre.OstAdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Preosteoblasts (ost ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropPre.OstAdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Preosteoblasts (ost ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropObl.OstAdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Osteoblasts (ost ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropObl.OstAdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Osteoblasts (ost ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropObl.OstAdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Osteoblasts (ost ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropEmb.OstAdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Embedding Osteoblasts (ost ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropEmb.OstAdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Embedding Osteoblasts (ost ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropEmb.OstAdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Embedding Osteoblasts (ost ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropMin.OstAdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Mineralizing Osteoblasts (ost ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropMin.OstAdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Mineralizing Osteoblasts (ost ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropMin.OstAdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Mineralizing Osteoblasts (ost ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropMat.OstAdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Maturing Osteocytes (ost ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropMat.OstAdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Maturing Osteocytes (ost ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$CD105,
               efficiency=utf1.tac3$PropMat.OstAdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="CD105 Expression",
               detail.eff="Maturing Osteocytes (ost ad hoc) (c)")
 
 ```
@@ -2677,166 +2118,409 @@ plot.corr.val(validation.data=vData$Alizarin,
 
 vData <- as_tibble(unique(data@meta.data[,c(51,36,35)])) %>% filter(Stage=="Time 2") %>% arrange(Individual.Replicate)
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropMSC.Cluster.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="MSCs (cluster) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropMSC.Cluster.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="MSCs (cluster) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
-              efficiency=utf1.tac3$PropMSC.Cluster.c,
-              detail.exp="Alizarin Stain",
-              detail.eff="MSCs (cluster) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropMSC.AdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="MSCs (ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropMSC.AdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="MSCs (ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
-              efficiency=utf1.tac3$PropMSC.AdHoc.c,
-              detail.exp="Alizarin Stain",
-              detail.eff="MSCs (ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropOst.Cluster.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Osteogenic Cells (clusters 1 and 2) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropOst.Cluster.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Osteogenic Cells (clusters 1 and 2) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropOst.Cluster.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Osteogenic Cells (clusters 1 and 2) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropOst1.Cluster.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Osteogenic Cells (cluster 1) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropOst1.Cluster.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Osteogenic Cells (cluster 1) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropOst1.Cluster.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Osteogenic Cells (cluster 1) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropOst2.Cluster.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Osteogenic Cells (cluster 2) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropOst2.Cluster.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Osteogenic Cells (cluster 2) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropOst2.Cluster.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Osteogenic Cells (cluster 2) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropOst.AdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Osteogenic Cells (ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropOst.AdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Osteogenic Cells (ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropOst.AdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Osteogenic Cells (ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropPre.OstAdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Preosteoblasts (ost ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropPre.OstAdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Preosteoblasts (ost ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropPre.OstAdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Preosteoblasts (ost ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropObl.OstAdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Osteoblasts (ost ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropObl.OstAdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Osteoblasts (ost ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropObl.OstAdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Osteoblasts (ost ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropEmb.OstAdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Embedding Osteoblasts (ost ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropEmb.OstAdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Embedding Osteoblasts (ost ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropEmb.OstAdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Embedding Osteoblasts (ost ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropMin.OstAdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Mineralizing Osteoblasts (ost ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropMin.OstAdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Mineralizing Osteoblasts (ost ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropMin.OstAdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Mineralizing Osteoblasts (ost ad hoc) (c)")
 
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropMat.OstAdHoc.a,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Maturing Osteocytes (ost ad hoc) (a)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropMat.OstAdHoc.b,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Maturing Osteocytes (ost ad hoc) (b)")
-plot.corr.val(validation.data=vData$Alizarin,
+plot.corr.val(validation.data=vData$OilRed,
               efficiency=utf1.tac3$PropMat.OstAdHoc.c,
-              detail.exp="Alizarin Stain",
+              detail.exp="Oil Red Stain",
               detail.eff="Maturing Osteocytes (ost ad hoc) (c)")
 
 ```
 
+### Final Plot Displaying Correlations of Interest
 
+```{r}
 
-
-```{r, eval=FALSE}
-
-ggplot(utf1.tac3, aes(x=UTF1.t0, y=PropMSC.Cluster.a, color=Species)) +
-  geom_point() +
-  geom_smooth(method=lm, se=FALSE)
-  theme_classic()
-
-ggplot(utf1.tac3, aes(x=UTF1.t0, y=PropMSC.Cluster.a)) +
-  geom_point() +
-  geom_smooth(method=lm, se=FALSE, color="black") +
-  theme_classic()
+vData <- as_tibble(unique(data@meta.data[,c(51,36,34)])) %>% filter(Stage=="Time 2") %>% arrange(Individual.Replicate)
+utf1.tac3$Alizarin <- vData$Alizarin
 
 ```
 
+#### Correlations with MSC differentiation efficiency (unsupervized clustering)
 
+```{r}
+
+CombinePlots(list(
+  (ggplot(utf1.tac3, aes(x=UTF1.c1, y=PropMSC.Cluster.b, color=Species)) +
+     geom_point() +
+     geom_smooth(method=lm, se=FALSE) +
+     scale_color_manual(values=c("grey","black")) +
+     labs(x="UTF1 Expression in iPSCs (cluster)", y="MSC Differentiation Efficiency (cluster)") +
+     theme_classic()),
+  (ggplot(utf1.tac3, aes(x=TAC3.c1, y=PropMSC.Cluster.b, color=Species)) +
+     geom_point() +
+     geom_smooth(method=lm, se=FALSE) +
+     scale_color_manual(values=c("grey","black")) +
+     labs(x="TAC3 Expression in iPSCs (cluster)", y="MSC Differentiation Efficiency (cluster)") +
+     theme_classic())),
+  ncol=2,
+  legend="right")
+
+```
+
+```{r}
+
+CombinePlots(list(
+  (ggplot(utf1.tac3, aes(x=UTF1.c1, y=PropMSC.Cluster.b)) +
+     geom_point() +
+     geom_smooth(method=lm, se=FALSE, color="black") +
+     labs(x="UTF1 Expression in iPSCs (cluster)", y="MSC Differentiation Efficiency (cluster)") +
+     theme_classic()),
+  (ggplot(utf1.tac3, aes(x=TAC3.c1, y=PropMSC.Cluster.b)) +
+     geom_point() +
+     geom_smooth(method=lm, se=FALSE, color="black") +
+     labs(x="TAC3 Expression in iPSCs (cluster)", y="MSC Differentiation Efficiency (cluster)") +
+     theme_classic())),
+  ncol=2,
+  legend="right")
+
+```
+
+#### Correlations with MSC differentiation efficiency (ad hoc classification)
+
+```{r}
+
+CombinePlots(list(
+  (ggplot(utf1.tac3, aes(x=UTF1.ad, y=PropMSC.AdHoc.b, color=Species)) +
+     geom_point() +
+     geom_smooth(method=lm, se=FALSE) +
+     scale_color_manual(values=c("grey","black")) +
+     labs(x="UTF1 Expression in iPSCs (ad hoc)", y="MSC Differentiation Efficiency (ad hoc)") +
+     theme_classic()),
+  (ggplot(utf1.tac3, aes(x=TAC3.ad, y=PropMSC.AdHoc.b, color=Species)) +
+     geom_point() +
+     geom_smooth(method=lm, se=FALSE) +
+     scale_color_manual(values=c("grey","black")) +
+     labs(x="TAC3 Expression in iPSCs (ad hoc)", y="MSC Differentiation Efficiency (ad hoc)") +
+     theme_classic())),
+  ncol=2,
+  legend="right")
+
+```
+
+```{r}
+
+CombinePlots(list(
+  (ggplot(utf1.tac3, aes(x=UTF1.ad, y=PropMSC.AdHoc.b)) +
+     geom_point() +
+     geom_smooth(method=lm, se=FALSE, color="black") +
+     labs(x="UTF1 Expression in iPSCs (ad hoc)", y="MSC Differentiation Efficiency (ad hoc)") +
+     theme_classic()),
+  (ggplot(utf1.tac3, aes(x=TAC3.ad, y=PropMSC.AdHoc.b)) +
+     geom_point() +
+     geom_smooth(method=lm, se=FALSE, color="black") +
+     labs(x="TAC3 Expression in iPSCs (ad hoc)", y="MSC Differentiation Efficiency (ad hoc)") +
+     theme_classic())),
+  ncol=2,
+  legend="right")
+
+```
+
+#### Correlations with Osteogenic differentiation efficiency (unsupervized clustering)
+
+```{r}
+
+ggplot(utf1.tac3, aes(x=Alizarin, y=PropOst1.Cluster.c, color=Species)) +
+   geom_point() +
+   geom_smooth(method=lm, se=FALSE) +
+   scale_color_manual(values=c("grey","black")) +
+   labs(x="Alizarin Stain", y="Osteogenic Differentiation Efficiency (cluster 1)") +
+   theme_classic()
+
+```
+
+```{r}
+
+ggplot(utf1.tac3, aes(x=Alizarin, y=PropOst1.Cluster.c)) +
+   geom_point() +
+   geom_smooth(method=lm, se=FALSE, color="black") +
+   labs(x="Alizarin Red", y="Osteogenic Differentiation Efficiency (cluster 1)") +
+   theme_classic()
+
+```
+
+```{r}
+
+CombinePlots(list(
+  (ggplot(utf1.tac3, aes(x=UTF1.c1, y=PropOst1.Cluster.c, color=Species)) +
+     geom_point() +
+     geom_smooth(method=lm, se=FALSE) +
+     scale_color_manual(values=c("grey","black")) +
+     labs(x="UTF1 Expression in iPSCs (cluster)", y="Osteogenic Differentiation Efficiency (cluster 1)") +
+     theme_classic()),
+  (ggplot(utf1.tac3, aes(x=TAC3.c1, y=PropOst1.Cluster.c, color=Species)) +
+     geom_point() +
+     geom_smooth(method=lm, se=FALSE) +
+     scale_color_manual(values=c("grey","black")) +
+     labs(x="TAC3 Expression in iPSCs (cluster)", y="Osteogenic Differentiation Efficiency (cluster 1)") +
+     theme_classic())),
+  ncol=2,
+  legend="right")
+
+```
+
+```{r}
+
+CombinePlots(list(
+  (ggplot(utf1.tac3, aes(x=UTF1.c1, y=PropOst1.Cluster.c)) +
+     geom_point() +
+     geom_smooth(method=lm, se=FALSE, color="black") +
+     labs(x="UTF1 Expression in iPSCs (cluster)", y="Osteogenic Differentiation Efficiency (cluster 1)") +
+     theme_classic()),
+  (ggplot(utf1.tac3, aes(x=TAC3.c1, y=PropOst1.Cluster.c)) +
+     geom_point() +
+     geom_smooth(method=lm, se=FALSE, color="black") +
+     labs(x="TAC3 Expression in iPSCs (cluster)", y="Osteogenic Differentiation Efficiency (cluster 1)") +
+     theme_classic())),
+  ncol=2,
+  legend="right")
+
+```
+
+```{r}
+
+ggplot(utf1.tac3, aes(x=Alizarin, y=PropOst2.Cluster.c, color=Species)) +
+   geom_point() +
+   geom_smooth(method=lm, se=FALSE) +
+   scale_color_manual(values=c("grey","black")) +
+   labs(x="Alizarin Stain", y="Osteogenic Differentiation Efficiency (cluster 2)") +
+   theme_classic()
+
+```
+
+```{r}
+
+ggplot(utf1.tac3, aes(x=Alizarin, y=PropOst2.Cluster.c)) +
+   geom_point() +
+   geom_smooth(method=lm, se=FALSE, color="black") +
+   labs(x="Alizarin Red", y="Osteogenic Differentiation Efficiency (cluster 2)") +
+   theme_classic()
+
+```
+
+```{r}
+
+CombinePlots(list(
+  (ggplot(utf1.tac3, aes(x=UTF1.c1, y=PropOst2.Cluster.c, color=Species)) +
+     geom_point() +
+     geom_smooth(method=lm, se=FALSE) +
+     scale_color_manual(values=c("grey","black")) +
+     labs(x="UTF1 Expression in iPSCs (cluster)", y="Osteogenic Differentiation Efficiency (cluster 2)") +
+     theme_classic()),
+  (ggplot(utf1.tac3, aes(x=TAC3.c1, y=PropOst2.Cluster.c, color=Species)) +
+     geom_point() +
+     geom_smooth(method=lm, se=FALSE) +
+     scale_color_manual(values=c("grey","black")) +
+     labs(x="TAC3 Expression in iPSCs (cluster)", y="Osteogenic Differentiation Efficiency (cluster 2)") +
+     theme_classic())),
+  ncol=2,
+  legend="right")
+
+```
+
+```{r}
+
+CombinePlots(list(
+  (ggplot(utf1.tac3, aes(x=UTF1.c1, y=PropOst2.Cluster.c)) +
+     geom_point() +
+     geom_smooth(method=lm, se=FALSE, color="black") +
+     labs(x="UTF1 Expression in iPSCs (cluster)", y="Osteogenic Differentiation Efficiency (cluster 2)") +
+     theme_classic()),
+  (ggplot(utf1.tac3, aes(x=TAC3.c1, y=PropOst2.Cluster.c)) +
+     geom_point() +
+     geom_smooth(method=lm, se=FALSE, color="black") +
+     labs(x="TAC3 Expression in iPSCs (cluster)", y="Osteogenic Differentiation Efficiency (cluster 2)") +
+     theme_classic())),
+  ncol=2,
+  legend="right")
+
+```
+
+#### Correlations with Osteogenic differentiation efficiency (ad hoc classification)
+
+```{r}
+
+ggplot(utf1.tac3, aes(x=Alizarin, y=PropOst.AdHoc.c, color=Species)) +
+   geom_point() +
+   geom_smooth(method=lm, se=FALSE) +
+   scale_color_manual(values=c("grey","black")) +
+   labs(x="Alizarin Stain", y="Osteogenic Differentiation Efficiency (cluster 1)") +
+   theme_classic()
+
+```
+
+```{r}
+
+ggplot(utf1.tac3, aes(x=Alizarin, y=PropOst.AdHoc.c)) +
+   geom_point() +
+   geom_smooth(method=lm, se=FALSE, color="black") +
+   labs(x="Alizarin Red", y="Osteogenic Differentiation Efficiency (cluster 1)") +
+   theme_classic()
+
+```
+
+```{r}
+
+CombinePlots(list(
+  (ggplot(utf1.tac3, aes(x=UTF1.ad, y=PropOst.AdHoc.c, color=Species)) +
+     geom_point() +
+     geom_smooth(method=lm, se=FALSE) +
+     scale_color_manual(values=c("grey","black")) +
+     labs(x="UTF1 Expression in iPSCs (ad hoc)", y="Osteogenic Differentiation Efficiency (ad hoc)") +
+     theme_classic()),
+  (ggplot(utf1.tac3, aes(x=TAC3.ad, y=PropOst.AdHoc.c, color=Species)) +
+     geom_point() +
+     geom_smooth(method=lm, se=FALSE) +
+     scale_color_manual(values=c("grey","black")) +
+     labs(x="TAC3 Expression in iPSCs (ad hoc)", y="Osteogenic Differentiation Efficiency (ad hoc)") +
+     theme_classic())),
+  ncol=2,
+  legend="right")
+
+```
+
+```{r}
+
+CombinePlots(list(
+  (ggplot(utf1.tac3, aes(x=UTF1.ad, y=PropOst.AdHoc.c)) +
+     geom_point() +
+     geom_smooth(method=lm, se=FALSE, color="black") +
+     labs(x="UTF1 Expression in iPSCs (ad hoc)", y="Osteogenic Differentiation Efficiency (ad hoc)") +
+     theme_classic()),
+  (ggplot(utf1.tac3, aes(x=TAC3.ad, y=PropOst.AdHoc.c)) +
+     geom_point() +
+     geom_smooth(method=lm, se=FALSE, color="black") +
+     labs(x="TAC3 Expression in iPSCs (ad hoc)", y="Osteogenic Differentiation Efficiency (ad hoc)") +
+     theme_classic())),
+  ncol=2,
+  legend="right")
+
+```

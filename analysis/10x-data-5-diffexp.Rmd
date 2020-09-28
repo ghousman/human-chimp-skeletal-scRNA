@@ -49,14 +49,14 @@ library(RUVSeq)
 
 #Load data
 
-scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds" #integrate across individuals - total (15k genes)
-#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.assign.rds" #integrate across individuals - total (15k genes)
-#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t0.assign.rds" #integrate across individuals - total (15k genes)
-#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t0.assign.rds" #integrate across individuals - total (15k genes)
-#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t1.assign.rds" #integrate across individuals - total (15k genes)
-#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t1.assign.rds" #integrate across individuals - total (15k genes)
-#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.assign.rds" #integrate across individuals - total (15k genes)
-#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t2.assign.rds" #integrate across individuals - total (15k genes)
+scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds" #integrate across individuals - total (19k genes)
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.assign.rds" #integrate across individuals - total (19k genes)
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t0.assign.rds" #integrate across individuals - total (19k genes)
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t0.assign.rds" #integrate across individuals - total (19k genes)
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t1.assign.rds" #integrate across individuals - total (19k genes)
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t1.assign.rds" #integrate across individuals - total (19k genes)
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.assign.rds" #integrate across individuals - total (19k genes)
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t2.assign.rds" #integrate across individuals - total (19k genes)
 data <- readRDS(scrna)
 
 data
@@ -79,7 +79,7 @@ Define data subsets for testing DE methods.
 
 ```{r}
 #dataSub <- subset(data,subset=Cluster=="iPSC.c3")
-#dataSub <- subset(data,subset=Cluster=="Osteoblast.c2")
+#dataSub <- subset(data,subset=Cluster=="Osteogenic.c2")
 #dataSub <- subset(data,subset=OstAdHoc.Assign=="embedding osteoblast")
 dataSub <- subset(data,subset=Stage=="Time 2")
 
@@ -98,8 +98,37 @@ dataSub <- subset(data,subset=Stage=="Time 2")
 When performing DE analyses with pseudobulk data, use raw counts only as this worked the best.
 
 ```{r}
-#make pseudobulk
 dataSub <- subset(data,subset=Stage=="Time 2")
+
+#make pseudobulk using individual+replicate information
+data@meta.data$Individual.Replicate <- paste0(data@meta.data$Individual,".",data@meta.data$Replicate)
+counts <- c()
+metadata <- c()
+labels <- c()
+for (i in unique(dataSub@meta.data$Individual.Replicate)) {
+      x.lab <- i
+      w <- which(dataSub@meta.data$Individual.Replicate==i)
+      if (length(w)>0) {
+        x.spp <- dataSub@meta.data$Species[w][1]
+        x.col <- dataSub@meta.data$Collection[w][1]
+        x.ind <- dataSub@meta.data$Individual[w][1]
+        x.rep <- dataSub@meta.data$Replicate[w][1]
+        if (length(w)==1) {
+          x.cnt <- dataSub@assays$RNA@counts[,w]
+        } else {
+          x.cnt <- Matrix::rowSums(dataSub@assays$RNA@counts[,w])
+        }
+        counts <- cbind(counts, x.cnt)
+        metadata <- rbind(metadata, c(x.lab, x.spp, x.col, x.ind, x.rep))
+        labels <- c(labels, x.lab)
+      }
+}
+colnames(counts) <- labels
+rownames(metadata) <- labels
+colnames(metadata) <- c("Individual.Replicate","Species","Collection","Individual","Replicate")
+metadata <- as.data.frame(metadata)
+
+#make pseudobulk using sample information
 counts <- c()
 metadata <- c()
 labels <- c()
@@ -681,6 +710,92 @@ Run DE analysis on cluster
 cd /project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA/code/
 
 #standard DE analyses
+sbatch ./DEdream.sh tot.sc.pch20.fml6.nofc.bh tot sc TRUE pch 0.2 formula6 stage
+sbatch ./DEdream.sh tot.sc.pch20.fml6.nofc.bh tot sc TRUE pch 0.2 formula6 cluster
+sbatch ./DEdream.sh tot.sc.pch20.fml6.nofc.bh tot sc TRUE pch 0.2 formula6 adhoc
+sbatch ./DEdream.sh tot.sc.pch20.fml6.nofc.bh tot sc TRUE pch 0.2 formula6 ostadhoc
+
+sbatch ./DEdream.sh t2.sc.pch20.fml6.nofc.bh t2 sc TRUE pch 0.2 formula6 cluster
+sbatch ./DEdream.sh t2.sc.pch20.fml6.nofc.bh t2 sc TRUE pch 0.2 formula6 adhoc
+sbatch ./DEdream.sh t2.sc.pch20.fml6.nofc.bh t2 sc TRUE pch 0.2 formula6 ostadhoc
+
+#pseudobulk DE analyses
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 stage
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 cluster
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 adhoc
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostadhoc
+
+sbatch ./DEdream.sh t2.pseudo.logcpm0.fml6.nofc.bh t2 pseudo TRUE logcpm 0 formula6 cluster
+sbatch ./DEdream.sh t2.pseudo.logcpm0.fml6.nofc.bh t2 pseudo TRUE logcpm 0 formula6 adhoc
+sbatch ./DEdream.sh t2.pseudo.logcpm0.fml6.nofc.bh t2 pseudo TRUE logcpm 0 formula6 ostadhoc
+
+#DE analyses with replicate 1 samples removed
+sbatch ./DEdreamsubset.sh tot.keepRep1.pch20.fml6.nofc.bh tot keepRep1 FALSE TRUE pch 0.2 formula6 stage
+sbatch ./DEdreamsubset.sh tot.keepRep1.pch20.fml6.nofc.bh tot keepRep1 FALSE TRUE pch 0.2 formula6 cluster
+sbatch ./DEdreamsubset.sh tot.keepRep1.pch20.fml6.nofc.bh tot keepRep1 FALSE TRUE pch 0.2 formula6 adhoc
+sbatch ./DEdreamsubset.sh tot.keepRep1.pch20.fml6.nofc.bh tot keepRep1 FALSE TRUE pch 0.2 formula6 ostadhoc
+
+sbatch ./DEdreamsubset.sh t2.keepRep1.pch20.fml6.nofc.bh t2 keepRep1 FALSE TRUE pch 0.2 formula6 cluster
+sbatch ./DEdreamsubset.sh t2.keepRep1.pch20.fml6.nofc.bh t2 keepRep1 FALSE TRUE pch 0.2 formula6 adhoc
+sbatch ./DEdreamsubset.sh t2.keepRep1.pch20.fml6.nofc.bh t2 keepRep1 FALSE TRUE pch 0.2 formula6 ostadhoc
+
+#DE analyses with replicate 2 samples removed
+sbatch ./DEdreamsubset.sh tot.keepRep2.pch20.fml6.nofc.bh tot keepRep2 FALSE TRUE pch 0.2 formula6 stage
+sbatch ./DEdreamsubset.sh tot.keepRep2.pch20.fml6.nofc.bh tot keepRep2 FALSE TRUE pch 0.2 formula6 cluster
+sbatch ./DEdreamsubset.sh tot.keepRep2.pch20.fml6.nofc.bh tot keepRep2 FALSE TRUE pch 0.2 formula6 adhoc
+sbatch ./DEdreamsubset.sh tot.keepRep2.pch20.fml6.nofc.bh tot keepRep2 FALSE TRUE pch 0.2 formula6 ostadhoc
+
+sbatch ./DEdreamsubset.sh t2.keepRep2.pch20.fml6.nofc.bh t2 keepRep2 FALSE TRUE pch 0.2 formula6 cluster
+sbatch ./DEdreamsubset.sh t2.keepRep2.pch20.fml6.nofc.bh t2 keepRep2 FALSE TRUE pch 0.2 formula6 adhoc
+sbatch ./DEdreamsubset.sh t2.keepRep2.pch20.fml6.nofc.bh t2 keepRep2 FALSE TRUE pch 0.2 formula6 ostadhoc
+
+#DE analyses with cells subsetted to smallest number across species
+sbatch ./DEdreamsubset.sh tot.subNum.pch20.fml6.nofc.bh tot subNum TRUE TRUE pch 0.2 formula6 stage
+sbatch ./DEdreamsubset.sh tot.subNum.pch20.fml6.nofc.bh tot subNum TRUE TRUE pch 0.2 formula6 cluster
+sbatch ./DEdreamsubset.sh tot.subNum.pch20.fml6.nofc.bh tot subNum TRUE TRUE pch 0.2 formula6 adhoc
+sbatch ./DEdreamsubset.sh tot.subNum.pch20.fml6.nofc.bh tot subNum TRUE TRUE pch 0.2 formula6 ostadhoc
+
+sbatch ./DEdreamsubset.sh t2.subNum.pch20.fml6.nofc.bh t2 subNum TRUE TRUE pch 0.2 formula6 cluster
+sbatch ./DEdreamsubset.sh t2.subNum.pch20.fml6.nofc.bh t2 subNum TRUE TRUE pch 0.2 formula6 adhoc
+sbatch ./DEdreamsubset.sh t2.subNum.pch20.fml6.nofc.bh t2 subNum TRUE TRUE pch 0.2 formula6 ostadhoc
+
+```
+
+```{bash, eval=FALSE}
+
+sbatch ./DEdream.sh tot.sc.pch20.fml5.nofc.bh tot sc TRUE pch 0.2 formula5 stage
+sbatch ./DEdream.sh tot.sc.pch20.fml5.nofc.bh tot sc TRUE pch 0.2 formula5 cluster
+sbatch ./DEdream.sh tot.sc.pch20.fml5.nofc.bh tot sc TRUE pch 0.2 formula5 adhoc
+sbatch ./DEdream.sh tot.sc.pch20.fml5.nofc.bh tot sc TRUE pch 0.2 formula5 ostadhoc
+sbatch ./DEdream.sh t2.sc.pch20.fml5.nofc.bh t2 sc TRUE pch 0.2 formula5 cluster
+sbatch ./DEdream.sh t2.sc.pch20.fml5.nofc.bh t2 sc TRUE pch 0.2 formula5 adhoc
+sbatch ./DEdream.sh t2.sc.pch20.fml5.nofc.bh t2 sc TRUE pch 0.2 formula5 ostadhoc
+
+
+#####
+
+sbatch ./DEdream.sh tot.sc.pch20.fml4.nofc.bh tot sc TRUE pch 0.2 formula4 stage
+sbatch ./DEdream.sh tot.sc.pch20.fml4.nofc.bh tot sc TRUE pch 0.2 formula4 cluster
+sbatch ./DEdream.sh tot.sc.pch20.fml4.nofc.bh tot sc TRUE pch 0.2 formula4 adhoc
+sbatch ./DEdream.sh tot.sc.pch20.fml4.nofc.bh tot sc TRUE pch 0.2 formula4 ostadhoc
+sbatch ./DEdream.sh t2.sc.pch20.fml4.nofc.bh t2 sc TRUE pch 0.2 formula4 cluster
+sbatch ./DEdream.sh t2.sc.pch20.fml4.nofc.bh t2 sc TRUE pch 0.2 formula4 adhoc
+sbatch ./DEdream.sh t2.sc.pch20.fml4.nofc.bh t2 sc TRUE pch 0.2 formula4 ostadhoc
+
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml4.nofc.bh tot pseudo TRUE logcpm 0 formula4 stage
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml4.nofc.bh tot pseudo TRUE logcpm 0 formula4 cluster
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml4.nofc.bh tot pseudo TRUE logcpm 0 formula4 adhoc
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml4.nofc.bh tot pseudo TRUE logcpm 0 formula4 ostadhoc
+sbatch ./DEdream.sh t2.pseudo.logcpm0.fml4.nofc.bh t2 pseudo TRUE logcpm 0 formula4 cluster
+sbatch ./DEdream.sh t2.pseudo.logcpm0.fml4.nofc.bh t2 pseudo TRUE logcpm 0 formula4 adhoc
+sbatch ./DEdream.sh t2.pseudo.logcpm0.fml4.nofc.bh t2 pseudo TRUE logcpm 0 formula4 ostadhoc
+
+
+#####
+##### OTHER ANALYSES RUN BUT NOT USED
+#####
+
+#standard DE analyses
 sbatch ./DEdream.sh totcell.filter.pch20.fml1.nofc.bh TRUE pch 0.2 formula1 FALSE BH stage
 sbatch ./DEdream.sh totcell.filter.pch20.fml1.nofc.bh TRUE pch 0.2 formula1 FALSE BH cluster
 sbatch ./DEdream.sh totcell.filter.pch20.fml1.nofc.bh TRUE pch 0.2 formula1 FALSE BH adhoc
@@ -749,7 +864,7 @@ sbatch ./DEedgeRsubset.sh totcell.keepRep2.filter.pch20.fc.bh TRUE pch 0.2 keepR
 sbatch ./DEedgeRsubset.sh totcell.keepRep2.filter.pch20.fc.bh TRUE pch 0.2 keepRep2 FALSE TRUE BH adhoc
 sbatch ./DEedgeRsubset.sh totcell.keepRep2.filter.pch20.fc.bh TRUE pch 0.2 keepRep2 FALSE TRUE BH ostadhoc
 
-#DE analyses with cells subsetted to smallest number across species - TO DO
+#DE analyses with cells subsetted to smallest number across species
 sbatch ./DEdreamsubset.sh totcell.subNum.filter.pch20.fml1.nofc.bh tot subNum TRUE TRUE pch 0.2 formula1 stage
 sbatch ./DEdreamsubset.sh totcell.subNum.filter.pch20.fml1.nofc.bh tot subNum TRUE TRUE pch 0.2 formula1 cluster
 sbatch ./DEdreamsubset.sh totcell.subNum.filter.pch20.fml1.nofc.bh tot subNum TRUE TRUE pch 0.2 formula1 adhoc
@@ -786,21 +901,32 @@ sbatch ./DEedgeRsubset.sh totcell.subNum.filter.pch20.fc.bh TRUE pch 0.2 NULL TR
 
 ```{r}
 
-compare <- readRDS("./data/de-data/DEdream.totcell.filter.pch20.fml5.nofc.bh.stage.rds")
-compare <- readRDS("./data/de-data/DEdream.totcell.filter.pch20.fml5.nofc.bh.cluster.rds")
-compare <- readRDS("./data/de-data/DEdream.totcell.filter.pch20.fml5.nofc.bh.adhoc.rds")
-compare <- readRDS("./data/de-data/DEdream.totcell.filter.pch20.fml5.nofc.bh.ostadhoc.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.sc.pch20.fml5.nofc.bh.stage.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.sc.pch20.fml5.nofc.bh.cluster.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.sc.pch20.fml5.nofc.bh.adhoc.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.sc.pch20.fml5.nofc.bh.ostadhoc.rds")
 
-compare <- readRDS("./data/de-data/DEdream.totcell.keepRep1.filter.pch20.fml1.nofc.bh.stage.rds")
-compare <- readRDS("./data/de-data/DEdream.totcell.keepRep2.filter.pch20.fml1.nofc.bh.stage.rds")
-compare <- readRDS("./data/de-data/DEdream.totcell.subNum.filter.pch20.fml1.nofc.bh.stage.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.stage.rds")
+compare <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.cluster.rds")
+compare <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.adhoc.rds")
+compare <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.rds")
+
+compare <- readRDS("./data/de-data/DEdream.tot.keepRep1.pch20.fml6.nofc.bh.stage.rds")
+compare <- readRDS("./data/de-data/DEdream.t2.keepRep1.pch20.fml6.nofc.bh.cluster.rds")
+compare <- readRDS("./data/de-data/DEdream.t2.keepRep1.pch20.fml6.nofc.bh.adhoc.rds")
+compare <- readRDS("./data/de-data/DEdream.t2.keepRep1.pch20.fml6.nofc.bh.ostadhoc.rds")
+
+compare <- readRDS("./data/de-data/DEdream.tot.keepRep2.pch20.fml6.nofc.bh.stage.rds")
+compare <- readRDS("./data/de-data/DEdream.t2.keepRep2.pch20.fml6.nofc.bh.cluster.rds")
+compare <- readRDS("./data/de-data/DEdream.t2.keepRep2.pch20.fml6.nofc.bh.adhoc.rds")
+compare <- readRDS("./data/de-data/DEdream.t2.keepRep2.pch20.fml6.nofc.bh.ostadhoc.rds")
+
+compare <- readRDS("./data/de-data/DEdream.tot.subNum.pch20.fml6.nofc.bh.stage.rds")
+compare <- readRDS("./data/de-data/DEdream.t2.subNum.pch20.fml6.nofc.bh.cluster.rds")
+compare <- readRDS("./data/de-data/DEdream.t2.subNum.pch20.fml6.nofc.bh.adhoc.rds")
+compare <- readRDS("./data/de-data/DEdream.t2.subNum.pch20.fml6.nofc.bh.ostadhoc.rds")
+
 colnames(compare)[5] <- "FDR"
-
-#compare <- readRDS("./data/de-data/DEdream.totcell.pseudo.nofilter.fml1.nofc.bh.stage.rds")
-#compare <- readRDS("./data/de-data/DEdream.totcell.pseudo.nofilter.fml1.nofc.bh.cluster.rds")
-#compare <- readRDS("./data/de-data/DEdream.totcell.pseudo.nofilter.fml1.nofc.bh.adhoc.rds")
-#compare <- readRDS("./data/de-data/DEdream.totcell.pseudo.nofilter.fml1.nofc.bh.ostadhoc.rds")
-#colnames(compare)[5] <- "FDR"
 
 #compare <- readRDS("./data/de-data/DEedgeR.totcell.filter.pch20.fc.bh.stage.rds")
 #compare <- readRDS("./data/de-data/DEedgeR.totcell.filter.pch20.fc.bh.cluster.rds")
@@ -812,15 +938,16 @@ colnames(compare)[5] <- "FDR"
 #compare <- readRDS("./data/de-data/DEedgeR.totcell.subNum.filter.pch20.fc.bh.ostadhoc.rds")
 
 #compare$DEgene <- (compare$FDR<0.01 & abs(compare$logFC)>1.2)
-compare$DEgene <- (compare$FDR<0.05 & abs(compare$logFC)>0.5)
+#compare$DEgene <- (compare$FDR<0.05 & abs(compare$logFC)>0.5)
+compare$DEgene <- compare$FDR<0.05
 
 #numbers of genes
 table(compare$cell.subset)
 #table(compare$cell.subset[which(compare$FDR<0.1)])
 table(compare$cell.subset[which(compare$FDR<0.05)])
 #table(compare$cell.subset[which(compare$FDR<0.01)])
-table(compare$cell.subset[which(compare$FDR<0.05 & abs(compare$logFC)>.5)])
-table(compare$cell.subset[which(compare$FDR<0.05 & abs(compare$logFC)>1.2)])
+#table(compare$cell.subset[which(compare$FDR<0.05 & abs(compare$logFC)>.5)])
+#table(compare$cell.subset[which(compare$FDR<0.05 & abs(compare$logFC)>1.2)])
 #table(compare$cell.subset[which(compare$FDR<0.01 & abs(compare$logFC)>1.2)])
 
 #logFC

@@ -229,26 +229,26 @@ Define new metadata label for clusters (resolution=0.1).
 data <- AddMetaData(data, rep(NA,length(rownames(data@meta.data))), col.name="Cluster")
 
 if(scrna=="./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t2.rds"){
-  data$Cluster[which(data$integrated_snn_res.0.1=="2")] <- "Osteoblast.c1"
-  data$Cluster[which(data$integrated_snn_res.0.1=="0")] <- "Osteoblast.c2"
-  data$Cluster[which(data$integrated_snn_res.0.1=="4")] <- "Osteoblast.c3"
-  data$Cluster[which(data$integrated_snn_res.0.1=="3")] <- "Osteoblast.c4"
-  data$Cluster[which(data$integrated_snn_res.0.1=="1")] <- "Osteoblast.c5"  
+  data$Cluster[which(data$integrated_snn_res.0.1=="2")] <- "Osteogenic.c1"
+  data$Cluster[which(data$integrated_snn_res.0.1=="0")] <- "Osteogenic.c2"
+  data$Cluster[which(data$integrated_snn_res.0.1=="4")] <- "Osteogenic.c3"
+  data$Cluster[which(data$integrated_snn_res.0.1=="3")] <- "Osteogenic.c4"
+  data$Cluster[which(data$integrated_snn_res.0.1=="1")] <- "Osteogenic.c5"  
 }
 
 if(scrna=="./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.rds"){
-  data$Cluster[which(data$integrated_snn_res.0.1=="2")] <- "Osteoblast.c1"
-  data$Cluster[which(data$integrated_snn_res.0.1=="0")] <- "Osteoblast.c2"
-  data$Cluster[which(data$integrated_snn_res.0.1=="4")] <- "Osteoblast.c3"
-  data$Cluster[which(data$integrated_snn_res.0.1=="3")] <- "Osteoblast.c4"
-  data$Cluster[which(data$integrated_snn_res.0.1=="1")] <- "Osteoblast.c5"   
+  data$Cluster[which(data$integrated_snn_res.0.1=="2")] <- "Osteogenic.c1"
+  data$Cluster[which(data$integrated_snn_res.0.1=="0")] <- "Osteogenic.c2"
+  data$Cluster[which(data$integrated_snn_res.0.1=="4")] <- "Osteogenic.c3"
+  data$Cluster[which(data$integrated_snn_res.0.1=="3")] <- "Osteogenic.c4"
+  data$Cluster[which(data$integrated_snn_res.0.1=="1")] <- "Osteogenic.c5"   
 }
 
 ```
 
 Calculate numbers of cells in each cluster given particular parameters.
 
-                   Osteoblast.c1 | Osteoblast.c2 | Osteoblast.c3 | Osteoblast.c4 | Osteoblast.c5 |
+                   Osteogenic.c1 | Osteogenic.c2 | Osteogenic.c3 | Osteogenic.c4 | Osteogenic.c5 |
 
 tot19k.reg.res.0.1          6367 |         13156 |           404 |           530 |          6694 |
 Human:                      2927 |          5049 |           145 |           529 |          3915 |

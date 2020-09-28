@@ -1384,6 +1384,6 @@ DimPlot(data, group.by="Stage", split.by="OstAdHoc.Assign.5gene.median", reducti
 ```{r}
 
 saveRDS(data, file="./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds")
-#saveRDS(data, file="./data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.assign.rds")
+saveRDS(data, file="./data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.assign.rds")
 
 ```
