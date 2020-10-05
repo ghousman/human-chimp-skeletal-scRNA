@@ -712,22 +712,50 @@ cd /project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA/code
 #standard DE analyses
 sbatch ./DEdream.sh tot.sc.pch20.fml6.nofc.bh tot sc TRUE pch 0.2 formula6 stage
 sbatch ./DEdream.sh tot.sc.pch20.fml6.nofc.bh tot sc TRUE pch 0.2 formula6 cluster
-sbatch ./DEdream.sh tot.sc.pch20.fml6.nofc.bh tot sc TRUE pch 0.2 formula6 adhoc
-sbatch ./DEdream.sh tot.sc.pch20.fml6.nofc.bh tot sc TRUE pch 0.2 formula6 ostadhoc
+sbatch ./DEdream.sh tot.sc.pch20.fml6.nofc.bh tot sc TRUE pch 0.2 formula6 cluster25
+sbatch ./DEdream.sh tot.sc.pch20.fml6.nofc.bh tot sc TRUE pch 0.2 formula6 cluster50
+sbatch ./DEdream.sh tot.sc.pch20.fml6.nofc.bh tot sc TRUE pch 0.2 formula6 clustert2
+#sbatch ./DEdream.sh tot.sc.pch20.fml6.nofc.bh tot sc TRUE pch 0.2 formula6 adhoc
+#sbatch ./DEdream.sh tot.sc.pch20.fml6.nofc.bh tot sc TRUE pch 0.2 formula6 ostadhoc
+sbatch ./DEdream.sh tot.sc.pch20.fml6.nofc.bh tot sc TRUE pch 0.2 formula6 adhocscale0
+sbatch ./DEdream.sh tot.sc.pch20.fml6.nofc.bh tot sc TRUE pch 0.2 formula6 ostadhocscale0
+sbatch ./DEdream.sh tot.sc.pch20.fml6.nofc.bh tot sc TRUE pch 0.2 formula6 ostadhocXscale0
+sbatch ./DEdream.sh tot.sc.pch20.fml6.nofc.bh tot sc TRUE pch 0.2 formula6 ostadhocscale0t2
+sbatch ./DEdream.sh tot.sc.pch20.fml6.nofc.bh tot sc TRUE pch 0.2 formula6 ostadhocXscale0t2
 
 sbatch ./DEdream.sh t2.sc.pch20.fml6.nofc.bh t2 sc TRUE pch 0.2 formula6 cluster
-sbatch ./DEdream.sh t2.sc.pch20.fml6.nofc.bh t2 sc TRUE pch 0.2 formula6 adhoc
-sbatch ./DEdream.sh t2.sc.pch20.fml6.nofc.bh t2 sc TRUE pch 0.2 formula6 ostadhoc
+sbatch ./DEdream.sh t2.sc.pch20.fml6.nofc.bh t2 sc TRUE pch 0.2 formula6 cluster50tot
+#sbatch ./DEdream.sh t2.sc.pch20.fml6.nofc.bh t2 sc TRUE pch 0.2 formula6 adhoc
+#sbatch ./DEdream.sh t2.sc.pch20.fml6.nofc.bh t2 sc TRUE pch 0.2 formula6 ostadhoc
+sbatch ./DEdream.sh t2.sc.pch20.fml6.nofc.bh t2 sc TRUE pch 0.2 formula6 adhocscale0
+sbatch ./DEdream.sh t2.sc.pch20.fml6.nofc.bh t2 sc TRUE pch 0.2 formula6 ostadhocscale0
+sbatch ./DEdream.sh t2.sc.pch20.fml6.nofc.bh t2 sc TRUE pch 0.2 formula6 ostadhocXscale0
+sbatch ./DEdream.sh t2.sc.pch20.fml6.nofc.bh t2 sc TRUE pch 0.2 formula6 ostadhocscale0tot
+sbatch ./DEdream.sh t2.sc.pch20.fml6.nofc.bh t2 sc TRUE pch 0.2 formula6 ostadhocXscale0tot
 
 #pseudobulk DE analyses
 sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 stage
 sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 cluster
-sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 adhoc
-sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostadhoc
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 cluster25
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 cluster50
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 clustert2
+#sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 adhoc
+#sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostadhoc
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 adhocscale0
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostadhocscale0
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostadhocXscale0
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostadhocscale0t2
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostadhocXscale0t2
 
 sbatch ./DEdream.sh t2.pseudo.logcpm0.fml6.nofc.bh t2 pseudo TRUE logcpm 0 formula6 cluster
-sbatch ./DEdream.sh t2.pseudo.logcpm0.fml6.nofc.bh t2 pseudo TRUE logcpm 0 formula6 adhoc
-sbatch ./DEdream.sh t2.pseudo.logcpm0.fml6.nofc.bh t2 pseudo TRUE logcpm 0 formula6 ostadhoc
+sbatch ./DEdream.sh t2.pseudo.logcpm0.fml6.nofc.bh t2 pseudo TRUE logcpm 0 formula6 cluster50tot
+#sbatch ./DEdream.sh t2.pseudo.logcpm0.fml6.nofc.bh t2 pseudo TRUE logcpm 0 formula6 adhoc
+#sbatch ./DEdream.sh t2.pseudo.logcpm0.fml6.nofc.bh t2 pseudo TRUE logcpm 0 formula6 ostadhoc
+sbatch ./DEdream.sh t2.pseudo.logcpm0.fml6.nofc.bh t2 pseudo TRUE logcpm 0 formula6 adhocscale0
+sbatch ./DEdream.sh t2.pseudo.logcpm0.fml6.nofc.bh t2 pseudo TRUE logcpm 0 formula6 ostadhocscale0
+sbatch ./DEdream.sh t2.pseudo.logcpm0.fml6.nofc.bh t2 pseudo TRUE logcpm 0 formula6 ostadhocXscale0
+sbatch ./DEdream.sh t2.pseudo.logcpm0.fml6.nofc.bh t2 pseudo TRUE logcpm 0 formula6 ostadhocscale0tot
+sbatch ./DEdream.sh t2.pseudo.logcpm0.fml6.nofc.bh t2 pseudo TRUE logcpm 0 formula6 ostadhocXscale0tot
 
 #DE analyses with replicate 1 samples removed
 sbatch ./DEdreamsubset.sh tot.keepRep1.pch20.fml6.nofc.bh tot keepRep1 FALSE TRUE pch 0.2 formula6 stage
@@ -765,30 +793,103 @@ sbatch ./DEdreamsubset.sh t2.subNum.pch20.fml6.nofc.bh t2 subNum TRUE TRUE pch 0
 
 sbatch ./DEdream.sh tot.sc.pch20.fml5.nofc.bh tot sc TRUE pch 0.2 formula5 stage
 sbatch ./DEdream.sh tot.sc.pch20.fml5.nofc.bh tot sc TRUE pch 0.2 formula5 cluster
-sbatch ./DEdream.sh tot.sc.pch20.fml5.nofc.bh tot sc TRUE pch 0.2 formula5 adhoc
-sbatch ./DEdream.sh tot.sc.pch20.fml5.nofc.bh tot sc TRUE pch 0.2 formula5 ostadhoc
+sbatch ./DEdream.sh tot.sc.pch20.fml5.nofc.bh tot sc TRUE pch 0.2 formula5 cluster25
+sbatch ./DEdream.sh tot.sc.pch20.fml5.nofc.bh tot sc TRUE pch 0.2 formula5 cluster50
+sbatch ./DEdream.sh tot.sc.pch20.fml5.nofc.bh tot sc TRUE pch 0.2 formula5 clustert2
+#sbatch ./DEdream.sh tot.sc.pch20.fml5.nofc.bh tot sc TRUE pch 0.2 formula5 adhoc
+#sbatch ./DEdream.sh tot.sc.pch20.fml5.nofc.bh tot sc TRUE pch 0.2 formula5 ostadhoc
+sbatch ./DEdream.sh tot.sc.pch20.fml5.nofc.bh tot sc TRUE pch 0.2 formula5 adhocscale0
+sbatch ./DEdream.sh tot.sc.pch20.fml5.nofc.bh tot sc TRUE pch 0.2 formula5 ostadhocscale0
+sbatch ./DEdream.sh tot.sc.pch20.fml5.nofc.bh tot sc TRUE pch 0.2 formula5 ostadhocXscale0
+sbatch ./DEdream.sh tot.sc.pch20.fml5.nofc.bh tot sc TRUE pch 0.2 formula5 ostadhocscale0t2
+sbatch ./DEdream.sh tot.sc.pch20.fml5.nofc.bh tot sc TRUE pch 0.2 formula5 ostadhocXscale0t2
 sbatch ./DEdream.sh t2.sc.pch20.fml5.nofc.bh t2 sc TRUE pch 0.2 formula5 cluster
-sbatch ./DEdream.sh t2.sc.pch20.fml5.nofc.bh t2 sc TRUE pch 0.2 formula5 adhoc
-sbatch ./DEdream.sh t2.sc.pch20.fml5.nofc.bh t2 sc TRUE pch 0.2 formula5 ostadhoc
+sbatch ./DEdream.sh t2.sc.pch20.fml5.nofc.bh t2 sc TRUE pch 0.2 formula5 cluster50tot
+#sbatch ./DEdream.sh t2.sc.pch20.fml5.nofc.bh t2 sc TRUE pch 0.2 formula5 adhoc
+#sbatch ./DEdream.sh t2.sc.pch20.fml5.nofc.bh t2 sc TRUE pch 0.2 formula5 ostadhoc
+sbatch ./DEdream.sh t2.sc.pch20.fml5.nofc.bh t2 sc TRUE pch 0.2 formula5 adhocscale0
+sbatch ./DEdream.sh t2.sc.pch20.fml5.nofc.bh t2 sc TRUE pch 0.2 formula5 ostadhocscale0
+sbatch ./DEdream.sh t2.sc.pch20.fml5.nofc.bh t2 sc TRUE pch 0.2 formula5 ostadhocXscale0
+sbatch ./DEdream.sh t2.sc.pch20.fml5.nofc.bh t2 sc TRUE pch 0.2 formula5 ostadhocscale0tot
+sbatch ./DEdream.sh t2.sc.pch20.fml5.nofc.bh t2 sc TRUE pch 0.2 formula5 ostadhocXscale0tot
 
+sbatch ./DEdreamsubset.sh tot.keepRep1.pch20.fml5.nofc.bh tot keepRep1 FALSE TRUE pch 0.2 formula5 stage
+sbatch ./DEdreamsubset.sh tot.keepRep1.pch20.fml5.nofc.bh tot keepRep1 FALSE TRUE pch 0.2 formula5 cluster
+sbatch ./DEdreamsubset.sh tot.keepRep1.pch20.fml5.nofc.bh tot keepRep1 FALSE TRUE pch 0.2 formula5 adhoc
+sbatch ./DEdreamsubset.sh tot.keepRep1.pch20.fml5.nofc.bh tot keepRep1 FALSE TRUE pch 0.2 formula5 ostadhoc
+sbatch ./DEdreamsubset.sh t2.keepRep1.pch20.fml5.nofc.bh t2 keepRep1 FALSE TRUE pch 0.2 formula5 cluster
+sbatch ./DEdreamsubset.sh t2.keepRep1.pch20.fml5.nofc.bh t2 keepRep1 FALSE TRUE pch 0.2 formula5 adhoc
+sbatch ./DEdreamsubset.sh t2.keepRep1.pch20.fml5.nofc.bh t2 keepRep1 FALSE TRUE pch 0.2 formula5 ostadhoc
+
+sbatch ./DEdreamsubset.sh tot.keepRep2.pch20.fml5.nofc.bh tot keepRep2 FALSE TRUE pch 0.2 formula5 stage
+sbatch ./DEdreamsubset.sh tot.keepRep2.pch20.fml5.nofc.bh tot keepRep2 FALSE TRUE pch 0.2 formula5 cluster
+sbatch ./DEdreamsubset.sh tot.keepRep2.pch20.fml5.nofc.bh tot keepRep2 FALSE TRUE pch 0.2 formula5 adhoc
+sbatch ./DEdreamsubset.sh tot.keepRep2.pch20.fml5.nofc.bh tot keepRep2 FALSE TRUE pch 0.2 formula5 ostadhoc
+sbatch ./DEdreamsubset.sh t2.keepRep2.pch20.fml5.nofc.bh t2 keepRep2 FALSE TRUE pch 0.2 formula5 cluster
+sbatch ./DEdreamsubset.sh t2.keepRep2.pch20.fml5.nofc.bh t2 keepRep2 FALSE TRUE pch 0.2 formula5 adhoc
+sbatch ./DEdreamsubset.sh t2.keepRep2.pch20.fml5.nofc.bh t2 keepRep2 FALSE TRUE pch 0.2 formula5 ostadhoc
+
+sbatch ./DEdreamsubset.sh tot.subNum.pch20.fml5.nofc.bh tot subNum TRUE TRUE pch 0.2 formula5 stage
+sbatch ./DEdreamsubset.sh tot.subNum.pch20.fml5.nofc.bh tot subNum TRUE TRUE pch 0.2 formula5 cluster
+sbatch ./DEdreamsubset.sh tot.subNum.pch20.fml5.nofc.bh tot subNum TRUE TRUE pch 0.2 formula5 adhoc
+sbatch ./DEdreamsubset.sh tot.subNum.pch20.fml5.nofc.bh tot subNum TRUE TRUE pch 0.2 formula5 ostadhoc
+sbatch ./DEdreamsubset.sh t2.subNum.pch20.fml5.nofc.bh t2 subNum TRUE TRUE pch 0.2 formula5 cluster
+sbatch ./DEdreamsubset.sh t2.subNum.pch20.fml5.nofc.bh t2 subNum TRUE TRUE pch 0.2 formula5 adhoc
+sbatch ./DEdreamsubset.sh t2.subNum.pch20.fml5.nofc.bh t2 subNum TRUE TRUE pch 0.2 formula5 ostadhoc
 
 #####
 
 sbatch ./DEdream.sh tot.sc.pch20.fml4.nofc.bh tot sc TRUE pch 0.2 formula4 stage
 sbatch ./DEdream.sh tot.sc.pch20.fml4.nofc.bh tot sc TRUE pch 0.2 formula4 cluster
-sbatch ./DEdream.sh tot.sc.pch20.fml4.nofc.bh tot sc TRUE pch 0.2 formula4 adhoc
-sbatch ./DEdream.sh tot.sc.pch20.fml4.nofc.bh tot sc TRUE pch 0.2 formula4 ostadhoc
+sbatch ./DEdream.sh tot.sc.pch20.fml4.nofc.bh tot sc TRUE pch 0.2 formula4 cluster25
+sbatch ./DEdream.sh tot.sc.pch20.fml4.nofc.bh tot sc TRUE pch 0.2 formula4 cluster50
+sbatch ./DEdream.sh tot.sc.pch20.fml4.nofc.bh tot sc TRUE pch 0.2 formula4 clustert2
+#sbatch ./DEdream.sh tot.sc.pch20.fml4.nofc.bh tot sc TRUE pch 0.2 formula4 adhoc
+#sbatch ./DEdream.sh tot.sc.pch20.fml4.nofc.bh tot sc TRUE pch 0.2 formula4 ostadhoc
+sbatch ./DEdream.sh tot.sc.pch20.fml4.nofc.bh tot sc TRUE pch 0.2 formula4 adhocscale0
+sbatch ./DEdream.sh tot.sc.pch20.fml4.nofc.bh tot sc TRUE pch 0.2 formula4 ostadhocscale0
+sbatch ./DEdream.sh tot.sc.pch20.fml4.nofc.bh tot sc TRUE pch 0.2 formula4 ostadhocXscale0
+sbatch ./DEdream.sh tot.sc.pch20.fml4.nofc.bh tot sc TRUE pch 0.2 formula4 ostadhocscale0t2
+sbatch ./DEdream.sh tot.sc.pch20.fml4.nofc.bh tot sc TRUE pch 0.2 formula4 ostadhocXscale0t2
 sbatch ./DEdream.sh t2.sc.pch20.fml4.nofc.bh t2 sc TRUE pch 0.2 formula4 cluster
-sbatch ./DEdream.sh t2.sc.pch20.fml4.nofc.bh t2 sc TRUE pch 0.2 formula4 adhoc
-sbatch ./DEdream.sh t2.sc.pch20.fml4.nofc.bh t2 sc TRUE pch 0.2 formula4 ostadhoc
+sbatch ./DEdream.sh t2.sc.pch20.fml4.nofc.bh t2 sc TRUE pch 0.2 formula4 cluster50tot
+#sbatch ./DEdream.sh t2.sc.pch20.fml4.nofc.bh t2 sc TRUE pch 0.2 formula4 adhoc
+#sbatch ./DEdream.sh t2.sc.pch20.fml4.nofc.bh t2 sc TRUE pch 0.2 formula4 ostadhoc
+sbatch ./DEdream.sh t2.sc.pch20.fml4.nofc.bh t2 sc TRUE pch 0.2 formula4 adhocscale0
+sbatch ./DEdream.sh t2.sc.pch20.fml4.nofc.bh t2 sc TRUE pch 0.2 formula4 ostadhocscale0
+sbatch ./DEdream.sh t2.sc.pch20.fml4.nofc.bh t2 sc TRUE pch 0.2 formula4 ostadhocXscale0
+sbatch ./DEdream.sh t2.sc.pch20.fml4.nofc.bh t2 sc TRUE pch 0.2 formula4 ostadhocscale0tot
+sbatch ./DEdream.sh t2.sc.pch20.fml4.nofc.bh t2 sc TRUE pch 0.2 formula4 ostadhocXscale0tot
 
 sbatch ./DEdream.sh tot.pseudo.logcpm0.fml4.nofc.bh tot pseudo TRUE logcpm 0 formula4 stage
 sbatch ./DEdream.sh tot.pseudo.logcpm0.fml4.nofc.bh tot pseudo TRUE logcpm 0 formula4 cluster
-sbatch ./DEdream.sh tot.pseudo.logcpm0.fml4.nofc.bh tot pseudo TRUE logcpm 0 formula4 adhoc
-sbatch ./DEdream.sh tot.pseudo.logcpm0.fml4.nofc.bh tot pseudo TRUE logcpm 0 formula4 ostadhoc
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml4.nofc.bh tot pseudo TRUE logcpm 0 formula4 cluster25
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml4.nofc.bh tot pseudo TRUE logcpm 0 formula4 cluster50
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml4.nofc.bh tot pseudo TRUE logcpm 0 formula4 clustert2
+#sbatch ./DEdream.sh tot.pseudo.logcpm0.fml4.nofc.bh tot pseudo TRUE logcpm 0 formula4 adhoc
+#sbatch ./DEdream.sh tot.pseudo.logcpm0.fml4.nofc.bh tot pseudo TRUE logcpm 0 formula4 ostadhoc
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml4.nofc.bh tot pseudo TRUE logcpm 0 formula4 adhocscale0
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml4.nofc.bh tot pseudo TRUE logcpm 0 formula4 ostadhocscale0
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml4.nofc.bh tot pseudo TRUE logcpm 0 formula4 ostadhocXscale0
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml4.nofc.bh tot pseudo TRUE logcpm 0 formula4 ostadhocscale0t2
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml4.nofc.bh tot pseudo TRUE logcpm 0 formula4 ostadhocXscale0t2
 sbatch ./DEdream.sh t2.pseudo.logcpm0.fml4.nofc.bh t2 pseudo TRUE logcpm 0 formula4 cluster
-sbatch ./DEdream.sh t2.pseudo.logcpm0.fml4.nofc.bh t2 pseudo TRUE logcpm 0 formula4 adhoc
-sbatch ./DEdream.sh t2.pseudo.logcpm0.fml4.nofc.bh t2 pseudo TRUE logcpm 0 formula4 ostadhoc
+sbatch ./DEdream.sh t2.pseudo.logcpm0.fml4.nofc.bh t2 pseudo TRUE logcpm 0 formula4 cluster50tot
+#sbatch ./DEdream.sh t2.pseudo.logcpm0.fml4.nofc.bh t2 pseudo TRUE logcpm 0 formula4 adhoc
+#sbatch ./DEdream.sh t2.pseudo.logcpm0.fml4.nofc.bh t2 pseudo TRUE logcpm 0 formula4 ostadhoc
+sbatch ./DEdream.sh t2.pseudo.logcpm0.fml4.nofc.bh t2 pseudo TRUE logcpm 0 formula4 adhocscale0
+sbatch ./DEdream.sh t2.pseudo.logcpm0.fml4.nofc.bh t2 pseudo TRUE logcpm 0 formula4 ostadhocscale0
+sbatch ./DEdream.sh t2.pseudo.logcpm0.fml4.nofc.bh t2 pseudo TRUE logcpm 0 formula4 ostadhocXscale0
+sbatch ./DEdream.sh t2.pseudo.logcpm0.fml4.nofc.bh t2 pseudo TRUE logcpm 0 formula4 ostadhocscale0tot
+sbatch ./DEdream.sh t2.pseudo.logcpm0.fml4.nofc.bh t2 pseudo TRUE logcpm 0 formula4 ostadhocXscale0tot
+
+sbatch ./DEdreamsubset.sh tot.subNum.pch20.fml4.nofc.bh tot subNum TRUE TRUE pch 0.2 formula4 stage
+sbatch ./DEdreamsubset.sh tot.subNum.pch20.fml4.nofc.bh tot subNum TRUE TRUE pch 0.2 formula4 cluster
+sbatch ./DEdreamsubset.sh tot.subNum.pch20.fml4.nofc.bh tot subNum TRUE TRUE pch 0.2 formula4 adhoc
+sbatch ./DEdreamsubset.sh tot.subNum.pch20.fml4.nofc.bh tot subNum TRUE TRUE pch 0.2 formula4 ostadhoc
+sbatch ./DEdreamsubset.sh t2.subNum.pch20.fml4.nofc.bh t2 subNum TRUE TRUE pch 0.2 formula4 cluster
+sbatch ./DEdreamsubset.sh t2.subNum.pch20.fml4.nofc.bh t2 subNum TRUE TRUE pch 0.2 formula4 adhoc
+sbatch ./DEdreamsubset.sh t2.subNum.pch20.fml4.nofc.bh t2 subNum TRUE TRUE pch 0.2 formula4 ostadhoc
 
 
 #####
@@ -901,25 +1002,31 @@ sbatch ./DEedgeRsubset.sh totcell.subNum.filter.pch20.fc.bh TRUE pch 0.2 NULL TR
 
 ```{r}
 
-compare <- readRDS("./data/de-data/DEdream.tot.sc.pch20.fml5.nofc.bh.stage.rds")
-compare <- readRDS("./data/de-data/DEdream.tot.sc.pch20.fml5.nofc.bh.cluster.rds")
-compare <- readRDS("./data/de-data/DEdream.tot.sc.pch20.fml5.nofc.bh.adhoc.rds")
-compare <- readRDS("./data/de-data/DEdream.tot.sc.pch20.fml5.nofc.bh.ostadhoc.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.sc.pch20.fml6.nofc.bh.stage.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.sc.pch20.fml6.nofc.bh.cluster.rds")
+#compare <- readRDS("./data/de-data/DEdream.tot.sc.pch20.fml6.nofc.bh.adhoc.rds")
+#compare <- readRDS("./data/de-data/DEdream.tot.sc.pch20.fml6.nofc.bh.ostadhoc.rds")
+compare <- readRDS("./data/de-data/DEdream.t2.sc.pch20.fml6.nofc.bh.adhocscale0.rds")
+compare <- readRDS("./data/de-data/DEdream.t2.sc.pch20.fml6.nofc.bh.ostadhocscale0.rds")
+compare <- readRDS("./data/de-data/DEdream.t2.sc.pch20.fml6.nofc.bh.ostadhocXscale0.rds")
 
 compare <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.stage.rds")
 compare <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.cluster.rds")
-compare <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.adhoc.rds")
-compare <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.rds")
+#compare <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.adhoc.rds")
+#compare <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.rds")
+compare <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.adhocscale0.rds")
+compare <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.ostadhocscale0.rds")
+compare <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.ostadhocXscale0.rds")
 
-compare <- readRDS("./data/de-data/DEdream.tot.keepRep1.pch20.fml6.nofc.bh.stage.rds")
-compare <- readRDS("./data/de-data/DEdream.t2.keepRep1.pch20.fml6.nofc.bh.cluster.rds")
-compare <- readRDS("./data/de-data/DEdream.t2.keepRep1.pch20.fml6.nofc.bh.adhoc.rds")
-compare <- readRDS("./data/de-data/DEdream.t2.keepRep1.pch20.fml6.nofc.bh.ostadhoc.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.keepRep1.pch20.fml5.nofc.bh.stage.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.keepRep1.pch20.fml5.nofc.bh.cluster.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.keepRep1.pch20.fml5.nofc.bh.adhoc.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.keepRep1.pch20.fml5.nofc.bh.ostadhoc.rds")
 
-compare <- readRDS("./data/de-data/DEdream.tot.keepRep2.pch20.fml6.nofc.bh.stage.rds")
-compare <- readRDS("./data/de-data/DEdream.t2.keepRep2.pch20.fml6.nofc.bh.cluster.rds")
-compare <- readRDS("./data/de-data/DEdream.t2.keepRep2.pch20.fml6.nofc.bh.adhoc.rds")
-compare <- readRDS("./data/de-data/DEdream.t2.keepRep2.pch20.fml6.nofc.bh.ostadhoc.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.keepRep2.pch20.fml5.nofc.bh.stage.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.keepRep2.pch20.fml5.nofc.bh.cluster.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.keepRep2.pch20.fml5.nofc.bh.adhoc.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.keepRep2.pch20.fml5.nofc.bh.ostadhoc.rds")
 
 compare <- readRDS("./data/de-data/DEdream.tot.subNum.pch20.fml6.nofc.bh.stage.rds")
 compare <- readRDS("./data/de-data/DEdream.t2.subNum.pch20.fml6.nofc.bh.cluster.rds")

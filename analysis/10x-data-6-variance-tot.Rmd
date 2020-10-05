@@ -36,6 +36,16 @@ library(reshape2)
 
 ```{r}
 
+min.mean.sd.max <- function(x) {
+  r <- c(min(x), mean(x) - sd(x), mean(x), mean(x) + sd(x), max(x))
+  names(r) <- c("ymin", "lower", "middle", "upper", "ymax")
+  r
+}
+
+```
+
+```{r}
+
 #Load data
 scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds" #integrate across individuals - total (19k genes + regress out UMI/mito)
 #scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.assign.rds" #integrate across individuals - total (19k genes)
@@ -1776,7 +1786,7 @@ t.test(HC.var$C6.1_MSC,HC.var$C6.1_Osteogenic) #p<2.2e-16
 groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$OstAdHoc.Assign.5gene.median,function(x)sub(" ",".",x)),sep="_"),
                       levels=c("Human_preosteoblast","Human_osteoblast","Human_embedding.osteoblast","Human_mineralizing.osteoblast","Human_maturing.osteocyte",
                                "Human_unknown.osteogenic","Human_not.osteogenic",
-                               "Chimp_preosteoblast","Chimp_osteoblast","Chimp_embedding.osteoblast","Chimp_mineralizing.osteoblast","Chimp_maturing.osteocyte","Chimp_other",
+                               "Chimp_preosteoblast","Chimp_osteoblast","Chimp_embedding.osteoblast","Chimp_mineralizing.osteoblast","Chimp_maturing.osteocyte",
                                "Chimp_unknown.osteogenic","Chimp_not.osteogenic"))
 
 # Calculate log2cpm means within species - mean decreases in osteoblasts, decreases in emb.osteoblasts (expt C), decreases in min.osteoblasts (expt C), and increases in mat.osteocytes (expt C)
@@ -1872,6 +1882,111 @@ t.test(HC.var$Chimp_preosteoblast,HC.var$Chimp_osteoblast)                     #
 t.test(HC.var$Chimp_osteoblast,HC.var$Chimp_embedding.osteoblast)              #p<2.2e-16
 t.test(HC.var$Chimp_embedding.osteoblast,HC.var$Chimp_mineralizing.osteoblast) #p=3.2e-10
 t.test(HC.var$Chimp_mineralizing.osteoblast,HC.var$Chimp_maturing.osteocyte)   #p=1.3e-09
+
+```
+
+```{r, eval=FALSE}
+
+# Compile group labels of each species
+groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$OstAdHoc.Assign.5gene.median,function(x)sub(" ",".",x)),sep="_"),
+                      levels=c("Human_preosteoblast","Human_osteoblast","Human_embedding.osteoblast","Human_mineralizing.osteoblast","Human_maturing.osteocyte",
+                               "Human_unknown.osteogenic","Human_not.osteogenic",
+                               "Chimp_preosteoblast","Chimp_osteoblast","Chimp_embedding.osteoblast","Chimp_mineralizing.osteoblast","Chimp_maturing.osteocyte",
+                               "Chimp_unknown.osteogenic","Chimp_not.osteogenic"))
+
+# Calculate log2cpm means within species - mean decreases in ost (expt C), decreases in emb.ost, decreases in min.ost, and increases in mat.ost
+HC.mean <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.mean["gene"] <- rownames(tmm)
+HC.mean["Human_preosteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_preosteoblast" & dge$samples$Stage=="Time 2")],1, mean))
+HC.mean["Human_osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_osteoblast" & dge$samples$Stage=="Time 2")],1, mean))
+HC.mean["Human_embedding.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_embedding.osteoblast" & dge$samples$Stage=="Time 2")],1, mean))
+HC.mean["Human_mineralizing.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_mineralizing.osteoblast" & dge$samples$Stage=="Time 2")],1, mean))
+HC.mean["Human_maturing.osteocyte"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_maturing.osteocyte" & dge$samples$Stage=="Time 2")],1, mean))
+HC.mean["Chimp_preosteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_preosteoblast" & dge$samples$Stage=="Time 2")],1, mean))
+HC.mean["Chimp_osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_osteoblast" & dge$samples$Stage=="Time 2")],1, mean))
+HC.mean["Chimp_embedding.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_embedding.osteoblast" & dge$samples$Stage=="Time 2")],1, mean))
+HC.mean["Chimp_mineralizing.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_mineralizing.osteoblast" & dge$samples$Stage=="Time 2")],1, mean))
+HC.mean["Chimp_maturing.osteocyte"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_maturing.osteocyte" & dge$samples$Stage=="Time 2")],1, mean))
+HC.mean.melt <- melt(HC.mean,
+                     id.vars="gene",
+                     measure.vars=c("Human_preosteoblast","Human_osteoblast","Human_embedding.osteoblast","Human_mineralizing.osteoblast","Human_maturing.osteocyte",
+                                    "Chimp_preosteoblast","Chimp_osteoblast","Chimp_embedding.osteoblast","Chimp_mineralizing.osteoblast","Chimp_maturing.osteocyte"))
+HC.mean.melt$species <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.mean.melt$ostadhoc <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.mean.melt, aes(x=species, y=value, fill=ostadhoc)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Ost Ad Hoc",
+                    labels=c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                    values=c("lightblue1","skyblue","deepskyblue","dodgerblue2","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+ggplot(HC.mean.melt, aes(x=species, y=value, fill=ostadhoc)) +
+  geom_violin(width=0.7) +
+  xlab("Species") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Ost Ad Hoc",
+                    labels=c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                    values=c("lightblue1","skyblue","deepskyblue","dodgerblue2","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.mean$Human_preosteoblast,HC.mean$Human_osteoblast)                     #p=1.1e-14
+t.test(HC.mean$Human_osteoblast,HC.mean$Human_embedding.osteoblast)              #p<2.2e-16
+t.test(HC.mean$Human_embedding.osteoblast,HC.mean$Human_mineralizing.osteoblast) #p<2.2e-16
+t.test(HC.mean$Human_mineralizing.osteoblast,HC.mean$Human_maturing.osteocyte)   #p<2.2e-16
+t.test(HC.mean$Chimp_preosteoblast,HC.mean$Chimp_osteoblast)                     #p=0.33010
+t.test(HC.mean$Chimp_osteoblast,HC.mean$Chimp_embedding.osteoblast)              #p<2.2e-16
+t.test(HC.mean$Chimp_embedding.osteoblast,HC.mean$Chimp_mineralizing.osteoblast) #p=0.03444
+t.test(HC.mean$Chimp_mineralizing.osteoblast,HC.mean$Chimp_maturing.osteocyte)   #p=1.4e-15
+
+# Calculate log2cpm variances within species - variance increases in ost (expt C), increases in emb.ost, increases in min.ost (expt C), and decreases in mat.ost
+HC.var <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.var["gene"] <- rownames(tmm)
+HC.var["Human_preosteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_preosteoblast" & dge$samples$Stage=="Time 2")],1, var))
+HC.var["Human_osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_osteoblast" & dge$samples$Stage=="Time 2")],1, var))
+HC.var["Human_embedding.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_embedding.osteoblast" & dge$samples$Stage=="Time 2")],1, var))
+HC.var["Human_mineralizing.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_mineralizing.osteoblast" & dge$samples$Stage=="Time 2")],1, var))
+HC.var["Human_maturing.osteocyte"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_maturing.osteocyte" & dge$samples$Stage=="Time 2")],1, var))
+HC.var["Chimp_preosteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_preosteoblast" & dge$samples$Stage=="Time 2")],1, var))
+HC.var["Chimp_osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_osteoblast" & dge$samples$Stage=="Time 2")],1, var))
+HC.var["Chimp_embedding.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_embedding.osteoblast" & dge$samples$Stage=="Time 2")],1, var))
+HC.var["Chimp_mineralizing.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_mineralizing.osteoblast" & dge$samples$Stage=="Time 2")],1, var))
+HC.var["Chimp_maturing.osteocyte"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_maturing.osteocyte" & dge$samples$Stage=="Time 2")],1, var))
+HC.var.melt <- melt(HC.var,
+                    id.vars="gene",
+                    measure.vars=c("Human_preosteoblast","Human_osteoblast","Human_embedding.osteoblast","Human_mineralizing.osteoblast","Human_maturing.osteocyte",
+                                   "Chimp_preosteoblast","Chimp_osteoblast","Chimp_embedding.osteoblast","Chimp_mineralizing.osteoblast","Chimp_maturing.osteocyte"))
+HC.var.melt$species <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.var.melt$ostadhoc <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.var.melt, aes(x=species, y=value, fill=ostadhoc)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 variance in gene expression') +
+  scale_fill_manual(name="Ost Ad Hoc",
+                    labels=c("preosteoblast","osteoblast","embedding.osteoblast","MSC.c1","mineralizing.osteoblast","maturing.osteocyte"),
+                    values=c("lightblue1","skyblue","deepskyblue","dodgerblue2","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+ggplot(HC.var.melt, aes(x=species, y=value, fill=ostadhoc)) +
+  geom_violin(width=0.7) +
+  xlab("Species") +
+  ylab('log2 variance in gene expression') +
+  scale_fill_manual(name="Ost Ad Hoc",
+                    labels=c("preosteoblast","osteoblast","embedding.osteoblast","MSC.c1","mineralizing.osteoblast","maturing.osteocyte"),
+                    values=c("lightblue1","skyblue","deepskyblue","dodgerblue2","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.var$Human_preosteoblast,HC.var$Human_osteoblast)                     #p<2.2e-16
+t.test(HC.var$Human_osteoblast,HC.var$Human_embedding.osteoblast)              #p<2.2e-16
+t.test(HC.var$Human_embedding.osteoblast,HC.var$Human_mineralizing.osteoblast) #p=0.08523
+t.test(HC.var$Human_mineralizing.osteoblast,HC.var$Human_maturing.osteocyte)   #p<2.2e-16
+t.test(HC.var$Chimp_preosteoblast,HC.var$Chimp_osteoblast)                     #p=0.28990
+t.test(HC.var$Chimp_osteoblast,HC.var$Chimp_embedding.osteoblast)              #p<2.2e-16
+t.test(HC.var$Chimp_embedding.osteoblast,HC.var$Chimp_mineralizing.osteoblast) #p=0.00997
+t.test(HC.var$Chimp_mineralizing.osteoblast,HC.var$Chimp_maturing.osteocyte)   #p<2.2e-16
 
 ```
 
@@ -2647,13 +2762,14 @@ HC.var.melt <- melt(HC.var,id.vars="gene",measure.vars=c("Human.Time0","Human.Ti
 HC.var.melt$species <- sapply(HC.var.melt$variable,function(x)str_split(x,"[.]")[[1]][1])
 HC.var.melt$stage <- sapply(HC.var.melt$variable,function(x)str_split(x,"[.]")[[1]][2])
 
-ggplot(HC.var.melt, aes(x=species, y=value, fill=stage)) +
-  geom_boxplot(width=0.4) +
+ggplot(HC.var.melt, aes(x=species, y=log2(value), fill=stage)) +
+  geom_boxplot(width=0.8, outlier.shape=NA) +
   xlab("Species") +
-  ylab('log2 variance in gene expression') +
+  ylab('Log2 Variance in Gene Expression') +
+  ylim(c(-10,5)) +
   scale_fill_manual(name="Stage", labels=c("Time 0","Time 1","Time 2"), values=c("pink","mediumorchid","dodgerblue")) +
   theme_classic() +
-  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=12), legend.text=element_text(size=12))
 t.test(HC.var$Human.Time0,HC.var$Human.Time1) #p<2.2e-16
 t.test(HC.var$Human.Time1,HC.var$Human.Time2) #p=3.1e-13
 t.test(HC.var$Chimp.Time0,HC.var$Chimp.Time1) #p<2.2e-16
@@ -2934,6 +3050,7 @@ metadata <- c()
 labels <- c()
 for(j in cell.subset) {
   dataSub <- subset(data,subset=OstAdHoc.Assign.5gene.median==j)
+  #dataSub <- subset(data,subset=(OstAdHoc.Assign.5gene.median==j & Stage=="Time 2"))
   for (i in unique(dataSub@meta.data$Individual.Replicate)) {
     x.lab <- paste0(i,"_",sub(" ",".",j))
     w <- which(dataSub@meta.data$Individual.Replicate==i)

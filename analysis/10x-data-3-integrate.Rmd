@@ -433,6 +433,7 @@ Cells were integrated using different methods:
 
 * 10000 genes used as integration anchors; no variables regressed out during scale data (int)
 * 19377 genes used as integration anchors; no variables regressed out during scale data (int19k)
+* 19377 genes used as integration anchors; nCount_RNA and percent.mt regressed out during scale data following integration (int19k.reg)
 
 Steps for each integration:
 

@@ -46,20 +46,37 @@ library(viridis)
 ```{r}
 
 #Load DE results
-#compare1 <- readRDS("./data/de-data/DEedgeR.totcell.filter.pch20.fc.bh.stage.rds")
-#compare2 <- readRDS("./data/de-data/DEedgeR.totcell.filter.pch20.fc.bh.cluster.rds")
-#compare3 <- readRDS("./data/de-data/DEedgeR.totcell.filter.pch20.fc.bh.adhoc.rds")
-#compare4 <- readRDS("./data/de-data/DEedgeR.totcell.filter.pch20.fc.bh.ostadhoc.rds")
-compare1 <- readRDS("./data/de-data/DEdream.totcell.filter.pch20.fml1.nofc.bh.stage.rds")
-compare2 <- readRDS("./data/de-data/DEdream.totcell.filter.pch20.fml1.nofc.bh.cluster.rds")
-compare3 <- readRDS("./data/de-data/DEdream.totcell.filter.pch20.fml1.nofc.bh.adhoc.rds")
-compare4 <- readRDS("./data/de-data/DEdream.totcell.filter.pch20.fml1.nofc.bh.ostadhoc.rds")
+#compare1 <- readRDS("./data/de-data/DEdream.tot.sc.pch20.fml6.nofc.bh.stage.rds")
+#compare2 <- readRDS("./data/de-data/DEdream.tot.sc.pch20.fml6.nofc.bh.cluster.rds")
+#compare3 <- readRDS("./data/de-data/DEdream.tot.sc.pch20.fml6.nofc.bh.adhoc.rds")
+#compare4 <- readRDS("./data/de-data/DEdream.tot.sc.pch20.fml6.nofc.bh.ostadhoc.rds")
+compare1 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.stage.rds")
+compare2 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.cluster.rds")
+compare3 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.adhoc.rds")
+compare4 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.rds")
+
 DEdata <- rbind(compare1,compare2,compare3,compare4)
 colnames(DEdata)[5] <- "FDR"
 DEdata <- as_tibble(DEdata)
 rm(compare1,compare2,compare3,compare4)
 
 ```
+
+```{r}
+
+#Load DE results
+compare1 <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.cluster.rds")
+compare2 <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.adhoc.rds")
+compare3 <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.rds")
+
+DEdata <- rbind(compare1,compare2,compare3)
+colnames(DEdata)[5] <- "FDR"
+DEdata <- as_tibble(DEdata)
+rm(compare1,compare2,compare3)
+
+```
+
+
 
 ```{r, eval=FALSE}
 
@@ -133,6 +150,106 @@ DEdataSig <- DEdata %>% filter(FDR<=0.01)
 
 ```
 
+### Examine logFC of DE Genes
+
+```{r NEED TO EDIT, eval=FALSE}
+
+compare1 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.stage.rds")
+compare2 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.cluster.rds")
+compare3 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.adhoc.rds")
+compare4 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.rds")
+DEdata <- rbind(compare1,compare2,compare3,compare4)
+rm(compare1,compare2,compare3,compare4)
+
+colnames(DEdata)[5] <- "FDR"
+DEdata <- as_tibble(DEdata)
+DEdataSig <- DEdata %>% dplyr::filter(FDR<=0.01)
+
+#stage
+DEgenes <- DEdataSig %>% dplyr::filter(cell.assign=="stage") %>% dplyr::select(cell.subset,gene,logFC)
+
+# Number of DE genes
+ggplot(DEgenes, aes(x=cell.subset, fill=cell.subset)) +
+  geom_bar() +
+  ylab('Number of DE Genes') +
+  scale_fill_manual(name="Stage", labels=c("Time 0","Time 1","Time 2"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+# Examine absoute logFC of DE genes
+ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
+  geom_boxplot() +
+  ylab('Absolute Log2 Fold Change in DE Genes') +
+  scale_fill_manual(name="Stage", labels=c("Time 0","Time 1","Time 2"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 0")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 1")])) #p=3.3e-11
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 1")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 2")])) #p=4.1e-08
+
+
+#ostadhoc
+DEgenes <- DEdataSig %>% dplyr::filter(cell.assign=="ostadhoc") %>% dplyr::select(cell.subset,gene,logFC)
+DEgenes$cell.subset <- factor(DEgenes$cell.subset,
+                              levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                              labels=c("preosteoblast","osteoblast","embedding\nosteoblast","mineralizing\nosteoblast","maturing\n osteocyte"))
+
+# Number of DE genes
+ggplot(DEgenes, aes(x=cell.subset, fill=cell.subset)) +
+  geom_bar() +
+  ylab('Number of DE Genes') +
+  scale_fill_manual(name="Osteogenic Stage",
+                    labels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                    values=c("lightblue1","skyblue","deepskyblue","dodgerblue2","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+# Examine absoute logFC of DE genes
+ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
+  geom_boxplot() +
+  ylab('Absolute Log2 Fold Change in DE Genes') +
+  scale_fill_manual(name="Osteogenic Stage",
+                    labels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                    values=c("lightblue1","skyblue","deepskyblue","dodgerblue2","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 0")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 1")])) #p=3.3e-11
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 1")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 2")])) #p=4.1e-08
+
+
+#ost.t2 cluster
+DEgenes <- DEdataSig %>% dplyr::filter(cell.assign=="cluster") %>% dplyr::select(cell.subset,gene,logFC)
+DEgenes$cell.subset <- factor(DEgenes$cell.subset,
+                              levels=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c4","Osteogenic.c5"))
+
+# Number of DE genes
+ggplot(DEgenes, aes(x=cell.subset, fill=cell.subset)) +
+  geom_bar() +
+  ylab('Number of DE Genes') +
+  scale_fill_manual(name="Osteogenic Cluster",
+                    labels=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c5"),
+                    values=c("lightblue1","skyblue","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+# Examine absoute logFC of DE genes
+ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
+  geom_boxplot() +
+  ylab('Absolute Log2 Fold Change in DE Genes') +
+  scale_fill_manual(name="Osteogenic Cluster",
+                    labels=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c5"),
+                    values=c("lightblue1","skyblue","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 0")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 1")])) #p=3.3e-11
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 1")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 2")])) #p=4.1e-08
+
+
+```
+
+
 ```{r}
 
 #Define functions to assess GO functional enrichment
@@ -178,7 +295,8 @@ upset(combined,
                          list("Time.1","Time.2"),
                          list("Time.0"),
                          list("Time.1"),
-                         list("Time.2")))
+                         list("Time.2")),
+      text.scale=2)
 
 #GO enrichment of significant DE genes
 go.t0 <- goEnrich(totGenes = pull(DEdata %>% filter(cell.assign=="stage" & cell.subset=="Time 0") %>% dplyr::select(gene)),
@@ -377,11 +495,17 @@ upset(combined,
 
 #cell assignment = ost ad hoc
 DEdataSig %>% filter(cell.assign=="ostadhoc" & cell.subset=="preosteoblast") %>% dplyr::select(gene)
+DEdataSig %>% filter(cell.assign=="ostadhoc" & cell.subset=="osteoblast") %>% dplyr::select(gene)
 DEdataSig %>% filter(cell.assign=="ostadhoc" & cell.subset=="embedding osteoblast") %>% dplyr::select(gene)
+DEdataSig %>% filter(cell.assign=="ostadhoc" & cell.subset=="mineralizing osteoblast") %>% dplyr::select(gene)
+DEdataSig %>% filter(cell.assign=="ostadhoc" & cell.subset=="maturing osteocyte") %>% dplyr::select(gene)
 
 #assess overlap
 combined <- reduce(list(data.frame(DEdataSig %>% filter(cell.assign=="ostadhoc" & cell.subset=="preosteoblast") %>% dplyr::select(gene), "pre.osteo"=1),
-                        data.frame(DEdataSig %>% filter(cell.assign=="ostadhoc" & cell.subset=="embedding osteoblast") %>% dplyr::select(gene), "emb.osteo"=1)
+                        data.frame(DEdataSig %>% filter(cell.assign=="ostadhoc" & cell.subset=="osteoblast") %>% dplyr::select(gene), "osteo"=1),
+                        data.frame(DEdataSig %>% filter(cell.assign=="ostadhoc" & cell.subset=="embedding osteoblast") %>% dplyr::select(gene), "emb.osteo"=1),
+                        data.frame(DEdataSig %>% filter(cell.assign=="ostadhoc" & cell.subset=="mineralizing osteoblast") %>% dplyr::select(gene), "min.osteo"=1),
+                        data.frame(DEdataSig %>% filter(cell.assign=="ostadhoc" & cell.subset=="maturing osteocyte") %>% dplyr::select(gene), "mat.osteo"=1)
                         ), full_join)
 combined[is.na(combined)] <- 0
 
@@ -389,10 +513,8 @@ combined[is.na(combined)] <- 0
 upset(combined,
       order.by="degree",
       keep.order=TRUE,
-      empty.intersections="on",
-      intersections=list(list("pre.osteo","emb.osteo"),
-                         list("pre.osteo"),
-                         list("emb.osteo")))
+      sets=c("pre.osteo","osteo","emb.osteo","min.osteo","mat.osteo"),
+      text.scale=2)
 
 #GO enrichment of cell type specific significant DE genes
 go.share <- goEnrich(totGenes = intersect(pull(DEdata %>% filter(cell.assign=="ostadhoc" & cell.subset=="preosteoblast") %>% dplyr::select(gene)),

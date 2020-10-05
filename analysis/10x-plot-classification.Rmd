@@ -54,7 +54,7 @@ data.t2@meta.data$Cell <- paste0(z,".O_",x)
 t2 <- as_tibble(data.t2@meta.data)
 t2
 
-rm(scrna.tot,data.tot,scrna.t2,data.t2,x,y,z)
+rm(scrna.tot,scrna.t2,x,y,z)
 
 ```
 
@@ -64,10 +64,10 @@ Assess the overlap of general ad hoc assignments between tot and t2:
 
 compare <- inner_join(
   t2 %>%
-    select(Cell,AdHoc.Assign.median),
+    select(Cell,AdHoc.Assign.thresh0),
   tot %>%
     filter(Stage=="Time 2") %>% 
-    select(Cell,AdHoc.Assign.median),
+    select(Cell,AdHoc.Assign.thresh0),
   by="Cell"
 )
 colnames(compare) <- c("cell","t2","tot")
@@ -87,12 +87,22 @@ Assess the overlap of osteogenic ad hoc assignments between tot and t2:
 
 compare <- inner_join(
   t2 %>%
-    select(Cell,OstAdHoc.Assign.5gene.median),
+    select(Cell,OstAdHoc.Assign.4geneA.median),
   tot %>%
     filter(Stage=="Time 2") %>% 
-    select(Cell,OstAdHoc.Assign.5gene.median),
+    select(Cell,OstAdHoc.Assign.4geneA.median),
   by="Cell"
 )
+
+compare <- inner_join(
+  t2 %>%
+    select(Cell,OstAdHoc.Assign.5gene.thresh0),
+  tot %>%
+    filter(Stage=="Time 2") %>% 
+    select(Cell,OstAdHoc.Assign.5gene.thresh0),
+  by="Cell"
+)
+
 colnames(compare) <- c("cell","t2","tot")
 compare
 
@@ -104,3 +114,195 @@ plot_confusion_matrix(conf_mat$`Confusion Matrix`[[1]],
 
 ```
 
+Add ad hoc assignments from data.t2 assignments to data.tot
+
+```{r}
+
+#Add ad hoc assignments from data.t2 assignments to data.tot
+
+compare <- right_join(
+  t2 %>%
+    dplyr::select(Cell,
+                  AdHoc.Assign.thresh0,
+                  AdHoc.Assign.l.thresh0,
+                  AdHoc.Assign.median,
+                  OstAdHoc.Assign.5gene.thresh0,
+                  OstAdHoc.Assign.x.5gene.thresh0,
+                  OstAdHoc.Assign.5gene.l.thresh0,
+                  OstAdHoc.Assign.x.5gene.l.thresh0,
+                  OstAdHoc.Assign.5gene.median,
+                  OstAdHoc.Assign.x.5gene.median,
+                  Cluster),
+  tot %>%
+    dplyr::select(Cell),
+  by="Cell"
+)
+colnames(compare) <- c("cell","t2.adhoc.0","t2.adhoc.l0","t2.adhoc.m",
+                       "t2.ostadhoc.0","t2.ostadhoc.x0","t2.ostadhoc.l0","t2.ostadhoc.xl0","t2.ostadhoc.m","t2.ostadhoc.xm",
+                       "t2.cluster")
+compare
+data.tot@meta.data$AdHoc.Assign.thresh0.t2 <- NA
+data.tot@meta.data$AdHoc.Assign.l.thresh0.t2 <- NA
+data.tot@meta.data$AdHoc.Assign.median.t2 <- NA
+data.tot@meta.data$OstAdHoc.Assign.5gene.thresh0.t2 <- NA
+data.tot@meta.data$OstAdHoc.Assign.x.5gene.thresh0.t2 <- NA
+data.tot@meta.data$OstAdHoc.Assign.5gene.l.thresh0.t2 <- NA
+data.tot@meta.data$OstAdHoc.Assign.x.5gene.l.thresh0.t2 <- NA
+data.tot@meta.data$OstAdHoc.Assign.5gene.median.t2 <- NA
+data.tot@meta.data$OstAdHoc.Assign.x.5gene.median.t2 <- NA
+data.tot@meta.data$Cluster.t2 <- NA
+i=1
+while(i<=length(rownames(data.tot@meta.data))) {
+  if(rownames(data.tot@meta.data)[i] %in% compare$cell) {
+    data.tot@meta.data$AdHoc.Assign.thresh0.t2[i]              <- as.character(compare$t2.adhoc.0[which(compare$cell==rownames(data.tot@meta.data)[i])])
+    data.tot@meta.data$AdHoc.Assign.l.thresh0.t2[i]            <- as.character(compare$t2.adhoc.l0[which(compare$cell==rownames(data.tot@meta.data)[i])])
+    data.tot@meta.data$AdHoc.Assign.median.t2[i]               <- as.character(compare$t2.adhoc.m[which(compare$cell==rownames(data.tot@meta.data)[i])])
+    data.tot@meta.data$OstAdHoc.Assign.5gene.thresh0.t2[i]     <- as.character(compare$t2.ostadhoc.0[which(compare$cell==rownames(data.tot@meta.data)[i])])
+    data.tot@meta.data$OstAdHoc.Assign.x.5gene.thresh0.t2[i]   <- as.character(compare$t2.ostadhoc.x0[which(compare$cell==rownames(data.tot@meta.data)[i])])
+    data.tot@meta.data$OstAdHoc.Assign.5gene.l.thresh0.t2[i]   <- as.character(compare$t2.ostadhoc.l0[which(compare$cell==rownames(data.tot@meta.data)[i])])
+    data.tot@meta.data$OstAdHoc.Assign.x.5gene.l.thresh0.t2[i] <- as.character(compare$t2.ostadhoc.xl0[which(compare$cell==rownames(data.tot@meta.data)[i])])
+    data.tot@meta.data$OstAdHoc.Assign.5gene.median.t2[i]      <- as.character(compare$t2.ostadhoc.m[which(compare$cell==rownames(data.tot@meta.data)[i])])
+    data.tot@meta.data$OstAdHoc.Assign.x.5gene.median.t2[i]    <- as.character(compare$t2.ostadhoc.xm[which(compare$cell==rownames(data.tot@meta.data)[i])])
+    data.tot@meta.data$Cluster.t2[i]                           <- as.character(compare$t2.cluster[which(compare$cell==rownames(data.tot@meta.data)[i])])
+  }
+  i=i+1
+}
+
+data.tot@meta.data$OstAdHoc.Assign.5gene.thresh0.t2   <- factor(data.tot@meta.data$OstAdHoc.Assign.5gene.thresh0.t2,
+                                                                levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+                                                                         "unknown osteogenic","not osteogenic","other"))
+data.tot@meta.data$OstAdHoc.Assign.5gene.l.thresh0.t2 <- factor(data.tot@meta.data$OstAdHoc.Assign.5gene.l.thresh0.t2,
+                                                                levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+                                                                         "unknown osteogenic","not osteogenic","other"))
+data.tot@meta.data$OstAdHoc.Assign.5gene.median.t2    <- factor(data.tot@meta.data$OstAdHoc.Assign.5gene.median.t2,
+                                                                levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+                                                                         "unknown osteogenic","not osteogenic","other"))
+
+data.tot@meta.data$OstAdHoc.Assign.x.5gene.thresh0.t2   <- factor(data.tot@meta.data$OstAdHoc.Assign.x.5gene.thresh0.t2,
+                                                                  levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+                                                                           "x.osteoblast","x.embedding osteoblast","x.mineralizing osteoblast","x.maturing osteocyte",
+                                                                           "unknown osteogenic","not osteogenic","other"))
+data.tot@meta.data$OstAdHoc.Assign.x.5gene.l.thresh0.t2 <- factor(data.tot@meta.data$OstAdHoc.Assign.x.5gene.l.thresh0.t2,
+                                                                  levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+                                                                           "x.osteoblast","x.embedding osteoblast","x.mineralizing osteoblast","x.maturing osteocyte",
+                                                                           "unknown osteogenic","not osteogenic","other"))
+data.tot@meta.data$OstAdHoc.Assign.x.5gene.median.t2    <- factor(data.tot@meta.data$OstAdHoc.Assign.x.5gene.median.t2,
+                                                                  levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+                                                                           "x.osteoblast","x.embedding osteoblast","x.mineralizing osteoblast","x.maturing osteocyte",
+                                                                           "unknown osteogenic","not osteogenic","other"))
+
+CombinePlots(list(DimPlot(data.tot, group.by="Stage", split.by="AdHoc.Assign.thresh0"),
+                  DimPlot(data.tot, group.by="Stage", split.by="AdHoc.Assign.thresh0.t2")),
+             ncol=1)
+
+CombinePlots(list(DimPlot(data.tot, group.by="Stage", split.by="OstAdHoc.Assign.5gene.thresh0"),
+                  DimPlot(data.tot, group.by="Stage", split.by="OstAdHoc.Assign.5gene.thresh0.t2"),
+                  DimPlot(data.tot, group.by="Stage", split.by="OstAdHoc.Assign.5gene.l.thresh0.t2"),
+                  DimPlot(data.tot, group.by="Stage", split.by="OstAdHoc.Assign.5gene.median.t2")),
+             ncol=1)
+
+CombinePlots(list(DimPlot(data.tot, group.by="Stage", split.by="OstAdHoc.Assign.x.5gene.thresh0"),
+                  DimPlot(data.tot, group.by="Stage", split.by="OstAdHoc.Assign.x.5gene.thresh0.t2"),
+                  DimPlot(data.tot, group.by="Stage", split.by="OstAdHoc.Assign.x.5gene.l.thresh0.t2"),
+                  DimPlot(data.tot, group.by="Stage", split.by="OstAdHoc.Assign.x.5gene.median.t2")),
+             ncol=1)
+
+CombinePlots(list(DimPlot(data.tot, group.by="Stage", split.by="Cluster"),
+                  DimPlot(data.tot, group.by="Stage", split.by="Cluster.t2")),
+             ncol=1)
+
+```
+
+Add ad hoc assignments from data.tot assignments to data.t2
+
+```{r}
+
+#Add ad hoc assignments from data.tot assignments to data.t2
+
+compare <- left_join(
+  t2 %>%
+    dplyr::select(Cell),
+  tot %>%
+    dplyr::select(Cell,
+                  AdHoc.Assign.thresh0,
+                  AdHoc.Assign.l.thresh0,
+                  AdHoc.Assign.median,
+                  OstAdHoc.Assign.5gene.thresh0,
+                  OstAdHoc.Assign.x.5gene.thresh0,
+                  OstAdHoc.Assign.5gene.l.thresh0,
+                  OstAdHoc.Assign.x.5gene.l.thresh0,
+                  OstAdHoc.Assign.5gene.median,
+                  OstAdHoc.Assign.x.5gene.median,
+                  Cluster,
+                  Cluster0.25,
+                  Cluster0.5),
+  by="Cell"
+)
+colnames(compare) <- c("cell","tot.adhoc.0","tot.adhoc.l0","tot.adhoc.m",
+                       "tot.ostadhoc.0","tot.ostadhoc.x0","tot.ostadhoc.l0","tot.ostadhoc.xl0","tot.ostadhoc.m","tot.ostadhoc.xm",
+                       "tot.cluster","tot.cluster0.25","tot.cluster0.5")
+compare
+data.t2@meta.data$AdHoc.Assign.thresh0.tot              <- compare$tot.adhoc.0
+data.t2@meta.data$AdHoc.Assign.l.thresh0.tot            <- compare$tot.adhoc.l0
+data.t2@meta.data$AdHoc.Assign.median.tot               <- compare$tot.adhoc.m
+data.t2@meta.data$OstAdHoc.Assign.5gene.thresh0.tot     <- compare$tot.ostadhoc.0
+data.t2@meta.data$OstAdHoc.Assign.x.5gene.thresh0.tot   <- compare$tot.ostadhoc.x0
+data.t2@meta.data$OstAdHoc.Assign.5gene.l.thresh0.tot   <- compare$tot.ostadhoc.l0
+data.t2@meta.data$OstAdHoc.Assign.x.5gene.l.thresh0.tot <- compare$tot.ostadhoc.xl0
+data.t2@meta.data$OstAdHoc.Assign.5gene.median.tot      <- compare$tot.ostadhoc.m
+data.t2@meta.data$OstAdHoc.Assign.x.5gene.median.tot    <- compare$tot.ostadhoc.xm
+data.t2@meta.data$Cluster.tot                           <- compare$tot.cluster
+data.t2@meta.data$Cluster0.25.tot                       <- compare$tot.cluster0.25
+data.t2@meta.data$Cluster0.5.tot                        <- compare$tot.cluster0.5
+
+data.t2@meta.data$OstAdHoc.Assign.5gene.thresh0.tot   <- factor(data.t2@meta.data$OstAdHoc.Assign.5gene.thresh0.tot,
+                                                                levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+                                                                         "unknown osteogenic","not osteogenic","other"))
+data.t2@meta.data$OstAdHoc.Assign.5gene.l.thresh0.tot <- factor(data.t2@meta.data$OstAdHoc.Assign.5gene.l.thresh0.tot,
+                                                                levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+                                                                         "unknown osteogenic","not osteogenic","other"))
+data.t2@meta.data$OstAdHoc.Assign.5gene.median.tot    <- factor(data.t2@meta.data$OstAdHoc.Assign.5gene.median.tot,
+                                                                levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+                                                                         "unknown osteogenic","not osteogenic","other"))
+
+data.t2@meta.data$OstAdHoc.Assign.x.5gene.thresh0.tot   <- factor(data.t2@meta.data$OstAdHoc.Assign.x.5gene.thresh0.tot,
+                                                                  levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+                                                                           "x.osteoblast","x.embedding osteoblast","x.mineralizing osteoblast","x.maturing osteocyte",
+                                                                           "unknown osteogenic","not osteogenic","other"))
+data.t2@meta.data$OstAdHoc.Assign.x.5gene.l.thresh0.tot <- factor(data.t2@meta.data$OstAdHoc.Assign.x.5gene.l.thresh0.tot,
+                                                                  levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+                                                                           "x.osteoblast","x.embedding osteoblast","x.mineralizing osteoblast","x.maturing osteocyte",
+                                                                           "unknown osteogenic","not osteogenic","other"))
+data.t2@meta.data$OstAdHoc.Assign.x.5gene.median.tot    <- factor(data.t2@meta.data$OstAdHoc.Assign.x.5gene.median.tot,
+                                                                  levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte",
+                                                                           "x.osteoblast","x.embedding osteoblast","x.mineralizing osteoblast","x.maturing osteocyte",
+                                                                           "unknown osteogenic","not osteogenic","other"))
+
+CombinePlots(list(DimPlot(data.t2, group.by="Stage", split.by="AdHoc.Assign.thresh0"),
+                  DimPlot(data.t2, group.by="Stage", split.by="AdHoc.Assign.thresh0.tot")),
+             ncol=1)
+
+CombinePlots(list(DimPlot(data.t2, group.by="Stage", split.by="OstAdHoc.Assign.5gene.thresh0"),
+                  DimPlot(data.t2, group.by="Stage", split.by="OstAdHoc.Assign.5gene.thresh0.tot"),
+                  DimPlot(data.t2, group.by="Stage", split.by="OstAdHoc.Assign.5gene.l.thresh0.tot"),
+                  DimPlot(data.t2, group.by="Stage", split.by="OstAdHoc.Assign.5gene.median.tot")),
+             ncol=1)
+
+CombinePlots(list(DimPlot(data.t2, group.by="Stage", split.by="OstAdHoc.Assign.x.5gene.thresh0"),
+                  DimPlot(data.t2, group.by="Stage", split.by="OstAdHoc.Assign.x.5gene.thresh0.tot"),
+                  DimPlot(data.t2, group.by="Stage", split.by="OstAdHoc.Assign.x.5gene.l.thresh0.tot"),
+                  DimPlot(data.t2, group.by="Stage", split.by="OstAdHoc.Assign.x.5gene.median.tot")),
+             ncol=1)
+
+CombinePlots(list(DimPlot(data.t2, group.by="Stage", split.by="Cluster"),
+                  DimPlot(data.t2, group.by="Stage", split.by="Cluster.tot")),
+             ncol=1)
+
+```
+
+```{r}
+
+saveRDS(data.tot, file="./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds")
+saveRDS(data.t2, file="./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.assign.rds")
+
+```

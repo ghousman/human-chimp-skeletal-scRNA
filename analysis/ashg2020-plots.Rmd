@@ -1,0 +1,502 @@
+---
+title: "asbmr2020-plots"
+author: "Genevieve Housman"
+date: "8/31/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r load libraries}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(grid)
+library(gbm)
+library(colorspace)
+library(RColorBrewer)
+library(edgeR)
+library(scran)
+library(SingleCellExperiment)
+
+```
+
+```{r}
+
+#Load data
+scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds" #integrate across individuals - total (15k genes)
+data <- readRDS(scrna)
+data
+
+```
+
+```{r plots for ASHG presentation}
+
+#stage of differentiation
+DimPlot(data,
+        group.by="Stage",
+        reduction="umap",
+        cols=c("pink","mediumorchid","dodgerblue")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(data,
+        group.by="Stage",
+        split.by="Species",
+        reduction="umap",
+        cols=c("pink","mediumorchid","dodgerblue")) +
+  labs(x="UMAP1",y="UMAP2")
+
+#cell counts
+ggplot(data@meta.data, aes(x=Species, fill=Stage)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=12), legend.text=element_text(size=12))
+
+#umi counts
+ggplot(data@meta.data, aes(x=Species, y=nCount_RNA, fill=Stage)) +
+  geom_violin(width=0.8) +
+  labs(y="UMIs per Cell", x="") +
+  scale_fill_manual(name="", values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=12), legend.text=element_text(size=12))
+
+#gene counts
+ggplot(data@meta.data, aes(x=Species, y=nFeature_RNA, fill=Stage)) +
+  geom_violin(width=0.8) +
+  labs(y="Genes per Cell", x="") +
+  scale_fill_manual(name="", values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=12), legend.text=element_text(size=12))
+
+#marker genes
+DotPlot(subset(data,subset=Species=="Human"), features=c("COL1A1","CD44","POU5F1"), group.by="Stage", dot.scale=20, cols=c("grey99","pink"), col.max=5)
+DotPlot(subset(data,subset=Species=="Human"), features=c("COL1A1","CD44","POU5F1"), group.by="Stage", dot.scale=20, cols=c("grey99","mediumorchid"), col.max=5)
+DotPlot(subset(data,subset=Species=="Human"), features=c("COL1A1","CD44","POU5F1"), group.by="Stage", dot.scale=20, cols=c("grey99","dodgerblue"), col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"), features=c("COL1A1","CD44","POU5F1"), group.by="Stage", dot.scale=20, cols=c("grey99","pink"), col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"), features=c("COL1A1","CD44","POU5F1"), group.by="Stage", dot.scale=20, cols=c("grey99","mediumorchid"), col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"), features=c("COL1A1","CD44","POU5F1"), group.by="Stage", dot.scale=20, cols=c("grey99","dodgerblue"), col.max=5)
+#tmp.data <- cbind(t(data@assays$integrated@scale.data[c("POU5F1","CD44","COL1A1"),]),data@meta.data[,c("Species","Stage")])
+#ggplot(tmp.data, aes(x=Species, y=POU5F1, fill=Stage)) +
+#  geom_violin(size=1) +
+#  labs(y="Genes Expression", x="") +
+#  scale_fill_manual(name="", values=c("pink","mediumorchid","dodgerblue")) +
+#  theme_classic() +
+#  theme(axis.text=element_text(size=12), axis.title=element_text(size=12), legend.text=element_text(size=12))
+#FeaturePlot(data, slot="scale.data", features="POU5F1", reduction="umap", cols=c("grey99","black"), order=TRUE) +
+#  labs(x="UMAP1",y="UMAP2")
+#VlnPlot(data, features=c("POU5F1","CD44","COL1A1"), group.by="Stage", split.by="Species", cols=c("pink","mediumorchid","dodgerblue"), pt.size=0)
+#VlnPlot(subset(data,subset=Species=="Human"), features=c("POU5F1","CD44","COL1A1"), group.by="Stage", cols=c("pink","mediumorchid","dodgerblue"), pt.size=0)
+#VlnPlot(subset(data,subset=Species=="Chimp"), features=c("POU5F1","CD44","COL1A1"), group.by="Stage", cols=c("pink","mediumorchid","dodgerblue"), pt.size=0)
+
+```
+
+
+```{r}
+
+#Load data
+scrna.tot <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds" #integrate across individuals - total (19k genes)
+data.tot <- readRDS(scrna.tot)
+data.tot@meta.data$Cell <- rownames(data.tot@meta.data)
+tot <- as_tibble(data.tot@meta.data)
+tot
+
+scrna.t2 <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.assign.rds" #integrate across individuals - time 2 (19k genes)
+data.t2 <- readRDS(scrna.t2)
+x <- sapply(str_split(rownames(data.t2@meta.data),"_"),`[`,1)
+y <- sapply(data.t2@meta.data$Sample, function(x){gsub("-O-","",x)})
+z <- sapply(y, function(x){gsub("-O","",x)})
+data.t2@meta.data$Cell <- paste0(z,".O_",x)
+t2 <- as_tibble(data.t2@meta.data)
+t2
+
+rm(scrna.tot,scrna.t2,x,y,z)
+
+#Add general ad hoc assignments from data.t2 assignments to data.tot
+compare <- right_join(
+  t2 %>%
+    dplyr::select(Cell,AdHoc.Assign.median,OstAdHoc.Assign.5gene.median,OstAdHoc.Assign.5gene.q1,OstAdHoc.Assign.5gene.q1median,Cluster),
+  tot %>%
+    dplyr::select(Cell),
+  by="Cell"
+)
+colnames(compare) <- c("cell","t2.adhoc","t2.ostadhoc.median","t2.ostadhoc.q1","t2.ostadhoc.q1median","t2.cluster")
+compare
+data.tot@meta.data$AdHoc.Assign.median.t2 <- NA
+data.tot@meta.data$OstAdHoc.Assign.5gene.median.t2 <- NA
+data.tot@meta.data$OstAdHoc.Assign.5gene.q1.t2 <- NA
+data.tot@meta.data$OstAdHoc.Assign.5gene.q1median.t2 <- NA
+data.tot@meta.data$Cluster.t2 <- NA
+i=1
+while(i<=length(rownames(data.tot@meta.data))) {
+  if(rownames(data.tot@meta.data)[i] %in% compare$cell) {
+    data.tot@meta.data$AdHoc.Assign.median.t2[i]            <- as.character(compare$t2.adhoc[which(compare$cell==rownames(data.tot@meta.data)[i])])
+    data.tot@meta.data$OstAdHoc.Assign.5gene.median.t2[i]   <- as.character(compare$t2.ostadhoc.median[which(compare$cell==rownames(data.tot@meta.data)[i])])
+    data.tot@meta.data$OstAdHoc.Assign.5gene.q1.t2[i]       <- as.character(compare$t2.ostadhoc.q1[which(compare$cell==rownames(data.tot@meta.data)[i])])
+    data.tot@meta.data$OstAdHoc.Assign.5gene.q1median.t2[i] <- as.character(compare$t2.ostadhoc.q1median[which(compare$cell==rownames(data.tot@meta.data)[i])])
+    data.tot@meta.data$Cluster.t2[i]                        <- as.character(compare$t2.cluster[which(compare$cell==rownames(data.tot@meta.data)[i])])
+  }
+  i=i+1
+}
+data.tot@meta.data$OstAdHoc.Assign.5gene.median.t2   <- factor(data.tot@meta.data$OstAdHoc.Assign.5gene.median.t2,
+                                                               levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"))
+data.tot@meta.data$OstAdHoc.Assign.5gene.q1.t2       <- factor(data.tot@meta.data$OstAdHoc.Assign.5gene.q1.t2,
+                                                               levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"))
+data.tot@meta.data$OstAdHoc.Assign.5gene.q1median.t2 <- factor(data.tot@meta.data$OstAdHoc.Assign.5gene.q1median.t2,
+                                                               levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"))
+
+CombinePlots(list(DimPlot(data.tot, group.by="Stage", split.by="AdHoc.Assign.median"),
+                  DimPlot(data.tot, group.by="Stage", split.by="AdHoc.Assign.median.t2")),
+             ncol=1)
+CombinePlots(list(DimPlot(data.tot, group.by="Stage", split.by="OstAdHoc.Assign.5gene.median"),
+                  DimPlot(data.tot, group.by="Stage", split.by="OstAdHoc.Assign.5gene.median.t2"),
+                  DimPlot(data.tot, group.by="Stage", split.by="OstAdHoc.Assign.5gene.q1.t2"),
+                  DimPlot(data.tot, group.by="Stage", split.by="OstAdHoc.Assign.5gene.q1median.t2")),
+             ncol=1)
+CombinePlots(list(DimPlot(data.tot, group.by="Stage", split.by="Cluster"),
+                  DimPlot(data.tot, group.by="Stage", split.by="Cluster.t2")),
+             ncol=1)
+
+
+#Add general ad hoc assignments from data.tot assignments to data.t2
+compare <- left_join(
+  t2 %>%
+    dplyr::select(Cell),
+  tot %>%
+    dplyr::select(Cell,AdHoc.Assign.median,OstAdHoc.Assign.5gene.median,Cluster),
+  by="Cell"
+)
+colnames(compare) <- c("cell","tot.adhoc","tot.ostadhoc.median","tot.cluster")
+compare
+data.t2@meta.data$AdHoc.Assign.median.tot <- compare$tot.adhoc
+data.t2@meta.data$OstAdHoc.Assign.5gene.median.tot <- compare$tot.ostadhoc.median
+data.t2@meta.data$Cluster.tot <- compare$tot.cluster
+#i=1
+#while(i<=length(rownames(data.t2@meta.data))) {
+#  if(str_split(rownames(data.t2@meta.data)[i],"_")[[1]][1] %in% compare$cell) {
+#    data.t2@meta.data$AdHoc.Assign.median.tot[i]            <- as.character(compare$tot.adhoc[which(compare$cell==rownames(data.t2@meta.data)[i])])
+#    data.t2@meta.data$OstAdHoc.Assign.5gene.median.tot[i]   <- as.character(compare$tot.ostadhoc.median[which(compare$cell==rownames(data.t2@meta.data)[i])])
+#    data.t2@meta.data$Cluster.tot[i]                        <- as.character(compare$tot.cluster[which(compare$cell==rownames(data.t2@meta.data)[i])])
+#  }
+#  i=i+1
+#}
+data.tot@meta.data$OstAdHoc.Assign.5gene.median.t2   <- factor(data.tot@meta.data$OstAdHoc.Assign.5gene.median.t2,
+                                                               levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"))
+data.tot@meta.data$OstAdHoc.Assign.5gene.median2   <- factor(data.tot@meta.data$OstAdHoc.Assign.5gene.median,
+                                                            levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"))
+
+
+#osteogenic clusters
+CombinePlots(list(DimPlot(data.tot,
+                          group.by="Cluster.t2",
+                          cols=c("lightskyblue1","skyblue1","deepskyblue","dodgerblue2","dodgerblue4"),
+                          na.value="grey99"),
+                  DimPlot(data.t2,
+                          group.by="Cluster", cols=c("lightskyblue1","skyblue1","deepskyblue","dodgerblue2","dodgerblue4"))),
+             ncol=2)
+CombinePlots(list(DimPlot(data.tot,
+                          group.by="Cluster.t2",
+                          split.by="Cluster.t2",
+                          cols=c("lightskyblue1","skyblue1","deepskyblue","dodgerblue2","dodgerblue4"),
+                          na.value="grey99"),
+                  DimPlot(data.t2,
+                          group.by="Cluster",
+                          split.by="Cluster",
+                          cols=c("lightskyblue1","skyblue1","deepskyblue","dodgerblue2","dodgerblue4"))),
+             ncol=1)
+
+CombinePlots(list(DimPlot(data.tot,
+                          group.by="Cluster",
+                          cols=c("pink","pink3","pink4","mediumorchid","dodgerblue","dodgerblue4"),
+                          na.value="grey99"),
+                  DimPlot(data.t2,
+                          group.by="Cluster.tot",
+                          cols=c("mediumorchid","dodgerblue","dodgerblue4"))),
+             ncol=2)
+CombinePlots(list(DimPlot(data.tot,
+                          group.by="Cluster",
+                          split.by="Cluster",
+                          cols=c("pink","pink3","pink4","mediumorchid","dodgerblue","dodgerblue4"),
+                          na.value="grey99"),
+                  DimPlot(data.t2,
+                          group.by="Cluster.tot",
+                          split.by="Cluster.tot",
+                          cols=c("mediumorchid","dodgerblue","dodgerblue4"))),
+             ncol=1)
+
+
+CombinePlots(list(DimPlot(data.tot,
+                          group.by="OstAdHoc.Assign.5gene.median",
+                          cols=c("lightskyblue1","skyblue1","deepskyblue","dodgerblue2","dodgerblue4","grey","grey"),
+                          na.value="grey99"),
+                  DimPlot(data.t2,
+                          group.by="OstAdHoc.Assign.5gene.median.tot",
+                          cols=c("lightskyblue1","skyblue1","deepskyblue","dodgerblue2","dodgerblue4","grey","grey"))),
+             ncol=2)
+CombinePlots(list(DimPlot(data.tot,
+                          group.by="OstAdHoc.Assign.5gene.median",
+                          split.by="OstAdHoc.Assign.5gene.median",
+                          cols=c("lightskyblue1","skyblue1","deepskyblue","dodgerblue2","dodgerblue4","grey","grey"),
+                          na.value="grey99"),
+                  DimPlot(data.t2, group.by="OstAdHoc.Assign.5gene.median.tot",
+                          split.by="OstAdHoc.Assign.5gene.median.tot",
+                          cols=c("lightskyblue1","skyblue1","deepskyblue","dodgerblue2","dodgerblue4","grey","grey"))),
+             ncol=1)
+
+CombinePlots(list(DimPlot(data.tot, group.by="OstAdHoc.Assign.5gene.median.t2",
+                          cols=c("lightskyblue1","skyblue1","deepskyblue","dodgerblue2","dodgerblue4","grey","grey"), na.value="grey99"),
+                  DimPlot(data.t2, group.by="OstAdHoc.Assign.5gene.median",
+                          cols=c("lightskyblue1","skyblue1","deepskyblue","dodgerblue2","dodgerblue4","grey","grey"))),
+             ncol=2)
+CombinePlots(list(DimPlot(data.tot, group.by="OstAdHoc.Assign.5gene.median.t2", split.by="OstAdHoc.Assign.5gene.median.t2",
+                          cols=c("lightskyblue1","skyblue1","deepskyblue","dodgerblue2","dodgerblue4","grey","grey"), na.value="grey99"),
+                  DimPlot(data.t2, group.by="OstAdHoc.Assign.5gene.median", split.by="OstAdHoc.Assign.5gene.median",
+                          cols=c("lightskyblue1","skyblue1","deepskyblue","dodgerblue2","dodgerblue4","grey","grey"))),
+             ncol=1)
+
+DotPlot(data.tot,
+        features=c("RUNX2","BGLAP","CAPG","PHEX","MEPE"),
+        group.by="Cluster",
+        dot.scale=20,
+        cols=c("grey99","dodgerblue"),
+        col.max=5)
+DotPlot(data.t2,
+        features=c("RUNX2","BGLAP","CAPG","PHEX","MEPE"),
+        group.by="Cluster.tot",
+        dot.scale=20,
+        cols=c("grey99","dodgerblue"),
+        col.max=5)
+DotPlot(subset(data.tot,subset=Stage=="Time 2"),
+        features=c("RUNX2","BGLAP","CAPG","PHEX","MEPE"),
+        group.by="Cluster.t2",
+        dot.scale=20,
+        cols=c("grey99","dodgerblue"),
+        col.max=5)
+DotPlot(data.t2,
+        features=c("RUNX2","BGLAP","CAPG","PHEX","MEPE"),
+        group.by="Cluster",
+        dot.scale=20,
+        cols=c("grey99","dodgerblue"),
+        col.max=5)
+
+DotPlot(data.tot,
+        features=c("RUNX2","BGLAP","CAPG","PHEX","MEPE"),
+        group.by="OstAdHoc.Assign.5gene.median",
+        dot.scale=20,
+        cols=c("grey99","dodgerblue"),
+        col.max=5)
+DotPlot(data.t2,
+        features=c("RUNX2","BGLAP","CAPG","PHEX","MEPE"),
+        group.by="OstAdHoc.Assign.5gene.median.tot",
+        dot.scale=20, cols=c("grey99","dodgerblue"),
+        col.max=5)
+DotPlot(data.tot,
+        features=c("RUNX2","BGLAP","CAPG","PHEX","MEPE"),
+        group.by="OstAdHoc.Assign.5gene.median.t2",
+        dot.scale=20,
+        cols=c("grey99","dodgerblue"),
+        col.max=5)
+DotPlot(data.t2,
+        features=c("RUNX2","BGLAP","CAPG","PHEX","MEPE"),
+        group.by="OstAdHoc.Assign.5gene.median",
+        dot.scale=20,
+        cols=c("grey99","dodgerblue"),
+        col.max=5)
+
+
+
+CombinePlots(list(DimPlot(data.tot, group.by="integrated_snn_res.0.05"),
+                  DotPlot(data.tot,
+                          features=c("RUNX2","BGLAP","CAPG","PHEX","MEPE"),
+                          group.by="integrated_snn_res.0.05",
+                          dot.scale=20,
+                          cols=c("grey99","dodgerblue"),
+                          col.max=5)),
+        ncol=2) +
+    labs(x="UMAP1",y="UMAP2")
+CombinePlots(list(DimPlot(data.tot, group.by="integrated_snn_res.0.1"),
+                  DotPlot(data.tot,
+                          features=c("RUNX2","BGLAP","CAPG","PHEX","MEPE"),
+                          group.by="integrated_snn_res.0.1",
+                          dot.scale=20,
+                          cols=c("grey99","dodgerblue"),
+                          col.max=5)),
+        ncol=2) +
+    labs(x="UMAP1",y="UMAP2")
+CombinePlots(list(DimPlot(data.tot, group.by="integrated_snn_res.0.25"),
+                  DotPlot(data.tot,
+                          features=c("RUNX2","BGLAP","CAPG","PHEX","MEPE"),
+                          group.by="integrated_snn_res.0.25",
+                          dot.scale=20,
+                          cols=c("grey99","dodgerblue"),
+                          col.max=5)),
+        ncol=2) +
+    labs(x="UMAP1",y="UMAP2")
+CombinePlots(list(DimPlot(data.tot, group.by="integrated_snn_res.0.5"),
+                  DotPlot(data.tot,
+                          features=c("RUNX2","BGLAP","CAPG","PHEX","MEPE"),
+                          group.by="integrated_snn_res.0.5",
+                          dot.scale=20,
+                          cols=c("grey99","dodgerblue"),
+                          col.max=5)),
+        ncol=2) +
+    labs(x="UMAP1",y="UMAP2")
+CombinePlots(list(DimPlot(data.tot, group.by="integrated_snn_res.0.75"),
+                  DotPlot(data.tot,
+                          features=c("RUNX2","BGLAP","CAPG","PHEX","MEPE"),
+                          group.by="integrated_snn_res.0.75",
+                          dot.scale=20,
+                          cols=c("grey99","dodgerblue"),
+                          col.max=5)),
+        ncol=2) +
+    labs(x="UMAP1",y="UMAP2")
+CombinePlots(list(DimPlot(data.tot, group.by="integrated_snn_res.1"),
+                  DotPlot(data.tot,
+                          features=c("RUNX2","BGLAP","CAPG","PHEX","MEPE"),
+                          group.by="integrated_snn_res.1",
+                          dot.scale=20,
+                          cols=c("grey99","dodgerblue"),
+                          col.max=5)),
+        ncol=2)
+
+
+
+DimPlot(data.tot,
+        group.by="Cluster.t2",
+        split.by="Cluster.t2",
+        cols=c("lightskyblue1","skyblue1","deepskyblue","dodgerblue2","dodgerblue4"),
+        na.value="grey99") +
+    labs(x="UMAP1",y="UMAP2")
+DimPlot(data.tot,
+        group.by="Cluster.t2",
+        cols=c("lightskyblue1","skyblue1","deepskyblue","dodgerblue2","dodgerblue4"),
+        na.value="grey99") +
+    labs(x="UMAP1",y="UMAP2")
+DimPlot(data.t2,
+        group.by="Cluster",
+        cols=c("lightskyblue1","skyblue1","deepskyblue","dodgerblue2","dodgerblue4"),
+        na.value="grey99") +
+    labs(x="UMAP1",y="UMAP2")
+
+DimPlot(data.tot,
+        group.by="OstAdHoc.Assign.5gene.median",
+        cols=c("lightskyblue1","skyblue1","deepskyblue","dodgerblue2","dodgerblue4","grey","grey"),
+        na.value="grey99") +
+    labs(x="UMAP1",y="UMAP2")
+
+DimPlot(data.t2,
+        group.by="OstAdHoc.Assign.5gene.median.tot",
+        split.by="OstAdHoc.Assign.5gene.median.tot",
+        cols=c("lightskyblue1","skyblue1","deepskyblue","dodgerblue2","dodgerblue4","grey99","grey99"),
+        na.value="grey99",
+        order=TRUE) +
+    labs(x="UMAP1",y="UMAP2")
+
+
+
+ggplot(data.t2@meta.data, aes(x=Species, fill=Cluster)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("lightblue1","skyblue","deepskyblue","dodgerblue2","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=12), legend.text=element_text(size=12))
+#ggplot(data.t2@meta.data, aes(x=Cluster, fill=Species)) +
+#  geom_bar(aes(x=Cluster, y=..prop.., group=Species), stat="count", position="dodge") +
+#  labs(y="Number of Cells", x="") +
+#  scale_fill_manual(name="", values=c("lightblue1","skyblue","deepskyblue","dodgerblue2","dodgerblue4")) +
+#  theme_classic() +
+#  theme(axis.text=element_text(size=12), axis.title=element_text(size=12), legend.text=element_text(size=12))
+ggplot(data.t2@meta.data, aes(x=Species, fill=OstAdHoc.Assign.5gene.median.tot)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("lightblue1","skyblue","deepskyblue","dodgerblue2","dodgerblue4","grey99","grey99")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=12), legend.text=element_text(size=12))
+
+
+
+ggplot(data@meta.data, aes(x=AdHoc.Assign.median, fill=Species)) +
+  geom_bar(mapping = aes(x=AdHoc.Assign.median, y=..prop.., group=Species), stat="count", position="dodge") +
+  scale_fill_manual(values=c("grey","black"))
+
+```
+
+
+```{r}
+
+#unsupervised clustering
+DimPlot(data, group.by="Cluster", reduction="umap", cols=c("pink","pink3","pink4","mediumorchid","dodgerblue","dodgerblue4")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(data, group.by="Cluster", split.by="Species", reduction="umap", cols=c("pink","pink3","pink4","mediumorchid","dodgerblue4")) +
+  labs(x="UMAP1",y="UMAP2")
+VlnPlot(data, features=c("POU5F1","CD44","COL1A1"), group.by="Cluster",
+        cols=c("pink","pink3","pink4","mediumorchid","dodgerblue","dodgerblue3","dodgerblue4"), pt.size=0)
+VlnPlot(subset(data,subset=Species=="Human"), features=c("POU5F1","CD44","COL1A1"), group.by="Cluster",
+        cols=c("pink","pink3","pink4","mediumorchid","dodgerblue","dodgerblue3","dodgerblue4"), pt.size=0)
+VlnPlot(subset(data,subset=Species=="Chimp"), features=c("POU5F1","CD44","COL1A1"), group.by="Cluster",
+        cols=c("pink","pink3","pink4","mediumorchid","dodgerblue","dodgerblue3","dodgerblue4"), pt.size=0)
+
+#ad hoc cell assignments
+DimPlot(data, group.by="AdHoc.Assign", reduction="umap", cols=c("lightgrey","pink","dodgerblue","mediumorchid"), order=c("MSC","Osteoblast","iPSC","other")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(data, group.by="AdHoc.Assign", split.by="Species", reduction="umap", cols=c("lightgrey","pink","dodgerblue","mediumorchid"),
+        order=c("MSC","Osteoblast","iPSC","other")) +
+  labs(x="UMAP1",y="UMAP2")
+VlnPlot(data, features=c("POU5F1","CD44","COL1A1"), group.by="AdHoc.Assign",
+        cols=c("pink","mediumorchid","dodgerblue","lightgrey"), pt.size=0)
+VlnPlot(subset(data,subset=Species=="Human"), features=c("POU5F1","CD44","COL1A1"), group.by="AdHoc.Assign",
+        cols=c("pink","mediumorchid","dodgerblue","lightgrey"), pt.size=0)
+VlnPlot(subset(data,subset=Species=="Chimp"), features=c("POU5F1","CD44","COL1A1"), group.by="AdHoc.Assign",
+        cols=c("pink","mediumorchid","dodgerblue","lightgrey"), pt.size=0)
+
+#ad hoc osteogenic cell assignments
+DimPlot(data, group.by="Stage", reduction="umap", cols=c("lightgrey","lightgrey","dodgerblue")) + labs(x="UMAP1",y="UMAP2")
+DimPlot(data, group.by="Stage", split.by="OstAdHoc.Assign", reduction="umap", cols=c("lightgrey","lightgrey","dodgerblue")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(data,
+        group.by="OstAdHoc.Assign",
+        split.by="OstAdHoc.Assign",
+        reduction="umap",
+        cols=c("dodgerblue","dodgerblue3","dodgerblue4","black","lightgrey"),
+        ncol=5) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(data,
+        group.by="OstAdHoc.Assign",
+        split.by="OstAdHoc.Assign",
+        reduction="umap",
+        cols=c("dodgerblue","dodgerblue3","dodgerblue4","black","lightgrey"),
+        ncol=1) +
+  labs(x="UMAP1",y="UMAP2")
+#DimPlot(data, group.by="OstAdHoc.Assign", reduction="umap", cols=c("dodgerblue","dodgerblue3","dodgerblue4","black","lightgrey")) +
+#  labs(x="UMAP1",y="UMAP2")
+VlnPlot(data,
+        features=c("RUNX2","BGLAP","CAPG","MEPE"),
+        group.by="OstAdHoc.Assign",
+        cols=c("dodgerblue","dodgerblue3","dodgerblue4","black","lightgrey"),
+        pt.size=0,
+        ncol=4)
+VlnPlot(subset(data,subset=Species=="Human"),
+        features=c("RUNX2","BGLAP","CAPG","MEPE"),
+        group.by="OstAdHoc.Assign",
+        cols=c("dodgerblue","dodgerblue3","dodgerblue4","black","lightgrey"),
+        pt.size=0,
+        ncol=4)
+VlnPlot(subset(data,subset=Species=="Chimp"),
+        features=c("RUNX2","BGLAP","CAPG","MEPE"),
+        group.by="OstAdHoc.Assign",
+        cols=c("dodgerblue","dodgerblue3","dodgerblue4","black","lightgrey"),
+        pt.size=0,
+        ncol=4)
+#VlnPlot(subset(data,subset=Species=="Human"), features=c("POU5F1","CD44","COL1A1"), group.by="OstAdHoc.Assign", pt.size=0)
+#VlnPlot(subset(data,subset=Species=="Chimp"), features=c("POU5F1","CD44","COL1A1"), group.by="OstAdHoc.Assign", pt.size=0)
+
+```
