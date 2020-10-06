@@ -1,0 +1,1374 @@
+---
+title: "10x-plot-diffexp"
+author: "Genevieve Housman"
+date: "October 2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 10X Data Cellranger Analysis - Differential Expression
+
+View results of pairwise differential expression tests between humans and chimpanzees within different cell classifications.
+
+
+```{r, message=FALSE}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(grid)
+library(gbm)
+library(colorspace)
+library(RColorBrewer)
+library(edgeR)
+library(scran)
+library(SingleCellExperiment)
+library(purrr)
+library(UpSetR)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(Rgraphviz)
+library(enrichplot)
+library(viridis)
+library(VennDiagram)
+
+```
+
+### Compare DE gene results across different tests
+
+```{r}
+
+#tot results
+compare1 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.cluster50.rds")
+compare2 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhocscale0.rds")
+compare3 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhocXscale0.rds")
+DEdata.tot <- rbind(compare1,compare2,compare3)
+colnames(DEdata.tot)[5] <- "FDR"
+DEdata.tot <- as_tibble(DEdata.tot)
+rm(compare1,compare2,compare3)
+
+#t2 results using tot assignments
+compare1 <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.cluster50tot.rds")
+compare2 <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.ostadhocscale0tot.rds")
+compare3 <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.ostadhocXscale0tot.rds")
+DEdata.t2Wtot <- rbind(compare1,compare2,compare3)
+colnames(DEdata.t2Wtot)[5] <- "FDR"
+DEdata.t2Wtot <- as_tibble(DEdata.t2Wtot)
+rm(compare1,compare2,compare3)
+
+#t2 results
+compare1 <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.cluster.rds")
+compare2 <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.ostadhocscale0.rds")
+compare3 <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.ostadhocXscale0.rds")
+DEdata.t2 <- rbind(compare1,compare2,compare3)
+colnames(DEdata.t2)[5] <- "FDR"
+DEdata.t2 <- as_tibble(DEdata.t2)
+rm(compare1,compare2,compare3)
+
+#tot results using t2 assignments - EXACTLY THE SAME AS T2 RESULTS
+compare1 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.clustert2.rds")
+compare2 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhocscale0t2.rds")
+compare3 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhocXscale0t2.rds")
+DEdata.totWt2 <- rbind(compare1,compare2,compare3)
+colnames(DEdata.totWt2)[5] <- "FDR"
+DEdata.totWt2 <- as_tibble(DEdata.totWt2)
+rm(compare1,compare2,compare3)
+
+```
+
+Osteogenic Clusters (tot res=0.5, t2 res=0.1)
+
+```{r}
+
+#Osteogenic.c1
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="cluster50") %>%
+    dplyr::filter(cell.subset=="Osteogenic.c1") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2Wtot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="cluster50tot") %>%
+    dplyr::filter(cell.subset=="Osteogenic.c1") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="cluster50") %>%
+    dplyr::filter(cell.subset=="Osteogenic.c1") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2 %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="cluster") %>%
+    dplyr::filter(cell.subset=="Osteogenic.c1") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+#Osteogenic.c2
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="cluster50") %>%
+    dplyr::filter(cell.subset=="Osteogenic.c2") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2Wtot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="cluster50tot") %>%
+    dplyr::filter(cell.subset=="Osteogenic.c2") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="cluster50") %>%
+    dplyr::filter(cell.subset=="Osteogenic.c2") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2 %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="cluster") %>%
+    dplyr::filter(cell.subset=="Osteogenic.c2") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+#Osteogenic.c3
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="cluster50") %>%
+    dplyr::filter(cell.subset=="Osteogenic.c3") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2Wtot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="cluster50tot") %>%
+    dplyr::filter(cell.subset=="Osteogenic.c3") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="cluster50") %>%
+    dplyr::filter(cell.subset=="Osteogenic.c3") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2 %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="cluster") %>%
+    dplyr::filter(cell.subset=="Osteogenic.c5") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+#Osteogenic.c5
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="cluster50") %>%
+    dplyr::filter(cell.subset=="Osteogenic.c5") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2Wtot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="cluster50tot") %>%
+    dplyr::filter(cell.subset=="Osteogenic.c5") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="cluster50") %>%
+    dplyr::filter(cell.subset=="Osteogenic.c5") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2 %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="cluster") %>%
+    dplyr::filter(cell.subset=="Osteogenic.c3") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+```
+
+OstAdHoc (scaled integrated data, thresh=0)
+
+```{r}
+
+#preosteoblasts
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocscale0") %>%
+    dplyr::filter(cell.subset=="preosteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2Wtot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocscale0tot") %>%
+    dplyr::filter(cell.subset=="preosteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocscale0") %>%
+    dplyr::filter(cell.subset=="preosteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2 %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocscale0") %>%
+    dplyr::filter(cell.subset=="preosteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+#osteoblasts
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocscale0") %>%
+    dplyr::filter(cell.subset=="osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2Wtot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocscale0tot") %>%
+    dplyr::filter(cell.subset=="osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocscale0") %>%
+    dplyr::filter(cell.subset=="osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2 %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocscale0") %>%
+    dplyr::filter(cell.subset=="osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+#embedding osteoblasts
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocscale0") %>%
+    dplyr::filter(cell.subset=="embedding osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2Wtot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocscale0tot") %>%
+    dplyr::filter(cell.subset=="embedding osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocscale0") %>%
+    dplyr::filter(cell.subset=="embedding osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2 %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocscale0") %>%
+    dplyr::filter(cell.subset=="embedding osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+#mineralizing osteoblasts
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocscale0") %>%
+    dplyr::filter(cell.subset=="mineralizing osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2Wtot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocscale0tot") %>%
+    dplyr::filter(cell.subset=="mineralizing osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocscale0") %>%
+    dplyr::filter(cell.subset=="mineralizing osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2 %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocscale0") %>%
+    dplyr::filter(cell.subset=="mineralizing osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+#maturing osteocytes
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocscale0") %>%
+    dplyr::filter(cell.subset=="maturing osteocyte") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2Wtot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocscale0tot") %>%
+    dplyr::filter(cell.subset=="maturing osteocyte") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocscale0") %>%
+    dplyr::filter(cell.subset=="maturing osteocyte") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2 %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocscale0") %>%
+    dplyr::filter(cell.subset=="maturing osteocyte") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+```
+
+OstAdHoc.x (scaled integrated data, thresh=0)
+
+```{r}
+
+#preosteoblasts
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocXscale0") %>%
+    dplyr::filter(cell.subset=="preosteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2Wtot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocXscale0tot") %>%
+    dplyr::filter(cell.subset=="preosteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocXscale0") %>%
+    dplyr::filter(cell.subset=="preosteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2 %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocXscale0") %>%
+    dplyr::filter(cell.subset=="preosteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+#osteoblasts
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocXscale0") %>%
+    dplyr::filter(cell.subset=="osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2Wtot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocXscale0tot") %>%
+    dplyr::filter(cell.subset=="osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocXscale0") %>%
+    dplyr::filter(cell.subset=="osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2 %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocXscale0") %>%
+    dplyr::filter(cell.subset=="osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+#embedding osteoblasts
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocXscale0") %>%
+    dplyr::filter(cell.subset=="embedding osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2Wtot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocXscale0tot") %>%
+    dplyr::filter(cell.subset=="embedding osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocXscale0") %>%
+    dplyr::filter(cell.subset=="embedding osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2 %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocXscale0") %>%
+    dplyr::filter(cell.subset=="embedding osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+#mineralizing osteoblasts
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocXscale0") %>%
+    dplyr::filter(cell.subset=="mineralizing osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2Wtot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocXscale0tot") %>%
+    dplyr::filter(cell.subset=="mineralizing osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocXscale0") %>%
+    dplyr::filter(cell.subset=="mineralizing osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2 %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocXscale0") %>%
+    dplyr::filter(cell.subset=="mineralizing osteoblast") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+#maturing osteocytes
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocXscale0") %>%
+    dplyr::filter(cell.subset=="maturing osteocyte") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2Wtot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocXscale0tot") %>%
+    dplyr::filter(cell.subset=="maturing osteocyte") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+compare <- full_join(
+  DEdata.tot %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocXscale0") %>%
+    dplyr::filter(cell.subset=="maturing osteocyte") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  DEdata.t2 %>%
+    dplyr::filter(FDR<=0.05) %>%
+    dplyr::filter(cell.assign=="ostadhocXscale0") %>%
+    dplyr::filter(cell.subset=="maturing osteocyte") %>% 
+    dplyr::select(cell.assign,cell.subset,gene),
+  by="gene"
+)
+#compare
+table(is.na(compare$cell.assign.x))
+table(is.na(compare$cell.assign.y))
+
+```
+
+```{r}
+
+rm(DEdata.tot,DEdata.t2Wtot,DEdata.t2,DEdata.totWt2)
+
+```
+
+### Examine output of DE analyses in more detail
+
+```{r}
+
+#Load DE results
+
+#compare1 <- readRDS("./data/de-data/DEdream.tot.sc.pch20.fml6.nofc.bh.stage.rds")
+#compare2 <- readRDS("./data/de-data/DEdream.tot.sc.pch20.fml6.nofc.bh.cluster.rds")
+#compare3 <- readRDS("./data/de-data/DEdream.tot.sc.pch20.fml6.nofc.bh.adhocscale0.rds")
+#compare4 <- readRDS("./data/de-data/DEdream.tot.sc.pch20.fml6.nofc.bh.cluster50.rds")
+#compare5 <- readRDS("./data/de-data/DEdream.t2.sc.pch20.fml6.nofc.bh.cluster50tot.rds")
+#compare6 <- readRDS("./data/de-data/DEdream.t2.sc.pch20.fml6.nofc.bh.cluster.rds")
+#compare7 <- readRDS("./data/de-data/DEdream.tot.sc.pch20.fml6.nofc.bh.ostadhocscale0.rds")
+#compare8 <- readRDS("./data/de-data/DEdream.t2.sc.pch20.fml6.nofc.bh.ostadhocscale0tot.rds")
+#compare9 <- readRDS("./data/de-data/DEdream.t2.sc.pch20.fml6.nofc.bh.ostadhocscale0.rds")
+
+compare1 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.stage.rds")
+compare2 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.cluster.rds")
+compare3 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.adhocscale0.rds")
+compare4 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.cluster50.rds")
+compare5 <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.cluster50tot.rds")
+compare6 <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.cluster.rds")
+compare7 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhocscale0.rds")
+compare8 <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.ostadhocscale0tot.rds")
+compare9 <- readRDS("./data/de-data/DEdream.t2.pseudo.logcpm0.fml6.nofc.bh.ostadhocscale0.rds")
+
+DEdata <- rbind(compare1,compare2,compare3,compare4,compare5,compare6,compare7,compare8,compare9)
+colnames(DEdata)[5] <- "FDR"
+DEdata <- as_tibble(DEdata)
+rm(compare1,compare2,compare3,compare4,compare5,compare6,compare7,compare8,compare9)
+
+```
+
+```{r}
+
+#Isolate significant DE genes
+
+DEdataSig <- DEdata %>% filter(FDR<=0.05)
+#DEdataSig <- DEdata %>% filter(FDR<=0.01)
+#DEdataSig <- DEdata %>% filter(abs(logFC)>=1.2 & FDR<=0.01)
+
+```
+
+### Examine Numbers, Overlap, and logFC of DE Genes
+
+Stages of Differentiation at Collection
+
+```{r}
+
+DEgenes <-
+  DEdataSig %>%
+    dplyr::filter(cell.assign=="stage") %>%
+    dplyr::select(cell.subset,gene,logFC)
+
+# Number of DE genes
+ggplot(DEgenes, aes(x=cell.subset, fill=cell.subset)) +
+  geom_bar() +
+  ylab('Number of DE Genes') +
+  scale_fill_manual(name="Stage",
+                    labels=c("Time 0","Time 1","Time 2"),
+                    values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+# Overlap of DE genes
+combined <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="Time 0") %>% dplyr::select(gene), "Time.0"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="Time 1") %>% dplyr::select(gene), "Time.1"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="Time 2") %>% dplyr::select(gene), "Time.2"=1)
+                        ), full_join)
+combined[is.na(combined)] <- 0
+upset(combined,
+      keep.order=TRUE,
+      empty.intersections="on",
+      intersections=list(list("Time.0"),
+                         list("Time.1"),
+                         list("Time.2"),
+                         list("Time.0","Time.1"),
+                         list("Time.1","Time.2"),
+                         list("Time.0","Time.2"),
+                         list("Time.0","Time.1","Time.2")),
+      text.scale=2)
+dev.off()
+v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="Time 0") %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="Time 1") %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="Time 2") %>% dplyr::select(gene))),
+                  category.names = c("Time 0","Time 1","Time 2"),
+                  filename=NULL,
+                  scaled=TRUE,
+                  euler.d=TRUE,
+                  col=c("pink","mediumorchid","dodgerblue"),
+                  fill=c("pink","mediumorchid","dodgerblue"),
+                  fontfamily="sans",
+                  cat.fontfamily="sans")
+grid.draw(v)
+
+# Examine absoute logFC of DE genes
+ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
+  geom_boxplot() +
+  ylab('Absolute Log2 Fold Change in DE Genes') +
+  scale_fill_manual(name="Stage",
+                    labels=c("Time 0","Time 1","Time 2"),
+                    values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 0")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 1")])) #FDR<0.05: p<2.2e-16 / FDR<0.01: p=3.3e-11
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 1")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 2")])) #FDR<0.05: p<2.2e-16 / FDR<0.01: p=4.1e-08
+
+```
+
+General Clusters (res=0.05)
+
+```{r}
+
+DEgenes <-
+  DEdataSig %>%
+    dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+    dplyr::filter(cell.assign=="cluster") %>%
+    dplyr::filter(cell.subset %in% c("iPSC.c1","iPSC.c2","iPSC.c3","MSC.c1","Osteogenic.c1","Osteogenic.c2")) %>% 
+    dplyr::select(cell.subset,gene,logFC)
+
+# Number of DE genes
+ggplot(DEgenes, aes(x=cell.subset, fill=cell.subset)) +
+  geom_bar() +
+  ylab('Number of DE Genes') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("iPSC.c1","iPSC.c2","iPSC.c3","MSC.c1","Osteogenic.c1","Osteogenic.c2"),
+                    values=c("pink","pink3","pink4","mediumorchid","dodgerblue","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+# Examine absoute logFC of DE genes
+ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
+  geom_boxplot() +
+  ylab('Absolute Log2 Fold Change in DE Genes') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("iPSC.c1","iPSC.c2","iPSC.c3","MSC.c1","Osteogenic.c1","Osteogenic.c2"),
+                    values=c("pink","pink3","pink4","mediumorchid","dodgerblue","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+###
+
+DEgenes <-
+  DEdataSig %>%
+    dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+    dplyr::filter(cell.assign=="cluster") %>%
+    dplyr::filter(cell.subset %in% c("iPSC.c1","MSC.c1","Osteogenic.c1")) %>% 
+    dplyr::select(cell.subset,gene,logFC)
+
+# Number of DE genes
+ggplot(DEgenes, aes(x=cell.subset, fill=cell.subset)) +
+  geom_bar() +
+  ylab('Number of DE Genes') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("iPSC.c1","MSC.c1","Osteogenic.c1"),
+                    values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+# Overlap of DE genes
+combined <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="iPSC.c1") %>% dplyr::select(gene), "iPSC.c1"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="MSC.c1") %>% dplyr::select(gene), "MSC.c1"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="Osteogenic.c1") %>% dplyr::select(gene), "Osteogenic.c1"=1)
+                        ), full_join)
+combined[is.na(combined)] <- 0
+upset(combined,
+      keep.order=TRUE,
+      empty.intersections="on",
+      intersections=list(list("iPSC.c1"),
+                         list("MSC.c1"),
+                         list("Osteogenic.c1"),
+                         list("iPSC.c1","MSC.c1"),
+                         list("MSC.c1","Osteogenic.c1"),
+                         list("iPSC.c1","Osteogenic.c1"),
+                         list("iPSC.c1","MSC.c1","Osteogenic.c1")),
+      text.scale=2)
+dev.off()
+v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="iPSC.c1") %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="MSC.c1") %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c1") %>% dplyr::select(gene))),
+                  category.names = c("iPSC.c1","MSC.c1","Osteogenic.c1"),
+                  filename=NULL,
+                  scaled=TRUE,
+                  euler.d=TRUE,
+                  col=c("pink","mediumorchid","dodgerblue"),
+                  fill=c("pink","mediumorchid","dodgerblue"),
+                  fontfamily="sans",
+                  cat.fontfamily="sans")
+grid.draw(v)
+
+# Examine absoute logFC of DE genes
+ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
+  geom_boxplot() +
+  ylab('Absolute Log2 Fold Change in DE Genes') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("iPSC.c1","MSC.c1","Osteogenic.c1"),
+                    values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="iPSC.c1")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="MSC.c1")]))       #FDR<0.05: p<2.2e-16 / FDR<0.01: p=1.1e-09
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="MSC.c1")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Osteogenic.c1")])) #FDR<0.05: p<2.2e-16 / FDR<0.01: p=6.0e-09
+
+```
+
+General Ad Hoc Classification of Cells (scaled integrated data, threshold=0)
+
+```{r}
+
+DEgenes <-
+  DEdataSig %>%
+    dplyr::filter(cell.assign=="adhocscale0") %>%
+    dplyr::select(cell.subset,gene,logFC)
+
+# Number of DE genes
+ggplot(DEgenes, aes(x=cell.subset, fill=cell.subset)) +
+  geom_bar() +
+  ylab('Number of DE Genes') +
+  scale_fill_manual(name="Ad Hoc",
+                    labels=c("iPSC","MSC","Osteogenic"),
+                    values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+# Overlap of DE genes
+combined <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="iPSC") %>% dplyr::select(gene), "iPSC"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="MSC") %>% dplyr::select(gene), "MSC"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="Osteogenic") %>% dplyr::select(gene), "Osteogenic"=1)
+                        ), full_join)
+combined[is.na(combined)] <- 0
+upset(combined,
+      keep.order=TRUE,
+      empty.intersections="on",
+      intersections=list(list("iPSC"),
+                         list("MSC"),
+                         list("Osteogenic"),
+                         list("iPSC","MSC"),
+                         list("MSC","Osteogenic"),
+                         list("iPSC","Osteogenic"),
+                         list("iPSC","MSC","Osteogenic")),
+      text.scale=2)
+dev.off()
+v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="iPSC") %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="MSC") %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="Osteogenic") %>% dplyr::select(gene))),
+                  category.names = c("iPSC","MSC","Osteogenic"),
+                  filename=NULL,
+                  scaled=TRUE,
+                  euler.d=TRUE,
+                  col=c("pink","mediumorchid","dodgerblue"),
+                  fill=c("pink","mediumorchid","dodgerblue"),
+                  fontfamily="sans",
+                  cat.fontfamily="sans")
+grid.draw(v)
+
+# Examine absoute logFC of DE genes
+ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
+  geom_boxplot() +
+  ylab('Absolute Log2 Fold Change in DE Genes') +
+  scale_fill_manual(name="Ad Hoc",
+                    labels=c("iPSC","MSC","Osteogenic"),
+                    values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="iPSC")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="MSC")]))       #FDR<0.05: p<2.2e-16 / FDR<0.01: p=1.5e-08
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="MSC")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Osteogenic")])) #FDR<0.05: p<2.2e-16 / FDR<0.01: p=6.2e-08
+
+```
+
+Osteogenic Clusters (tot-cluster50, res=0.5 in tot data)
+
+```{r}
+
+DEgenes <-
+  DEdataSig %>%
+    dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+    dplyr::filter(cell.assign=="cluster50") %>%
+    dplyr::filter(cell.subset %in% c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c5")) %>% 
+    dplyr::select(cell.subset,gene,logFC)
+
+# Number of DE genes
+ggplot(DEgenes, aes(x=cell.subset, fill=cell.subset)) +
+  geom_bar() +
+  ylab('Number of DE Genes') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c5"),
+                    values=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+# Overlap of DE genes
+combined <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="Osteogenic.c1") %>% dplyr::select(gene), "Osteogenic.c1"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="Osteogenic.c2") %>% dplyr::select(gene), "Osteogenic.c2"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="Osteogenic.c3") %>% dplyr::select(gene), "Osteogenic.c3"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="Osteogenic.c5") %>% dplyr::select(gene), "Osteogenic.c5"=1)
+                        ), full_join)
+combined[is.na(combined)] <- 0
+upset(combined,
+      keep.order=TRUE,
+      empty.intersections="on")
+upset(combined,
+      keep.order=TRUE,
+      empty.intersections="on",
+      sets=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c5"),
+      intersections=list(list("Osteogenic.c1"),
+                         list("Osteogenic.c2"),
+                         list("Osteogenic.c3"),
+                         list("Osteogenic.c5"),
+                         list("Osteogenic.c1","Osteogenic.c2"),
+                         list("Osteogenic.c2","Osteogenic.c3"),
+                         list("Osteogenic.c3","Osteogenic.c5"),
+                         list("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3"),
+                         list("Osteogenic.c2","Osteogenic.c3","Osteogenic.c5"),
+                         list("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c5")),
+      text.scale=2)
+dev.off()
+v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="Osteogenic.c1") %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c2") %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c3") %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c5") %>% dplyr::select(gene))),
+                  category.names = c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c5"),
+                  filename=NULL,
+                  scaled=TRUE,
+                  euler.d=TRUE,
+                  col=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4"),
+                  fill=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4"),
+                  fontfamily="sans",
+                  cat.fontfamily="sans")
+grid.draw(v)
+
+# Examine absoute logFC of DE genes
+ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
+  geom_boxplot() +
+  ylab('Absolute Log2 Fold Change in DE Genes') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c5"),
+                    values=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="Osteogenic.c1")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Osteogenic.c2")])) #FDR<0.05: p=0.14670 / FDR<0.01: p=0.13240
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="Osteogenic.c2")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Osteogenic.c3")])) #FDR<0.05: p=0.01449 / FDR<0.01: p=0.00360
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="Osteogenic.c3")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Osteogenic.c5")])) #FDR<0.05: p=0.00475 / FDR<0.01: NA
+
+```
+
+Osteogenic Clusters (t2-cluster50.tot, res=0.5 in tot data)
+
+```{r}
+
+DEgenes <-
+  DEdataSig %>%
+    dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.assign.rds") %>%
+    dplyr::filter(cell.assign=="cluster50tot") %>%
+    dplyr::filter(cell.subset %in% c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c5")) %>% 
+    dplyr::select(cell.subset,gene,logFC)
+
+# Number of DE genes
+ggplot(DEgenes, aes(x=cell.subset, fill=cell.subset)) +
+  geom_bar() +
+  ylab('Number of DE Genes') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c5"),
+                    values=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+# Overlap of DE genes
+combined <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="Osteogenic.c1") %>% dplyr::select(gene), "Osteogenic.c1"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="Osteogenic.c2") %>% dplyr::select(gene), "Osteogenic.c2"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="Osteogenic.c3") %>% dplyr::select(gene), "Osteogenic.c3"=1)
+                        ), full_join)
+combined[is.na(combined)] <- 0
+upset(combined,
+      keep.order=TRUE,
+      empty.intersections="on",
+      sets=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3"),
+      intersections=list(list("Osteogenic.c1"),
+                         list("Osteogenic.c2"),
+                         list("Osteogenic.c3"),
+                         list("Osteogenic.c1","Osteogenic.c2"),
+                         list("Osteogenic.c2","Osteogenic.c3"),
+                         list("Osteogenic.c1","Osteogenic.c3"),
+                         list("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3")),
+      text.scale=2)
+dev.off()
+v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="Osteogenic.c1") %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c2") %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c3") %>% dplyr::select(gene))),
+                  category.names = c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3"),
+                  filename=NULL,
+                  scaled=TRUE,
+                  euler.d=TRUE,
+                  col=c("lightblue1","deepskyblue","dodgerblue2"),
+                  fill=c("lightblue1","deepskyblue","dodgerblue2"),
+                  fontfamily="sans",
+                  cat.fontfamily="sans")
+grid.draw(v)
+
+# Examine absoute logFC of DE genes
+ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
+  geom_boxplot() +
+  ylab('Absolute Log2 Fold Change in DE Genes') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c5"),
+                    values=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="Osteogenic.c1")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Osteogenic.c2")])) #FDR<0.05: p=0.44620 / FDR<0.01: p=0.30010
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="Osteogenic.c2")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Osteogenic.c3")])) #FDR<0.05: p=8.1e-11 / FDR<0.01: p=1.9e-05
+
+```
+
+Osteogenic Clusters (t2-clusters, res=0.1 in t2 data)
+
+```{r}
+
+#note: Osteogenic.c5 is the same as Osteogenic.c3 above (Osteogenic.c3 is the same as Osteogenic.c5 above)
+
+DEgenes <-
+  DEdataSig %>%
+    dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.assign.rds") %>%
+    dplyr::filter(cell.assign=="cluster") %>%
+    dplyr::filter(cell.subset %in% c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c5")) %>% 
+    dplyr::select(cell.subset,gene,logFC)
+
+# Number of DE genes
+ggplot(DEgenes, aes(x=cell.subset, fill=cell.subset)) +
+  geom_bar() +
+  ylab('Number of DE Genes') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c5"),
+                    values=c("lightblue1","deepskyblue","dodgerblue4","dodgerblue2")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+# Overlap of DE genes
+combined <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="Osteogenic.c1") %>% dplyr::select(gene), "Osteogenic.c1"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="Osteogenic.c2") %>% dplyr::select(gene), "Osteogenic.c2"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="Osteogenic.c3") %>% dplyr::select(gene), "Osteogenic.c3"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="Osteogenic.c5") %>% dplyr::select(gene), "Osteogenic.c5"=1)
+                        ), full_join)
+combined[is.na(combined)] <- 0
+upset(combined,
+      keep.order=TRUE,
+      empty.intersections="on",
+      sets=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c5"),
+      intersections=list(list("Osteogenic.c1"),
+                         list("Osteogenic.c2"),
+                         list("Osteogenic.c3"),
+                         list("Osteogenic.c5"),
+                         list("Osteogenic.c1","Osteogenic.c2"),
+                         list("Osteogenic.c2","Osteogenic.c3"),
+                         list("Osteogenic.c3","Osteogenic.c5"),
+                         list("Osteogenic.c1","Osteogenic.c3"),
+                         list("Osteogenic.c1","Osteogenic.c5"),
+                         list("Osteogenic.c2","Osteogenic.c5"),
+                         list("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3"),
+                         list("Osteogenic.c2","Osteogenic.c3","Osteogenic.c5"),
+                         list("Osteogenic.c1","Osteogenic.c2","Osteogenic.c5"),
+                         list("Osteogenic.c1","Osteogenic.c3","Osteogenic.c5"),
+                         list("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c5")),
+      text.scale=2)
+dev.off()
+v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="Osteogenic.c1") %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c2") %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c3") %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c5") %>% dplyr::select(gene))),
+                  category.names = c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c5"),
+                  filename=NULL,
+                  scaled=TRUE,
+                  euler.d=TRUE,
+                  col=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4"),
+                  fill=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4"),
+                  fontfamily="sans",
+                  cat.fontfamily="sans")
+grid.draw(v)
+
+# Examine absoute logFC of DE genes
+ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
+  geom_boxplot() +
+  ylab('Absolute Log2 Fold Change in DE Genes') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c5"),
+                    values=c("lightblue1","deepskyblue","dodgerblue4","dodgerblue2")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="Osteogenic.c1")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Osteogenic.c2")])) #FDR<0.05: p=0.95920 / FDR<0.01: p=0.26690
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="Osteogenic.c2")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Osteogenic.c5")])) #FDR<0.05: p=6.7e-07 / FDR<0.01: p=0.00029
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="Osteogenic.c5")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Osteogenic.c3")])) #FDR<0.05: p=0.35390 / FDR<0.01: NA
+
+```
+
+Osteogenic Ad Hoc Classification of Cells (tot-ostadhocscale0, scaled integrated data, threshold=0)
+
+```{r}
+
+DEgenes <-
+  DEdataSig %>%
+    dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+    dplyr::filter(cell.assign=="ostadhocscale0") %>%
+    dplyr::select(cell.subset,gene,logFC)
+
+DEgenes$cell.subset <- factor(DEgenes$cell.subset,
+                              levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                              labels=c("preosteoblast","osteoblast","embedding\nosteoblast","mineralizing\nosteoblast","maturing\nosteocyte"))
+
+# Number of DE genes
+ggplot(DEgenes, aes(x=cell.subset, fill=cell.subset)) +
+  geom_bar() +
+  ylab('Number of DE Genes') +
+  scale_fill_manual(name="Osteogenic Stage",
+                    labels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                    values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+# Overlap of DE genes
+combined <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="preosteoblast")            %>% dplyr::select(gene), "preosteoblast"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="osteoblast")               %>% dplyr::select(gene), "osteoblast"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="embedding\nosteoblast")    %>% dplyr::select(gene), "embedding.osteoblast"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="mineralizing\nosteoblast") %>% dplyr::select(gene), "mineralizing.osteoblast"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="maturing\nosteocyte")      %>% dplyr::select(gene), "maturing.osteocyte"=1)
+                        ), full_join)
+combined[is.na(combined)] <- 0
+upset(combined,
+      keep.order=TRUE,
+      empty.intersections="on")
+upset(combined,
+      keep.order=TRUE,
+      empty.intersections="on",
+      sets=c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+      intersections=list(list("preosteoblast"),
+                         list("osteoblast"),
+                         list("embedding.osteoblast"),
+                         list("mineralizing.osteoblast"),
+                         list("maturing.osteocyte"),
+                         list("preosteoblast","osteoblast"),
+                         list("osteoblast","embedding.osteoblast"),
+                         list("embedding.osteoblast","mineralizing.osteoblast"),
+                         list("mineralizing.osteoblast","maturing.osteocyte"),
+                         list("preosteoblast","osteoblast","embedding.osteoblast"),
+                         list("osteoblast","embedding.osteoblast","mineralizing.osteoblast"),
+                         list("embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                         list("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast"),
+                         list("osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                         list("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte")),
+      text.scale=2)
+dev.off()
+v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="preosteoblast")            %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="osteoblast")               %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="embedding\nosteoblast")    %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="mineralizing\nosteoblast") %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="maturing\nosteocyte")      %>% dplyr::select(gene))),
+                  category.names = c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                  filename=NULL,
+                  scaled=TRUE,
+                  euler.d=TRUE,
+                  col=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
+                  fill=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
+                  fontfamily="sans",
+                  cat.fontfamily="sans")
+grid.draw(v)
+
+# Examine absoute logFC of DE genes
+ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
+  geom_boxplot() +
+  ylab('Absolute Log2 Fold Change in DE Genes') +
+  scale_fill_manual(name="Osteogenic Stage",
+                    labels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                    values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="preosteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="osteoblast")]))                       #FDR<0.05: p=0.00769 / FDR<0.01: p=0.46880
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="osteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="embedding\nosteoblast")]))               #FDR<0.05: p<2.2e-16 / FDR<0.01: p=1.0e-06
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="embedding\nosteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="mineralizing\nosteoblast")])) #FDR<0.05: p=0.00538 / FDR<0.01: p=0.08167
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="mineralizing\nosteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="maturing\nosteocyte")]))   #FDR<0.05: p=2.2e-05 / FDR<0.01: p=0.00030
+
+```
+
+Osteogenic Ad Hoc Classification of Cells (t2-ostadhocscale0.tot, scaled integrated data, threshold=0)
+
+```{r}
+
+DEgenes <-
+  DEdataSig %>%
+    dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.assign.rds") %>%
+    dplyr::filter(cell.assign=="ostadhocscale0tot") %>%
+    dplyr::select(cell.subset,gene,logFC)
+
+DEgenes$cell.subset <- factor(DEgenes$cell.subset,
+                              levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                              labels=c("preosteoblast","osteoblast","embedding\nosteoblast","mineralizing\nosteoblast","maturing\nosteocyte"))
+
+# Number of DE genes
+ggplot(DEgenes, aes(x=cell.subset, fill=cell.subset)) +
+  geom_bar() +
+  ylab('Number of DE Genes') +
+  scale_fill_manual(name="Osteogenic Stage",
+                    labels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                    values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+# Overlap of DE genes
+combined <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="preosteoblast")            %>% dplyr::select(gene), "preosteoblast"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="osteoblast")               %>% dplyr::select(gene), "osteoblast"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="embedding\nosteoblast")    %>% dplyr::select(gene), "embedding.osteoblast"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="mineralizing\nosteoblast") %>% dplyr::select(gene), "mineralizing.osteoblast"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="maturing\nosteocyte")      %>% dplyr::select(gene), "maturing.osteocyte"=1)
+                        ), full_join)
+combined[is.na(combined)] <- 0
+upset(combined,
+      keep.order=TRUE,
+      empty.intersections="on")
+upset(combined,
+      keep.order=TRUE,
+      empty.intersections="on",
+      sets=c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+      intersections=list(list("preosteoblast"),
+                         list("osteoblast"),
+                         list("embedding.osteoblast"),
+                         list("mineralizing.osteoblast"),
+                         list("maturing.osteocyte"),
+                         list("preosteoblast","osteoblast"),
+                         list("osteoblast","embedding.osteoblast"),
+                         list("embedding.osteoblast","mineralizing.osteoblast"),
+                         list("mineralizing.osteoblast","maturing.osteocyte"),
+                         list("preosteoblast","osteoblast","embedding.osteoblast"),
+                         list("osteoblast","embedding.osteoblast","mineralizing.osteoblast"),
+                         list("embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                         list("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast"),
+                         list("osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                         list("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte")),
+      text.scale=2)
+dev.off()
+v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="preosteoblast")            %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="osteoblast")               %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="embedding\nosteoblast")    %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="mineralizing\nosteoblast") %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="maturing\nosteocyte")      %>% dplyr::select(gene))),
+                  category.names = c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                  filename=NULL,
+                  scaled=TRUE,
+                  euler.d=TRUE,
+                  col=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
+                  fill=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
+                  fontfamily="sans",
+                  cat.fontfamily="sans")
+grid.draw(v)
+
+# Examine absoute logFC of DE genes
+ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
+  geom_boxplot() +
+  ylab('Absolute Log2 Fold Change in DE Genes') +
+  scale_fill_manual(name="Osteogenic Stage",
+                    labels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                    values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="preosteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="osteoblast")]))                       #FDR<0.05: p=0.00183 / FDR<0.01: p=0.74110
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="osteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="embedding\nosteoblast")]))               #FDR<0.05: p<2.2e-16 / FDR<0.01: p=4.3e-06
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="embedding\nosteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="mineralizing\nosteoblast")])) #FDR<0.05: p=0.08559 / FDR<0.01: p=0.62810
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="mineralizing\nosteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="maturing\nosteocyte")]))   #FDR<0.05: p=1.6e-11 / FDR<0.01: p=9.7e-05
+
+```
+
+Osteogenic Ad Hoc Classification of Cells (t2-ostadhocscale0, scaled integrated data, threshold=0)
+
+```{r}
+
+DEgenes <-
+  DEdataSig %>%
+    dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.assign.rds") %>%
+    dplyr::filter(cell.assign=="ostadhocscale0") %>%
+    dplyr::select(cell.subset,gene,logFC)
+
+DEgenes$cell.subset <- factor(DEgenes$cell.subset,
+                              levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                              labels=c("preosteoblast","osteoblast","embedding\nosteoblast","mineralizing\nosteoblast","maturing\nosteocyte"))
+
+# Number of DE genes
+ggplot(DEgenes, aes(x=cell.subset, fill=cell.subset)) +
+  geom_bar() +
+  ylab('Number of DE Genes') +
+  scale_fill_manual(name="Osteogenic Stage",
+                    labels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                    values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+# Overlap of DE genes
+combined <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="preosteoblast")            %>% dplyr::select(gene), "preosteoblast"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="osteoblast")               %>% dplyr::select(gene), "osteoblast"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="embedding\nosteoblast")    %>% dplyr::select(gene), "embedding.osteoblast"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="mineralizing\nosteoblast") %>% dplyr::select(gene), "mineralizing.osteoblast"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="maturing\nosteocyte")      %>% dplyr::select(gene), "maturing.osteocyte"=1)
+                        ), full_join)
+combined[is.na(combined)] <- 0
+upset(combined,
+      keep.order=TRUE,
+      empty.intersections="on")
+upset(combined,
+      keep.order=TRUE,
+      empty.intersections="on",
+      sets=c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+      intersections=list(list("preosteoblast"),
+                         list("osteoblast"),
+                         list("embedding.osteoblast"),
+                         list("mineralizing.osteoblast"),
+                         list("maturing.osteocyte"),
+                         list("preosteoblast","osteoblast"),
+                         list("osteoblast","embedding.osteoblast"),
+                         list("embedding.osteoblast","mineralizing.osteoblast"),
+                         list("mineralizing.osteoblast","maturing.osteocyte"),
+                         list("preosteoblast","osteoblast","embedding.osteoblast"),
+                         list("osteoblast","embedding.osteoblast","mineralizing.osteoblast"),
+                         list("embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                         list("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast"),
+                         list("osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                         list("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte")),
+      text.scale=2)
+dev.off()
+v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="preosteoblast")            %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="osteoblast")               %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="embedding\nosteoblast")    %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="mineralizing\nosteoblast") %>% dplyr::select(gene)),
+                       pull(DEgenes %>% filter(cell.subset=="maturing\nosteocyte")      %>% dplyr::select(gene))),
+                  category.names = c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                  filename=NULL,
+                  scaled=TRUE,
+                  euler.d=TRUE,
+                  col=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
+                  fill=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
+                  fontfamily="sans",
+                  cat.fontfamily="sans")
+grid.draw(v)
+
+# Examine absoute logFC of DE genes
+ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
+  geom_boxplot() +
+  ylab('Absolute Log2 Fold Change in DE Genes') +
+  scale_fill_manual(name="Osteogenic Stage",
+                    labels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                    values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="preosteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="osteoblast")]))                       #FDR<0.05: p=0.28870 / FDR<0.01: p=0.01397
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="osteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="embedding\nosteoblast")]))               #FDR<0.05: p=1.4e-08 / FDR<0.01: p=0.03585
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="embedding\nosteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="mineralizing\nosteoblast")])) #FDR<0.05: p=0.83730 / FDR<0.01: p=0.76080
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="mineralizing\nosteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="maturing\nosteocyte")]))   #FDR<0.05: p=7.5e-09 / FDR<0.01: p=0.01472
+
+```
