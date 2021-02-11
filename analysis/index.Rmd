@@ -1,0 +1,14 @@
+---
+title: "Home"
+site: workflowr::wflow_site
+output:
+  workflowr::wflow_html:
+    toc: false
+editor_options:
+  chunk_output_type: console
+---
+
+Genevieve Housman
+
+This site contains the workflow and analysis of my human and chimpanzee comparative skeletal single-cell gene expression project.
+
