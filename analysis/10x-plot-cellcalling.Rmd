@@ -1,7 +1,7 @@
 ---
 title: "10x-plot-cellcalling"
 author: "Genevieve Housman"
-date: "January 2021"
+date: "February 2021"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -11,12 +11,16 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## 10X Data Cellranger Analysis - Visual Cell Classifications
+# 10X Data Cellranger Analysis - Visual Cell Classifications
 
+As detailed in 10x-data-1-process.Rmd and 10x-data-0-process-test, cellranger is really bad at human/chimp assignments, so we instead assigned cells based on the ratio of human-aligned UMIs per cells vs. the total number of aligned UMIs per cells (output from cellranger using combined_genome_index). We used a cutoff ratio <= 0.1 to assign chimpanzee cells and a cutoff ratio >= 0.9 to assign human cells.
+
+Here, we produce plots to compare the cellranger species assignments to our revised species assignments.
 
 ```{r load libraries}
 
 library(ggplot2)
+library(gridExtra)
 library(colorspace)
 library(RColorBrewer)
 
@@ -34,7 +38,7 @@ batch <- read.csv(file='./data/scrna-batch.csv', header=TRUE, sep=",")
 i <- 1
 while (i <= length(batch$Sample_Name_at_Core)) {
   
-  print(i)
+  print(batch$Sample_Name_at_Core[i])
 
   #load data
   dir_data <- paste0('./../scRNA/cellranger-data-full/cellranger-data-HumanOrthoV2_and_ChimpOrthoV2/',batch$Sample_Name_at_Core[i],'/outs/analysis/')
@@ -42,7 +46,7 @@ while (i <= length(batch$Sample_Name_at_Core)) {
   temp <- read.csv(file=paste0(dir_data,'gem_classification_GHedit.csv'))
   
   #make calls a factor
-  temp$call <- factor(temp$call, levels=c("ChimpOrthoV2","HumanOrthoV2","Multiplet"), labels=c("Chimp","Human","Multiplet"))
+  temp$call <- factor(temp$call, levels=c("Chimp","Human","Multiplet"), labels=c("Chimp","Human","Multiplet"))
   temp$NEWcall <- factor(temp$NEWcall, levels=c("Chimp","Human","Multiplet"), labels=c("Chimp","Human","Multiplet"))
   
   #number of species assignments (cellranger)
@@ -74,11 +78,13 @@ while (i <= length(batch$Sample_Name_at_Core)) {
   c_cutoff <- 0.1
   h_cutoff <- 0.9
   
-  ggplot(temp, aes(x=RatioOrthoV2)) +
-         geom_histogram(binwidth=0.01, color="black", fill="white", alpha=0.2) +
-         xlim(0,1) +
-         geom_vline(xintercept=c(c_cutoff,h_cutoff), color=c("blue","red")) +
-         labs(x="Ratio of Human UMIs to Total UMIs", y="Frequency")
+  p1 <- ggplot(temp, aes(x=RatioOrthoV2)) +
+          geom_histogram(binwidth=0.01, color="black", fill="white", alpha=0.2) +
+          xlim(0,1) +
+          geom_vline(xintercept=c(c_cutoff,h_cutoff), color=c("blue","red")) +
+          labs(x="Ratio of Human UMIs to Total UMIs", y="Frequency")
+  
+  grid.arrange(p1)
   
   #number of species assignments (revised calls)
   table(temp$NEWcall)
@@ -105,236 +111,3 @@ while (i <= length(batch$Sample_Name_at_Core)) {
 }
 
 ```
-
-```{r, eval=FALSE}
-
-i <- 1
-while (i <= length(batch$Sample_Name_at_Core)) {
-  
-  print(i)
-
-  #load data
-  dir_data <- paste0('./../scRNA/cellranger-data-full/cellranger-data-HumanOrthoV2_and_ChimpOrthoV2/',batch$Sample_Name_at_Core[i],'/outs/analysis/')
-  #dir_data <- paste0('./../scRNA/cellranger-data-full/cellranger-data-HumanOrthoV2_and_ChimpOrthoV2/GHO-3/outs/analysis/')
-  temp <- read.csv(file=paste0(dir_data,'gem_classification.csv'))
-  
-  #make calls a factor
-  temp$call <- factor(temp$call, levels=c("ChimpOrthoV2","HumanOrthoV2","Multiplet"), labels=c("Chimp","Human","Multiplet"))
-  
-  print(table(temp$call))
-  
-  i=i+1
-
-}
-
-```
-
-```{r, eval=FALSE}
-
-i <- 1
-while (i <= length(batch$Sample_Name_at_Core)) {
-  
-  print(i)
-
-  #load data
-  dir_data <- paste0('./../scRNA/cellranger-data-full/cellranger-data-HumanOrthoV2_and_ChimpOrthoV2/',batch$Sample_Name_at_Core[i],'/outs/analysis/')
-  #dir_data <- paste0('./../scRNA/cellranger-data-full/cellranger-data-HumanOrthoV2_and_ChimpOrthoV2/GHO-3/outs/analysis/')
-  temp <- read.csv(file=paste0(dir_data,'gem_classification_GHedit.csv'))
-  
-  #make calls a factor
-  temp$call <- factor(temp$call, levels=c("ChimpOrthoV2","HumanOrthoV2","Multiplet"), labels=c("Chimp","Human","Multiplet"))
-  
-  print(table(temp$call))
-  
-  i=i+1
-
-}
-
-```
-
-```{r, eval=FALSE}
-
-#load data
-i <- 1
-dir_data <- paste0('./../scRNA/cellranger-data-full/cellranger-data-HumanOrthoV2_and_ChimpOrthoV2/',batch$Sample_Name_at_Core[i],'/outs/analysis/')
-#dir_data <- paste0('./../scRNA/cellranger-data-full/cellranger-data-HumanOrthoV2_and_ChimpOrthoV2/GHO-3/outs/analysis/')
-temp <- read.csv(file=paste0(dir_data,'gem_classification.csv'))
-
-#make 10x calls a factor
-temp$call <- factor(temp$call, levels=c("ChimpOrthoV2","HumanOrthoV2","Multiplet"), labels=c("chimp","human","multiplet"))
-
-#number of species assignments
-table(temp$call)
-
-#maximum number of UMIs/cell that aligned to each genome
-max(temp$ChimpOrthoV2)
-max(temp$HumanOrthoV2)
-max_umi <- max(c(temp$ChimpOrthoV2,temp$HumanOrthoV2))
-
-p1 <- ggplot(temp, aes(x=HumanOrthoV2, y=ChimpOrthoV2, color=call)) +
-        geom_point() +
-        scale_color_manual(drop=FALSE, values=c("blue","red","grey")) +
-        lims(x=c(0,max_umi), y=c(0,max_umi)) +
-        labs(x="UMI Aligned to Human Genome", y="UMI Aligned to Chimp Genome", color="CellRanger Calls") +
-        theme(legend.position=c(0.8,0.8))
-
-p2 <- ggplot(temp, aes(x=call, fill=call)) +
-        geom_bar() +
-        scale_x_discrete(drop=FALSE) +
-        scale_fill_manual(drop=FALSE, values=c("blue","red","grey")) +
-        ylim(0,5000) +
-        theme(legend.position="none") +
-        labs(x="CellRanger Calls", y="Frequency")
-
-grid.arrange(p1,p2, ncol=2, widths=c(2,1))
-
-#calculate total number of umis
-temp$TotalOrthoV2 <- temp$HumanOrthoV2 + temp$ChimpOrthoV2
-#calculate ratio of human umis to total umis
-temp$RatioOrthoV2 <- temp$HumanOrthoV2 / temp$TotalOrthoV2
-
-#human RatioOrthoV2 cutoff
-c_cutoff <- 0.1
-h_cutoff <- 0.9
-
-ggplot(temp, aes(x=RatioOrthoV2)) +
-       geom_histogram(binwidth=0.01, color="black", fill="white", alpha=0.2) +
-       xlim(0,1) +
-       geom_vline(xintercept=c(c_cutoff,h_cutoff), color=c("blue","red")) +
-       labs(x="Ratio of Human UMIs to Total UMIs", y="Frequency")
-
-#assign new human/chimp cells
-temp$NEWcall <- "multiplet"
-temp$NEWcall[which(temp$RatioOrthoV2>=h_cutoff)] <- "human"
-temp$NEWcall[which(temp$RatioOrthoV2<=c_cutoff)] <- "chimp"
-temp$NEWcall <- factor(temp$NEWcall, levels=c("chimp","human","multiplet"), labels=c("chimp","human","multiplet"))
-
-#number of species assignments
-table(temp$NEWcall)
-
-p1 <- ggplot(temp, aes(x=HumanOrthoV2, y=ChimpOrthoV2, color=NEWcall)) +
-        geom_point() +
-        scale_color_manual(drop=FALSE, values=c("blue","red","grey")) +
-        lims(x=c(0,max_umi), y=c(0,max_umi)) +
-        labs(x="UMI Aligned to Human Genome", y="UMI Aligned to Chimp Genome", color="New Calls") +
-        theme(legend.position=c(0.8,0.8))
-
-p2 <- ggplot(temp, aes(x=NEWcall, fill=NEWcall)) +
-        geom_bar() +
-        scale_x_discrete(drop=FALSE) +
-        scale_fill_manual(drop=FALSE, values=c("blue","red","grey")) +
-        ylim(0,5000) +
-        theme(legend.position="none") +
-        labs(x="New Calls", y="Frequency")
-
-grid.arrange(p1,p2, ncol=2, widths=c(2,1))
-
-```
-
-```{r, eval=FALSE}
-
-dir_data <- paste0('./../scRNA/cellranger-data-full/cellranger-data-HumanOrthoV2_and_ChimpOrthoV2/',batch$Sample_Name_at_Core[1],'/outs/analysis/')
-#dir_data <- paste0('./../scRNA/cellranger-data-full/cellranger-data-HumanOrthoV2_and_ChimpOrthoV2/GHO-3/outs/analysis/')
-temp <- read.csv(file=paste0(dir_data,'gem_classification.csv'))
-
-ggplot(temp, aes(x=HumanOrthoV2, y=ChimpOrthoV2, color=call)) +
-  geom_point() +
-  scale_color_manual(values=c("blue","red","grey"))
-
-#number of species assignments
-table(temp$call)
-
-#maximum number of UMIs/cell that aligned to each genome
-#max(temp$ChimpOrthoV2)
-#max(temp$HumanOrthoV2)
-
-#total number of umis
-temp$TotalOrthoV2 <- temp$HumanOrthoV2 + temp$ChimpOrthoV2
-
-#ratio of human umis to total umis
-temp$RatioOrthoV2 <- temp$HumanOrthoV2 / temp$TotalOrthoV2
-hist(temp$RatioOrthoV2,breaks=100)
-
-#assign new human/chimp
-temp$call_0.1 <- "multiplet"
-temp$call_0.1[which(temp$RatioOrthoV2>=0.9)] <- "human"
-temp$call_0.1[which(temp$RatioOrthoV2<=0.1)] <- "chimp"
-
-temp$call_0.15 <- "multiplet"
-temp$call_0.15[which(temp$RatioOrthoV2>=0.85)] <- "human"
-temp$call_0.15[which(temp$RatioOrthoV2<=0.15)] <- "chimp"
-
-temp$call_0.2 <- "multiplet"
-temp$call_0.2[which(temp$RatioOrthoV2>=0.8)] <- "human"
-temp$call_0.2[which(temp$RatioOrthoV2<=0.2)] <- "chimp"
-
-#number of species assignments
-table(temp$call_0.1)
-table(temp$call_0.15)
-table(temp$call_0.2)
-
-ggplot(temp, aes(x=HumanOrthoV2, y=ChimpOrthoV2, color=call_0.1)) +
-  geom_point() +
-  scale_color_manual(values=c("blue","red","grey"))
-
-ggplot(temp, aes(x=HumanOrthoV2, y=ChimpOrthoV2, color=call_0.15)) +
-  geom_point() +
-  scale_color_manual(values=c("blue","red","grey"))
-
-ggplot(temp, aes(x=HumanOrthoV2, y=ChimpOrthoV2, color=call_0.2)) +
-  geom_point() +
-  scale_color_manual(values=c("blue","red","grey"))
-
-#distribution of total umi per cell
-a <- ggplot(temp, aes(TotalOrthoV2, color=call)) +
-       geom_histogram(bins=100, fill="white", alpha=0.2, position="dodge") +
-       facet_wrap(~call, ncol=1) +
-       theme(legend.position="none")
-
-b <- ggplot(temp, aes(TotalOrthoV2, color=call_0.1)) +
-       geom_histogram(bins=100, fill="white", alpha=0.2, position="dodge") +
-       facet_wrap(~call_0.1, ncol=1) +
-       theme(legend.position="none")
-
-c <- ggplot(temp, aes(TotalOrthoV2, color=call_0.15)) +
-       geom_histogram(bins=100, fill="white", alpha=0.2, position="dodge") +
-       facet_wrap(~call_0.15, ncol=1) +
-       theme(legend.position="none")
-
-d <- ggplot(temp, aes(TotalOrthoV2, color=call_0.2)) +
-       geom_histogram(bins=100, fill="white", alpha=0.2, position="dodge") +
-       facet_wrap(~call_0.2, ncol=1) +
-       theme(legend.position="none")
-
-grid.arrange(a,b,c,d, ncol=4)
-
-#####
-
-```
-
-```{r, eval=FALSE}
-
-#number of cells in the top 10th percentile for each species UMI count
-temp$Human10th <- temp$HumanOrthoV2 > quantile(temp$HumanOrthoV2, .90)
-temp$Chimp10th <- temp$ChimpOrthoV2 > quantile(temp$ChimpOrthoV2, .90)
-table(temp$Human10th)
-table(temp$Chimp10th)
-
-ggplot(temp, aes(x=HumanOrthoV2, y=ChimpOrthoV2, color=Human10th)) +
-  geom_point() +
-  scale_color_manual(values=c("grey","yellow"))
-
-ggplot(temp, aes(x=HumanOrthoV2, y=ChimpOrthoV2, color=Chimp10th)) +
-  geom_point() +
-  scale_color_manual(values=c("grey","yellow"))
-
-#cells in top 10th percentile that overlap with called barcodes
-table(temp$barcode[temp$Human10th==TRUE] %in% temp$barcode[temp$call=="HumanOrthoV2"])
-table(temp$barcode[temp$Chimp10th==TRUE] %in% temp$barcode[temp$call=="ChimpOrthoV2"])
-
-###
-#take that graph and just say “if more than X% reads are chimp, call it multiplet” rather than cellrangers’ X number of reads
-#i would fit the line of chimp% for human-assigned cells to get the expected percent chimp for a human cell, than reassign anything under chimp%+ 5% or something like that
-
-```
-
