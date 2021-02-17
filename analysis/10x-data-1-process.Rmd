@@ -1,7 +1,7 @@
 ---
 title: "10x-data-process"
 author: "Genevieve Housman"
-date: "August 2020"
+date: "February 2021"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -11,31 +11,31 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## 10X Data Cellranger Analysis - Data Processing
+# 10X Data Cellranger Analysis - Data Processing
 
 Data being examined comes from 6 humans and 6 chimpanzees.
 
 * GHO-1:  H1-I + C1-I (iPSCs from H23555 and C8861)
 * GHO-2:  H1-M + C1-M (iPSC-derived MSCs from H23555 and C8861)
-* GHO-4:  H1-O + C1-O (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+* GHO-4:  H1-O + C1-O (iPSC-MSC-derived osteogenic cells from H23555 and C8861)
 * HOU-10: H1-I-r2 + C1-I-r2 (iPSCs from H23555 and C8861)
 * HOU-12: H1-M-r2 + C1-M-r2 (iPSC-derived MSCs from H23555 and C8861)
-* HOU-16: H1-O-r2 + C1-O-r2 (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+* HOU-16: H1-O-r2 + C1-O-r2 (iPSC-MSC-derived osteogenic cells from H23555 and C8861)
 * HOU-1:  H2-I + C2-I (iPSCs from H20157 and C3647)
 * HOU-2:  H2-M + C2-M (iPSC-derived MSCs from H20157 and C3647)
-* HOU-4:  H2-O + C2-O (iPSC-MSC-derived osteoblasts from H20157 and C3647)
+* HOU-4:  H2-O + C2-O (iPSC-MSC-derived osteogenic cells from H20157 and C3647)
 * HOU-9:  H3-I + C3-I (iPSCs from H28126 and C3649)
 * HOU-11: H3-M + C3-M (iPSC-derived MSCs from H28126 and C3649)
-* HOU-15: H3-O + C3-O (iPSC-MSC-derived osteoblasts from H28126 and C3649)
+* HOU-15: H3-O + C3-O (iPSC-MSC-derived osteogenic cells from H28126 and C3649)
 * HOU-5:  H4-I + C4-I (iPSCs from H28834 and C40210)
 * HOU-6:  H4-M + C4-M (iPSC-derived MSCs from H28834 and C40210)
-* HOU-8:  H4-O + C4-O (iPSC-MSC-derived osteoblasts from H28834 and C40210)
+* HOU-8:  H4-O + C4-O (iPSC-MSC-derived osteogenic cells from H28834 and C40210)
 * HOU-17:	H5-I + C5-I (iPSCs from H21792 and C40280)
 * HOU-19:	H5-M + C5-M (iPSC-derived MSCs from H21792 and C40280)
-* HOU-21:	H5-O + C5-O (iPSC-MSC-derived osteoblasts from H21792 and C40280)
+* HOU-21:	H5-O + C5-O (iPSC-MSC-derived osteogenic cells from H21792 and C40280)
 * HOU-18:	H6-I + C6-I (iPSCs from H20961 and C3624)
 * HOU-20:	H6-M + C6-M (iPSC-derived MSCs from H20961 and C3624)
-* HOU-22:	H6-O + C6-O (iPSC-MSC-derived osteoblasts from H20961 and C3624)
+* HOU-22:	H6-O + C6-O (iPSC-MSC-derived osteogenic cells from H20961 and C3624)
 
 For downstream analysis of 10X data, we need to:
 
@@ -57,6 +57,8 @@ Count matrices were made using each of the three different cellranger references
 1. Reads were processed using human_genome_index.
 2. Reads were processed using chimp_genome_index.
 3. Reads were processed using combined_genome_index.
+
+We found that cellranger is really bad at human/chimp assignments [see 10x-data-0-process-test]. Thus, we take the cellranger cell assignment output when using combined_genome_index, and instead assign cells based on the ratio of resulting human-aligned UMIs per cells vs. the total number of aligned UMIs per cells. We use a cutoff ratio <= 0.1 to assign chimpanzee cells and a cutoff ratio >= 0.9 to assign human cells.
 
 Notes on what cellranger does to compute count matrices:
 
@@ -185,6 +187,7 @@ Each dataset being evaluated comprises gene count data that were seperately calc
 
 ```{bash, eval=FALSE, echo=TRUE}
 #easties to run these scripts on the cluster
+cd /project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA
 sinteractive --mem=24g --time=12:00:00 --partition=broadwl
 module load R/3.6.1
 R
@@ -207,6 +210,11 @@ library(RColorBrewer)
 #Load batch info
 batch <- read.csv(file='./data/scrna-batch.csv', header=TRUE, sep=",")
 
+#batch <- as.data.frame(t(c("1-C","1","Chondrocyte","GHO-3","H1-C","H23555","M",22,"C1-C","C8861","M",16)))
+#colnames(batch) <- c("Pooled_Sample_Name","Batch","Cell_Type","Sample_Name_at_Core",
+#                     "Human_Sample_in_Pool","Human_Individual_in_Pool","Human_Sex_in_Pool","Human_Age_in_Pool",
+#                     "Chimp_Sample_in_Pool","Chimp_Individual_in_Pool","Chimp_Sex_in_Pool","Chimp_Age_in_Pool")
+
 ```
 
 ```{r assess species assignments, eval=FALSE, echo=TRUE}
@@ -215,16 +223,43 @@ batch <- read.csv(file='./data/scrna-batch.csv', header=TRUE, sep=",")
 spp <- data.frame()
 i <- 1
 while (i <= length(batch$Sample_Name_at_Core)) {
+  
   print(i)
+  
   #Define directory containing data from one collection
   dir_data <- paste0('./../scRNA/cellranger-data-full/cellranger-data-HumanOrthoV2_and_ChimpOrthoV2/',batch$Sample_Name_at_Core[i],'/outs/analysis/')
+  #dir_data <- paste0('./../scRNA/cellranger-data-full/cellranger-data-HumanOrthoV2_and_ChimpOrthoV2/GHO-3/outs/analysis/')
+  
   #Load summary metrics from one collection
   temp <- read.csv(file=paste0(dir_data,'gem_classification.csv'))
-  #Process metrics
+  
+  #Process cellranger metrics
   temp$barcode <- sapply(temp$barcode, gsub, pattern="-1", replacement="")
   temp$call <- sapply(temp$call, gsub, pattern="HumanOrthoV2", replacement="Human")
   temp$call <- sapply(temp$call, gsub, pattern="ChimpOrthoV2", replacement="Chimp")
   temp$Collection.Name <- batch$Sample_Name_at_Core[i]
+  
+  #Determine new species assignments
+
+  #calculate total number of umis
+  temp$TotalOrthoV2 <- temp$HumanOrthoV2 + temp$ChimpOrthoV2
+  
+  #calculate ratio of human umis to total umis
+  temp$RatioOrthoV2 <- temp$HumanOrthoV2 / temp$TotalOrthoV2
+  
+  #define RatioOrthoV2 cutoffs
+  c_cutoff <- 0.1
+  h_cutoff <- 0.9
+  
+  #assign new human/chimp cells
+  temp$NEWcall <- "Multiplet"
+  temp$NEWcall[which(temp$RatioOrthoV2>=h_cutoff)] <- "Human"
+  temp$NEWcall[which(temp$RatioOrthoV2<=c_cutoff)] <- "Chimp"
+  
+  #Save revised csv
+  write.csv(temp,file=paste0('./../scRNA/cellranger-data-full/cellranger-data-HumanOrthoV2_and_ChimpOrthoV2/',batch$Sample_Name_at_Core[i],'/outs/analysis/gem_classification_GHedit.csv'))
+  #write.csv(temp,file=paste0('./../scRNA/cellranger-data-full/cellranger-data-HumanOrthoV2_and_ChimpOrthoV2/GHO-3/outs/analysis/gem_classification_GHedit.csv'))
+
   #Add data to dataframe
   spp <- rbind(spp,temp)
   i <- i+1
@@ -262,21 +297,17 @@ while (i <= length(batch$Sample_Name_at_Core)) {
   
   #(5)add species assignments to data
     dir_data <- paste0('./../scRNA/cellranger-data-full/cellranger-data-HumanOrthoV2_and_ChimpOrthoV2/',batch$Sample_Name_at_Core[i],'/outs/analysis/')
+
     #Load summary metrics
-    temp <- read.csv(file=paste0(dir_data,'gem_classification.csv'))
-    #Process metrics
-    temp$barcode <- sapply(temp$barcode, gsub, pattern="-1", replacement="")
-    temp$call <- sapply(temp$call, gsub, pattern="HumanOrthoV2", replacement="Human")
-    temp$call <- sapply(temp$call, gsub, pattern="ChimpOrthoV2", replacement="Chimp")
-    temp$Collection.Name <- batch$Sample_Name_at_Core[i]
+    temp <- read.csv(file=paste0(dir_data,'gem_classification_GHedit.csv'))
 
     m <- match(rownames(h.dat@meta.data),temp$barcode)
     if(any(is.na(m))) cat("Not all barcodes are in data.\n")
-    h.dat <- AddMetaData(h.dat, temp[m,]$call, col.name="Species")
+    h.dat <- AddMetaData(h.dat, temp[m,]$NEWcall, col.name="Species")
   
     m <- match(rownames(c.dat@meta.data),temp$barcode)
     if(any(is.na(m))) cat("Not all barcodes are in data.\n")
-    c.dat <- AddMetaData(c.dat, temp[m,]$call, col.name="Species")
+    c.dat <- AddMetaData(c.dat, temp[m,]$NEWcall, col.name="Species")
 
   #(6)view details of species assignments
     table(h.dat@meta.data$Species, useNA="always")
@@ -299,6 +330,8 @@ while (i <= length(batch$Sample_Name_at_Core)) {
 }
 
 ```
+
+Add metadata to count matrices.
 
 ```{r process scRNA data - add mitochondrial metadata, eval=FALSE, echo=TRUE}
 
@@ -485,7 +518,7 @@ for (i in 1:length(data)) { data[[i]]$Collection <- i }
 #cell type anticipated based on stage of differentiation at collection
 for (i in c(1,4,7,10,13,16,19)) { data[[i]]$Cell.Type <- "iPSC" }
 for (i in c(2,5,8,11,14,17,20)) { data[[i]]$Cell.Type <- "MSC" }
-for (i in c(3,6,9,12,15,18,21)) { data[[i]]$Cell.Type <- "Osteoblast" }
+for (i in c(3,6,9,12,15,18,21)) { data[[i]]$Cell.Type <- "Osteogenic" }
 
 #individuals pooled together in collection
 for (i in 1:6) { data[[i]]$Pair <- "H1+C1" }
@@ -513,6 +546,8 @@ for (i in 19:21) { data[[i]]$Individual[which(data[[i]]$Species=="Chimp")] <- "C
 #replicate in overall study design
 for (i in c(1:3,7:21)) { data[[i]]$Replicate <- "1" }
 for (i in 4:6) { data[[i]]$Replicate <- "2" }
+
+#msc media
 for (i in c(1:3,7:12)) { data[[i]]$MSCmedia <- "3B" }
 for (i in c(4:6,13:21)) { data[[i]]$MSCmedia <- "2B" }
 
@@ -547,20 +582,20 @@ for (i in 1:length(data)) {
   data[[i]]$Sample[which(data[[i]]$Cell.Type=="MSC" & data[[i]]$Individual=="C4" & data[[i]]$Replicate=="1")] <- "C4-M" 
   data[[i]]$Sample[which(data[[i]]$Cell.Type=="MSC" & data[[i]]$Individual=="C5" & data[[i]]$Replicate=="1")] <- "C5-M" 
   data[[i]]$Sample[which(data[[i]]$Cell.Type=="MSC" & data[[i]]$Individual=="C6" & data[[i]]$Replicate=="1")] <- "C6-M" 
-  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteoblast" & data[[i]]$Individual=="H1" & data[[i]]$Replicate=="1")] <- "H1-O" 
-  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteoblast" & data[[i]]$Individual=="H1" & data[[i]]$Replicate=="2")] <- "H1-O-r2" 
-  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteoblast" & data[[i]]$Individual=="H2" & data[[i]]$Replicate=="1")] <- "H2-O" 
-  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteoblast" & data[[i]]$Individual=="H3" & data[[i]]$Replicate=="1")] <- "H3-O" 
-  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteoblast" & data[[i]]$Individual=="H4" & data[[i]]$Replicate=="1")] <- "H4-O" 
-  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteoblast" & data[[i]]$Individual=="H5" & data[[i]]$Replicate=="1")] <- "H5-O" 
-  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteoblast" & data[[i]]$Individual=="H6" & data[[i]]$Replicate=="1")] <- "H6-O"
-  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteoblast" & data[[i]]$Individual=="C1" & data[[i]]$Replicate=="1")] <- "C1-O" 
-  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteoblast" & data[[i]]$Individual=="C1" & data[[i]]$Replicate=="2")] <- "C1-O-r2" 
-  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteoblast" & data[[i]]$Individual=="C2" & data[[i]]$Replicate=="1")] <- "C2-O" 
-  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteoblast" & data[[i]]$Individual=="C3" & data[[i]]$Replicate=="1")] <- "C3-O" 
-  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteoblast" & data[[i]]$Individual=="C4" & data[[i]]$Replicate=="1")] <- "C4-O" 
-  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteoblast" & data[[i]]$Individual=="C5" & data[[i]]$Replicate=="1")] <- "C5-O" 
-  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteoblast" & data[[i]]$Individual=="C6" & data[[i]]$Replicate=="1")] <- "C6-O" 
+  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteogenic" & data[[i]]$Individual=="H1" & data[[i]]$Replicate=="1")] <- "H1-O" 
+  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteogenic" & data[[i]]$Individual=="H1" & data[[i]]$Replicate=="2")] <- "H1-O-r2" 
+  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteogenic" & data[[i]]$Individual=="H2" & data[[i]]$Replicate=="1")] <- "H2-O" 
+  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteogenic" & data[[i]]$Individual=="H3" & data[[i]]$Replicate=="1")] <- "H3-O" 
+  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteogenic" & data[[i]]$Individual=="H4" & data[[i]]$Replicate=="1")] <- "H4-O" 
+  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteogenic" & data[[i]]$Individual=="H5" & data[[i]]$Replicate=="1")] <- "H5-O" 
+  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteogenic" & data[[i]]$Individual=="H6" & data[[i]]$Replicate=="1")] <- "H6-O"
+  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteogenic" & data[[i]]$Individual=="C1" & data[[i]]$Replicate=="1")] <- "C1-O" 
+  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteogenic" & data[[i]]$Individual=="C1" & data[[i]]$Replicate=="2")] <- "C1-O-r2" 
+  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteogenic" & data[[i]]$Individual=="C2" & data[[i]]$Replicate=="1")] <- "C2-O" 
+  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteogenic" & data[[i]]$Individual=="C3" & data[[i]]$Replicate=="1")] <- "C3-O" 
+  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteogenic" & data[[i]]$Individual=="C4" & data[[i]]$Replicate=="1")] <- "C4-O" 
+  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteogenic" & data[[i]]$Individual=="C5" & data[[i]]$Replicate=="1")] <- "C5-O" 
+  data[[i]]$Sample[which(data[[i]]$Cell.Type=="Osteogenic" & data[[i]]$Individual=="C6" & data[[i]]$Replicate=="1")] <- "C6-O" 
 }
 
 samples <- c("C1-I","C1-I-r2","C2-I","C3-I","C4-I","C5-I","C6-I",
@@ -657,7 +692,7 @@ for (i in 1:length(data)) {
   }
 }
 
-#oil red data (for now put with MSCs and osteoblasts)
+#oil red data (put with MSCs and osteogenic cells)
 for (i in 1:length(data)) { data[[i]]$OilRed <- NA }
 for (i in 1:length(data)) { 
   for(j in samples) {
@@ -680,3 +715,153 @@ for (i in c(3,6,9,12,15,18,21)) { data[[i]]$Stage <- "Time 2" }
 saveRDS(data, file="./data/cellranger-data-full/data.rds")
 
 ```
+
+### Export processed count matrices for GEO
+
+Processed data for pilot eQTL paper
+
+```{r, eval=FALSE}
+
+#Export count matrix and metadata for GHO-1, GHO-2, GHO-3, and GHO-4 [processed data for pilot eQTL paper]
+
+#Load and add metadata to GHO-3
+dataGHO3 <- readRDS(paste0("./data/cellranger-data-full/h.c.dat.spp.GHO-3.rds"))
+#percent mitochondria
+mito <- c("MT-ATP6","MT-ATP8","MT-CO1","MT-CO2","MT-CO3","MT-CYB","MT-ND1","MT-ND2","MT-ND3","MT-ND4","MT-ND4L","MT-ND5")
+dataGHO3$percent.mt <- PercentageFeatureSet(dataGHO3, features=mito)
+#collection
+dataGHO3$Collection <- 0
+#cell type anticipated based on stage of differentiation at collection
+dataGHO3$Cell.Type <- "Chondrogenic"
+#individuals pooled together in collection
+dataGHO3$Pair <- "H1+C1"
+#individual cell line used in collection
+dataGHO3$Individual <- NA
+dataGHO3$Individual[which(dataGHO3$Species=="Human")] <- "H1"
+dataGHO3$Individual[which(dataGHO3$Species=="Chimp")] <- "C1"
+#replicate in overall study design
+dataGHO3$Replicate <- "1"
+#msc media
+dataGHO3$MSCmedia <- "3B"
+#abbreviation of sample name in collection
+dataGHO3$Sample <- NA
+dataGHO3$Sample[which(dataGHO3$Individual=="H1")] <- "H1-C" 
+dataGHO3$Sample[which(dataGHO3$Individual=="C1")] <- "C1-C" 
+#several details on cell line and collection
+dataGHO3$Sex <- "M"
+dataGHO3$Age <- NA
+dataGHO3$Age[which(dataGHO3$Individual=="H1")] <- 22
+dataGHO3$Age[which(dataGHO3$Individual=="C1")] <- 16
+dataGHO3$DateCollection <- "6/5/2019"
+dataGHO3$Number6W <- 3
+dataGHO3$PrewashCount <- NA
+dataGHO3$PrewashCount[which(dataGHO3$Individual=="H1")] <- 1025000
+dataGHO3$PrewashCount[which(dataGHO3$Individual=="C1")] <- 0.575
+dataGHO3$PrewashViability <- NA
+dataGHO3$PrewashViability[which(dataGHO3$Individual=="H1")] <- 2440000
+dataGHO3$PrewashViability[which(dataGHO3$Individual=="C1")] <- 0.48
+dataGHO3$PostwashCount <- NA
+dataGHO3$PostwashCount[which(dataGHO3$Individual=="H1")] <- 440000
+dataGHO3$PostwashCount[which(dataGHO3$Individual=="C1")] <- 445000
+dataGHO3$PostwashViability <- NA
+dataGHO3$PostwashViability[which(dataGHO3$Individual=="H1")] <- 0.75
+dataGHO3$PostwashViability[which(dataGHO3$Individual=="C1")] <- 0.6
+dataGHO3$PostmixCount <- 425000
+dataGHO3$PostmixViability <- 0.75
+dataGHO3$DatecDNA <- "6/5/2019"
+dataGHO3$DateLibrary <- "6/10/2019"
+dataGHO3$SequencingBatch <- 1
+#facs information (control)
+dataGHO3$CD90_Control <- NA
+dataGHO3$CD73_Control <- NA
+dataGHO3$CD105_Control <- NA
+dataGHO3$CD45.CD34.CD11b.CD19.HLA.DR_Control <- NA
+#facs information (cocktail) 
+dataGHO3$CD90 <- NA
+dataGHO3$CD73 <- NA
+dataGHO3$CD105 <- NA
+dataGHO3$CD45.CD34.CD11b.CD19.HLA.DR <- NA
+#alizarin red data
+dataGHO3$Alizarin <- NA
+#oil red data (put with MSCs and osteogenic cells)
+dataGHO3$OilRed <- NA
+#cell classification information - stage of differentiation at collection
+dataGHO3$Stage <- "Time 3"
+
+#####
+
+#Read in remaining data
+data <- readRDS("./data/cellranger-data-full/data.rds")
+
+#Rename cells
+data[[1]] <- RenameCells(data[[1]], add.cell.id="GHO-1")
+data[[2]] <- RenameCells(data[[2]], add.cell.id="GHO-2")
+dataGHO3  <- RenameCells(dataGHO3, add.cell.id="GHO-3")
+data[[3]] <- RenameCells(data[[3]], add.cell.id="GHO-4")
+
+#Combine raw count data
+tbl.cnt <- cbind(as.data.frame(GetAssayData(object=data[[1]], slot="counts")),
+                 as.data.frame(GetAssayData(object=data[[2]], slot="counts")),
+                 as.data.frame(GetAssayData(object=dataGHO3, slot="counts")),
+                 as.data.frame(GetAssayData(object=data[[3]], slot="counts")))
+
+#Combine metadata
+tbl.met <- rbind(as.data.frame(data[[1]]@meta.data)[,-c(1:3)],
+                 as.data.frame(data[[2]]@meta.data)[,-c(1:3)],
+                 as.data.frame(dataGHO3@meta.data)[,-c(1:3)],
+                 as.data.frame(data[[3]]@meta.data)[,-c(1:3)])
+
+#Save processed data
+write.table(tbl.cnt, 
+            file="./data/cellranger-data-full/GHO_count.csv", 
+            sep=',',
+            row.names=T,
+            col.names=T,
+            quote=F)
+write.table(tbl.met, 
+            file="./data/cellranger-data-full/GHO_meta.csv", 
+            sep=',',
+            row.names=T,
+            col.names=T,
+            quote=F)
+
+```
+
+Processed data remaining for comparative osteogenesis paper
+
+```{r, eval=FALSE}
+
+#Export count matrix and metadata for remaining samples
+
+#Load data
+batch <- read.csv(file='./data/scrna-batch.csv', header=TRUE, sep=",")
+data <- readRDS("./data/cellranger-data-full/data.rds")
+
+#Rename cells and combine raw count data and metadata
+tbl.cnt <- data.frame(matrix(NA, nrow=19377, ncol=0))
+tbl.met <- data.frame(matrix(NA, nrow=0, ncol=33))
+i=4
+while (i <= length(data)) {
+  print(i)
+  data[[i]] <- RenameCells(data[[i]], add.cell.id=batch$Sample_Name_at_Core[i])
+  tbl.cnt <- cbind(tbl.cnt,as.data.frame(GetAssayData(object=data[[i]], slot="counts")))
+  tbl.met <- rbind(tbl.met,as.data.frame(data[[i]]@meta.data)[,-c(1:3)])
+  i=i+1
+}
+
+#Save processed data
+write.table(tbl.cnt, 
+            file="./data/cellranger-data-full/HOU_count.csv", 
+            sep=',',
+            row.names=T,
+            col.names=T,
+            quote=F)
+write.table(tbl.met, 
+            file="./data/cellranger-data-full/HOU_meta.csv", 
+            sep=',',
+            row.names=T,
+            col.names=T,
+            quote=F)
+
+```
+
