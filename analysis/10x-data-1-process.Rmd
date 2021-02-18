@@ -827,6 +827,43 @@ write.table(tbl.met,
 
 ```
 
+```{bash, eval=FALSE}
+#easiest to do this on the computing cluster
+
+#Make folder containing files to be uploaded to GEO
+cd /project2/gilad/ghousman
+mkdir geo_GHO_20210218
+cd geo_GHO_20210218
+mkdir data_raw
+mkdir data_proc
+cd data_proc
+cp /project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA/data/cellranger-data-full/GHO_count.csv ./GHO_count.csv
+cp /project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA/data/cellranger-data-full/GHO_meta.csv ./GHO_meta.csv
+md5sum *
+#manually added file checksum to metadata file
+cd ..
+cd data_raw
+cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/190621_K00242_0576_AH7G3JBBXY_YG-GH-10X-4S-ln1/H7G3JBBXY_6/*/*.fastq.gz .
+cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/190626_K00242_0578_AH77TNBBXY_YG-GH-10X-4S-ln2/H77TNBBXY_1/*/*.fastq.gz .
+cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/190726_K00242_0593_BH77N2BBXY_YG-GH-10X-4S-xtra-ln1/H77N2BBXY_7/*/*.fastq.gz .
+cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/190730_K00242_0594_BH7N3HBBXY_YG-GH-10X-4S-xtra-ln2/H7N3HBBXY_3/*/*.fastq.gz .
+rm *_I1_*.fastq.gz
+md5sum *
+#manually added file checksum to metadata file
+#manually transferred metadata file to geo_GHO_20210218 via FileZilla
+
+#Upload files to GEO
+cd /project2/gilad/ghousman
+sftp geoftp@sftp-private.ncbi.nlm.nih.gov
+cd uploads/ghousman_SbedAyUe
+mkdir geo_GHO_20210218
+put -R /project2/gilad/ghousman/geo_GHO_20210218
+
+#Remove files for GEO
+cd /project2/gilad/ghousman
+rm -r geo_GHO_20210218
+```
+
 Processed data remaining for comparative osteogenesis paper
 
 ```{r, eval=FALSE}
@@ -863,5 +900,51 @@ write.table(tbl.met,
             col.names=T,
             quote=F)
 
+```
+
+```{bash, eval=FALSE}
+#easiest to do this on the computing cluster
+
+#Make folder containing files to be uploaded to GEO
+mkdir geo_GHO_20210415
+cd geo_GHO_20210415
+mkdir data_raw
+mkdir data_proc
+cd data_proc
+cp /project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA/data/cellranger-data-full/HOU_count.csv .
+cp /project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA/data/cellranger-data-full/HOU_meta.csv .
+md5sum *
+#manually added file checksum to metadata file
+cd ..
+cd data_raw
+cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191112_K00242_0637_AHCLNGBBXY-YG-GH-10X-12S-HOU-lns1-2/HCLNGBBXY_78/*/*.fastq.gz .
+cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191217_K00242_0648_BHFHY7BBXY-YG-GH-10X-12S-HOU-lns345/FastQ/HFHY7BBXY_123/*/*.fastq.gz .
+#these files have the same names as some in the next folder [see notes below] so rename the files
+mv *_L001_*.fastq.gz *_L005_*.fastq.gz
+mv *_L002_*.fastq.gz *_L006_*.fastq.gz
+mv *_L003_*.fastq.gz *_L009_*.fastq.gz
+cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191220_K00242_0650_BHFTJ2BBXY-YG-GH-10X-12S-HOU-lns6789/FastQ/HFTJ2BBXY_1234/*/*.fastq.gz .
+cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191227_K00242_0655_BHG3MCBBXY-YG-GH-10X-HOU2-6s-lns12/Unaligned_YG-GH-10X-HOU2-6S/HG3MCBBXY_78/*/*.fastq.gz .
+#these files have the same names as some in the next two folders [see notes below] so rename the files
+mv *_L007_*.fastq.gz *_L005_*.fastq.gz
+cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/200103_K00242_0656_BHFYVWBBXY_YG-GH-10X-HOU2-6S-ln3/Unaligned_YG-GH-10X-HOU2-6S-ln3/HFYVWBBXY_7/*/*.fastq.gz .
+#these files have the same names as some in the next folder [see notes below] so rename the files
+mv *_L007_*.fastq.gz *_L006_*.fastq.gz
+cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/200124_K00242_0661_BHGGF3BBXY-YG-GH-HOU2-10X-6S-ln4/Unaligned_YG-GH-10X-HOU2-6S-ln4/HGGF3BBXY_7/*/*.fastq.gz .
+rm *_I1_*.fastq.gz
+md5sum *
+#manually added file checksum to metadata file
+#manually transferred metadata file to geo_GHO_20210415 via FileZilla
+
+#Upload files to GEO
+cd /project2/gilad/ghousman
+sftp geoftp@sftp-private.ncbi.nlm.nih.gov
+cd uploads/ghousman_SbedAyUe
+mkdir geo_GHO_20210415
+put -R /project2/gilad/ghousman/geo_GHO_20210415
+
+#Remove files for GEO
+cd /project2/gilad/ghousman
+rm -r geo_GHO_20210415
 ```
 
