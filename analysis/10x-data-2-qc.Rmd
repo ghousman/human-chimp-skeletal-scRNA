@@ -346,62 +346,62 @@ for (i in 1:length(data.filter)) {
   print(summary(data.filter[[i]]@meta.data$percent.mt[which(data.filter[[i]]@meta.data$Species=="Chimp")]))
   print(summary(data.filter[[i]]@meta.data$percent.mt[which(data.filter[[i]]@meta.data$Species=="Human")]))
   #complexity
-  data[[i]]@meta.data$Complexity <- log10(data[[i]]@meta.data$nCount_RNA/data[[i]]@meta.data$nFeature_RNA)
+  data.filter[[i]]@meta.data$Complexity <- log10(data.filter[[i]]@meta.data$nCount_RNA/data.filter[[i]]@meta.data$nFeature_RNA)
   print("Complexity (Chimp and Human)")
-  print(summary(data[[i]]@meta.data$Complexity[which(data[[i]]@meta.data$Species=="Chimp")]))
-  print(summary(data[[i]]@meta.data$Complexity[which(data[[i]]@meta.data$Species=="Human")]))
+  print(summary(data.filter[[i]]@meta.data$Complexity[which(data.filter[[i]]@meta.data$Species=="Chimp")]))
+  print(summary(data.filter[[i]]@meta.data$Complexity[which(data.filter[[i]]@meta.data$Species=="Human")]))
   
-  p1b <- ggplot(data[[i]]@meta.data, aes(x=nCount_RNA,color=Species)) +
+  p1b <- ggplot(data.filter[[i]]@meta.data, aes(x=nCount_RNA,color=Species)) +
            geom_histogram(fill="white", alpha=0.1, position="identity", binwidth=100) +
            labs(title=collection,x="UMI per Cell",y="Count") +
            xlim(0,100000) +
            facet_grid(Species ~ .)
-  p1c <- ggplot(data[[i]]@meta.data, aes(x=nFeature_RNA,color=Species)) +
+  p1c <- ggplot(data.filter[[i]]@meta.data, aes(x=nFeature_RNA,color=Species)) +
            geom_histogram(fill="white", alpha=0.1, position="identity", binwidth=10) +
            labs(title=collection,x="Genes per Cell",y="Count") +
            xlim(0,10000) +
            facet_grid(Species ~ .)
-  p1d <- ggplot(data[[i]]@meta.data, aes(x=percent.mt,color=Species)) +
+  p1d <- ggplot(data.filter[[i]]@meta.data, aes(x=percent.mt,color=Species)) +
            geom_histogram(fill="white", alpha=0.1, position="identity", binwidth=0.005) +
            labs(title=collection,x="Percent of Mitochondrial Reads",y="Count") +
            xlim(0,100) +
            facet_grid(Species ~ .)
     
-  p2a <- ggplot(data[[i]]@meta.data, aes(x=Species, y=nCount_RNA, fill=Species)) +
+  p2a <- ggplot(data.filter[[i]]@meta.data, aes(x=Species, y=nCount_RNA, fill=Species)) +
            geom_violin() +
            geom_boxplot(fill="white", alpha=0.5, width=0.1) +
            labs(title=collection, x="Cell Type", y="UMI per Cell") +
            ylim(0,100000)
-  p2b <- ggplot(data[[i]]@meta.data, aes(x=Species, y=nFeature_RNA, fill=Species)) +
+  p2b <- ggplot(data.filter[[i]]@meta.data, aes(x=Species, y=nFeature_RNA, fill=Species)) +
            geom_violin() +
            geom_boxplot(fill="white", alpha=0.5, width=0.1) +
            labs(title=collection, x="Cell Type", y="Genes per Cell") +
            ylim(0,10000)
-  p2c <- ggplot(data[[i]]@meta.data, aes(x=nCount_RNA, y=nFeature_RNA, color=Species)) +
+  p2c <- ggplot(data.filter[[i]]@meta.data, aes(x=nCount_RNA, y=nFeature_RNA, color=Species)) +
            geom_point(size=2,alpha=0.3) +
            xlim(0,100000) +
            ylim(0,10000) +
            facet_grid(Species ~ .) +
            labs(title=collection,x="UMI per Cell",y="Genes per Cell")
-  p2d <- ggplot(data[[i]]@meta.data, aes(x=Species, y=percent.mt, fill=Species)) +
+  p2d <- ggplot(data.filter[[i]]@meta.data, aes(x=Species, y=percent.mt, fill=Species)) +
            geom_violin() +
            geom_boxplot(fill="white", alpha=0.5, width=0.1, outlier.shape=NA) +
            labs(title=collection, x="Cell Type", y="Percent Mitochondrial Reads") +
            ylim(0,100)
 
-  p3a  <- ggplot(data[[i]]@meta.data, aes(x=Complexity,color=Species,fill=Species)) +
+  p3a  <- ggplot(data.filter[[i]]@meta.data, aes(x=Complexity,color=Species,fill=Species)) +
            geom_density(alpha=0.1, position="identity") +
            labs(title=collection,x="Complexity(log10GenesPerUMI)",y="Count") +
            xlim(0,2)
-  p3b <- ggplot(data[[i]]@meta.data, aes(x=nCount_RNA,color=Species,fill=Species)) +
+  p3b <- ggplot(data.filter[[i]]@meta.data, aes(x=nCount_RNA,color=Species,fill=Species)) +
            geom_density(alpha=0.1, position="identity") +
            labs(title=collection,x="UMI per Cell",y="Count") +
            xlim(0,100000)
-  p3c <- ggplot(data[[i]]@meta.data, aes(x=nFeature_RNA,color=Species,fill=Species)) +
+  p3c <- ggplot(data.filter[[i]]@meta.data, aes(x=nFeature_RNA,color=Species,fill=Species)) +
            geom_density(alpha=0.1, position="identity") +
            labs(title=collection,x="Genes per Cell",y="Count") +
            xlim(0,10000)
-  p3d <- ggplot(data[[i]]@meta.data, aes(x=nCount_RNA, y=nFeature_RNA, color=percent.mt)) +
+  p3d <- ggplot(data.filter[[i]]@meta.data, aes(x=nCount_RNA, y=nFeature_RNA, color=percent.mt)) +
            geom_point(size=0.5, alpha=0.3) +
            scale_color_gradient2(low="black",mid="black",high="red",midpoint=25) +
            labs(title=collection,x="UMI per Cell",y="Genes per Cell") +
@@ -410,22 +410,22 @@ for (i in 1:length(data.filter)) {
            facet_grid(Species ~ .)
 
   #investigate potential that cells are actually failed libraries (lower end outliers) or are cell doublets (higher end outliers)
-  p4a <- ggplot(subset(data[[i]]@meta.data,Species%in%"Chimp"),
+  p4a <- ggplot(subset(data.filter[[i]]@meta.data,Species%in%"Chimp"),
                 aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
            geom_point(size=0.5,alpha=0.5,color="#F8766D") +
            labs(title=collection, x="Cell Rank", y="UMI per Cell") +
            ylim(0,100000)
-  p4b <- ggplot(subset(data[[i]]@meta.data,Species%in%"Human"),
+  p4b <- ggplot(subset(data.filter[[i]]@meta.data,Species%in%"Human"),
                 aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
            geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
            labs(title=collection, x="Cell Rank", y="UMI per Cell") +
            ylim(0,100000)
-  p4c <- ggplot(subset(data[[i]]@meta.data,Species%in%"Chimp"),
+  p4c <- ggplot(subset(data.filter[[i]]@meta.data,Species%in%"Chimp"),
                 aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
            geom_point(size=0.5,alpha=0.5,color="#F8766D") +
            labs(title=collection, x="Cell Rank", y="Genes per Cell") +
            ylim(0,10000)
-  p4d <- ggplot(subset(data[[i]]@meta.data,Species%in%"Human"),
+  p4d <- ggplot(subset(data.filter[[i]]@meta.data,Species%in%"Human"),
                 aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
            geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
            labs(title=collection, x="Cell Rank", y="Genes per Cell") +
@@ -530,62 +530,62 @@ for (i in 1:length(data.filter)) {
   print(summary(data.filter[[i]]@meta.data$percent.mt[which(data.filter[[i]]@meta.data$Species=="Chimp")]))
   print(summary(data.filter[[i]]@meta.data$percent.mt[which(data.filter[[i]]@meta.data$Species=="Human")]))
   #complexity
-  data[[i]]@meta.data$Complexity <- log10(data[[i]]@meta.data$nCount_RNA/data[[i]]@meta.data$nFeature_RNA)
+  data.filter[[i]]@meta.data$Complexity <- log10(data.filter[[i]]@meta.data$nCount_RNA/data.filter[[i]]@meta.data$nFeature_RNA)
   print("Complexity (Chimp and Human)")
-  print(summary(data[[i]]@meta.data$Complexity[which(data[[i]]@meta.data$Species=="Chimp")]))
-  print(summary(data[[i]]@meta.data$Complexity[which(data[[i]]@meta.data$Species=="Human")]))
+  print(summary(data.filter[[i]]@meta.data$Complexity[which(data.filter[[i]]@meta.data$Species=="Chimp")]))
+  print(summary(data.filter[[i]]@meta.data$Complexity[which(data.filter[[i]]@meta.data$Species=="Human")]))
   
-  p1b <- ggplot(data[[i]]@meta.data, aes(x=nCount_RNA,color=Species)) +
+  p1b <- ggplot(data.filter[[i]]@meta.data, aes(x=nCount_RNA,color=Species)) +
            geom_histogram(fill="white", alpha=0.1, position="identity", binwidth=100) +
            labs(title=collection,x="UMI per Cell",y="Count") +
            xlim(0,100000) +
            facet_grid(Species ~ .)
-  p1c <- ggplot(data[[i]]@meta.data, aes(x=nFeature_RNA,color=Species)) +
+  p1c <- ggplot(data.filter[[i]]@meta.data, aes(x=nFeature_RNA,color=Species)) +
            geom_histogram(fill="white", alpha=0.1, position="identity", binwidth=10) +
            labs(title=collection,x="Genes per Cell",y="Count") +
            xlim(0,10000) +
            facet_grid(Species ~ .)
-  p1d <- ggplot(data[[i]]@meta.data, aes(x=percent.mt,color=Species)) +
+  p1d <- ggplot(data.filter[[i]]@meta.data, aes(x=percent.mt,color=Species)) +
            geom_histogram(fill="white", alpha=0.1, position="identity", binwidth=0.005) +
            labs(title=collection,x="Percent of Mitochondrial Reads",y="Count") +
            xlim(0,100) +
            facet_grid(Species ~ .)
     
-  p2a <- ggplot(data[[i]]@meta.data, aes(x=Species, y=nCount_RNA, fill=Species)) +
+  p2a <- ggplot(data.filter[[i]]@meta.data, aes(x=Species, y=nCount_RNA, fill=Species)) +
            geom_violin() +
            geom_boxplot(fill="white", alpha=0.5, width=0.1) +
            labs(title=collection, x="Cell Type", y="UMI per Cell") +
            ylim(0,100000)
-  p2b <- ggplot(data[[i]]@meta.data, aes(x=Species, y=nFeature_RNA, fill=Species)) +
+  p2b <- ggplot(data.filter[[i]]@meta.data, aes(x=Species, y=nFeature_RNA, fill=Species)) +
            geom_violin() +
            geom_boxplot(fill="white", alpha=0.5, width=0.1) +
            labs(title=collection, x="Cell Type", y="Genes per Cell") +
            ylim(0,10000)
-  p2c <- ggplot(data[[i]]@meta.data, aes(x=nCount_RNA, y=nFeature_RNA, color=Species)) +
+  p2c <- ggplot(data.filter[[i]]@meta.data, aes(x=nCount_RNA, y=nFeature_RNA, color=Species)) +
            geom_point(size=2,alpha=0.3) +
            xlim(0,100000) +
            ylim(0,10000) +
            facet_grid(Species ~ .) +
            labs(title=collection,x="UMI per Cell",y="Genes per Cell")
-  p2d <- ggplot(data[[i]]@meta.data, aes(x=Species, y=percent.mt, fill=Species)) +
+  p2d <- ggplot(data.filter[[i]]@meta.data, aes(x=Species, y=percent.mt, fill=Species)) +
            geom_violin() +
            geom_boxplot(fill="white", alpha=0.5, width=0.1, outlier.shape=NA) +
            labs(title=collection, x="Cell Type", y="Percent Mitochondrial Reads") +
            ylim(0,100)
 
-  p3a  <- ggplot(data[[i]]@meta.data, aes(x=Complexity,color=Species,fill=Species)) +
+  p3a  <- ggplot(data.filter[[i]]@meta.data, aes(x=Complexity,color=Species,fill=Species)) +
            geom_density(alpha=0.1, position="identity") +
            labs(title=collection,x="Complexity(log10GenesPerUMI)",y="Count") +
            xlim(0,2)
-  p3b <- ggplot(data[[i]]@meta.data, aes(x=nCount_RNA,color=Species,fill=Species)) +
+  p3b <- ggplot(data.filter[[i]]@meta.data, aes(x=nCount_RNA,color=Species,fill=Species)) +
            geom_density(alpha=0.1, position="identity") +
            labs(title=collection,x="UMI per Cell",y="Count") +
            xlim(0,100000)
-  p3c <- ggplot(data[[i]]@meta.data, aes(x=nFeature_RNA,color=Species,fill=Species)) +
+  p3c <- ggplot(data.filter[[i]]@meta.data, aes(x=nFeature_RNA,color=Species,fill=Species)) +
            geom_density(alpha=0.1, position="identity") +
            labs(title=collection,x="Genes per Cell",y="Count") +
            xlim(0,10000)
-  p3d <- ggplot(data[[i]]@meta.data, aes(x=nCount_RNA, y=nFeature_RNA, color=percent.mt)) +
+  p3d <- ggplot(data.filter[[i]]@meta.data, aes(x=nCount_RNA, y=nFeature_RNA, color=percent.mt)) +
            geom_point(size=0.5, alpha=0.3) +
            scale_color_gradient2(low="black",mid="black",high="red",midpoint=25) +
            labs(title=collection,x="UMI per Cell",y="Genes per Cell") +
@@ -594,22 +594,22 @@ for (i in 1:length(data.filter)) {
            facet_grid(Species ~ .)
 
   #investigate potential that cells are actually failed libraries (lower end outliers) or are cell doublets (higher end outliers)
-  p4a <- ggplot(subset(data[[i]]@meta.data,Species%in%"Chimp"),
+  p4a <- ggplot(subset(data.filter[[i]]@meta.data,Species%in%"Chimp"),
                 aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
            geom_point(size=0.5,alpha=0.5,color="#F8766D") +
            labs(title=collection, x="Cell Rank", y="UMI per Cell") +
            ylim(0,100000)
-  p4b <- ggplot(subset(data[[i]]@meta.data,Species%in%"Human"),
+  p4b <- ggplot(subset(data.filter[[i]]@meta.data,Species%in%"Human"),
                 aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
            geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
            labs(title=collection, x="Cell Rank", y="UMI per Cell") +
            ylim(0,100000)
-  p4c <- ggplot(subset(data[[i]]@meta.data,Species%in%"Chimp"),
+  p4c <- ggplot(subset(data.filter[[i]]@meta.data,Species%in%"Chimp"),
                 aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
            geom_point(size=0.5,alpha=0.5,color="#F8766D") +
            labs(title=collection, x="Cell Rank", y="Genes per Cell") +
            ylim(0,10000)
-  p4d <- ggplot(subset(data[[i]]@meta.data,Species%in%"Human"),
+  p4d <- ggplot(subset(data.filter[[i]]@meta.data,Species%in%"Human"),
                 aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
            geom_point(size=0.5,alpha=0.5,color="#00BFC4") +
            labs(title=collection, x="Cell Rank", y="Genes per Cell") +
