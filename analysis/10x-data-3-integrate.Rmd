@@ -1,7 +1,7 @@
 ---
 title: "10x-data-integrate"
 author: "Genevieve Housman"
-date: "September 2020"
+date: "March 2021"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -81,8 +81,9 @@ Because subset, merged, and integrated data reductions were correlated with UMI 
 * https://hbctraining.github.io/scRNA-seq/lessons/06_SC_SCT_and_integration.html
 * https://hbctraining.github.io/scRNA-seq/lessons/cell_cycle_scoring.html
 * See the following scripts for previous trial runs:
-  + ./analysis/v1/v1-10x-data-normalize-log.Rmd
-  + ./analysis/v1/v1-10x-data-normalize-sct.Rmd
+    + ./analysis/v1/v1-10x-data-normalize-log.Rmd
+    + ./analysis/v1/v1-10x-data-normalize-sct.Rmd
+    + ./analysis/v2/v2-10x-data-3-integrate.Rmd
 
 ```{r, eval=FALSE}
 
@@ -95,6 +96,7 @@ library(ggplot2)
 library(colorspace)
 library(RColorBrewer)
 library(tidyr)
+library(raster)
 
 ```
 
@@ -107,8 +109,13 @@ Prepare filtered 10X data by separating each individual and cell type into seper
 #Load batch info
 batch <- read.csv(file='./data/scrna-batch.csv', header=TRUE, sep=",")
 
+#Define filter type
+#filter <- ""
+#filter <- ".filterL"
+filter <- ".filterC"
+
 #Read in files
-data <- readRDS("./data/cellranger-data-full/data.filter.rds")
+data <- readRDS(paste0("./data/cellranger-data-full/data",filter,".rds"))
 
 #Load cell cycle markers (Tirosh et al., 2016 Science) with seurat
 s.genes <- cc.genes$s.genes
@@ -231,7 +238,6 @@ for (i in 1:length(objects)) {
   print(i)
   objects[[i]] <- FindVariableFeatures(objects[[i]], selection.method="vst", nfeatures=3000, verbose=FALSE)
   objects[[i]] <- ScaleData(objects[[i]], vars.to.regress=NULL, verbose=FALSE)
-  #objects[[i]] <- ScaleData(objects[[i]], vars.to.regress=c("nCount_RNA","percent.mt"))
   objects[[i]] <- RunPCA(objects[[i]], npcs=100, verbose=FALSE)
   #keep all dims that explaim more than 0.1% of variance
   pva <- objects[[i]]@reductions$pca@stdev^2/objects[[i]]@reductions$pca@misc$total.variance
@@ -247,27 +253,19 @@ rm(pva,ndim,i)
 ```{r, eval=FALSE}
 
 #Save data
-saveRDS(objects[1:42], file="./data/cellranger-data-full/data.filter.log.indv-cell.rds")
-saveRDS(objects[43:56], file="./data/cellranger-data-full/data.filter.log.indv.rds")
-saveRDS(objects[57], file="./data/cellranger-data-full/data.filter.log.merge-t0.rds")
-saveRDS(objects[57], file="./data/cellranger-data-full/data.filter.log.merge-t1.rds")
-saveRDS(objects[57], file="./data/cellranger-data-full/data.filter.log.merge-t2.rds")
-saveRDS(objects[57], file="./data/cellranger-data-full/data.filter.log.merge-tot.rds")
+saveRDS(objects[1:42], file=paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.rds"))
+saveRDS(objects[43:56], file=paste0("./data/cellranger-data-full/data",filter,".log.indv.rds"))
+saveRDS(objects[57], file=paste0("./data/cellranger-data-full/data",filter,".log.merge-t0.rds"))
+saveRDS(objects[58], file=paste0("./data/cellranger-data-full/data",filter,".log.merge-t1.rds"))
+saveRDS(objects[59], file=paste0("./data/cellranger-data-full/data",filter,".log.merge-t2.rds"))
+saveRDS(objects[60], file=paste0("./data/cellranger-data-full/data",filter,".log.merge-tot.rds"))
 rm(batch, objects)
-
-#saveRDS(objects[1:42], file="./data/cellranger-data-full/data.filter.log.reg.indv-cell.rds")
-#saveRDS(objects[43:56], file="./data/cellranger-data-full/data.filter.log.reg.indv.rds")
-#saveRDS(objects[57], file="./data/cellranger-data-full/data.filter.log.reg.merge-t0.rds")
-#saveRDS(objects[57], file="./data/cellranger-data-full/data.filter.log.reg.merge-t1.rds")
-#saveRDS(objects[57], file="./data/cellranger-data-full/data.filter.log.reg.merge-t2.rds")
-#saveRDS(objects[57], file="./data/cellranger-data-full/data.filter.log.reg.merge-tot.rds")
-#rm(batch, objects)
 
 ```
 
 ### QC of Data Subsets
 
-All subsets show variation correlated with UMI counts per cell (nCount_RNA), gene counts per cell (nFeature_RNA), percent of mitochondrial reads (percent.mt), and cell cycle phase (Phase, S.Score, G2M.Score). For subsets containing three collections (Time 0, Time 1, Time 2) for one cell line, batch effects associated with collection are also correlated with expression variation (Collection, Stage, Sample, PrewashViability, PostwashViability, PostmixViability, CD90, CD73, CD105, CD45.CD34.CD11b.CD19.HLA.DR, Alizarin, OilRed).
+All subsets show variation correlated with UMI counts per cell (nCount_RNA), gene counts per cell (nFeature_RNA), percent of mitochondrial reads (percent.mt), and cell cycle phase (Phase, S.Score, G2M.Score). For subsets containing three collections (Time 0, Time 1, Time 2) for one cell line, batch effects associated with collection are also correlated with expression variation (Collection, Stage, Sample, PrewashViability, PostwashViability, PostmixViability, CD90, CD73, CD105, CD45.CD34.CD11b.CD19.HLA.DR, Alizarin, OilRed). This is true across all cell filtering schemes (no filtering, lenient filtering, and conservative filtering).
 
 ```{r, eval=FALSE}
 
@@ -379,10 +377,8 @@ qcPlots <-function(data,text,batch) {
 
 #Load information of data to be examined
 
-obj.set1 <- readRDS("./data/cellranger-data-full/data.filter.log.indv-cell.rds")
-obj.set2 <- readRDS("./data/cellranger-data-full/data.filter.log.indv.rds")
-#obj.set1 <- readRDS("./data/cellranger-data-full/data.filter.log.reg.indv-cell.rds")
-#obj.set2 <- readRDS("./data/cellranger-data-full/data.filter.log.reg.indv.rds")
+obj.set1 <- readRDS(paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.rds"))
+obj.set2 <- readRDS(paste0("./data/cellranger-data-full/data",filter,".log.indv.rds"))
 objects <- append(obj.set1,obj.set2)
 rm(obj.set1,obj.set2)
 
@@ -391,21 +387,19 @@ batch <- c("Stage","Species","Collection","Pair","Individual","Replicate","MSCme
            "CD90","CD73","CD105","CD45.CD34.CD11b.CD19.HLA.DR","Alizarin","OilRed","S.Score","G2M.Score")
 
 #Calculate and plot correlation of batch with first 10 PCs and UMAP
-pdf(file=paste0("./output/data-qc-postfilter-subsets-batchcor.pdf"), onefile=TRUE, width=7, height=7)
-#pdf(file=paste0("./output/data-qc-postfilter-subsets.reg-batchcor.pdf"), onefile=TRUE, width=7, height=7)
+pdf(file=paste0("./output/data-qc-post",str_remove(filter,"."),"-subsets-batchcor.pdf"), onefile=TRUE, width=7, height=7)
 i=1
 for (i in 1:length(objects)) {
   print(i)
   text <- paste0("subset ",i)
   data <- objects[[i]]
-  batchPlot(data,text)
+  batchPlot(data,text,batch)
   i=i+1
 }
 dev.off()
 
 #Visualize batch effects in PC and UMAP space
-pdf(file="./output/data-qc-postfilter-subsets-batchviz.pdf", onefile=TRUE, width=18, height=81)
-#pdf(file="./output/data-qc-postfilter-subsets.reg-batchviz.pdf", onefile=TRUE, width=18, height=81)
+pdf(file=paste0("./output/data-qc-post",str_remove(filter,"."),"-subsets-batchviz.pdf"), onefile=TRUE, width=18, height=81)
 i=1
 for (i in 1:length(objects)) {
   text <- paste0("subset ",i)
@@ -429,11 +423,19 @@ Datasets used:
 * separate individuals but keep all cell types together
     + integrated all cells
 
-Cells were integrated using different methods:
+Cells were integrated using different numbers of genes:
 
-* 10000 genes used as integration anchors; no variables regressed out during scale data (int)
-* 19377 genes used as integration anchors; no variables regressed out during scale data (int19k)
-* 19377 genes used as integration anchors; nCount_RNA and percent.mt regressed out during scale data following integration (int19k.reg)
+* all genes that have at least 1 UMI count across samples used as integration anchors (intNo0)
+    + t0:  18053 genes
+    + t1:  17510 genes
+    + t2:  17476 genes
+    + tot: 18482 genes
+* all 19377 genes used as integration anchors  (int19k)
+
+Following integration, scale data involved either:
+
+* no variables regressed out during scale data (intNo0, int19k)
+* nCount_RNA and percent.mt regressed out during scale data following integration (intNo0.reg, int19k.reg)
 
 Steps for each integration:
 
@@ -444,11 +446,22 @@ Steps for each integration:
 * Reduce dimensionality
 * Save data
 
+```{bash, eval=FALSE}
+sinteractive --partition=gilad --time=48:00:00 --mem-per-cpu=83400
+module load R/3.6.1
+R
+```
+
 ```{r, eval=FALSE}
 
+#Define filter type
+#filter <- ""
+#filter <- ".filterL"
+filter <- ".filterC"
+
 #Load objects
-dataCell <- readRDS("./data/cellranger-data-full/data.filter.log.indv-cell.rds")
-#dataCell <- readRDS("./data/cellranger-data-full/data.filter.log.reg.indv-cell.rds")
+dataCell <- readRDS(paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.rds"))
+#dataCell <- readRDS(paste0("./data/cellranger-data-full/data",filter,".log.reg.indv-cell.rds"))
 
 ```
 
@@ -464,14 +477,20 @@ obj  <- list(dataCell[[1]],dataCell[[2]],
              dataCell[[31]],dataCell[[32]],
              dataCell[[37]],dataCell[[38]])
 
-#obj.features <- SelectIntegrationFeatures(object.list=obj, nfeatures=10000)
-obj.features <- rownames(dataCell[[1]]@assays$RNA@counts) #all 19377 genes
+#all genes that have at least 1 UMI count across samples
+geneList <- c()
+for(object in obj) {
+  geneList <- c(geneList,rownames(object@assays$RNA@counts)[rowSums(object@assays$RNA@counts)!=0])
+}
+obj.features <- unique(geneList)
+length(obj.features)
+#all 19377 genes
+#obj.features <- rownames(dataCell[[1]]@assays$RNA@counts)
 
 ref.data <- c(3:4) #H1-r2 and C1-r2 differentiated best
 
 obj <- lapply(X=obj, FUN=function(x) {
   x <- ScaleData(x, features=obj.features, verbose=FALSE)
-  #x <- ScaleData(x, features=obj.features, vars.to.regress=c("nCount_RNA","percent.mt"))
   x <- RunPCA(x, features=obj.features, verbose=FALSE)
 })
 
@@ -484,8 +503,8 @@ obj.anchors <- FindIntegrationAnchors(object.list=obj,
 integrate <- IntegrateData(anchorset=obj.anchors,
                            normalization.method="LogNormalize")
 
-integrate <- ScaleData(integrate, vars.to.regress=NULL, verbose=FALSE)
-#integrate <- ScaleData(integrate, vars.to.regress=c("nCount_RNA","percent.mt"))
+#integrate <- ScaleData(integrate, vars.to.regress=NULL, verbose=FALSE)
+integrate <- ScaleData(integrate, vars.to.regress=c("nCount_RNA","percent.mt"))
 
 integrate <- RunPCA(object=integrate,
                     npcs=100,
@@ -499,11 +518,10 @@ print(ndim)
 integrate <- RunUMAP(integrate,
                      dims=1:ndim)
 
-#saveRDS(integrate, file="./data/cellranger-data-full/data.filter.log.indv-cell.int-t0.rds")
-saveRDS(integrate, file="./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t0.rds")
-#saveRDS(integrate, file="./data/cellranger-data-full/data.filter.log.reg.indv-cell.int19k-t0.rds")
-#saveRDS(integrate, file="./data/cellranger-data-full/data.filter.log.indv-cell.reg.int19k-t0.rds")
-#saveRDS(integrate, file="./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t0.rds")
+#saveRDS(integrate, file=paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.intNo0-t0.rds"))
+saveRDS(integrate, file=paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.intNo0.reg-t0.rds"))
+#saveRDS(integrate, file=paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.int19k-t0.rds"))
+#saveRDS(integrate, file=paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.int19k.reg-t0.rds"))
 
 rm(obj,obj.features,obj.anchors,ref.data,integrate,pva,ndim)
 
@@ -521,8 +539,15 @@ obj   <- list(dataCell[[3]],dataCell[[4]],
               dataCell[[33]],dataCell[[34]],
               dataCell[[39]],dataCell[[40]])
 
-#obj.features <- SelectIntegrationFeatures(object.list=obj, nfeatures=10000)
-obj.features <- rownames(dataCell[[3]]@assays$RNA@counts) #all 19377 genes
+#all genes that have at least 1 UMI count across samples
+geneList <- c()
+for(object in obj) {
+  geneList <- c(geneList,rownames(object@assays$RNA@counts)[rowSums(object@assays$RNA@counts)!=0])
+}
+obj.features <- unique(geneList)
+length(obj.features)
+#all 19377 genes
+#obj.features <- rownames(dataCell[[1]]@assays$RNA@counts)
 
 ref.data <- c(3:4) #H1-r2 and C1-r2 differentiated best
 
@@ -540,8 +565,8 @@ obj.anchors <- FindIntegrationAnchors(object.list=obj,
 integrate <- IntegrateData(anchorset=obj.anchors,
                            normalization.method="LogNormalize")
 
-integrate <- ScaleData(integrate, vars.to.regress=NULL, verbose=FALSE)
-#integrate <- ScaleData(integrate, vars.to.regress=c("nCount_RNA","percent.mt"))
+#integrate <- ScaleData(integrate, vars.to.regress=NULL, verbose=FALSE)
+integrate <- ScaleData(integrate, vars.to.regress=c("nCount_RNA","percent.mt"))
 
 integrate <- RunPCA(object=integrate,
                     npcs=100,
@@ -555,9 +580,10 @@ print(ndim)
 integrate <- RunUMAP(integrate,
                      dims=1:ndim)
 
-#saveRDS(integrate, file="./data/cellranger-data-full/data.filter.log.indv-cell.int-t1.rds")
-saveRDS(integrate, file="./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t1.rds")
-#saveRDS(integrate, file="./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t1.rds")
+#saveRDS(integrate, file=paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.intNo0-t1.rds"))
+saveRDS(integrate, file=paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.intNo0.reg-t1.rds"))
+#saveRDS(integrate, file=paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.int19k-t1.rds"))
+#saveRDS(integrate, file=paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.int19k.reg-t1.rds"))
 
 rm(obj,obj.features,obj.anchors,ref.data,integrate,pva,ndim)
 
@@ -575,8 +601,15 @@ obj <- list(dataCell[[5]],dataCell[[6]],
             dataCell[[35]],dataCell[[36]],
             dataCell[[41]],dataCell[[42]])
 
-#obj.features <- SelectIntegrationFeatures(object.list=obj, nfeatures=10000)
-obj.features <- rownames(dataCell[[5]]$RNA@counts) #all 19377 genes
+#all genes that have at least 1 UMI count across samples
+geneList <- c()
+for(object in obj) {
+  geneList <- c(geneList,rownames(object@assays$RNA@counts)[rowSums(object@assays$RNA@counts)!=0])
+}
+obj.features <- unique(geneList)
+length(obj.features)
+#all 19377 genes
+#obj.features <- rownames(dataCell[[1]]@assays$RNA@counts)
 
 ref.data <- c(3:4) #H1-r2 and C1-r2 differentiated best
 
@@ -594,8 +627,8 @@ obj.anchors <- FindIntegrationAnchors(object.list=obj,
 integrate <- IntegrateData(anchorset=obj.anchors,
                            normalization.method="LogNormalize")
 
-integrate <- ScaleData(integrate, vars.to.regress=NULL, verbose=FALSE)
-#integrate <- ScaleData(integrate, vars.to.regress=c("nCount_RNA","percent.mt"))
+#integrate <- ScaleData(integrate, vars.to.regress=NULL, verbose=FALSE)
+integrate <- ScaleData(integrate, vars.to.regress=c("nCount_RNA","percent.mt"))
 
 integrate <- RunPCA(object=integrate,
                     npcs=100,
@@ -609,9 +642,10 @@ print(ndim)
 integrate <- RunUMAP(integrate,
                      dims=1:ndim)
 
-#saveRDS(integrate, file="./data/cellranger-data-full/data.filter.log.indv-cell.int-t2.rds")
-saveRDS(integrate, file="./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t2.rds")
-#saveRDS(integrate, file="./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.rds")
+#saveRDS(integrate, file=paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.intNo0-t2.rds"))
+saveRDS(integrate, file=paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.intNo0.reg-t2.rds"))
+#saveRDS(integrate, file=paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.int19k-t2.rds"))
+#saveRDS(integrate, file=paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.int19k.reg-t2.rds"))
 
 rm(obj,obj.features,obj.anchors,ref.data,integrate,pva,ndim)
 
@@ -627,10 +661,17 @@ rm(dataCell)
 
 #Combine all cells from all samples
 
-obj <- readRDS("./data/cellranger-data-full/data.filter.log.indv.rds")
+obj <- readRDS(paste0("./data/cellranger-data-full/data",filter,".log.indv.rds"))
 
-#obj.features <- SelectIntegrationFeatures(object.list=obj, nfeatures=10000)
-obj.features <- rownames(obj[[1]]@assays$RNA@counts) #all 19377 genes
+#all genes that have at least 1 UMI count across samples
+geneList <- c()
+for(object in obj) {
+  geneList <- c(geneList,rownames(object@assays$RNA@counts)[rowSums(object@assays$RNA@counts)!=0])
+}
+obj.features <- unique(geneList)
+length(obj.features)
+#all 19377 genes
+#obj.features <- rownames(obj[[1]]@assays$RNA@counts)
 
 ref.data <- c(2,9) #H1-r2 and C1-r2 differentiated best
 
@@ -648,8 +689,8 @@ obj.anchors <- FindIntegrationAnchors(object.list=obj,
 integrate <- IntegrateData(anchorset=obj.anchors,
                            normalization.method="LogNormalize")
 
-integrate <- ScaleData(integrate, vars.to.regress=NULL, verbose=FALSE)
-#integrate <- ScaleData(integrate, vars.to.regress=c("nCount_RNA","percent.mt"))
+#integrate <- ScaleData(integrate, vars.to.regress=NULL, verbose=FALSE)
+integrate <- ScaleData(integrate, vars.to.regress=c("nCount_RNA","percent.mt"))
 
 integrate <- RunPCA(object=integrate,
                     npcs=100,
@@ -663,9 +704,10 @@ print(ndim)
 integrate <- RunUMAP(integrate,
                      dims=1:ndim)
 
-#saveRDS(integrate, file="./data/cellranger-data-full/data.filter.log.indv-cell.int-tot.rds")
-saveRDS(integrate, file="./data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.rds")
-#saveRDS(integrate, file="./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.rds")
+#saveRDS(integrate, file=paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.intNo0-tot.rds"))
+saveRDS(integrate, file=paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.intNo0.reg-tot.rds"))
+#saveRDS(integrate, file=paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.int19k-tot.rds"))
+#saveRDS(integrate, file=paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.int19k.reg-tot.rds"))
 
 rm(obj,obj.features,obj.anchors,ref.data,integrate,pva,ndim)
 
@@ -676,18 +718,28 @@ rm(obj,obj.features,obj.anchors,ref.data,integrate,pva,ndim)
 Results of correlations between expression data reductions and batch effects:
 
 * Merged Data
-  + variation correlated with UMI counts per cell (nCount_RNA), gene counts per cell (nFeature_RNA), and percent of mitochondrial reads (percent.mt)
-  + variation correlated with collection-associated batch effects (Sample, Individual, Pair, Age, CD90)
-  + variation correlated with species
-  + variation not correlated with cell cycle phase (Phase, S.Score, G2M.Score)
-* Integrated Data
-  + variation correlated with UMI counts per cell (nCount_RNA), gene counts per cell (nFeature_RNA), percent of mitochondrial reads (percent.mt), and cell cycle phase (Phase, S.Score, G2M.Score)
-  + variation not correlated with collection-associated batch effects (Sample, Individual, Pair, Age, CD90)
-  + variation not correlated with species
-* Integrated Data (with nCount_RNA and percent.mt regressed out during data scaling following integration)
-  + variation correlated with cell cycle phase (Phase, S.Score, G2M.Score)
-  + variation not correlated with collection-associated batch effects (Sample, Individual, Pair, Age, CD90)
-  + variation not correlated with species, UMI counts per cell (nCount_RNA), gene counts per cell (nFeature_RNA), percent of mitochondrial reads (percent.mt), and 
+    + variation correlated with UMI counts per cell (nCount_RNA), gene counts per cell (nFeature_RNA), and percent of mitochondrial reads (percent.mt)
+    + variation correlated with collection-associated batch effects (Sample, Individual, Pair, Age, CD90)
+    + variation correlated with species
+    + variation not correlated with cell cycle phase (Phase, S.Score, G2M.Score)
+* Integrated Data (non-zero genes)
+    + variation correlated with UMI counts per cell (nCount_RNA), gene counts per cell (nFeature_RNA), percent of mitochondrial reads (percent.mt), and cell cycle phase (Phase, S.Score, G2M.Score)
+    + variation not correlated with collection-associated batch effects (Sample, Individual, Pair, Age, CD90)
+    + variation not correlated with species
+* Integrated Data (non-zero genes, with nCount_RNA and percent.mt regressed out during data scaling following integration)
+    + variation correlated with cell cycle phase (Phase, S.Score, G2M.Score)
+    + variation not correlated with collection-associated batch effects (Sample, Individual, Pair, Age, CD90)
+    + variation not correlated with species, UMI counts per cell (nCount_RNA), gene counts per cell (nFeature_RNA), percent of mitochondrial reads (percent.mt)
+* Integrated Data (19k genes)
+    + variation correlated with UMI counts per cell (nCount_RNA), gene counts per cell (nFeature_RNA), percent of mitochondrial reads (percent.mt), and cell cycle phase (Phase, S.Score, G2M.Score)
+    + variation not correlated with collection-associated batch effects (Sample, Individual, Pair, Age, CD90)
+    + variation not correlated with species
+* Integrated Data (19k genes, with nCount_RNA and percent.mt regressed out during data scaling following integration)
+    + variation correlated with cell cycle phase (Phase, S.Score, G2M.Score)
+    + variation not correlated with collection-associated batch effects (Sample, Individual, Pair, Age, CD90)
+    + variation not correlated with species, UMI counts per cell (nCount_RNA), gene counts per cell (nFeature_RNA), percent of mitochondrial reads (percent.mt)
+
+Conservative and lenient filters produce similar results.
 
 ```{r, eval=FALSE}
 
@@ -798,19 +850,28 @@ qcPlots <-function(data,text,batch) {
 
 ```{r, eval=FALSE}
 
+#Define filter type
+#filter <- ""
+#filter <- ".filterL"
+filter <- ".filterC"
+
+```
+
+```{r, eval=FALSE}
+
 #Load information of merged data to be examined
 
-obj.info <- list(c("merge-t0","./data/cellranger-data-full/data.filter.log.merge-t0.rds"),
-                 c("merge-t1","./data/cellranger-data-full/data.filter.log.merge-t1.rds"),
-                 c("merge-t2","./data/cellranger-data-full/data.filter.log.merge-t2.rds"),
-                 c("merge-tot","./data/cellranger-data-full/data.filter.log.merge-tot.rds"))
+obj.info <- list(c("merge-t0",paste0("./data/cellranger-data-full/data",filter,".log.merge-t0.rds")),
+                 c("merge-t1",paste0("./data/cellranger-data-full/data",filter,".log.merge-t1.rds")),
+                 c("merge-t2",paste0("./data/cellranger-data-full/data",filter,".log.merge-t2.rds")),
+                 c("merge-tot",paste0("./data/cellranger-data-full/data",filter,".log.merge-tot.rds")))
 
 batch <- c("Stage","Species","Collection","Pair","Individual","Replicate","MSCmedia","Sample","Sex","Age","Number6W","SequencingBatch",
            "Phase","nCount_RNA","nFeature_RNA","percent.mt","PrewashViability","PostwashViability","PostmixViability",
            "CD90","CD73","CD105","CD45.CD34.CD11b.CD19.HLA.DR","Alizarin","OilRed","S.Score","G2M.Score")
 
 #Calculate and plot correlation of batch with first 10 PCs and UMAP
-pdf(file=paste0("./output/data-qc-postfilter-subsets-merge-batchcor.pdf"), onefile=TRUE, width=7, height=7)
+pdf(file=paste0("./output/data-qc-post",str_remove(filter,"."),"-subsets-merge-batchcor.pdf"), onefile=TRUE, width=7, height=7)
 i=1
 for (i in 1:length(obj.info)) {
   print(i)
@@ -822,7 +883,7 @@ for (i in 1:length(obj.info)) {
 dev.off()
 
 #Visualize batch effects in PC and UMAP space
-pdf(file="./output/data-qc-postfilter-subsets-merge-batchviz.pdf", onefile=TRUE, width=18, height=81)
+pdf(file=paste0("./output/data-qc-post",str_remove(filter,"."),"-subsets-merge-batchviz.pdf"), onefile=TRUE, width=18, height=81)
 i=1
 for (i in 1:length(obj.info)) {
   text <- obj.info[[i]][1]
@@ -837,19 +898,19 @@ dev.off()
 
 ```{r, eval=FALSE}
 
-#Load information of integrated data to be examined
+#Load information of integrated data (non-zero genes) to be examined
 
-obj.info <- list(c("int-t0","./data/cellranger-data-full/data.filter.log.indv-cell.int-t0.rds"),
-                 c("int-t1","./data/cellranger-data-full/data.filter.log.indv-cell.int-t1.rds"),
-                 c("int-t2","./data/cellranger-data-full/data.filter.log.indv-cell.int-t2.rds"),
-                 c("int-tot","./data/cellranger-data-full/data.filter.log.indv-cell.int-tot.rds"))
+obj.info <- list(c("intNo0-t0",paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.intNo0-t0.rds")),
+                 c("intNo0-t1",paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.intNo0-t1.rds")),
+                 c("intNo0-t2",paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.intNo0-t2.rds")),
+                 c("intNo0-tot",paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.intNo0-tot.rds")))
 
 batch <- c("Stage","Species","Collection","Pair","Individual","Replicate","MSCmedia","Sample","Sex","Age","Number6W","SequencingBatch",
            "Phase","nCount_RNA","nFeature_RNA","percent.mt","PrewashViability","PostwashViability","PostmixViability",
            "CD90","CD73","CD105","CD45.CD34.CD11b.CD19.HLA.DR","Alizarin","OilRed","S.Score","G2M.Score")
 
 #Calculate and plot correlation of batch with first 10 PCs and UMAP
-pdf(file=paste0("./output/data-qc-postfilter-subsets-int-batchcor.pdf"), onefile=TRUE, width=7, height=7)
+pdf(file=paste0("./output/data-qc-post",str_remove(filter,"."),"-subsets-intNo0-batchcor.pdf"), onefile=TRUE, width=7, height=7)
 i=1
 for (i in 1:length(obj.info)) {
   print(i)
@@ -861,7 +922,46 @@ for (i in 1:length(obj.info)) {
 dev.off()
 
 #Visualize batch effects in PC and UMAP space
-pdf(file="./output/data-qc-postfilter-subsets-int-batchviz.pdf", onefile=TRUE, width=18, height=81)
+pdf(file=paste0("./output/data-qc-post",str_remove(filter,"."),"-subsets-intNo0-batchviz.pdf"), onefile=TRUE, width=18, height=81)
+i=1
+for (i in 1:length(obj.info)) {
+  text <- obj.info[[i]][1]
+  data <- readRDS(obj.info[[i]][2])
+  print(text)
+  qcPlots(data,text,batch)
+  i=i+1
+}
+dev.off()
+
+```
+
+```{r, eval=FALSE}
+
+#Load information of integrated data (non-zero genes, with nCount_RNA and percent.mt regressed out during data scaling following integration) to be examined
+
+obj.info <- list(c("intNo0.reg-t0",paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.intNo0.reg-t0.rds")),
+                 c("intNo0.reg-t1",paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.intNo0.reg-t1.rds")),
+                 c("intNo0.reg-t2",paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.intNo0.reg-t2.rds")),
+                 c("intNo0.reg-tot",paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.intNo0.reg-tot.rds")))
+
+batch <- c("Stage","Species","Collection","Pair","Individual","Replicate","MSCmedia","Sample","Sex","Age","Number6W","SequencingBatch",
+           "Phase","nCount_RNA","nFeature_RNA","percent.mt","PrewashViability","PostwashViability","PostmixViability",
+           "CD90","CD73","CD105","CD45.CD34.CD11b.CD19.HLA.DR","Alizarin","OilRed","S.Score","G2M.Score")
+
+#Calculate and plot correlation of batch with first 10 PCs and UMAP
+pdf(file=paste0("./output/data-qc-post",str_remove(filter,"."),"-subsets-intNo0.reg-batchcor.pdf"), onefile=TRUE, width=7, height=7)
+i=1
+for (i in 1:length(obj.info)) {
+  print(i)
+  text <- obj.info[[i]][1]
+  data <- readRDS(obj.info[[i]][2])
+  batchPlot(data,text,batch)
+  i=i+1
+}
+dev.off()
+
+#Visualize batch effects in PC and UMAP space
+pdf(file=paste0("./output/data-qc-post",str_remove(filter,"."),"-subsets-intNo0.reg-batchviz.pdf"), onefile=TRUE, width=18, height=81)
 i=1
 for (i in 1:length(obj.info)) {
   text <- obj.info[[i]][1]
@@ -878,17 +978,17 @@ dev.off()
 
 #Load information of integrated data (19k genes) to be examined
 
-obj.info <- list(c("int19k-t0","./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t0.rds"),
-                 c("int19k-t1","./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t1.rds"),
-                 c("int19k-t2","./data/cellranger-data-full/data.filter.log.indv-cell.int19k-t2.rds"),
-                 c("int19k-tot","./data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.rds"))
+obj.info <- list(c("int19k-t0",paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.int19k-t0.rds")),
+                 c("int19k-t1",paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.int19k-t1.rds")),
+                 c("int19k-t2",paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.int19k-t2.rds")),
+                 c("int19k-tot",paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.int19k-tot.rds")))
 
 batch <- c("Stage","Species","Collection","Pair","Individual","Replicate","MSCmedia","Sample","Sex","Age","Number6W","SequencingBatch",
            "Phase","nCount_RNA","nFeature_RNA","percent.mt","PrewashViability","PostwashViability","PostmixViability",
            "CD90","CD73","CD105","CD45.CD34.CD11b.CD19.HLA.DR","Alizarin","OilRed","S.Score","G2M.Score")
 
 #Calculate and plot correlation of batch with first 10 PCs and UMAP
-pdf(file=paste0("./output/data-qc-postfilter-subsets-int19k-batchcor.pdf"), onefile=TRUE, width=7, height=7)
+pdf(file=paste0("./output/data-qc-post",str_remove(filter,"."),"-subsets-int19k-batchcor.pdf"), onefile=TRUE, width=7, height=7)
 i=1
 for (i in 1:length(obj.info)) {
   print(i)
@@ -900,7 +1000,7 @@ for (i in 1:length(obj.info)) {
 dev.off()
 
 #Visualize batch effects in PC and UMAP space
-pdf(file="./output/data-qc-postfilter-subsets-int19k-batchviz.pdf", onefile=TRUE, width=18, height=81)
+pdf(file=paste0("./output/data-qc-post",str_remove(filter,"."),"-subsets-int19k-batchviz.pdf"), onefile=TRUE, width=18, height=81)
 i=1
 for (i in 1:length(obj.info)) {
   text <- obj.info[[i]][1]
@@ -915,19 +1015,20 @@ dev.off()
 
 ```{r, eval=FALSE}
 
-#Load information of integrated data (19k genes) to be examined
+#Load information of integrated data (19k genes, with nCount_RNA and percent.mt regressed out during data scaling following integration) to be examined
 
-obj.info <- list(c("int19k.reg-t0","./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t0.rds"),
-                 c("int19k.reg-t1","./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t1.rds"),
-                 c("int19k.reg-t2","./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.rds"),
-                 c("int19k.reg-tot","./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.rds"))
+obj.info <- list(c("int19k.reg-t0",paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.int19k.reg-t0.rds")),
+                 c("int19k.reg-t1",paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.int19k.reg-t1.rds")),
+                 c("int19k.reg-t2",paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.int19k.reg-t2.rds")))
+                 #c("int19k.reg-t2",paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.int19k.reg-t2.rds")),
+                 #c("int19k.reg-tot",paste0("./data/cellranger-data-full/data",filter,".log.indv-cell.int19k.reg-tot.rds")))
 
 batch <- c("Stage","Species","Collection","Pair","Individual","Replicate","MSCmedia","Sample","Sex","Age","Number6W","SequencingBatch",
            "Phase","nCount_RNA","nFeature_RNA","percent.mt","PrewashViability","PostwashViability","PostmixViability",
            "CD90","CD73","CD105","CD45.CD34.CD11b.CD19.HLA.DR","Alizarin","OilRed","S.Score","G2M.Score")
 
 #Calculate and plot correlation of batch with first 10 PCs and UMAP
-pdf(file=paste0("./output/data-qc-postfilter-subsets-int19k.reg-batchcor.pdf"), onefile=TRUE, width=7, height=7)
+pdf(file=paste0("./output/data-qc-post",str_remove(filter,"."),"-subsets-int19k.reg-batchcor.pdf"), onefile=TRUE, width=7, height=7)
 i=1
 for (i in 1:length(obj.info)) {
   print(i)
@@ -939,7 +1040,7 @@ for (i in 1:length(obj.info)) {
 dev.off()
 
 #Visualize batch effects in PC and UMAP space
-pdf(file="./output/data-qc-postfilter-subsets-int19k.reg-batchviz.pdf", onefile=TRUE, width=18, height=81)
+pdf(file=paste0("./output/data-qc-post",str_remove(filter,"."),"-subsets-int19k.reg-batchviz.pdf"), onefile=TRUE, width=18, height=81)
 i=1
 for (i in 1:length(obj.info)) {
   text <- obj.info[[i]][1]
@@ -951,3 +1052,5 @@ for (i in 1:length(obj.info)) {
 dev.off()
 
 ```
+
+Decided to move forward with conservative filter with data integrated across all genes with non-zero UMI counts and with nCount_RNA and percent.mt regressed out during data scaling following integration (data.filterC.log.indv-cell.intNo0.reg-tot.rds).
