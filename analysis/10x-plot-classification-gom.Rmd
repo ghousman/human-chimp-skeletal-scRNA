@@ -1,0 +1,239 @@
+---
+title: "10x-plot-classification-gom"
+author: "Genevieve Housman"
+date: "March 2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 10X Data Cellranger Analysis - Visual Cell Classifications (Grades of Membership)
+
+Visualize topic modeling (grade of membership) results - structure plots and gene contributions to topics.
+
+```{r}
+
+#Load libraries
+library(fastTopics)
+library(ggplot2)
+library(gridExtra)
+library(pheatmap)
+
+```
+
+```{r}
+
+#GoM Functions
+plot_structure_plot <- function(omega, labels){
+     annotation <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=labels)
+     rownames(omega) <- annotation$sample_id
+     StructureGGplot(omega=omega, annotation=annotation, order_sample=TRUE,
+                     axis_tick=list(axis_ticks_length = .1,
+                                    axis_ticks_lwd_y = .1,
+                                    axis_ticks_lwd_x = .1,
+                                    axis_label_size = 7,
+                                    axis_label_face = "bold"))
+     }
+
+make_topic_plots <- function(omega, labels, angle) {
+  i=1
+  omega <- as.data.frame(omega)
+  colNames <- names(omega)
+  omega <- cbind(omega,labels)
+  names(omega)
+  p <- list()
+  for (k in colNames) {
+    p[[i]] <- ggplot(data=omega, mapping=aes(x=labels)) +
+      geom_violin(mapping=aes_string(y=k),width=1,fill="lightgrey",color="lightgrey") +
+      geom_boxplot(mapping=aes_string(y=k),width=0.1,outlier.shape=NA, alpha=0.2) +
+      labs(y=paste0("Topic ", k, " value"), x=paste0("")) +
+      theme_classic() +
+      theme(axis.text.x=element_text(angle=angle, hjust=0, vjust=0))
+    i=i+1
+  }
+  do.call(grid.arrange,c(p,ncol=1))
+}
+
+annotate_clusters <- function(theta_mat){
+  top_features <- ExtractTopFeatures(theta_mat, top_features=100, method="poisson", options="min")
+  gene_vector <- do.call(rbind, lapply(1:dim(top_features[[1]])[1], function(x) rownames(theta_mat)[top_features[[1]][x,]]))
+  scores_vector <- do.call(rbind, lapply(1:dim(top_features[[1]])[1], function(x) top_features[[2]][x,]))
+  return(list(gene_vector, scores_vector))
+}
+
+```
+
+```{r}
+
+batchcor <- c("",".bc1")
+numclust <- c(3,4,5,6,7)
+dataspps <- c("",".human",".chimp")
+
+for (i in batchcor) {
+  for (j in numclust) {
+    for (k in dataspps) {
+      
+      print(paste0("Plot of: ",j,i,k))
+      
+      #Define Colors
+      if (j==3) { colclust <- c("pink","mediumorchid","dodgerblue") }
+      
+      if (j==4 & k=="" & i=="") { colclust <- c("pink","mediumorchid","orchid4","dodgerblue") }
+      if (j==4 & k==".human" & i=="") { colclust <- c("pink","mediumorchid","dodgerblue1","dodgerblue4") }
+      if (j==4 & k==".chimp" & i=="") { colclust <- c("pink","mediumorchid","orchid4","dodgerblue") }
+      if (j==4 & k=="" & i==".bc1") { colclust <- c("pink","mediumorchid","orchid4","dodgerblue") }
+      if (j==4 & k==".human" & i==".bc1") { colclust <- c("pink","mediumorchid","dodgerblue","grey") }
+      if (j==4 & k==".chimp" & i==".bc1") { colclust <- c("pink","mediumorchid","orchid4","dodgerblue") }
+      
+      if (j==5 & k=="" & i=="") { colclust <- c("pink","pink4","mediumorchid","orchid4","dodgerblue") }
+      if (j==5 & k==".human" & i=="") { colclust <- c("pink","mediumorchid","dodgerblue1","dodgerblue4","grey") }
+      if (j==5 & k==".chimp" & i=="") { colclust <- c("pink","mediumorchid","orchid4","dodgerblue1","dodgerblue4") }
+      if (j==5 & k=="" & i==".bc1") { colclust <- c("pink","pink4","mediumorchid","orchid4","dodgerblue") }
+      if (j==5 & k==".human" & i==".bc1") { colclust <- c("pink","mediumorchid","dodgerblue","lightgrey","darkgrey") }
+      if (j==5 & k==".chimp" & i==".bc1") { colclust <- c("pink","mediumorchid","orchid4","dodgerblue","grey") }
+      
+      if (j==6 & k=="" & i=="") { colclust <- c("pink","pink4","mediumorchid","orchid4","dodgerblue1","dodgerblue4") }
+      if (j==6 & k==".human" & i=="") { colclust <- c("pink","pink4","mediumorchid","orchid4","dodgerblue","grey") }
+      if (j==6 & k==".chimp" & i=="") { colclust <- c("pink","mediumorchid","orchid4","dodgerblue1","dodgerblue4","grey") }
+      if (j==6 & k=="" & i==".bc1") { colclust <- c("pink","pink4","mediumorchid","orchid4","dodgerblue","grey") }
+      if (j==6 & k==".human" & i==".bc1") { colclust <- c("pink","mediumorchid","dodgerblue1","dodgerblue4","lightgrey","darkgrey") }
+      if (j==6 & k==".chimp" & i==".bc1") { colclust <- c("pink","mediumorchid","orchid4","dodgerblue1","dodgerblue4","grey") }
+
+      if (j==7 & k=="" & i=="") { colclust <- c("pink","pink4","mediumorchid","orchid4","dodgerblue1","dodgerblue4","grey") }
+      if (j==7 & k==".human" & i=="") { colclust <- c("pink","mediumorchid","orchid4","dodgerblue1","dodgerblue4","lightgrey","darkgrey") }
+      if (j==7 & k==".chimp" & i=="") { colclust <- c("pink","mediumorchid","orchid4","dodgerblue1","dodgerblue4","lightgrey","darkgrey") }
+      if (j==7 & k=="" & i==".bc1") { colclust <- c("pink","pink4","mediumorchid","orchid4","dodgerblue1","dodgerblue4","grey") }
+      if (j==7 & k==".human" & i==".bc1") { colclust <- c("pink","mediumorchid","orchid4","dodgerblue1","dodgerblue4","lightgrey","darkgrey") }
+      if (j==7 & k==".chimp" & i==".bc1") { colclust <- c("pink","mediumorchid","orchid4","dodgerblue1","dodgerblue4","lightgrey","darkgrey") }
+      
+      #Read fastTopics data
+      fit <- readRDS(paste0("./data/gom-data/topics",j,k,".data.filterC.log.indv-cell.intNo0.reg-tot",i,".rds"))
+      
+      #Check fitting procedure
+      quickplot(x=1:length(fit$progress$loglik),
+                y=fit$progress$loglik,
+                geom=c("point","line"),
+                xlab="iteration",
+                ylab="loglik")
+      
+      #Compute omega (weights, cells x k) and theta (topics, genes x k) (need to add up to 1)
+      l <- fit$L
+      f <- fit$F
+      omega <- sweep(l, MARGIN=2, colSums(f), `*`)
+      scale <- rowSums(omega)
+      omega <- omega / scale
+      theta <- f/colSums(f)
+      
+      #BIC
+      loglik <- fit$progress$loglik[length(fit$progress$loglik)]
+      BIC <- -2*loglik + nrow(theta)*(ncol(theta)-1)*log(nrow(omega))
+      BIC
+      
+      #Recover the multinomial topic model
+      fit.multinom <- poisson2multinom(fit)
+      range(rowSums(fit.multinom$L))
+      range(colSums(fit.multinom$F))
+      
+      #Create labels
+      labels <- sapply(strsplit(rownames(omega),"_"), `[`, 1)
+      annotation1 <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=as.factor(labels))
+      celltype <- labels
+      celltype[celltype %in% c("C1.I","C1r2.I","C2.I","C3.I","C4.I","C5.I","C6.I")] <- "Chimp.iPSC"
+      celltype[celltype %in% c("C1.M","C1r2.M","C2.M","C3.M","C4.M","C5.M","C6.M")] <- "Chimp.MSC"
+      celltype[celltype %in% c("C1.O","C1r2.O","C2.O","C3.O","C4.O","C5.O","C6.O")] <- "Chimp.Osteogenic"
+      celltype[celltype %in% c("H1.I","H1r2.I","H2.I","H3.I","H4.I","H5.I","H6.I")] <- "Human.iPSC"
+      celltype[celltype %in% c("H1.M","H1r2.M","H2.M","H3.M","H4.M","H5.M","H6.M")] <- "Human.MSC"
+      celltype[celltype %in% c("H1.O","H1r2.O","H2.O","H3.O","H4.O","H5.O","H6.O")] <- "Human.Osteogenic"
+      annotation2 <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=as.factor(celltype))
+      
+      #Reorder k
+      if (j==3 & k=="" & i=="") { omega <- omega[,c(3,1,2)] }
+      if (j==3 & k==".human" & i=="") { omega <- omega[,c(3,1,2)] }
+      if (j==3 & k==".chimp" & i=="") { omega <- omega[,c(3,1,2)] }
+      if (j==3 & k=="" & i==".bc1") { omega <- omega[,c(3,1,2)] }
+      if (j==3 & k==".human" & i==".bc1") { omega <- omega[,c(3,1,2)] }
+      if (j==3 & k==".chimp" & i==".bc1") { omega <- omega[,c(3,1,2)] }
+      
+      if (j==4 & k=="" & i=="") { omega <- omega[,c(4,2,3,1)] }
+      if (j==4 & k==".human" & i=="") { omega <- omega[,c(4,3,2,1)] }
+      if (j==4 & k==".chimp" & i=="") { omega <- omega[,c(4,2,3,1)] }
+      if (j==4 & k=="" & i==".bc1") { omega <- omega[,c(4,2,3,1)] }
+      if (j==4 & k==".human" & i==".bc1") { omega <- omega[,c(1,4,3,2)] }
+      if (j==4 & k==".chimp" & i==".bc1") { omega <- omega[,c(4,3,1,2)] }
+      
+      if (j==5 & k=="" & i=="") { omega <- omega[,c(2,1,5,3,4)] }
+      if (j==5 & k==".human" & i=="") { omega <- omega[,c(1,5,3,4,2)] }
+      if (j==5 & k==".chimp" & i=="") { omega <- omega[,c(5,4,1,2,3)] }
+      if (j==5 & k=="" & i==".bc1") { omega <- omega[,c(4,3,2,5,1)] }
+      if (j==5 & k==".human" & i==".bc1") { omega <- omega[,c(3,5,1,2,4)] }
+      if (j==5 & k==".chimp" & i==".bc1") { omega <- omega[,c(4,5,1,3,2)] }
+      
+      if (j==6 & k=="" & i=="") { omega <- omega[,c(4,2,5,3,6,1)] }
+      if (j==6 & k==".human" & i=="") { omega <- omega[,c(6,3,5,4,2,1)] }
+      if (j==6 & k==".chimp" & i=="") { omega <- omega[,c(6,1,5,3,4,2)] }
+      if (j==6 & k=="" & i==".bc1") { omega <- omega[,c(3,2,5,6,4,1)] }
+      if (j==6 & k==".human" & i==".bc1") { omega <- omega[,c(5,6,1,2,4,3)] }
+      if (j==6 & k==".chimp" & i==".bc1") { omega <- omega[,c(6,5,2,4,1,3)] }
+      
+      if (j==7 & k=="" & i=="") { omega <- omega[,c(6,7,5,3,2,1,4)] }
+      if (j==7 & k==".human" & i=="") { omega <- omega[,c(3,7,4,5,1,6,2)] }
+      if (j==7 & k==".chimp" & i=="") { omega <- omega[,c(1,5,3,7,6,4,2)] }
+      if (j==7 & k=="" & i==".bc1") { omega <- omega[,c(6,7,4,2,5,3,1)] }
+      if (j==7 & k==".human" & i==".bc1") { omega <- omega[,c(6,5,1,2,3,7,4)] }
+      if (j==7 & k==".chimp" & i==".bc1") { omega <- omega[,c(5,7,3,2,6,4,1)] }
+
+      #Plot of topic membership
+      make_topic_plots(omega=omega, labels=labels, angle=-45)
+      make_topic_plots(omega=omega, labels=celltype, angle=-20)
+      
+      #Structure plots
+      rownames(omega) <- annotation1$sample_id
+      print(CountClust::StructureGGplot(omega=omega,
+                                        annotation=annotation1,
+                                        palette=colclust,
+                                        yaxis_label="Samples",
+                                        order_sample=TRUE,
+                                        axis_tick=list(axis_ticks_length=0.1,
+                                                       axis_ticks_lwd_y=0.1,
+                                                       axis_ticks_lwd_x=0.1,
+                                                       axis_label_size=7,
+                                                       axis_label_face="bold")))
+      rownames(omega) <- annotation2$sample_id
+      print(CountClust::StructureGGplot(omega=omega,
+                                        annotation=annotation2,
+                                        palette=colclust,
+                                        yaxis_label="Species",
+                                        order_sample=TRUE,
+                                        axis_tick=list(axis_ticks_length=0.1,
+                                                       axis_ticks_lwd_y=0.1,
+                                                       axis_ticks_lwd_x=0.1,
+                                                       axis_label_size=7,
+                                                       axis_label_face="bold")))
+
+      #Heatmap of topic weights (omega)
+      annotation <- data.frame(row.names=paste0("X", c(1:NROW(omega))), labels=as.factor(labels))
+      rownames(omega) <- rownames(annotation)
+      pheatmap(omega,
+               cluster_cols=FALSE,
+               cluster_rows=FALSE,
+               annotation_row=annotation,
+               show_rownames=FALSE,
+               main="Heatmap of topic weights")
+      annotation <- data.frame(row.names=paste0("X", c(1:NROW(omega))), labels=as.factor(celltype))
+      rownames(omega) <- rownames(annotation)
+      pheatmap(omega,
+               cluster_cols=FALSE,
+               cluster_rows=FALSE,
+               annotation_row=annotation,
+               show_rownames=FALSE,
+               main="Heatmap of topic weights")
+      
+    }
+  }
+}
+
+```
