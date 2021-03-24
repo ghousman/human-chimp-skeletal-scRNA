@@ -11,7 +11,7 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## 10X Data Cellranger Analysis - Visual Cell Classifications (Grades of Membership)
+# 10X Data Cellranger Analysis - Visual Cell Classifications (Grades of Membership)
 
 Visualize topic modeling (grade of membership) results - structure plots and gene contributions to topics.
 
