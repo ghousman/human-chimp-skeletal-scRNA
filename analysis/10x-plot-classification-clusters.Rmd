@@ -1,0 +1,62 @@
+---
+title: "10x-plot-classification-clusters"
+author: "Genevieve Housman"
+date: "April 2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 10X Data Cellranger Analysis - Visual Cell Unsupervised Clusters (Seurat)
+
+Visualize unsupervised cluster (Seurat) results.
+
+```{r}
+
+#Load libraries
+library(ggplot2)
+library(Seurat)
+
+```
+
+
+```{r}
+
+#data integrated across individuals - total (conservative cell filter + non-zero genes + regress out UMI/mito)
+scrna <- "./data/cellranger-data-full/data.filterC.log.indv-cell.intNo0.reg-tot.assign.rds"
+data <- readRDS(scrna)
+
+```
+
+```{r}
+
+clusters <- c("integrated_snn_res.0.05", "integrated_snn_res.0.1", "integrated_snn_res.0.25", "integrated_snn_res.0.5", "integrated_snn_res.0.75", "integrated_snn_res.1")
+
+for (x in clusters) {
+  
+  print(x)
+  
+  print(DimPlot(data, group.by=x, reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2"))
+  print(DimPlot(data, group.by=x, reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4"))
+  print(DimPlot(data, group.by=x, reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6"))
+  print(DimPlot(data, group.by=x, reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8"))
+  print(DimPlot(data, group.by=x, reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))
+  
+  print(DimPlot(data, group.by=x, reduction="umap") + labs(x="UMAP1",y="UMAP2"))
+  
+  print(CombinePlots(plots=list((DimPlot(subset(data,subset=Species=="Human"), split.by=x, reduction="umap") + labs(title="Human Cells",x="UMAP1",y="UMAP2")),
+                                (DimPlot(subset(data,subset=Species=="Chimp"), split.by=x, reduction="umap") + labs(title="Chimp Cells",x="UMAP1",y="UMAP2"))),
+                     ncol=1))
+        
+  print(CombinePlots(plots=list((DimPlot(subset(data,subset=Stage=="Time 0"), split.by=x, reduction="umap") + labs(title="Time 0 Cells",x="UMAP1",y="UMAP2")),
+                                (DimPlot(subset(data,subset=Stage=="Time 1"), split.by=x, reduction="umap") + labs(title="Time 1 Cells",x="UMAP1",y="UMAP2")),
+                                (DimPlot(subset(data,subset=Stage=="Time 2"), split.by=x, reduction="umap") + labs(title="Time 2 Cells",x="UMAP1",y="UMAP2"))),
+                     ncol=1))
+
+}
+
+```
