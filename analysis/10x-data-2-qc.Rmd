@@ -266,7 +266,7 @@ Based on the QC of my scRNA-seq data:
 * setting a cutoff for percent.mt < 25 filters out some cells but fewer than when adding UMI and gene cutoffs
 * setting a cutoff for UMI count > 1000 & < 60000, gene count > 250 & < 7500, and percent.mt < 25 seems relatively good across datasets
 
-Decided to filter cells using percent percent mitochondrial reads < 25 cutoff threshold as a lenient threshold and UMI counts per cell > 1000 & < 60000, gene counts per cell > 250 & < 750, and percent mitochondrial reads < 25 as a conservative threshold.
+Decided to filter cells using percent percent mitochondrial reads < 25 cutoff threshold as a lenient threshold and UMI counts per cell > 1000 & < 60000, gene counts per cell > 250 & < 7500, and percent mitochondrial reads < 25 as a conservative threshold.
 
 ```{r, eval=FALSE}
 
