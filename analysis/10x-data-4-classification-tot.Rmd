@@ -504,9 +504,9 @@ VlnPlot(data, features=top5$gene[26:30], group.by="Cluster0.05", slot="data", pt
 markers.i <- FindMarkers(data, ident.1=c(1,4,5), ident.2=c(0,2,3), only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25) #ipsc
 markers.m <- FindMarkers(data, ident.1=c(0), ident.2=c(1,2,3,4,5), only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25) #msc
 markers.o <- FindMarkers(data, ident.1=c(2,3), ident.2=c(0,1,4,5), only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25) #osteo
-saveRDS(markers.i, file="./output/markers0.05-I.data.filterC.log.indv-cell.intNo0.reg-tot..rds")
-saveRDS(markers.m, file="./output/markers0.05-M.data.filterC.log.indv-cell.intNo0.reg-tot..rds")
-saveRDS(markers.o, file="./output/markers0.05-O.data.filterC.log.indv-cell.intNo0.reg-tot..rds")
+saveRDS(markers.i, file="./output/markers0.05-I.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+saveRDS(markers.m, file="./output/markers0.05-M.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+saveRDS(markers.o, file="./output/markers0.05-O.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
 
 VlnPlot(data, features=rownames(markers.i)[1:5], group.by="Cluster0.05", slot="data", pt.size=0, ncol=5) #CD24, POU5F1, APOE, TUBB2B, L1TD1
 VlnPlot(data, features=rownames(markers.m)[1:5], group.by="Cluster0.05", slot="data", pt.size=0, ncol=5) #MMP1, LGALS1, TAGLN2, VIM, TPM1
@@ -1273,7 +1273,6 @@ This cutoff scheme should work as is, but closely related gene expression patter
     + x.obl = +BGLAP [and] -PHEX,-MEPE
     + x.emb = +PHEX [and] -MEPE
     + x.min = +MEPE
-    + x.mat = +MEPE [and] -PHEX
     
 Assignments using 8 genes
 
@@ -1568,12 +1567,12 @@ hoc.assign.x.4 <- function(assignments) {
       if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==0 & assignments$PHEX[i]==1 & assignments$MEPE[i]==0) {assignments$assign[i] <- "x.embedding osteoblast"}
       if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==0 & assignments$PHEX[i]==1 & assignments$MEPE[i]==0) {assignments$assign[i] <- "x.embedding osteoblast"}
       if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==1 & assignments$PHEX[i]==1 & assignments$MEPE[i]==0) {assignments$assign[i] <- "x.embedding osteoblast"}
+      if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==0 & assignments$PHEX[i]==0 & assignments$MEPE[i]==1) {assignments$assign[i] <- "x.mineralizing osteoblast"}
       if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==0 & assignments$PHEX[i]==0 & assignments$MEPE[i]==1) {assignments$assign[i] <- "x.mineralizing osteoblast"}
       if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==1 & assignments$PHEX[i]==0 & assignments$MEPE[i]==1) {assignments$assign[i] <- "x.mineralizing osteoblast"}
       if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==1 & assignments$PHEX[i]==0 & assignments$MEPE[i]==1) {assignments$assign[i] <- "x.mineralizing osteoblast"}
       if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==0 & assignments$PHEX[i]==1 & assignments$MEPE[i]==1) {assignments$assign[i] <- "x.mineralizing osteoblast"}
       if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==1 & assignments$PHEX[i]==1 & assignments$MEPE[i]==1) {assignments$assign[i] <- "x.mineralizing osteoblast"}
-      if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==0 & assignments$PHEX[i]==0 & assignments$MEPE[i]==1) {assignments$assign[i] <- "x.maturing osteocyte"}
     }
     i=i+1
   }
@@ -1597,12 +1596,12 @@ hoc.assign.4 <- function(assignments) {
       if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==0 & assignments$PHEX[i]==1 & assignments$MEPE[i]==0) {assignments$assign[i] <- "embedding osteoblast"}
       if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==0 & assignments$PHEX[i]==1 & assignments$MEPE[i]==0) {assignments$assign[i] <- "embedding osteoblast"}
       if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==1 & assignments$PHEX[i]==1 & assignments$MEPE[i]==0) {assignments$assign[i] <- "embedding osteoblast"}
+      if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==0 & assignments$PHEX[i]==0 & assignments$MEPE[i]==1) {assignments$assign[i] <- "mineralizing osteoblast"}
       if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==0 & assignments$PHEX[i]==0 & assignments$MEPE[i]==1) {assignments$assign[i] <- "mineralizing osteoblast"}
       if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==1 & assignments$PHEX[i]==0 & assignments$MEPE[i]==1) {assignments$assign[i] <- "mineralizing osteoblast"}
       if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==1 & assignments$PHEX[i]==0 & assignments$MEPE[i]==1) {assignments$assign[i] <- "mineralizing osteoblast"}
       if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==0 & assignments$PHEX[i]==1 & assignments$MEPE[i]==1) {assignments$assign[i] <- "mineralizing osteoblast"}
       if(assignments$RUNX2[i]==1 & assignments$BGLAP[i]==1 & assignments$PHEX[i]==1 & assignments$MEPE[i]==1) {assignments$assign[i] <- "mineralizing osteoblast"}
-      if(assignments$RUNX2[i]==0 & assignments$BGLAP[i]==0 & assignments$PHEX[i]==0 & assignments$MEPE[i]==1) {assignments$assign[i] <- "maturing osteocyte"}
     }
     i=i+1
   }
