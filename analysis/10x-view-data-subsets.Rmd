@@ -1,0 +1,104 @@
+---
+title: "10x-view-data-subsets"
+author: "Genevieve Housman"
+date: "May 2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# View 10X Data Cellranger Subsets
+
+View plots of the following data subsets (conservative cell filter + integrated across individuals + non-zero genes + regress out UMI/mito)):
+
+* all cells from Time 0 collections
+* all cells from Time 1 collections
+* all cells from Time 2 collections
+
+
+```{r}
+
+#Load libraries
+library(Seurat)
+library(ggplot2)
+
+```
+
+## Time 0
+
+```{r}
+
+#Load data
+scrna <- "./data/cellranger-data-full/data.filterC.log.indv-cell.intNo0.reg-t0.rds"
+data <- readRDS(scrna)
+
+#UMAP plots
+DimPlot(data,
+        group.by="Stage",
+        reduction="umap",
+        cols="pink") +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(data,
+        group.by="Stage",
+        split.by="Species",
+        reduction="umap",
+        cols="pink") +
+  labs(x="UMAP1",y="UMAP2")
+
+rm(data)
+
+```
+
+## Time 1
+
+```{r}
+
+#Load data
+scrna <- "./data/cellranger-data-full/data.filterC.log.indv-cell.intNo0.reg-t1.rds"
+data <- readRDS(scrna)
+
+#UMAP plots
+DimPlot(data,
+        group.by="Stage",
+        reduction="umap",
+        cols="mediumorchid") +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(data,
+        group.by="Stage",
+        split.by="Species",
+        reduction="umap",
+        cols="mediumorchid") +
+  labs(x="UMAP1",y="UMAP2")
+
+rm(data)
+
+```
+
+## Time 2
+
+```{r}
+
+#Load data
+scrna <- "./data/cellranger-data-full/data.filterC.log.indv-cell.intNo0.reg-t2.rds"
+data <- readRDS(scrna)
+
+#UMAP plots
+DimPlot(data,
+        group.by="Stage",
+        reduction="umap",
+        cols="dodgerblue") +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(data,
+        group.by="Stage",
+        split.by="Species",
+        reduction="umap",
+        cols="dodgerblue") +
+  labs(x="UMAP1",y="UMAP2")
+
+rm(data)
+
+```

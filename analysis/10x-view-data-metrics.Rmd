@@ -1,7 +1,7 @@
 ---
 title: "10x-view-data-metrics"
 author: "Genevieve Housman"
-date: "August 2020"
+date: "May 2021"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -11,9 +11,9 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## View 10X Data Cellranger Metrics
+# View 10X Data Cellranger Metrics
 
-Data being examined comes from 6 humans and 6 chimpanzees.
+Data being examined come from 6 humans and 6 chimpanzees.
 
 * GHO-1:  H1-I + C1-I (iPSCs from H23555 and C8861)
 * GHO-2:  H1-M + C1-M (iPSC-derived MSCs from H23555 and C8861)
@@ -102,7 +102,7 @@ metrics$reads_mapped_confidently_to_transcriptome <- metrics$Number.of.Reads * m
 
 ```
 
-### Visualize read alignment metrics:
+## Visualize read alignment metrics:
 
 ```{r}
 
@@ -518,11 +518,10 @@ ggplot(subset(metrics,Alignment.Type=='HumanOrthoV2')) +
 
 ```
 
-### Conclusion after viewing 10X cellranger data metrics:
+## Conclusions
 
 * Number of total reads sequenced varied slightly across collections
 * Number of reads that were retained (confidently mapped to the transcriptome) were similar across collections
 * Number of reads that were retained (confidently mapped to the transcriptome) were similar whether using hg38 or panTro6 reference
 * 10X collections from Time 2 generally had higher sequencing saturation than from Time 0 or Time 1
 * Collection HOU-15 (H3+C3 Time 2) has higher reads/cell, UMIs/cell, and genes/per cell
-* Using ortho-exon v2 (as compared to v1) results in 5% more reads being retained (confidently mapped to the transcriptome)

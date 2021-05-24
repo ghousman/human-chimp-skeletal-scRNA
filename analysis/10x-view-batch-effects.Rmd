@@ -1,7 +1,7 @@
 ---
 title: "10x-view-batch-effects"
 author: "Genevieve Housman"
-date: "August 2020"
+date: "May 2021"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -11,9 +11,9 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Viewing of Known Batch Effects in Overall Study Design
+# Viewing of Known Batch Effects in Overall Study Design
 
-Data being examined comes from 6 humans and 6 chimpanzees.
+Data being examined come from 6 humans and 6 chimpanzees.
 
 * GHO-1:  H1-I + C1-I (iPSCs from H23555 and C8861)
 * GHO-2:  H1-M + C1-M (iPSC-derived MSCs from H23555 and C8861)
