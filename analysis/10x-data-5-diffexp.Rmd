@@ -470,15 +470,19 @@ cd /project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA/code
 sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 stage
 sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 cluster
 sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 adhoc
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostcluster0.50
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostcluster0.75
 sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostadhoc
-sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostadhocX #error
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostadhocX
 sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostadhoc.T2
-sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostadhocX.T2 #error
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostadhocX.T2
 
 #pseudobulk DE analyses with replicate 1 samples removed
 sbatch ./DEdreamsubset.sh tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh tot keepRep1 FALSE TRUE logcpm 0 formula6 stage
 sbatch ./DEdreamsubset.sh tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh tot keepRep1 FALSE TRUE logcpm 0 formula6 cluster
 sbatch ./DEdreamsubset.sh tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh tot keepRep1 FALSE TRUE logcpm 0 formula6 adhoc
+sbatch ./DEdreamsubset.sh tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh tot keepRep1 FALSE TRUE logcpm 0 formula6 ostcluster0.50
+sbatch ./DEdreamsubset.sh tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh tot keepRep1 FALSE TRUE logcpm 0 formula6 ostcluster0.75
 sbatch ./DEdreamsubset.sh tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh tot keepRep1 FALSE TRUE logcpm 0 formula6 ostadhoc
 sbatch ./DEdreamsubset.sh tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh tot keepRep1 FALSE TRUE logcpm 0 formula6 ostadhocX
 sbatch ./DEdreamsubset.sh tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh tot keepRep1 FALSE TRUE logcpm 0 formula6 ostadhoc.T2
@@ -488,6 +492,8 @@ sbatch ./DEdreamsubset.sh tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh tot keepRep1 
 sbatch ./DEdreamsubset.sh tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh tot keepRep2 FALSE TRUE logcpm 0 formula6 stage
 sbatch ./DEdreamsubset.sh tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh tot keepRep2 FALSE TRUE logcpm 0 formula6 cluster
 sbatch ./DEdreamsubset.sh tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh tot keepRep2 FALSE TRUE logcpm 0 formula6 adhoc
+sbatch ./DEdreamsubset.sh tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh tot keepRep2 FALSE TRUE logcpm 0 formula6 ostcluster0.50
+sbatch ./DEdreamsubset.sh tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh tot keepRep2 FALSE TRUE logcpm 0 formula6 ostcluster0.75
 sbatch ./DEdreamsubset.sh tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh tot keepRep2 FALSE TRUE logcpm 0 formula6 ostadhoc
 sbatch ./DEdreamsubset.sh tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh tot keepRep2 FALSE TRUE logcpm 0 formula6 ostadhocX
 sbatch ./DEdreamsubset.sh tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh tot keepRep2 FALSE TRUE logcpm 0 formula6 ostadhoc.T2
@@ -497,10 +503,12 @@ sbatch ./DEdreamsubset.sh tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh tot keepRep2 
 sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 stage
 sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 cluster
 sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 adhoc
+sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 ostcluster0.50
+sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 ostcluster0.75
 sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 ostadhoc
-sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 ostadhocX #error
+sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 ostadhocX
 sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 ostadhoc.T2
-sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 ostadhocX.T2 #error
+sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 ostadhocX.T2
 
 #single-cell DE analyses - NOT RUN
 #sbatch ./DEdream.sh tot.sc.pch20.fml6.nofc.bh tot sc TRUE pch 0.2 formula6 stage
@@ -516,6 +524,8 @@ Similar trends in DE gene numbers seen when replicate 1 samples removed, replica
 compare <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.stage.rds")
 compare <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.cluster.rds")
 compare <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.adhoc.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.50.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.75.rds")
 compare <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.rds")
 compare <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhocX.rds")
 compare <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.T2.rds")
@@ -524,6 +534,8 @@ compare <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostad
 compare <- readRDS("./data/de-data/DEdream.tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh.stage.rds")
 compare <- readRDS("./data/de-data/DEdream.tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh.cluster.rds")
 compare <- readRDS("./data/de-data/DEdream.tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh.adhoc.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.50.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.75.rds")
 compare <- readRDS("./data/de-data/DEdream.tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.rds")
 compare <- readRDS("./data/de-data/DEdream.tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh.ostadhocX.rds")
 compare <- readRDS("./data/de-data/DEdream.tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.T2.rds")
@@ -532,6 +544,8 @@ compare <- readRDS("./data/de-data/DEdream.tot.keepRep1.pseudo.logcpm0.fml6.nofc
 compare <- readRDS("./data/de-data/DEdream.tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh.stage.rds")
 compare <- readRDS("./data/de-data/DEdream.tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh.cluster.rds")
 compare <- readRDS("./data/de-data/DEdream.tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh.adhoc.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.50.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.75.rds")
 compare <- readRDS("./data/de-data/DEdream.tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.rds")
 compare <- readRDS("./data/de-data/DEdream.tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh.ostadhocX.rds")
 compare <- readRDS("./data/de-data/DEdream.tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.T2.rds")
@@ -540,6 +554,8 @@ compare <- readRDS("./data/de-data/DEdream.tot.keepRep2.pseudo.logcpm0.fml6.nofc
 compare <- readRDS("./data/de-data/DEdream.tot.subNum.pseudo.logcpm0.fml6.nofc.bh.stage.rds")
 compare <- readRDS("./data/de-data/DEdream.tot.subNum.pseudo.logcpm0.fml6.nofc.bh.cluster.rds")
 compare <- readRDS("./data/de-data/DEdream.tot.subNum.pseudo.logcpm0.fml6.nofc.bh.adhoc.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.subNum.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.50.rds")
+compare <- readRDS("./data/de-data/DEdream.tot.subNum.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.75.rds")
 compare <- readRDS("./data/de-data/DEdream.tot.subNum.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.rds")
 compare <- readRDS("./data/de-data/DEdream.tot.subNum.pseudo.logcpm0.fml6.nofc.bh.ostadhocX.rds")
 compare <- readRDS("./data/de-data/DEdream.tot.subNum.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.T2.rds")

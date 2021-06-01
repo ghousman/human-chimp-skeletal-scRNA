@@ -48,13 +48,13 @@ for (x in clusters) {
   
   print(DimPlot(data, group.by=x, reduction="umap") + labs(x="UMAP1",y="UMAP2"))
   
-  print(CombinePlots(plots=list((DimPlot(subset(data,subset=Species=="Human"), split.by=x, reduction="umap") + labs(title="Human Cells",x="UMAP1",y="UMAP2")),
-                                (DimPlot(subset(data,subset=Species=="Chimp"), split.by=x, reduction="umap") + labs(title="Chimp Cells",x="UMAP1",y="UMAP2"))),
+  print(CombinePlots(plots=list((DimPlot(subset(data,subset=Species=="Human"), group.by=x, split.by=x, reduction="umap") + labs(title="Human Cells",x="UMAP1",y="UMAP2")),
+                                (DimPlot(subset(data,subset=Species=="Chimp"), group.by=x, split.by=x, reduction="umap") + labs(title="Chimp Cells",x="UMAP1",y="UMAP2"))),
                      ncol=1))
         
-  print(CombinePlots(plots=list((DimPlot(subset(data,subset=Stage=="Time 0"), split.by=x, reduction="umap") + labs(title="Time 0 Cells",x="UMAP1",y="UMAP2")),
-                                (DimPlot(subset(data,subset=Stage=="Time 1"), split.by=x, reduction="umap") + labs(title="Time 1 Cells",x="UMAP1",y="UMAP2")),
-                                (DimPlot(subset(data,subset=Stage=="Time 2"), split.by=x, reduction="umap") + labs(title="Time 2 Cells",x="UMAP1",y="UMAP2"))),
+  print(CombinePlots(plots=list((DimPlot(subset(data,subset=Stage=="Time 0"), group.by=x, split.by=x, reduction="umap") + labs(title="Time 0 Cells",x="UMAP1",y="UMAP2")),
+                                (DimPlot(subset(data,subset=Stage=="Time 1"), group.by=x, split.by=x, reduction="umap") + labs(title="Time 1 Cells",x="UMAP1",y="UMAP2")),
+                                (DimPlot(subset(data,subset=Stage=="Time 2"), group.by=x, split.by=x, reduction="umap") + labs(title="Time 2 Cells",x="UMAP1",y="UMAP2"))),
                      ncol=1))
 
 }

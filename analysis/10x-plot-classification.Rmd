@@ -166,11 +166,28 @@ DotPlot(subset(data,subset=Species=="Chimp"), features=c("COL1A1","CD44","POU5F1
 #DotPlot(subset(data,subset=Species=="Chimp"), features=c("COL1A1","CD44","POU5F1"), group.by="Stage", dot.scale=20, cols=c("grey99","pink"), col.max=5)
 #DotPlot(subset(data,subset=Species=="Chimp"), features=c("COL1A1","CD44","POU5F1"), group.by="Stage", dot.scale=20, cols=c("grey99","mediumorchid"), col.max=5)
 #DotPlot(subset(data,subset=Species=="Chimp"), features=c("COL1A1","CD44","POU5F1"), group.by="Stage", dot.scale=20, cols=c("grey99","dodgerblue"), col.max=5)
+VlnPlot(data,
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="Stage",
+        cols=c("pink","mediumorchid","dodgerblue"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="Stage",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="Stage",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
 
 ```
 
 ### Enrichment
-Assess GO functional enrichment of genes defining each cluster.
+Assess GO functional enrichment of genes defining each stage of differentiation.
 
 ```{r, eval=FALSE}
 
@@ -436,7 +453,7 @@ rm(t0,t1,t2,avg.t0,avg.t1,avg.t2,t.avg)
 
 ## Unsupervised clustering
 
-### Plots
+### Plots (general clusters)
 Make plots of cell classification findings.
 
 #### Resolution=0.05
@@ -513,6 +530,24 @@ DotPlot(subset(data,subset=Species=="Chimp"),
         cols=c("grey99","black"),
         col.max=5)
 
+VlnPlot(data,
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="Cluster0.05",
+        cols=c("pink","pink4","grey","mediumorchid","dodgerblue","navyblue"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="Cluster0.05",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="Cluster0.05",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
 ```
 
 #### Resolution=0.25
@@ -583,8 +618,8 @@ VlnPlot(data,
         features=c("POU5F1","CD44","COL1A1"),
         group.by="Cluster0.25",
         cols=c("pink","palevioletred1","pink3","pink4","grey40","grey",
-                                      "mediumorchid","orchid4","purple",
-                                      "dodgerblue","dodgerblue4","navyblue"),
+               "mediumorchid","orchid4","purple",
+               "dodgerblue","dodgerblue4","navyblue"),
         pt.size=0)
 DotPlot(subset(data,subset=Species=="Human"),
         features=c("COL1A1","CD44","POU5F1"),
@@ -597,6 +632,27 @@ DotPlot(subset(data,subset=Species=="Chimp"),
         dot.scale=20,
         cols=c("grey99","black"),
         col.max=5)
+
+VlnPlot(data,
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="Cluster0.25",
+        cols=c("pink","palevioletred1","pink3","pink4","grey40","grey",
+               "mediumorchid","orchid4","purple",
+               "dodgerblue","dodgerblue4","navyblue"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="Cluster0.25",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="Cluster0.25",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
 ```
 
 #### Resolution=0.50
@@ -685,6 +741,533 @@ DotPlot(subset(data,subset=Species=="Human"),
 DotPlot(subset(data,subset=Species=="Chimp"),
         features=c("COL1A1","CD44","POU5F1"),
         group.by="Cluster0.50",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
+VlnPlot(data,
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="Cluster0.50",
+        cols=c("pink","palevioletred1","palevioletred3","palevioletred4",
+               "pink3","pink4","grey40","grey",
+               "mediumorchid","orchid2","orchid4","purple",
+               "dodgerblue","deepskyblue2","dodgerblue4","navyblue"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="Cluster0.50",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="Cluster0.50",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
+```
+
+#### Resolution=0.75
+
+```{r}
+
+#umap
+DimPlot(data,
+        group.by="Cluster0.75",
+        reduction="umap",
+        cols=c("pink","palevioletred1","palevioletred3","palevioletred4",
+               "pink3","pink4","grey40","grey",
+               "mediumorchid","orchid2","orchid4","purple",
+               "dodgerblue","dodgerblue4","deepskyblue2","navyblue",
+               "lightblue1","royalblue3","grey","black")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(data,
+        group.by="Cluster0.75",
+        split.by="Species",
+        reduction="umap",
+        cols=c("pink","palevioletred1","palevioletred3","palevioletred4",
+               "pink3","pink4","grey40","grey",
+               "mediumorchid","orchid2","orchid4","purple",
+               "dodgerblue","dodgerblue4","deepskyblue2","navyblue",
+               "lightblue1","royalblue3","grey","black")) +
+  labs(x="UMAP1",y="UMAP2")
+
+#cell counts
+ggplot(data@meta.data, aes(x=Cluster0.75, fill=Cluster0.75)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("pink","palevioletred1","palevioletred3","palevioletred4",
+                                      "pink3","pink4","grey40","grey",
+                                      "mediumorchid","orchid2","orchid4","purple",
+                                      "dodgerblue","dodgerblue4","deepskyblue2","navyblue",
+                                      "lightblue1","royalblue3","grey","black")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+
+#umi counts
+ggplot(data@meta.data, aes(x=Cluster0.75, y=nCount_RNA, fill=Cluster0.75)) +
+  geom_violin(width=0.8) +
+  labs(y="UMIs per Cell", x="") +
+  scale_fill_manual(name="", values=c("pink","palevioletred1","palevioletred3","palevioletred4",
+                                      "pink3","pink4","grey40","grey",
+                                      "mediumorchid","orchid2","orchid4","purple",
+                                      "dodgerblue","dodgerblue4","deepskyblue2","navyblue",
+                                      "lightblue1","royalblue3","grey","black")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+
+#gene counts
+ggplot(data@meta.data, aes(x=Cluster0.75, y=nFeature_RNA, fill=Cluster0.75)) +
+  geom_violin(width=0.8) +
+  labs(y="Genes per Cell", x="") +
+  scale_fill_manual(name="", values=c("pink","palevioletred1","palevioletred3","palevioletred4",
+                                      "pink3","pink4","grey40","grey",
+                                      "mediumorchid","orchid2","orchid4","purple",
+                                      "dodgerblue","dodgerblue4","deepskyblue2","navyblue",
+                                      "lightblue1","royalblue3","grey","black")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+
+#marker genes
+VlnPlot(data,
+        features=c("POU5F1","CD44","COL1A1"),
+        group.by="Cluster0.75",
+        cols=c("pink","palevioletred1","palevioletred3","palevioletred4",
+               "pink3","pink4","grey40","grey",
+               "mediumorchid","orchid2","orchid4","purple",
+               "dodgerblue","dodgerblue4","deepskyblue2","navyblue",
+               "lightblue1","royalblue3","grey","black"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("COL1A1","CD44","POU5F1"),
+        group.by="Cluster0.75",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("COL1A1","CD44","POU5F1"),
+        group.by="Cluster0.75",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
+VlnPlot(data,
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="Cluster0.75",
+        cols=c("pink","palevioletred1","palevioletred3","palevioletred4",
+               "pink3","pink4","grey40","grey",
+               "mediumorchid","orchid2","orchid4","purple",
+               "dodgerblue","dodgerblue4","deepskyblue2","navyblue",
+               "lightblue1","royalblue3","grey","black"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="Cluster0.75",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="Cluster0.75",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
+```
+
+### Plots (osteogenic clusters)
+Make plots of cell classification findings.
+
+#### Resolution=0.05
+
+```{r}
+
+#umap
+DimPlot(data,
+        group.by="OstCluster0.05",
+        reduction="umap",
+        cols=c("grey99","dodgerblue","navyblue")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(data,
+        group.by="OstCluster0.05",
+        split.by="Species",
+        reduction="umap",
+        cols=c("grey99","dodgerblue","navyblue")) +
+  labs(x="UMAP1",y="UMAP2")
+
+#cell counts
+ggplot(data@meta.data, aes(x=OstCluster0.05, fill=OstCluster0.05)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("grey99","dodgerblue","navyblue")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12),
+        axis.text.x=element_text(angle=90))
+
+#umi counts
+ggplot(data@meta.data, aes(x=OstCluster0.05, y=nCount_RNA, fill=OstCluster0.05)) +
+  geom_violin(width=0.8) +
+  labs(y="UMIs per Cell", x="") +
+  scale_fill_manual(name="", valuesc("grey99","dodgerblue","navyblue")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12),
+        axis.text.x=element_text(angle=90))
+
+#gene counts
+ggplot(data@meta.data, aes(x=OstCluster0.05, y=nFeature_RNA, fill=OstCluster0.05)) +
+  geom_violin(width=0.8) +
+  labs(y="Genes per Cell", x="") +
+  scale_fill_manual(name="", values=c("grey99","dodgerblue","navyblue")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12),
+        axis.text.x=element_text(angle=90))
+
+#marker genes
+VlnPlot(data,
+        features=c("POU5F1","CD44","COL1A1"),
+        group.by="OstCluster0.05",
+        cols=c("grey99","dodgerblue","navyblue"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("COL1A1","CD44","POU5F1"),
+        group.by="OstCluster0.05", dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("COL1A1","CD44","POU5F1"),
+        group.by="OstCluster0.05",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
+VlnPlot(data,
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstCluster0.05",
+        cols=c("grey99","dodgerblue","navyblue"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstCluster0.05",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstCluster0.05",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
+```
+
+#### Resolution=0.25
+
+```{r}
+
+#umap
+DimPlot(data,
+        group.by="OstCluster0.25",
+        reduction="umap",
+        cols=c("grey99","dodgerblue","dodgerblue4","navyblue")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(data,
+        group.by="OstCluster0.25",
+        split.by="Species",
+        reduction="umap",
+        cols=c("grey99","dodgerblue","dodgerblue4","navyblue")) +
+  labs(x="UMAP1",y="UMAP2")
+
+#cell counts
+ggplot(data@meta.data, aes(x=OstCluster0.25, fill=OstCluster0.25)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("grey99","dodgerblue","dodgerblue4","navyblue")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+
+#umi counts
+ggplot(data@meta.data, aes(x=OstCluster0.25, y=nCount_RNA, fill=OstCluster0.25)) +
+  geom_violin(width=0.8) +
+  labs(y="UMIs per Cell", x="") +
+  scale_fill_manual(name="", values=c("grey99","dodgerblue","dodgerblue4","navyblue")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+
+#gene counts
+ggplot(data@meta.data, aes(x=OstCluster0.25, y=nFeature_RNA, fill=OstCluster0.25)) +
+  geom_violin(width=0.8) +
+  labs(y="Genes per Cell", x="") +
+  scale_fill_manual(name="", values=c("grey99","dodgerblue","dodgerblue4","navyblue")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+
+#marker genes
+VlnPlot(data,
+        features=c("POU5F1","CD44","COL1A1"),
+        group.by="OstCluster0.25",
+        cols=c("grey99","dodgerblue","dodgerblue4","navyblue"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("COL1A1","CD44","POU5F1"),
+        group.by="OstCluster0.25", dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("COL1A1","CD44","POU5F1"),
+        group.by="OstCluster0.25",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
+VlnPlot(data,
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstCluster0.25",
+        cols=c("grey99","dodgerblue","dodgerblue4","navyblue"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstCluster0.25",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstCluster0.25",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
+```
+
+#### Resolution=0.50
+
+```{r}
+
+#umap
+DimPlot(data,
+        group.by="OstCluster0.50",
+        reduction="umap",
+        cols=c("grey99","dodgerblue","deepskyblue2","dodgerblue4","navyblue")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(data,
+        group.by="OstCluster0.50",
+        split.by="Species",
+        reduction="umap",
+        cols=c("grey99","dodgerblue","deepskyblue2","dodgerblue4","navyblue")) +
+  labs(x="UMAP1",y="UMAP2")
+
+#cell counts
+ggplot(data@meta.data, aes(x=OstCluster0.50, fill=OstCluster0.50)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("grey99","dodgerblue","deepskyblue2","dodgerblue4","navyblue")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+
+#umi counts
+ggplot(data@meta.data, aes(x=OstCluster0.50, y=nCount_RNA, fill=OstCluster0.50)) +
+  geom_violin(width=0.8) +
+  labs(y="UMIs per Cell", x="") +
+  scale_fill_manual(name="", values=c("grey99","dodgerblue","deepskyblue2","dodgerblue4","navyblue")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+
+#gene counts
+ggplot(data@meta.data, aes(x=OstCluster0.50, y=nFeature_RNA, fill=OstCluster0.50)) +
+  geom_violin(width=0.8) +
+  labs(y="Genes per Cell", x="") +
+  scale_fill_manual(name="", values=c("grey99","dodgerblue","deepskyblue2","dodgerblue4","navyblue")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+
+#marker genes
+VlnPlot(data,
+        features=c("POU5F1","CD44","COL1A1"),
+        group.by="OstCluster0.50",
+        cols=c("grey99","dodgerblue","deepskyblue2","dodgerblue4","navyblue"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("COL1A1","CD44","POU5F1"),
+        group.by="OstCluster0.50",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("COL1A1","CD44","POU5F1"),
+        group.by="OstCluster0.50",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
+VlnPlot(data,
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstCluster0.50",
+        cols=c("grey99","dodgerblue","deepskyblue2","dodgerblue4","navyblue"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstCluster0.50",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstCluster0.50",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
+```
+
+#### Resolution=0.75
+
+```{r}
+
+#umap
+DimPlot(data,
+        group.by="OstCluster0.75",
+        reduction="umap",
+        cols=c("grey99",
+               "dodgerblue","dodgerblue4","deepskyblue2","navyblue",
+               "lightblue1","royalblue3","grey","black")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(data,
+        group.by="OstCluster0.75",
+        split.by="Species",
+        reduction="umap",
+        cols=c("grey99",
+               "dodgerblue","dodgerblue4","deepskyblue2","navyblue",
+               "lightblue1","royalblue3","grey","black")) +
+  labs(x="UMAP1",y="UMAP2")
+
+#cell counts
+ggplot(data@meta.data, aes(x=OstCluster0.75, fill=OstCluster0.75)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("grey99",
+                                      "dodgerblue","dodgerblue4","deepskyblue2","navyblue",
+                                      "lightblue1","royalblue3","grey","black")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+
+#umi counts
+ggplot(data@meta.data, aes(x=OstCluster0.75, y=nCount_RNA, fill=OstCluster0.75)) +
+  geom_violin(width=0.8) +
+  labs(y="UMIs per Cell", x="") +
+  scale_fill_manual(name="", values=c("grey99",
+                                      "dodgerblue","dodgerblue4","deepskyblue2","navyblue",
+                                      "lightblue1","royalblue3","grey","black")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+
+#gene counts
+ggplot(data@meta.data, aes(x=OstCluster0.75, y=nFeature_RNA, fill=OstCluster0.75)) +
+  geom_violin(width=0.8) +
+  labs(y="Genes per Cell", x="") +
+  scale_fill_manual(name="", values=c("grey99",
+                                      "dodgerblue","dodgerblue4","deepskyblue2","navyblue",
+                                      "lightblue1","royalblue3","grey","black")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+
+#marker genes
+VlnPlot(data,
+        features=c("POU5F1","CD44","COL1A1"),
+        group.by="OstCluster0.75",
+        cols=c("grey99",
+               "dodgerblue","dodgerblue4","deepskyblue2","navyblue",
+               "lightblue1","royalblue3","grey","black"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("COL1A1","CD44","POU5F1"),
+        group.by="OstCluster0.75",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("COL1A1","CD44","POU5F1"),
+        group.by="OstCluster0.75",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
+VlnPlot(data,
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstCluster0.75",
+        cols=c("grey99",
+               "dodgerblue","dodgerblue4","deepskyblue2","navyblue",
+               "lightblue1","royalblue3","grey","black"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstCluster0.75",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstCluster0.75",
         dot.scale=20,
         cols=c("grey99","black"),
         col.max=5)
@@ -889,11 +1472,10 @@ goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Cluster0.50(iPSC.c3) Genes")
 
 #resolution=0.50-iPSC.c4
-#no genes
-#geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==12)
-#goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
-#goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
-#goEnPlot(goTot,title="Cluster0.50(iPSC.c4) Genes")
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==12)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.50(iPSC.c4) Genes")
 
 #resolution=0.50-iPSC.c5
 geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==11)
@@ -908,18 +1490,16 @@ goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Cluster0.50(iPSC.c6) Genes")
 
 #resolution=0.50-iPSC.c7
-#no genes
-#geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==14)
-#goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
-#goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
-#goEnPlot(goTot,title="Cluster0.50(iPSC.c7) Genes")
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==14)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.50(iPSC.c7) Genes")
 
 #resolution=0.50-iPSC.c8
-#no genes
-#geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==15)
-#goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
-#goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
-#goEnPlot(goTot,title="Cluster0.50(iPSC.c8) Genes")
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==15)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.50(iPSC.c8) Genes")
 
 #resolution=0.50-MSC.c1
 geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==1)
@@ -952,11 +1532,10 @@ goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Cluster0.50(Osteogenic.c1) Genes")
 
 #resolution=0.50-Osteogenic.c2
-#no genes
-#geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==13)
-#goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
-#goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
-#goEnPlot(goTot,title="Cluster0.50(Osteogenic.c2) Genes")
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==13)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.50(Osteogenic.c2) Genes")
 
 #resolution=0.50-Osteogenic.c3
 geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==8)
@@ -969,6 +1548,137 @@ geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter
 goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Cluster0.50(Osteogenic.c4) Genes")
+
+rm(genes,geneSub,goTot)
+
+```
+
+#### Resolution=0.75
+
+```{r}
+
+#resolution=0.75
+genes <- readRDS("./output/markers0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+
+#resolution=0.75-iPSC.c1
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==1)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.75(iPSC.c1) Genes")
+
+#resolution=0.75-iPSC.c2
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==3)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.75(iPSC.c2) Genes")
+
+#resolution=0.75-iPSC.c3
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==7)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.75(iPSC.c3) Genes")
+
+#resolution=0.75-iPSC.c4
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==13)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.75(iPSC.c4) Genes")
+
+#resolution=0.75-iPSC.c5
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==15)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.75(iPSC.c5) Genes")
+
+#resolution=0.75-iPSC.c6
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==11)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.75(iPSC.c6) Genes")
+
+#resolution=0.75-iPSC.c7
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==14)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.75(iPSC.c7) Genes")
+
+#resolution=0.75-iPSC.c8
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==18)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.75(iPSC.c8) Genes")
+
+#resolution=0.75-MSC.c1
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==0)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.75(MSC.c1) Genes")
+
+#resolution=0.75-MSC.c2
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==4)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.75(MSC.c2) Genes")
+
+#resolution=0.75-MSC.c3
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==2)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.75(MSC.c3) Genes")
+
+#resolution=0.75-MSC.c4
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==9)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.75(MSC.c4) Genes")
+
+#resolution=0.75-Osteogenic.c1
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==5)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.75(Osteogenic.c1) Genes")
+
+#resolution=0.75-Osteogenic.c2
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==8)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.75(Osteogenic.c2) Genes")
+
+#resolution=0.75-Osteogenic.c3
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==10)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.75(Osteogenic.c3) Genes")
+
+#resolution=0.75-Osteogenic.c4
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==6)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.75(Osteogenic.c4) Genes")
+
+#resolution=0.75-Osteogenic.c5
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==12)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.75(Osteogenic.c5) Genes")
+
+#resolution=0.75-Osteogenic.c6
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==16)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.75(Osteogenic.c6) Genes")
+
+#resolution=0.75-Osteogenic.c7
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==17)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.75(Osteogenic.c7) Genes")
+
+#resolution=0.75-Osteogenic.c8
+geneSub <- genes %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC) %>% filter(cluster==19)
+goTot <- goEnrich(totGenes=geneTot, deGenes=geneSub$gene, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Cluster0.75(Osteogenic.c8) Genes")
 
 rm(genes,geneSub,goTot)
 
@@ -1473,6 +2183,227 @@ ggpairs(avg,
                        "Osteogenic.c3",
                        "Osteogenic.c4"),
         mapping=ggplot2::aes(alpha=0.5))
+```
+
+```{r}
+
+rm(tmm,avg)
+
+```
+
+#### Resolution=0.75
+
+```{r}
+
+# Compile log2 normalized gene expression data
+#make count matrix and metadata for edgeR object - pseudobulk (pseudocounts, filter genes mean(log2cpm)>0)
+cell.subset <- c("iPSC.c1","iPSC.c2","iPSC.c3","iPSC.c4","iPSC.c5","iPSC.c6","iPSC.c7","iPSC.c8",
+                 "MSC.c1","MSC.c2","MSC.c3","MSC.c4",
+                 "Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c4","Osteogenic.c5","Osteogenic.c6","Osteogenic.c7","Osteogenic.c8")
+counts <- c()
+metadata <- c()
+labels <- c()
+for(j in cell.subset) {
+  dataSub <- subset(data,subset=Cluster0.75==j)
+  for (i in unique(dataSub@meta.data$Individual.Replicate)) {
+    x.lab <- paste0(i,"_",j)
+    w <- which(dataSub@meta.data$Individual.Replicate==i)
+    if (length(w)>0) {
+      x.spp <- dataSub@meta.data$Species[w][1]
+      x.col <- dataSub@meta.data$Collection[w][1]
+      x.ind <- dataSub@meta.data$Individual[w][1]
+      x.rep <- dataSub@meta.data$Replicate[w][1]
+      x.idr <- dataSub@meta.data$Individual.Replicate[w][1]
+      x.clt <- dataSub@meta.data$Cluster0.75[w][1]
+      if (length(w)==1) {
+        x.cnt <- dataSub@assays$RNA@counts[,w]
+      } else {
+        x.cnt <- Matrix::rowSums(dataSub@assays$RNA@counts[,w])
+      }
+      counts <- cbind(counts, x.cnt)
+      metadata <- rbind(metadata, c(x.lab, x.spp, x.col, x.ind, x.rep, x.idr, x.clt))
+      labels <- c(labels, x.lab)
+    }
+  }
+}
+colnames(counts) <- labels
+rownames(metadata) <- labels
+colnames(metadata) <- c("Sample","Species","Collection","Individual","Replicate","Individual.Replicate","Cluster")
+metadata <- as.data.frame(metadata)
+#remove mitochondrial and ribosomal genes
+counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
+#make edgeR object
+dge <- DGEList(counts)
+meta_dge <- dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, metadata)
+dge$samples <- meta_dge
+rm(counts,metadata,meta_dge)
+#filter genes
+keep <- rowMeans(edgeR::cpm(dge,log=TRUE,prior.count=0.25))>0
+dge$counts <- dge$counts[keep,]
+#normalize data
+dge <- calcNormFactors(dge, method="TMM")
+#log2 transformed cpm
+tmm <- edgeR::cpm(dge,normalized.lib.sizes=TRUE,log=TRUE,prior.count=0.25)
+
+rm(cell.subset,labels,dataSub,i,j,w,x.lab,x.spp,x.col,x.ind,x.rep,x.idr,x.clt,x.cnt,keep,dge)
+
+```
+
+Keep human and chimp samples together.
+
+```{r}
+
+avg <- data.frame("iPSC.c1"=rowMeans(tmm[,1:14]),
+                  "iPSC.c2"=rowMeans(tmm[,15:28]),
+                  "iPSC.c3"=rowMeans(tmm[,29:42]),
+                  "iPSC.c4"=rowMeans(tmm[,43:56]),
+                  "iPSC.c5"=rowMeans(tmm[,57:69]),
+                  "iPSC.c6"=rowMeans(tmm[,70:83]),
+                  "iPSC.c7"=rowMeans(tmm[,84:97]),
+                  "iPSC.c8"=rowMeans(tmm[,98:108]),
+                  "MSC.c1"=rowMeans(tmm[,109:122]),
+                  "MSC.c2"=rowMeans(tmm[,123:136]),
+                  "MSC.c3"=rowMeans(tmm[,137:150]),
+                  "MSC.c4"=rowMeans(tmm[,151:163]),
+                  "Osteogenic.c1"=rowMeans(tmm[,164:177]),
+                  "Osteogenic.c2"=rowMeans(tmm[,178:191]),
+                  "Osteogenic.c3"=rowMeans(tmm[,192:205]),
+                  "Osteogenic.c4"=rowMeans(tmm[,206:219]),
+                  "Osteogenic.c5"=rowMeans(tmm[,220:233]),
+                  "Osteogenic.c6"=rowMeans(tmm[,234:240]),
+                  "Osteogenic.c7"=rowMeans(tmm[,241:254]),
+                  "Osteogenic.c8"=rowMeans(tmm[,255:268]),
+                  row.names=rownames(tmm))
+
+ggpairs(avg,
+        columns=1:20,
+        columnLabels=c("iPSC.c1",
+                       "iPSC.c2",
+                       "iPSC.c3",
+                       "iPSC.c4",
+                       "iPSC.c5",
+                       "iPSC.c6",
+                       "iPSC.c7",
+                       "iPSC.c8",
+                       "MSC.c1",
+                       "MSC.c2",
+                       "MSC.c3",
+                       "MSC.c4",
+                       "Osteogenic.c1",
+                       "Osteogenic.c2",
+                       "Osteogenic.c3",
+                       "Osteogenic.c4",
+                       "Osteogenic.c5",
+                       "Osteogenic.c6",
+                       "Osteogenic.c7",
+                       "Osteogenic.c8"),
+        mapping=ggplot2::aes(alpha=0.5))
+
+```
+
+Look at humans separately.
+
+```{r}
+
+avg <- data.frame("iPSC.c1"=rowMeans(tmm[,1:7]),
+                  "iPSC.c2"=rowMeans(tmm[,15:21]),
+                  "iPSC.c3"=rowMeans(tmm[,29:35]),
+                  "iPSC.c4"=rowMeans(tmm[,43:49]),
+                  "iPSC.c5"=rowMeans(tmm[,57:62]),
+                  "iPSC.c6"=rowMeans(tmm[,70:76]),
+                  "iPSC.c7"=rowMeans(tmm[,84:90]),
+                  "iPSC.c8"=rowMeans(tmm[,98:102]),
+                  "MSC.c1"=rowMeans(tmm[,109:115]),
+                  "MSC.c2"=rowMeans(tmm[,123:129]),
+                  "MSC.c3"=rowMeans(tmm[,137:143]),
+                  "MSC.c4"=rowMeans(tmm[,151:156]),
+                  "Osteogenic.c1"=rowMeans(tmm[,164:170]),
+                  "Osteogenic.c2"=rowMeans(tmm[,178:184]),
+                  "Osteogenic.c3"=rowMeans(tmm[,192:198]),
+                  "Osteogenic.c4"=rowMeans(tmm[,206:212]),
+                  "Osteogenic.c5"=rowMeans(tmm[,220:226]),
+                  "Osteogenic.c6"=rowMeans(tmm[,234:235]),
+                  "Osteogenic.c7"=rowMeans(tmm[,241:247]),
+                  "Osteogenic.c8"=rowMeans(tmm[,255:261]),
+                  row.names=rownames(tmm))
+
+ggpairs(avg,
+        columns=1:20,
+        columnLabels=c("iPSC.c1",
+                       "iPSC.c2",
+                       "iPSC.c3",
+                       "iPSC.c4",
+                       "iPSC.c5",
+                       "iPSC.c6",
+                       "iPSC.c7",
+                       "iPSC.c8",
+                       "MSC.c1",
+                       "MSC.c2",
+                       "MSC.c3",
+                       "MSC.c4",
+                       "Osteogenic.c1",
+                       "Osteogenic.c2",
+                       "Osteogenic.c3",
+                       "Osteogenic.c4",
+                       "Osteogenic.c5",
+                       "Osteogenic.c6",
+                       "Osteogenic.c7",
+                       "Osteogenic.c8"),
+        mapping=ggplot2::aes(alpha=0.5))
+
+```
+
+Look at chimps separately.
+
+```{r}
+
+avg <- data.frame("iPSC.c1"=rowMeans(tmm[,8:14]),
+                  "iPSC.c2"=rowMeans(tmm[,22:28]),
+                  "iPSC.c3"=rowMeans(tmm[,36:42]),
+                  "iPSC.c4"=rowMeans(tmm[,50:56]),
+                  "iPSC.c5"=rowMeans(tmm[,63:69]),
+                  "iPSC.c6"=rowMeans(tmm[,77:83]),
+                  "iPSC.c7"=rowMeans(tmm[,91:97]),
+                  "iPSC.c8"=rowMeans(tmm[,103:108]),
+                  "MSC.c1"=rowMeans(tmm[,116:122]),
+                  "MSC.c2"=rowMeans(tmm[,130:136]),
+                  "MSC.c3"=rowMeans(tmm[,144:150]),
+                  "MSC.c4"=rowMeans(tmm[,157:163]),
+                  "Osteogenic.c1"=rowMeans(tmm[,171:177]),
+                  "Osteogenic.c2"=rowMeans(tmm[,185:191]),
+                  "Osteogenic.c3"=rowMeans(tmm[,199:205]),
+                  "Osteogenic.c4"=rowMeans(tmm[,213:219]),
+                  "Osteogenic.c5"=rowMeans(tmm[,227:233]),
+                  "Osteogenic.c6"=rowMeans(tmm[,236:240]),
+                  "Osteogenic.c7"=rowMeans(tmm[,248:254]),
+                  "Osteogenic.c8"=rowMeans(tmm[,262:268]),
+                  row.names=rownames(tmm))
+
+ggpairs(avg,
+        columns=1:20,
+        columnLabels=c("iPSC.c1",
+                       "iPSC.c2",
+                       "iPSC.c3",
+                       "iPSC.c4",
+                       "iPSC.c5",
+                       "iPSC.c6",
+                       "iPSC.c7",
+                       "iPSC.c8",
+                       "MSC.c1",
+                       "MSC.c2",
+                       "MSC.c3",
+                       "MSC.c4",
+                       "Osteogenic.c1",
+                       "Osteogenic.c2",
+                       "Osteogenic.c3",
+                       "Osteogenic.c4",
+                       "Osteogenic.c5",
+                       "Osteogenic.c6",
+                       "Osteogenic.c7",
+                       "Osteogenic.c8"),
+        mapping=ggplot2::aes(alpha=0.5))
+
 ```
 
 ```{r}
@@ -2417,6 +3348,524 @@ rm(avg)
 
 ```
 
+#### Resolution=0.75
+
+Keep human and chimp samples together.
+
+```{r}
+
+i1 <- subset(data, subset=(Cluster0.75=="iPSC.c1"))
+Idents(i1) <- "i1"
+avg.i1 <- log1p(AverageExpression(i1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i1$gene <- rownames(avg.i1)
+
+i2 <- subset(data, subset=(Cluster0.75=="iPSC.c2"))
+Idents(i2) <- "i2"
+avg.i2 <- log1p(AverageExpression(i2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i2$gene <- rownames(avg.i2)
+
+i3 <- subset(data, subset=(Cluster0.75=="iPSC.c3"))
+Idents(i3) <- "i3"
+avg.i3 <- log1p(AverageExpression(i3, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i3$gene <- rownames(avg.i3)
+
+i4 <- subset(data, subset=(Cluster0.75=="iPSC.c4"))
+Idents(i4) <- "i4"
+avg.i4 <- log1p(AverageExpression(i4, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i4$gene <- rownames(avg.i4)
+
+i5 <- subset(data, subset=(Cluster0.75=="iPSC.c5"))
+Idents(i5) <- "i5"
+avg.i5 <- log1p(AverageExpression(i5, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i5$gene <- rownames(avg.i5)
+
+i6 <- subset(data, subset=(Cluster0.75=="iPSC.c6"))
+Idents(i6) <- "i6"
+avg.i6 <- log1p(AverageExpression(i6, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i6$gene <- rownames(avg.i6)
+
+i7 <- subset(data, subset=(Cluster0.75=="iPSC.c7"))
+Idents(i7) <- "i7"
+avg.i7 <- log1p(AverageExpression(i7, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i7$gene <- rownames(avg.i7)
+
+i8 <- subset(data, subset=(Cluster0.75=="iPSC.c8"))
+Idents(i8) <- "i8"
+avg.i8 <- log1p(AverageExpression(i8, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i8$gene <- rownames(avg.i8)
+
+m1 <- subset(data, subset=(Cluster0.75=="MSC.c1"))
+Idents(m1) <- "m1"
+avg.m1 <- log1p(AverageExpression(m1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.m1$gene <- rownames(avg.m1)
+
+m2 <- subset(data, subset=(Cluster0.75=="MSC.c2"))
+Idents(m2) <- "m2"
+avg.m2 <- log1p(AverageExpression(m2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.m2$gene <- rownames(avg.m2)
+
+m3 <- subset(data, subset=(Cluster0.75=="MSC.c3"))
+Idents(m3) <- "m3"
+avg.m3 <- log1p(AverageExpression(m3, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.m3$gene <- rownames(avg.m3)
+
+m4 <- subset(data, subset=(Cluster0.75=="MSC.c4"))
+Idents(m4) <- "m4"
+avg.m4 <- log1p(AverageExpression(m4, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.m4$gene <- rownames(avg.m4)
+
+o1 <- subset(data, subset=(Cluster0.75=="Osteogenic.c1"))
+Idents(o1) <- "o1"
+avg.o1 <- log1p(AverageExpression(o1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o1$gene <- rownames(avg.o1)
+
+o2 <- subset(data, subset=(Cluster0.75=="Osteogenic.c2"))
+Idents(o2) <- "o2"
+avg.o2 <- log1p(AverageExpression(o2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o2$gene <- rownames(avg.o2)
+
+o3 <- subset(data, subset=(Cluster0.75=="Osteogenic.c3"))
+Idents(o3) <- "o3"
+avg.o3 <- log1p(AverageExpression(o3, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o3$gene <- rownames(avg.o3)
+
+o4 <- subset(data, subset=(Cluster0.75=="Osteogenic.c4"))
+Idents(o4) <- "o4"
+avg.o4 <- log1p(AverageExpression(o4, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o4$gene <- rownames(avg.o4)
+
+o5 <- subset(data, subset=(Cluster0.75=="Osteogenic.c5"))
+Idents(o5) <- "o5"
+avg.o5 <- log1p(AverageExpression(o5, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o5$gene <- rownames(avg.o5)
+
+o6 <- subset(data, subset=(Cluster0.75=="Osteogenic.c6"))
+Idents(o6) <- "o6"
+avg.o6 <- log1p(AverageExpression(o6, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o6$gene <- rownames(avg.o6)
+
+o7 <- subset(data, subset=(Cluster0.75=="Osteogenic.c7"))
+Idents(o7) <- "o7"
+avg.o7 <- log1p(AverageExpression(o7, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o7$gene <- rownames(avg.o7)
+
+o8 <- subset(data, subset=(Cluster0.75=="Osteogenic.c8"))
+Idents(o8) <- "o8"
+avg.o8 <- log1p(AverageExpression(o8, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o8$gene <- rownames(avg.o8)
+
+avg <- merge(avg.i1,
+             merge(avg.i2, 
+                   merge(avg.i3,
+                         merge(avg.i4,
+                               merge(avg.i5,
+                                     merge(avg.i6,
+                                           merge(avg.i7,
+                                                 merge(avg.i8,
+                                                       merge(avg.m1,
+                                                             merge(avg.m2,
+                                                                   merge(avg.m3,
+                                                                         merge(avg.m4,
+                                                                               merge(avg.o1,
+                                                                                     merge(avg.o2,
+                                                                                           merge(avg.o3, 
+                                                                                                  merge(avg.o4,
+                                                                                                         merge(avg.o5,
+                                                                                                                merge(avg.o6,
+                                                                                                                       merge(avg.o7, avg.o8, by="gene"),
+                                                                                                                      by="gene"),
+                                                                                                               by="gene"),
+                                                                                                        by="gene"),
+                                                                                                 by="gene"),
+                                                                                           by="gene"),
+                                                                                     by="gene"),
+                                                                               by="gene"),
+                                                                         by="gene"),
+                                                                   by="gene"),
+                                                             by="gene"),
+                                                       by="gene"),
+                                                 by="gene"),
+                                           by="gene"),
+                                     by="gene"),
+                               by="gene"),
+                         by="gene"),
+                   by="gene"),
+             by="gene")
+
+ggpairs(avg,
+        columns=2:length(colnames(avg)),
+        columnLabels=c("iPSC.c1",
+                       "iPSC.c2",
+                       "iPSC.c3",
+                       "iPSC.c4",
+                       "iPSC.c5",
+                       "iPSC.c6",
+                       "iPSC.c7",
+                       "iPSC.c8",
+                       "MSC.c1",
+                       "MSC.c2",
+                       "MSC.c3",
+                       "MSC.c4",
+                       "Osteogenic.c1",
+                       "Osteogenic.c2",
+                       "Osteogenic.c3",
+                       "Osteogenic.c4",
+                       "Osteogenic.c5",
+                       "Osteogenic.c6",
+                       "Osteogenic.c7",
+                       "Osteogenic.c8"),
+        mapping=ggplot2::aes(alpha=0.5))
+
+rm(i1,i2,i3,i4,i5,i6,i7,i8,m1,m2,m3,m4,o1,o2,o3,o4,o5,o6,o7,o8)
+rm(avg.i1,avg.i2,avg.i3,avg.i4,avg.i5,avg.i6,avg.i7,avg.i8,avg.m1,avg.m2,avg.m3,avg.m4,avg.o1,avg.o2,avg.o3,avg.o4,avg.o5,avg.o6,avg.o7,avg.o8)
+rm(avg)
+
+```
+
+Look at humans separately.
+
+```{r}
+
+i1 <- subset(data, subset=(Cluster0.75=="iPSC.c1" & Species=="Human"))
+Idents(i1) <- "i1"
+avg.i1 <- log1p(AverageExpression(i1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i1$gene <- rownames(avg.i1)
+
+i2 <- subset(data, subset=(Cluster0.75=="iPSC.c2" & Species=="Human"))
+Idents(i2) <- "i2"
+avg.i2 <- log1p(AverageExpression(i2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i2$gene <- rownames(avg.i2)
+
+i3 <- subset(data, subset=(Cluster0.75=="iPSC.c3" & Species=="Human"))
+Idents(i3) <- "i3"
+avg.i3 <- log1p(AverageExpression(i3, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i3$gene <- rownames(avg.i3)
+
+i4 <- subset(data, subset=(Cluster0.75=="iPSC.c4" & Species=="Human"))
+Idents(i4) <- "i4"
+avg.i4 <- log1p(AverageExpression(i4, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i4$gene <- rownames(avg.i4)
+
+i5 <- subset(data, subset=(Cluster0.75=="iPSC.c5" & Species=="Human"))
+Idents(i5) <- "i5"
+avg.i5 <- log1p(AverageExpression(i5, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i5$gene <- rownames(avg.i5)
+
+i6 <- subset(data, subset=(Cluster0.75=="iPSC.c6" & Species=="Human"))
+Idents(i6) <- "i6"
+avg.i6 <- log1p(AverageExpression(i6, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i6$gene <- rownames(avg.i6)
+
+i7 <- subset(data, subset=(Cluster0.75=="iPSC.c7" & Species=="Human"))
+Idents(i7) <- "i7"
+avg.i7 <- log1p(AverageExpression(i7, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i7$gene <- rownames(avg.i7)
+
+i8 <- subset(data, subset=(Cluster0.75=="iPSC.c8" & Species=="Human"))
+Idents(i8) <- "i8"
+avg.i8 <- log1p(AverageExpression(i8, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i8$gene <- rownames(avg.i8)
+
+m1 <- subset(data, subset=(Cluster0.75=="MSC.c1" & Species=="Human"))
+Idents(m1) <- "m1"
+avg.m1 <- log1p(AverageExpression(m1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.m1$gene <- rownames(avg.m1)
+
+m2 <- subset(data, subset=(Cluster0.75=="MSC.c2" & Species=="Human"))
+Idents(m2) <- "m2"
+avg.m2 <- log1p(AverageExpression(m2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.m2$gene <- rownames(avg.m2)
+
+m3 <- subset(data, subset=(Cluster0.75=="MSC.c3" & Species=="Human"))
+Idents(m3) <- "m3"
+avg.m3 <- log1p(AverageExpression(m3, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.m3$gene <- rownames(avg.m3)
+
+m4 <- subset(data, subset=(Cluster0.75=="MSC.c4" & Species=="Human"))
+Idents(m4) <- "m4"
+avg.m4 <- log1p(AverageExpression(m4, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.m4$gene <- rownames(avg.m4)
+
+o1 <- subset(data, subset=(Cluster0.75=="Osteogenic.c1" & Species=="Human"))
+Idents(o1) <- "o1"
+avg.o1 <- log1p(AverageExpression(o1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o1$gene <- rownames(avg.o1)
+
+o2 <- subset(data, subset=(Cluster0.75=="Osteogenic.c2" & Species=="Human"))
+Idents(o2) <- "o2"
+avg.o2 <- log1p(AverageExpression(o2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o2$gene <- rownames(avg.o2)
+
+o3 <- subset(data, subset=(Cluster0.75=="Osteogenic.c3" & Species=="Human"))
+Idents(o3) <- "o3"
+avg.o3 <- log1p(AverageExpression(o3, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o3$gene <- rownames(avg.o3)
+
+o4 <- subset(data, subset=(Cluster0.75=="Osteogenic.c4" & Species=="Human"))
+Idents(o4) <- "o4"
+avg.o4 <- log1p(AverageExpression(o4, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o4$gene <- rownames(avg.o4)
+
+o5 <- subset(data, subset=(Cluster0.75=="Osteogenic.c5" & Species=="Human"))
+Idents(o5) <- "o5"
+avg.o5 <- log1p(AverageExpression(o5, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o5$gene <- rownames(avg.o5)
+
+o6 <- subset(data, subset=(Cluster0.75=="Osteogenic.c6" & Species=="Human"))
+Idents(o6) <- "o6"
+avg.o6 <- log1p(AverageExpression(o6, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o6$gene <- rownames(avg.o6)
+
+o7 <- subset(data, subset=(Cluster0.75=="Osteogenic.c7" & Species=="Human"))
+Idents(o7) <- "o7"
+avg.o7 <- log1p(AverageExpression(o7, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o7$gene <- rownames(avg.o7)
+
+o8 <- subset(data, subset=(Cluster0.75=="Osteogenic.c8" & Species=="Human"))
+Idents(o8) <- "o8"
+avg.o8 <- log1p(AverageExpression(o8, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o8$gene <- rownames(avg.o8)
+
+avg <- merge(avg.i1,
+             merge(avg.i2, 
+                   merge(avg.i3,
+                         merge(avg.i4,
+                               merge(avg.i5,
+                                     merge(avg.i6,
+                                           merge(avg.i7,
+                                                 merge(avg.i8,
+                                                       merge(avg.m1,
+                                                             merge(avg.m2,
+                                                                   merge(avg.m3,
+                                                                         merge(avg.m4,
+                                                                               merge(avg.o1,
+                                                                                     merge(avg.o2,
+                                                                                           merge(avg.o3, 
+                                                                                                  merge(avg.o4,
+                                                                                                         merge(avg.o5,
+                                                                                                                merge(avg.o6,
+                                                                                                                       merge(avg.o7, avg.o8, by="gene"),
+                                                                                                                      by="gene"),
+                                                                                                               by="gene"),
+                                                                                                        by="gene"),
+                                                                                                 by="gene"),
+                                                                                           by="gene"),
+                                                                                     by="gene"),
+                                                                               by="gene"),
+                                                                         by="gene"),
+                                                                   by="gene"),
+                                                             by="gene"),
+                                                       by="gene"),
+                                                 by="gene"),
+                                           by="gene"),
+                                     by="gene"),
+                               by="gene"),
+                         by="gene"),
+                   by="gene"),
+             by="gene")
+
+ggpairs(avg,
+        columns=2:length(colnames(avg)),
+        columnLabels=c("iPSC.c1",
+                       "iPSC.c2",
+                       "iPSC.c3",
+                       "iPSC.c4",
+                       "iPSC.c5",
+                       "iPSC.c6",
+                       "iPSC.c7",
+                       "iPSC.c8",
+                       "MSC.c1",
+                       "MSC.c2",
+                       "MSC.c3",
+                       "MSC.c4",
+                       "Osteogenic.c1",
+                       "Osteogenic.c2",
+                       "Osteogenic.c3",
+                       "Osteogenic.c4",
+                       "Osteogenic.c5",
+                       "Osteogenic.c6",
+                       "Osteogenic.c7",
+                       "Osteogenic.c8"),
+        mapping=ggplot2::aes(alpha=0.5))
+
+rm(i1,i2,i3,i4,i5,i6,i7,i8,m1,m2,m3,m4,o1,o2,o3,o4,o5,o6,o7,o8)
+rm(avg.i1,avg.i2,avg.i3,avg.i4,avg.i5,avg.i6,avg.i7,avg.i8,avg.m1,avg.m2,avg.m3,avg.m4,avg.o1,avg.o2,avg.o3,avg.o4,avg.o5,avg.o6,avg.o7,avg.o8)
+rm(avg)
+
+```
+
+Look at chimps separately.
+
+```{r}
+
+i1 <- subset(data, subset=(Cluster0.75=="iPSC.c1" & Species=="Chimp"))
+Idents(i1) <- "i1"
+avg.i1 <- log1p(AverageExpression(i1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i1$gene <- rownames(avg.i1)
+
+i2 <- subset(data, subset=(Cluster0.75=="iPSC.c2" & Species=="Chimp"))
+Idents(i2) <- "i2"
+avg.i2 <- log1p(AverageExpression(i2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i2$gene <- rownames(avg.i2)
+
+i3 <- subset(data, subset=(Cluster0.75=="iPSC.c3" & Species=="Chimp"))
+Idents(i3) <- "i3"
+avg.i3 <- log1p(AverageExpression(i3, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i3$gene <- rownames(avg.i3)
+
+i4 <- subset(data, subset=(Cluster0.75=="iPSC.c4" & Species=="Chimp"))
+Idents(i4) <- "i4"
+avg.i4 <- log1p(AverageExpression(i4, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i4$gene <- rownames(avg.i4)
+
+i5 <- subset(data, subset=(Cluster0.75=="iPSC.c5" & Species=="Chimp"))
+Idents(i5) <- "i5"
+avg.i5 <- log1p(AverageExpression(i5, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i5$gene <- rownames(avg.i5)
+
+i6 <- subset(data, subset=(Cluster0.75=="iPSC.c6" & Species=="Chimp"))
+Idents(i6) <- "i6"
+avg.i6 <- log1p(AverageExpression(i6, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i6$gene <- rownames(avg.i6)
+
+i7 <- subset(data, subset=(Cluster0.75=="iPSC.c7" & Species=="Chimp"))
+Idents(i7) <- "i7"
+avg.i7 <- log1p(AverageExpression(i7, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i7$gene <- rownames(avg.i7)
+
+i8 <- subset(data, subset=(Cluster0.75=="iPSC.c8" & Species=="Chimp"))
+Idents(i8) <- "i8"
+avg.i8 <- log1p(AverageExpression(i8, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.i8$gene <- rownames(avg.i8)
+
+m1 <- subset(data, subset=(Cluster0.75=="MSC.c1" & Species=="Chimp"))
+Idents(m1) <- "m1"
+avg.m1 <- log1p(AverageExpression(m1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.m1$gene <- rownames(avg.m1)
+
+m2 <- subset(data, subset=(Cluster0.75=="MSC.c2" & Species=="Chimp"))
+Idents(m2) <- "m2"
+avg.m2 <- log1p(AverageExpression(m2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.m2$gene <- rownames(avg.m2)
+
+m3 <- subset(data, subset=(Cluster0.75=="MSC.c3" & Species=="Chimp"))
+Idents(m3) <- "m3"
+avg.m3 <- log1p(AverageExpression(m3, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.m3$gene <- rownames(avg.m3)
+
+m4 <- subset(data, subset=(Cluster0.75=="MSC.c4" & Species=="Chimp"))
+Idents(m4) <- "m4"
+avg.m4 <- log1p(AverageExpression(m4, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.m4$gene <- rownames(avg.m4)
+
+o1 <- subset(data, subset=(Cluster0.75=="Osteogenic.c1" & Species=="Chimp"))
+Idents(o1) <- "o1"
+avg.o1 <- log1p(AverageExpression(o1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o1$gene <- rownames(avg.o1)
+
+o2 <- subset(data, subset=(Cluster0.75=="Osteogenic.c2" & Species=="Chimp"))
+Idents(o2) <- "o2"
+avg.o2 <- log1p(AverageExpression(o2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o2$gene <- rownames(avg.o2)
+
+o3 <- subset(data, subset=(Cluster0.75=="Osteogenic.c3" & Species=="Chimp"))
+Idents(o3) <- "o3"
+avg.o3 <- log1p(AverageExpression(o3, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o3$gene <- rownames(avg.o3)
+
+o4 <- subset(data, subset=(Cluster0.75=="Osteogenic.c4" & Species=="Chimp"))
+Idents(o4) <- "o4"
+avg.o4 <- log1p(AverageExpression(o4, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o4$gene <- rownames(avg.o4)
+
+o5 <- subset(data, subset=(Cluster0.75=="Osteogenic.c5" & Species=="Chimp"))
+Idents(o5) <- "o5"
+avg.o5 <- log1p(AverageExpression(o5, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o5$gene <- rownames(avg.o5)
+
+o6 <- subset(data, subset=(Cluster0.75=="Osteogenic.c6" & Species=="Chimp"))
+Idents(o6) <- "o6"
+avg.o6 <- log1p(AverageExpression(o6, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o6$gene <- rownames(avg.o6)
+
+o7 <- subset(data, subset=(Cluster0.75=="Osteogenic.c7" & Species=="Chimp"))
+Idents(o7) <- "o7"
+avg.o7 <- log1p(AverageExpression(o7, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o7$gene <- rownames(avg.o7)
+
+o8 <- subset(data, subset=(Cluster0.75=="Osteogenic.c8" & Species=="Chimp"))
+Idents(o8) <- "o8"
+avg.o8 <- log1p(AverageExpression(o8, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.o8$gene <- rownames(avg.o8)
+
+avg <- merge(avg.i1,
+             merge(avg.i2, 
+                   merge(avg.i3,
+                         merge(avg.i4,
+                               merge(avg.i5,
+                                     merge(avg.i6,
+                                           merge(avg.i7,
+                                                 merge(avg.i8,
+                                                       merge(avg.m1,
+                                                             merge(avg.m2,
+                                                                   merge(avg.m3,
+                                                                         merge(avg.m4,
+                                                                               merge(avg.o1,
+                                                                                     merge(avg.o2,
+                                                                                           merge(avg.o3,  
+                                                                                                  merge(avg.o4,
+                                                                                                         merge(avg.o5,
+                                                                                                                merge(avg.o6,
+                                                                                                                       merge(avg.o7, avg.o8, by="gene"),
+                                                                                                                      by="gene"),
+                                                                                                               by="gene"),
+                                                                                                        by="gene"),
+                                                                                                 by="gene"),
+                                                                                           by="gene"),
+                                                                                     by="gene"),
+                                                                               by="gene"),
+                                                                         by="gene"),
+                                                                   by="gene"),
+                                                             by="gene"),
+                                                       by="gene"),
+                                                 by="gene"),
+                                           by="gene"),
+                                     by="gene"),
+                               by="gene"),
+                         by="gene"),
+                   by="gene"),
+             by="gene")
+
+ggpairs(avg,
+        columns=2:length(colnames(avg)),
+        columnLabels=c("iPSC.c1",
+                       "iPSC.c2",
+                       "iPSC.c3",
+                       "iPSC.c4",
+                       "iPSC.c5",
+                       "iPSC.c6",
+                       "iPSC.c7",
+                       "iPSC.c8",
+                       "MSC.c1",
+                       "MSC.c2",
+                       "MSC.c3",
+                       "MSC.c4",
+                       "Osteogenic.c1",
+                       "Osteogenic.c2",
+                       "Osteogenic.c3",
+                       "Osteogenic.c4",
+                       "Osteogenic.c5",
+                       "Osteogenic.c6",
+                       "Osteogenic.c7",
+                       "Osteogenic.c8"),
+        mapping=ggplot2::aes(alpha=0.5))
+
+rm(i1,i2,i3,i4,i5,i6,i7,i8,m1,m2,m3,m4,o1,o2,o3,o4,o5,o6,o7,o8)
+rm(avg.i1,avg.i2,avg.i3,avg.i4,avg.i5,avg.i6,avg.i7,avg.i8,avg.m1,avg.m2,avg.m3,avg.m4,avg.o1,avg.o2,avg.o3,avg.o4,avg.o5,avg.o6,avg.o7,avg.o8)
+rm(avg)
+
+```
+
 ## Grades of Membership
 
 ### Plots
@@ -2979,6 +4428,24 @@ DotPlot(subset(data,subset=Species=="Chimp"),
         cols=c("grey99","black"),
         col.max=5)
 
+VlnPlot(data,
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="AdHoc.Assign.thresh0",
+        cols=c("pink","mediumorchid","dodgerblue","grey"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="AdHoc.Assign.thresh0",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="AdHoc.Assign.thresh0",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
 ```
 
 ### Enrichment
@@ -3429,6 +4896,24 @@ DotPlot(subset(data,subset=Species=="Chimp"),
         cols=c("grey99","black"),
         col.max=5)
 
+VlnPlot(data,
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstAdHoc.Assign.8gene.thresh0",
+        cols=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4","grey90","grey90","grey90"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstAdHoc.Assign.8gene.thresh0",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstAdHoc.Assign.8gene.thresh0",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
 ```
 
 #### 8 genes.x
@@ -3625,6 +5110,26 @@ DotPlot(subset(data,subset=Species=="Chimp"),
         cols=c("grey99","black"),
         col.max=5)
 
+VlnPlot(data,
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstAdHoc.Assign.x.8gene.thresh0",
+        cols=c("lightblue1","deepskyblue","dodgerblue2","royalblue3",
+               "deepskyblue","dodgerblue2","royalblue3","royalblue4",
+               "grey90","grey90","grey90"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstAdHoc.Assign.x.8gene.thresh0",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstAdHoc.Assign.x.8gene.thresh0",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
 ```
 
 #### 6 genes
@@ -3788,6 +5293,24 @@ DotPlot(subset(data,subset=Species=="Human"),
         col.max=5)
 DotPlot(subset(data,subset=Species=="Chimp"),
         features=c("COL1A1","CD44","POU5F1"),
+        group.by="OstAdHoc.Assign.6gene.thresh0",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
+VlnPlot(data,
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstAdHoc.Assign.6gene.thresh0",
+        cols=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4","grey90","grey90","grey90"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstAdHoc.Assign.6gene.thresh0",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
         group.by="OstAdHoc.Assign.6gene.thresh0",
         dot.scale=20,
         cols=c("grey99","black"),
@@ -3989,6 +5512,26 @@ DotPlot(subset(data,subset=Species=="Chimp"),
         cols=c("grey99","black"),
         col.max=5)
 
+VlnPlot(data,
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstAdHoc.Assign.x.6gene.thresh0",
+        cols=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4",
+               "deepskyblue","dodgerblue2","royalblue3","royalblue4",
+               "grey90","grey90","grey90"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstAdHoc.Assign.x.6gene.thresh0",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstAdHoc.Assign.x.6gene.thresh0",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
 ```
 
 #### 4 genes
@@ -4152,6 +5695,24 @@ DotPlot(subset(data,subset=Species=="Human"),
         col.max=5)
 DotPlot(subset(data,subset=Species=="Chimp"),
         features=c("COL1A1","CD44","POU5F1"),
+        group.by="OstAdHoc.Assign.4gene.thresh0",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
+VlnPlot(data,
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstAdHoc.Assign.4gene.thresh0",
+        cols=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4","grey90","grey90","grey90"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstAdHoc.Assign.4gene.thresh0",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
         group.by="OstAdHoc.Assign.4gene.thresh0",
         dot.scale=20,
         cols=c("grey99","black"),
@@ -4348,6 +5909,26 @@ DotPlot(subset(data,subset=Species=="Human"),
         col.max=5)
 DotPlot(subset(data,subset=Species=="Chimp"),
         features=c("COL1A1","CD44","POU5F1"),
+        group.by="OstAdHoc.Assign.x.4gene.thresh0",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
+VlnPlot(data,
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstAdHoc.Assign.x.4gene.thresh0",
+        cols=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4",
+               "deepskyblue","dodgerblue2","royalblue3","royalblue4",
+               "grey90","grey90","grey90"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="OstAdHoc.Assign.x.4gene.thresh0",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
         group.by="OstAdHoc.Assign.x.4gene.thresh0",
         dot.scale=20,
         cols=c("grey99","black"),

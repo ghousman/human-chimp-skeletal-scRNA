@@ -187,7 +187,7 @@ CombinePlots(plots=list((DimPlot(subset(data,subset=Stage=="Time 0"), split.by=x
 
 ```
 
-Define new metadata label for clusters (resolution=0.05).
+Define new metadata label for general clusters (resolution=0.05,0.25,0.50) and osteogenic clusters (resolution=0.05,0.25,0.50,0.75).
 
 ```{r, eval=FALSE}
 
@@ -233,6 +233,99 @@ data$Cluster0.50[which(data$integrated_snn_res.0.5=="0")]  <- "Osteogenic.c1"
 data$Cluster0.50[which(data$integrated_snn_res.0.5=="13")] <- "Osteogenic.c2"
 data$Cluster0.50[which(data$integrated_snn_res.0.5=="8")]  <- "Osteogenic.c3"
 data$Cluster0.50[which(data$integrated_snn_res.0.5=="6")]  <- "Osteogenic.c4"
+
+#resolution=0.75
+data <- AddMetaData(data, rep(NA,length(rownames(data@meta.data))), col.name="Cluster0.75")
+data$Cluster0.75[which(data$integrated_snn_res.0.75=="1")]  <- "iPSC.c1"
+data$Cluster0.75[which(data$integrated_snn_res.0.75=="3")]  <- "iPSC.c2"
+data$Cluster0.75[which(data$integrated_snn_res.0.75=="7")]  <- "iPSC.c3"
+data$Cluster0.75[which(data$integrated_snn_res.0.75=="13")] <- "iPSC.c4"
+data$Cluster0.75[which(data$integrated_snn_res.0.75=="15")] <- "iPSC.c5"
+data$Cluster0.75[which(data$integrated_snn_res.0.75=="11")] <- "iPSC.c6"
+data$Cluster0.75[which(data$integrated_snn_res.0.75=="14")] <- "iPSC.c7"
+data$Cluster0.75[which(data$integrated_snn_res.0.75=="18")] <- "iPSC.c8"
+data$Cluster0.75[which(data$integrated_snn_res.0.75=="0")]  <- "MSC.c1"
+data$Cluster0.75[which(data$integrated_snn_res.0.75=="4")]  <- "MSC.c2"
+data$Cluster0.75[which(data$integrated_snn_res.0.75=="2")]  <- "MSC.c3"
+data$Cluster0.75[which(data$integrated_snn_res.0.75=="9")]  <- "MSC.c4"
+data$Cluster0.75[which(data$integrated_snn_res.0.75=="5")]  <- "Osteogenic.c1"
+data$Cluster0.75[which(data$integrated_snn_res.0.75=="8")]  <- "Osteogenic.c2"
+data$Cluster0.75[which(data$integrated_snn_res.0.75=="10")] <- "Osteogenic.c3"
+data$Cluster0.75[which(data$integrated_snn_res.0.75=="6")]  <- "Osteogenic.c4"
+data$Cluster0.75[which(data$integrated_snn_res.0.75=="12")] <- "Osteogenic.c5"
+data$Cluster0.75[which(data$integrated_snn_res.0.75=="16")] <- "Osteogenic.c6"
+data$Cluster0.75[which(data$integrated_snn_res.0.75=="17")] <- "Osteogenic.c7"
+data$Cluster0.75[which(data$integrated_snn_res.0.75=="19")] <- "Osteogenic.c8"
+
+```
+
+```{r, eval=FALSE}
+
+#resolution=0.05
+data <- AddMetaData(data, rep(NA,length(rownames(data@meta.data))), col.name="OstCluster0.05")
+data$OstCluster0.05[which(data$integrated_snn_res.0.05=="1")] <- "not osteogenic"
+data$OstCluster0.05[which(data$integrated_snn_res.0.05=="4")] <- "not osteogenic"
+data$OstCluster0.05[which(data$integrated_snn_res.0.05=="5")] <- "not osteogenic"
+data$OstCluster0.05[which(data$integrated_snn_res.0.05=="0")] <- "not osteogenic"
+data$OstCluster0.05[which(data$integrated_snn_res.0.05=="2")] <- "Osteogenic.c1"
+data$OstCluster0.05[which(data$integrated_snn_res.0.05=="3")] <- "Osteogenic.c2"
+
+#resolution=0.25
+data <- AddMetaData(data, rep(NA,length(rownames(data@meta.data))), col.name="OstCluster0.25")
+data$OstCluster0.25[which(data$integrated_snn_res.0.25=="2")]  <- "not osteogenic"
+data$OstCluster0.25[which(data$integrated_snn_res.0.25=="3")]  <- "not osteogenic"
+data$OstCluster0.25[which(data$integrated_snn_res.0.25=="9")]  <- "not osteogenic"
+data$OstCluster0.25[which(data$integrated_snn_res.0.25=="7")]  <- "not osteogenic"
+data$OstCluster0.25[which(data$integrated_snn_res.0.25=="10")] <- "not osteogenic"
+data$OstCluster0.25[which(data$integrated_snn_res.0.25=="11")] <- "not osteogenic"
+data$OstCluster0.25[which(data$integrated_snn_res.0.25=="0")]  <- "not osteogenic"
+data$OstCluster0.25[which(data$integrated_snn_res.0.25=="4")]  <- "not osteogenic"
+data$OstCluster0.25[which(data$integrated_snn_res.0.25=="8")]  <- "not osteogenic"
+data$OstCluster0.25[which(data$integrated_snn_res.0.25=="1")]  <- "Osteogenic.c1"
+data$OstCluster0.25[which(data$integrated_snn_res.0.25=="6")]  <- "Osteogenic.c2"
+data$OstCluster0.25[which(data$integrated_snn_res.0.25=="5")]  <- "Osteogenic.c3"
+
+#resolution=0.50
+data <- AddMetaData(data, rep(NA,length(rownames(data@meta.data))), col.name="OstCluster0.50")
+data$OstCluster0.50[which(data$integrated_snn_res.0.5=="2")]  <- "not osteogenic"
+data$OstCluster0.50[which(data$integrated_snn_res.0.5=="3")]  <- "not osteogenic"
+data$OstCluster0.50[which(data$integrated_snn_res.0.5=="9")]  <- "not osteogenic"
+data$OstCluster0.50[which(data$integrated_snn_res.0.5=="12")] <- "not osteogenic"
+data$OstCluster0.50[which(data$integrated_snn_res.0.5=="11")] <- "not osteogenic"
+data$OstCluster0.50[which(data$integrated_snn_res.0.5=="10")] <- "not osteogenic"
+data$OstCluster0.50[which(data$integrated_snn_res.0.5=="14")] <- "not osteogenic"
+data$OstCluster0.50[which(data$integrated_snn_res.0.5=="15")] <- "not osteogenic"
+data$OstCluster0.50[which(data$integrated_snn_res.0.5=="1")]  <- "not osteogenic"
+data$OstCluster0.50[which(data$integrated_snn_res.0.5=="4")]  <- "not osteogenic"
+data$OstCluster0.50[which(data$integrated_snn_res.0.5=="7")]  <- "not osteogenic"
+data$OstCluster0.50[which(data$integrated_snn_res.0.5=="5")]  <- "not osteogenic"
+data$OstCluster0.50[which(data$integrated_snn_res.0.5=="0")]  <- "Osteogenic.c1"
+data$OstCluster0.50[which(data$integrated_snn_res.0.5=="13")] <- "Osteogenic.c2"
+data$OstCluster0.50[which(data$integrated_snn_res.0.5=="8")]  <- "Osteogenic.c3"
+data$OstCluster0.50[which(data$integrated_snn_res.0.5=="6")]  <- "Osteogenic.c4"
+
+#resolution=0.75
+data <- AddMetaData(data, rep(NA,length(rownames(data@meta.data))), col.name="OstCluster0.75")
+data$OstCluster0.75[which(data$integrated_snn_res.0.75=="1")]  <- "not osteogenic"
+data$OstCluster0.75[which(data$integrated_snn_res.0.75=="3")]  <- "not osteogenic"
+data$OstCluster0.75[which(data$integrated_snn_res.0.75=="7")]  <- "not osteogenic"
+data$OstCluster0.75[which(data$integrated_snn_res.0.75=="13")] <- "not osteogenic"
+data$OstCluster0.75[which(data$integrated_snn_res.0.75=="15")] <- "not osteogenic"
+data$OstCluster0.75[which(data$integrated_snn_res.0.75=="11")] <- "not osteogenic"
+data$OstCluster0.75[which(data$integrated_snn_res.0.75=="14")] <- "not osteogenic"
+data$OstCluster0.75[which(data$integrated_snn_res.0.75=="18")] <- "not osteogenic"
+data$OstCluster0.75[which(data$integrated_snn_res.0.75=="0")]  <- "not osteogenic"
+data$OstCluster0.75[which(data$integrated_snn_res.0.75=="4")]  <- "not osteogenic"
+data$OstCluster0.75[which(data$integrated_snn_res.0.75=="2")]  <- "not osteogenic"
+data$OstCluster0.75[which(data$integrated_snn_res.0.75=="9")]  <- "not osteogenic"
+data$OstCluster0.75[which(data$integrated_snn_res.0.75=="5")]  <- "Osteogenic.c1"
+data$OstCluster0.75[which(data$integrated_snn_res.0.75=="8")]  <- "Osteogenic.c2"
+data$OstCluster0.75[which(data$integrated_snn_res.0.75=="10")] <- "Osteogenic.c3"
+data$OstCluster0.75[which(data$integrated_snn_res.0.75=="6")]  <- "Osteogenic.c4"
+data$OstCluster0.75[which(data$integrated_snn_res.0.75=="12")] <- "Osteogenic.c5"
+data$OstCluster0.75[which(data$integrated_snn_res.0.75=="16")] <- "Osteogenic.c6"
+data$OstCluster0.75[which(data$integrated_snn_res.0.75=="17")] <- "Osteogenic.c7"
+data$OstCluster0.75[which(data$integrated_snn_res.0.75=="19")] <- "Osteogenic.c8"
 
 ```
 
