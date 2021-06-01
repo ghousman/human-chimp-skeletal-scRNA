@@ -10,5 +10,68 @@ editor_options:
 
 Genevieve Housman
 
-This site contains the workflow and analysis of my human and chimpanzee comparative skeletal single-cell gene expression project.
+# Workflow and analysis of my human and chimpanzee comparative skeletal single-cell gene expression project.
 
+iPSCs from 6 human and 6 chimpanzees were differentiated into mesenchymal stem cells and subsequently into osteogenic cells. Single cell RNAseq from each major stage of differentiation (iPSCs, MSCs, and osteogenic cells) were collected using the 10x platform for all samples, as well as 1 replicate human cell line and 1 replicate chimpanzee cell line.
+
+If you are running the files in this repository to recreate the analyses, running them in the order they appear on this list is recommended.
+
+## Single-cell data processing
+
+* [Pre-processing of raw 10x fastq files into count matrices and assigning species of origin](10x-data-1-process.html)
+
+    + [Analyses justifying method the used to assign species of origin](10x-data-0-process-test.html)
+
+* [QC of count matricies and barcode filtering](10x-data-2-qc.html)
+
+    + Decided to proceed with a conservative threshold: umi per cell > 1000 | genes per cell > 700 | percent mito < 25
+
+* [Data integration](10x-data-3-integrate.html)
+
+    + Decided to proceed with data integrated across all genes with non-zero UMI counts and with nCount_RNA and percent.mt regressed out during data scaling following integration
+  
+## Cell classification
+
+* [Classified cells using unsupervised clustering, topic modeling grades of membership, and ad hoc assignments](10x-data-4-classification-tot.html)
+
+    + [Visualized results of unsupervised clustering](10x-plot-classification-clusters.html)
+    
+    + [Visualized results of topic modeling grades of membership](10x-plot-classification-gom.html)
+    
+    + [Visualized results of ad hoc assignments](10x-plot-classification-adhoc.html)
+    
+    + [Made finalized plots, examined functional enrichment, and evaluated pseudobulk correlations between cell classifications](10x-plot-classification.html)
+  
+* For General Unsupervised Clustering: Decided to proceed with cluster resolutions 0.05. Also examined 0.25 and 0.50 further.
+
+* For Grades of Membership: Decided to proceed with total dataset batch corrected (individual, replicate) with k=3, k=4, k=5, k=6, and k=7.
+
+* For General Ad Hoc: Decided to proceed with the following:
+  
+    + thresh0 (or mean) for scaled integrated data (with confounding variables regressed out)
+    + ips = +POU5F1,+TDGF,+SOX2,+EPCAM
+    + msc = +THY1,+NT5E,+ENG,+CD44
+    + ost = -POU5F1,+COL1A1,+COL1A2,+ALPL
+    + also examined assignments at a couple different cutoffs (thresh-0.01,thresh-0.05,thresh-0.1,thresh0.01,thresh0.05,thresh0.1)
+  
+* For Osteogenic Unsupervised Clustering: Decided to proceed with the following:
+
+    + cluster resolutions 0.50 (4 osteogenic clusters)
+    + cluster resolutions 0.75 (8 osteogenic clusters)
+
+* For Osteogenic Ad Hoc: Decided to proceed with the following:
+
+    + thresh0 (or mean) for scaled integrated data (with confounding variables regressed out)
+    + assignments based on 4 genes (both strict and flexible classifications)
+    + also examined assignments at a couple different cutoffs (thresh-0.01,thresh0.01)
+    + also examined assignments based on 8 genes (strict and flexible) and 6 genes (strict and flexible)
+
+## Differential expression
+
+* [Performed pairwise DE tests](10x-data-5-diffexp.Rmd)
+
+* [Performed DE tests using Cormotif](10x-data-5-diffexp.Rmd)
+
+## Enrichment analyses
+
+## Standard validation analyses
