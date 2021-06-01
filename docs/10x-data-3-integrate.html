@@ -1,0 +1,2032 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Genevieve Housman" />
+
+
+<title>10x-data-integrate</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">human-chimp-skeletal-scRNA</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">10x-data-integrate</h1>
+<h4 class="author">Genevieve Housman</h4>
+<h4 class="date">March 2021</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2021-05-11
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong> <code>human-chimp-skeletal-scRNA/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown file has unstaged changes. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20190719code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20190719)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20190719code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20190719)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreef3876a3c393ccf9434fed33f4b0aeee9914f5815targetblankf3876a3a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/f3876a3c393ccf9434fed33f4b0aeee9914f5815" target="_blank">f3876a3</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreef3876a3c393ccf9434fed33f4b0aeee9914f5815targetblankf3876a3a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/f3876a3c393ccf9434fed33f4b0aeee9914f5815" target="_blank">f3876a3</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/figure/
+
+Untracked files:
+    Untracked:  analysis/10x-plot-enrichment-gom.Rmd
+    Untracked:  analysis/TODO_10x-data-4-classification-t2.Rmd
+    Untracked:  analysis/TODO_10x-data-4-classification-tot.Rmd
+    Untracked:  analysis/TODO_10x-data-4-classification.Rmd
+    Untracked:  analysis/TODO_10x-data-4-reclassification-tot.Rmd
+    Untracked:  analysis/TODO_10x-data-5-diffexp.Rmd
+    Untracked:  analysis/TODO_10x-data-6-conservexp.Rmd
+    Untracked:  analysis/TODO_10x-data-6-cormotif-t2.Rmd
+    Untracked:  analysis/TODO_10x-data-6-cormotif-tot.Rmd
+    Untracked:  analysis/TODO_10x-data-6-variance-t2.Rmd
+    Untracked:  analysis/TODO_10x-data-6-variance-tot.Rmd
+    Untracked:  analysis/TODO_10x-data-7-enrichment.Rmd
+    Untracked:  analysis/TODO_10x-data-8-batch-correlation.Rmd
+    Untracked:  analysis/TODO_10x-plot-classification.Rmd
+    Untracked:  analysis/TODO_10x-plot-diffexp.Rmd
+    Untracked:  analysis/TODO_10x-plot-replicate-correlation-t2.Rmd
+    Untracked:  analysis/TODO_10x-plot-replicate-correlation-tot.Rmd
+    Untracked:  analysis/TODO_10x-plot-utf1-tac3.Rmd
+    Untracked:  analysis/TODO_10x-view-batch-effects.Rmd
+    Untracked:  analysis/TODO_10x-view-data-metrics.Rmd
+    Untracked:  analysis/TODO_10x-view-species-assignments.Rmd
+    Untracked:  analysis/TODO_10x-view-validation-data.Rmd
+    Untracked:  analysis/v2/
+    Untracked:  code/FindMarkers.R
+    Untracked:  code/FindMarkers.sh
+    Untracked:  code/FindMarkers_0.1.err
+    Untracked:  code/FindMarkers_0.1.out
+    Untracked:  code/FindMarkers_0.25.err
+    Untracked:  code/FindMarkers_0.25.out
+    Untracked:  code/FindMarkers_0.5.err
+    Untracked:  code/FindMarkers_0.5.out
+    Untracked:  code/FindMarkers_0.75.err
+    Untracked:  code/FindMarkers_0.75.out
+    Untracked:  code/FindMarkers_1.err
+    Untracked:  code/FindMarkers_1.out
+    Untracked:  code/GoM.R
+    Untracked:  code/GoM.sh
+    Untracked:  code/fastTopics.R
+    Untracked:  code/fastTopics.sh
+    Untracked:  code/fastTopicsBC.R
+    Untracked:  code/fastTopicsBC.sh
+    Untracked:  code/fastTopicsBC_3_tot.err
+    Untracked:  code/fastTopicsBC_3_tot.out
+    Untracked:  code/fastTopicsBC_4_tot.err
+    Untracked:  code/fastTopicsBC_4_tot.out
+    Untracked:  code/fastTopicsBC_5_tot.err
+    Untracked:  code/fastTopicsBC_5_tot.out
+    Untracked:  code/fastTopicsBC_6_tot.err
+    Untracked:  code/fastTopicsBC_6_tot.out
+    Untracked:  code/fastTopicsBC_7_tot.err
+    Untracked:  code/fastTopicsBC_7_tot.out
+    Untracked:  code/fastTopicsSpp.R
+    Untracked:  code/fastTopicsSpp.sh
+    Untracked:  code/fastTopicsSppBC.R
+    Untracked:  code/fastTopicsSppBC.sh
+    Untracked:  code/fastTopicsSppBC_3_tot.err
+    Untracked:  code/fastTopicsSppBC_3_tot.out
+    Untracked:  code/fastTopicsSppBC_4_tot.err
+    Untracked:  code/fastTopicsSppBC_4_tot.out
+    Untracked:  code/fastTopicsSppBC_5_tot.err
+    Untracked:  code/fastTopicsSppBC_5_tot.out
+    Untracked:  code/fastTopicsSppBC_6_tot.err
+    Untracked:  code/fastTopicsSppBC_6_tot.out
+    Untracked:  code/fastTopicsSppBC_7_tot.err
+    Untracked:  code/fastTopicsSppBC_7_tot.out
+    Untracked:  code/fastTopicsSpp_3_tot.err
+    Untracked:  code/fastTopicsSpp_3_tot.out
+    Untracked:  code/fastTopicsSpp_4_tot.err
+    Untracked:  code/fastTopicsSpp_4_tot.out
+    Untracked:  code/fastTopicsSpp_5_tot.err
+    Untracked:  code/fastTopicsSpp_5_tot.out
+    Untracked:  code/fastTopicsSpp_6_tot.err
+    Untracked:  code/fastTopicsSpp_6_tot.out
+    Untracked:  code/fastTopicsSpp_7_tot.err
+    Untracked:  code/fastTopicsSpp_7_tot.out
+    Untracked:  code/fastTopics_3_tot.err
+    Untracked:  code/fastTopics_3_tot.out
+    Untracked:  code/fastTopics_4_tot.err
+    Untracked:  code/fastTopics_4_tot.out
+    Untracked:  code/fastTopics_5_tot.err
+    Untracked:  code/fastTopics_5_tot.out
+    Untracked:  code/fastTopics_6_tot.err
+    Untracked:  code/fastTopics_6_tot.out
+    Untracked:  code/fastTopics_7_tot.err
+    Untracked:  code/fastTopics_7_tot.out
+    Untracked:  code/slurm-9586807.out
+    Untracked:  code/slurm-9586811.out
+    Untracked:  code/slurm-9586968.out
+    Untracked:  code/slurm-9586970.out
+    Untracked:  code/slurm-9587058.out
+    Untracked:  code/slurm-9587061.out
+    Untracked:  code/slurm-9588977.out
+    Untracked:  code/slurm-9588979.out
+    Untracked:  code/slurm-9588980.out
+    Untracked:  code/slurm-9588981.out
+    Untracked:  code/slurm-9588982.out
+    Untracked:  code/slurm-9598502.out
+    Untracked:  code/slurm-9598587.out
+    Untracked:  code/slurm-9611792.out
+    Untracked:  code/slurm-9611794.out
+    Untracked:  code/slurm-9612244.out
+    Untracked:  code/slurm-9614956.out
+    Untracked:  code/slurm-9619833.out
+    Untracked:  code/slurm-9622390.out
+    Untracked:  code/slurm-9626666.out
+    Untracked:  code/slurm-9626667.out
+    Untracked:  code/slurm-9649495.out
+    Untracked:  code/slurm-9649496.out
+    Untracked:  code/slurm-9649497.out
+    Untracked:  code/slurm-9649498.out
+    Untracked:  code/slurm-9649500.out
+    Untracked:  code/slurm-9688894.out
+    Untracked:  code/slurm-9688895.out
+    Untracked:  code/slurm-9688896.out
+    Untracked:  code/slurm-9688897.out
+    Untracked:  code/slurm-9688902.out
+    Untracked:  code/v2/
+    Untracked:  data/HumanPrimaryCellAtlasData-SingleR
+    Untracked:  data/HumanPrimaryCellAtlasDetails-SingleR.csv
+    Untracked:  data/HumanPrimaryCellAtlasLabels-SingleR.csv
+    Untracked:  data/alizarin-red-quant-total.csv
+    Untracked:  data/cell_atlas_ref_panel
+    Untracked:  data/cellranger-data-full/
+    Untracked:  data/corrmatrix.ost
+    Untracked:  data/de-data/
+    Untracked:  data/facs-MSC-collection-summary-sample-avg.csv
+    Untracked:  data/facs-MSC-collection-summary-species-avg.csv
+    Untracked:  data/facs-MSC-collection-summary-total.csv
+    Untracked:  data/gom-data/
+    Untracked:  data/oil-red-quant-total.csv
+    Untracked:  data/scrna-batch-reformat.csv
+    Untracked:  data/scrna-batch.csv
+    Untracked:  output/data-qc-post-subsets-batchcor.pdf
+    Untracked:  output/data-qc-post-subsets-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-batchcor.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-int19k-batchcor.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-int19k-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-int19k.reg-batchcor.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-int19k.reg-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-intNo0-batchcor.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-intNo0-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-intNo0.reg-batchcor.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-intNo0.reg-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-merge-batchcor.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-merge-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-batchcor.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-batchviz.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-intNo0.reg-batchcor.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-intNo0.reg-batchviz.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-merge-batchcor.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-merge-batchviz.pdf
+    Untracked:  output/data-qc-postfilterL.pdf
+    Untracked:  output/data-qc-prefilter.pdf
+    Untracked:  output/markers0.05-I.data.filterC.log.indv-cell.intNo0.reg-tot..rds
+    Untracked:  output/markers0.05-M.data.filterC.log.indv-cell.intNo0.reg-tot..rds
+    Untracked:  output/markers0.05-O.data.filterC.log.indv-cell.intNo0.reg-tot..rds
+    Untracked:  output/markers0.05.data.filterC.log.indv-cell.intNo0.reg-tot..rds
+    Untracked:  output/markers0.1.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  output/markers0.25.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  output/markers0.5.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  output/markers0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  output/markers1.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  output/v1/
+    Untracked:  output/v2/
+
+Unstaged changes:
+    Modified:   analysis/10x-data-2-qc.Rmd
+    Modified:   analysis/10x-data-3-integrate.Rmd
+    Deleted:    analysis/10x-data-4-classification-t2.Rmd
+    Deleted:    analysis/10x-data-4-classification-tot.Rmd
+    Deleted:    analysis/10x-data-4-classification.Rmd
+    Deleted:    analysis/10x-data-5-diffexp.Rmd
+    Deleted:    analysis/10x-data-6-conservexp.Rmd
+    Deleted:    analysis/10x-data-6-cormotif-t2.Rmd
+    Deleted:    analysis/10x-data-6-cormotif-tot.Rmd
+    Deleted:    analysis/10x-data-6-variance-t2.Rmd
+    Deleted:    analysis/10x-data-6-variance-tot.Rmd
+    Deleted:    analysis/10x-data-7-enrichment.Rmd
+    Deleted:    analysis/10x-data-8-batch-correlation.Rmd
+    Modified:   analysis/10x-plot-classification-adhoc.Rmd
+    Deleted:    analysis/10x-plot-classification.Rmd
+    Deleted:    analysis/10x-plot-diffexp.Rmd
+    Deleted:    analysis/10x-plot-replicate-correlation-t2.Rmd
+    Deleted:    analysis/10x-plot-replicate-correlation-tot.Rmd
+    Deleted:    analysis/10x-plot-utf1-tac3.Rmd
+    Deleted:    analysis/10x-view-batch-effects.Rmd
+    Deleted:    analysis/10x-view-data-metrics.Rmd
+    Deleted:    analysis/10x-view-species-assignments.Rmd
+    Deleted:    analysis/10x-view-validation-data.Rmd
+    Deleted:    analysis/asbmr2020-plots.Rmd
+    Deleted:    analysis/ashg2020-plots.Rmd
+    Modified:   analysis/index.Rmd
+    Deleted:    analysis/temp-code.Rmd
+    Deleted:    analysis/v1/index.Rmd
+    Deleted:    analysis/v1/license.Rmd
+    Modified:   code/DEdream.R
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_FALSE.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_stage.out
+    Modified:   code/DEdreamsubset.R
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_adhoc.err
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_adhoc.out
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_cluster.err
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_cluster.out
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_ostadhoc.err
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_ostadhoc.out
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_stage.err
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_stage.out
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_adhoc.err
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_adhoc.out
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_cluster.err
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_cluster.out
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_ostadhoc.err
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_ostadhoc.out
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_stage.err
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_stage.out
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_adhoc.err
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_adhoc.out
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_cluster.err
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_cluster.out
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_ostadhoc.err
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_ostadhoc.out
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_stage.err
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_stage.out
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_adhoc.err
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_adhoc.out
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_cluster.err
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_cluster.out
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_ostadhoc.err
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_ostadhoc.out
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_stage.err
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_stage.out
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/10x-data-3-integrate.Rmd</code>) and HTML (<code>docs/10x-data-3-integrate.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/b9dbe40723ebf7347c4c3420b63f5ac3d68f3e94/analysis/10x-data-3-integrate.Rmd" target="_blank">b9dbe40</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-03-05
+</td>
+<td>
+updated data integration
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/e6ab6ebde72ba993a4e3964d0bc4bb696872e3e4/analysis/10x-data-3-integrate.Rmd" target="_blank">e6ab6eb</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2020-10-05
+</td>
+<td>
+updated cormotif
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/750156c90d27b7c7b9b88b5a993c5ae749b9e2d8/analysis/10x-data-3-integrate.Rmd" target="_blank">750156c</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2020-09-20
+</td>
+<td>
+Updated DE analyses
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/411735bb59a76f62a63ffde8ea89d613ea272789/analysis/10x-data-3-integrate.Rmd" target="_blank">411735b</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2020-09-07
+</td>
+<td>
+Updated integration scripts
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/938b5128938a0f80b09af63894d3ccaa890c1ffd/analysis/10x-data-3-integrate.Rmd" target="_blank">938b512</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2020-08-17
+</td>
+<td>
+Updated data processing and integration
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="x-data-cellranger-analysis---integrate-data" class="section level2">
+<h2>10X Data Cellranger Analysis - Integrate Data</h2>
+<p>For each dataset, normalization, variance stabilization, and regression of unwanted variation were performed. Following this, datasets were integrated using shared highly variable genes.</p>
+<p>The first question was how should the data be subsetted before normalization. The following subsets were assessed:</p>
+<ul>
+<li>separate species and cell types (n=6) (EX: Human iPSCs)</li>
+<li>separate human-chimp pairs and cell types (n=21) (EX: H1+C1 iPSCs)</li>
+<li>separate individuals and cell types (n=42) (EX: H1 iPSCs)</li>
+<li>separate species but keep all cell types together (n=2) (EX: Human iPSCs+MSCs+Osteoblasts)</li>
+<li>separate human-chimp pairs but keep all cell types together (n=7) (EX: H1+C1 iPSCs+MSCs+Osteoblasts)</li>
+<li>separate individuals but keep all cell types together (n=14) (EX: H1 iPSCs+MSCs+Osteoblasts)</li>
+</ul>
+<p>However, the final datasets chosen and included here are:</p>
+<ul>
+<li>separate individuals and cell types (n=42) (EX: H1 iPSCs)</li>
+<li>separate individuals but keep all cell types together</li>
+</ul>
+<p><strong>Step 1 - Normalization</strong></p>
+<p>In Seurat the main normalization methods are:</p>
+<ol style="list-style-type: decimal">
+<li>Log Normalization
+<ul>
+<li>Within a cell, gene counts are divided by the total counts, multiplied by a scale.factor (10000), and natural-log transformed using log1p.</li>
+</ul></li>
+<li>SCTransform
+<ul>
+<li>Alternative workflow that perfoms log normalization, variable feature identification, and data scaling in one command.</li>
+</ul></li>
+</ol>
+<p>Because data are more difficult to manipulate with SCTransform, standard log normalization is used here.</p>
+<p><strong>Step 2 - Calculate Cell Cycle Score</strong></p>
+<p>Cell cycle scores are assigned to cells based on G2/M and S phase markers in each cell. The calculation depends on average gene expression levels across cells in a seurat object, so merging or subsetting data can affect these scores. Here, these scores are calculated within separate samples (n=42, each individual and cell type separated) rather than after different samples are merged together.</p>
+<p>Possible Cell Cycle Assignments</p>
+<ul>
+<li>G1: beginning of interphase</li>
+<li>S: synthesis phase</li>
+<li>G2: end of interphase prior to mitosis</li>
+</ul>
+<p><strong>Step 3 - Variance Stabilization</strong></p>
+<p>Identifying variable genes depends on expression patterns across cells in a seurat object, so merging or subsetting data can affect which genes are identified as variable. Here,</p>
+<p><strong>Step 4 - Regression of Unwanted Variation</strong></p>
+<p>Here, variation associated with related variables is not regressed out of the data subsets before integration.</p>
+<p><strong>Step 5 - Data Integration</strong></p>
+<p>In order to best call cell types across collections and species, data were integrated. Simple merging of datasets and even merging datasets using the intersect of the 6000 most variable genes in humans and chimpanzees (see scripts for previous trial runs below) retained unwanted variation. Thus, data were integrated to remove this unwanted variation and allow successful calling of cell types on biological variation of interest.</p>
+<p>Data were integrated using reciprocal PCA combined with reference-based integration. This method (while perhaps less accurate than CCA) is more computationally efficient than other datasets, which is necessary for the large number of cells considered here. In this method, reciprocal PCA is performed to identify an effective space in which to find anchors. Specifically, each dataset is projected into every other dataset’s PCA space, and anchors are constrained by the same mutual neighborhood requirement. Because a subset of databases are assigned as references, each dataset is compared to the references instead of performing all pairwise comparisons. During integration, the identified anchors between datasets (which represent pairwise correspondences between individual cells) are then used to harmonize the datasets (transfer information from one dataset to another).</p>
+<p><strong><em>Additional Notes</em></strong></p>
+<p>Because subset, merged, and integrated data reductions were correlated with UMI counts and percent of mitochondrial reads, several methods of regressing out this unwanted variation were tested. Cell cycle phase was also correlated with data reductions, but this variation was not regressed out because this is not recommended for differentiating cells.</p>
+<ul>
+<li>Option 1: regress out unwanted variation due to UMI counts and percent.mt while data are still in subsets</li>
+<li>unwanted variation does not stay regressed out following integration (do no use)</li>
+<li>Option 2: regress out unwanted variation due to UMI counts and percent.mt during reciprocal PCA integration set up</li>
+<li>method does not work</li>
+<li>Option 3: regress out unwanted variation due to UMI counts and percent.mt after data are integrated</li>
+<li>unwanted variation is successfully regressed out and data reduction appears different (should look into further)</li>
+</ul>
+<p><strong>References</strong></p>
+<ul>
+<li><a href="https://satijalab.org/seurat/v3.2/integration.html" class="uri">https://satijalab.org/seurat/v3.2/integration.html</a></li>
+<li><a href="https://hbctraining.github.io/scRNA-seq/lessons/06_SC_SCT_and_integration.html" class="uri">https://hbctraining.github.io/scRNA-seq/lessons/06_SC_SCT_and_integration.html</a></li>
+<li><a href="https://hbctraining.github.io/scRNA-seq/lessons/cell_cycle_scoring.html" class="uri">https://hbctraining.github.io/scRNA-seq/lessons/cell_cycle_scoring.html</a></li>
+<li>See the following scripts for previous trial runs:
+<ul>
+<li>./analysis/v1/v1-10x-data-normalize-log.Rmd</li>
+<li>./analysis/v1/v1-10x-data-normalize-sct.Rmd</li>
+<li>./analysis/v2/v2-10x-data-3-integrate.Rmd</li>
+</ul></li>
+</ul>
+<pre class="r"><code>#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(colorspace)
+library(RColorBrewer)
+library(tidyr)
+library(raster)</code></pre>
+<div id="load-and-prepare-data" class="section level3">
+<h3>Load and Prepare Data</h3>
+<p>Prepare filtered 10X data by separating each individual and cell type into seperate datasets.</p>
+<pre class="r"><code>#Load batch info
+batch &lt;- read.csv(file=&#39;./data/scrna-batch.csv&#39;, header=TRUE, sep=&quot;,&quot;)
+
+#Define filter type
+#filter &lt;- &quot;&quot;
+#filter &lt;- &quot;.filterL&quot;
+filter &lt;- &quot;.filterC&quot;
+
+#Read in files
+data &lt;- readRDS(paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.rds&quot;))
+
+#Load cell cycle markers (Tirosh et al., 2016 Science) with seurat
+s.genes &lt;- cc.genes$s.genes
+g2m.genes &lt;- cc.genes$g2m.genes
+
+#Separate human and chimp data within each collection into separate objects
+objects &lt;- list()
+idx &lt;- 1
+for (i in 1:length(batch$Sample_Name_at_Core))
+{
+  obj &lt;- subset(data[[i]], Species==&#39;Human&#39;)
+  objects[[idx]] &lt;- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx &lt;- idx+1
+  obj &lt;- subset(data[[i]], Species==&#39;Chimp&#39;)
+  objects[[idx]] &lt;- CreateSeuratObject(obj@assays$RNA@counts, meta.data=obj@meta.data)
+  idx &lt;- idx+1
+}
+rm(data,obj,idx)</code></pre>
+</div>
+<div id="normalize-data-and-score-cell-cycle" class="section level3">
+<h3>Normalize Data and Score Cell Cycle</h3>
+<p>Because cell cycle score depends on average gene expression levels across cells in a seurat object, it is probably best to calculate these scores within separate samples (n=42, each individual and cell type separated) rather than after different samples are merged together.</p>
+<pre class="r"><code>#Perform log normalization and cell cycle scoring on each individual and cell type
+for (i in 1:length(objects)) {
+  print(i)
+  objects[[i]] &lt;- NormalizeData(objects[[i]], normalization.method=&quot;LogNormalize&quot;, scale.factor=10000, verbose=FALSE)
+  objects[[i]] &lt;- CellCycleScoring(objects[[i]], s.features=s.genes, g2m.features=g2m.genes, set.ident=FALSE)
+}
+rm(s.genes,g2m.genes,i)</code></pre>
+</div>
+<div id="merge-data-into-different-subsets" class="section level3">
+<h3>Merge Data into Different Subsets</h3>
+<p>Datasets include:</p>
+<ul>
+<li>cells separated by individual and cell type (n=42)</li>
+<li>cells separated by individual (n=14)</li>
+<li>all cells from Time 0 collections (n=1)</li>
+<li>all cells from Time 1 collections (n=1)</li>
+<li>all cells from Time 2 collections (n=1)</li>
+<li>all cells from all collections (n=1)</li>
+</ul>
+<pre class="r"><code>#keep collections separated by individual and cell type (.log.indv-cell)
+#objects
+
+#merge T0, T1, and T2 collections within each individual (.log.indv)
+objects[[43]] &lt;- merge(objects[[1]], y=c(objects[[3]],objects[[5]]),add.cell.ids=c(&quot;H1.I&quot;,&quot;H1.M&quot;,&quot;H1.O&quot;))
+objects[[44]] &lt;- merge(objects[[7]], y=c(objects[[9]],objects[[11]]),add.cell.ids=c(&quot;H1r2.I&quot;,&quot;H1r2.M&quot;,&quot;H1r2.O&quot;))
+objects[[45]] &lt;- merge(objects[[13]], y=c(objects[[15]],objects[[17]]),add.cell.ids=c(&quot;H2.I&quot;,&quot;H2.M&quot;,&quot;H2.O&quot;))
+objects[[46]] &lt;- merge(objects[[19]], y=c(objects[[21]],objects[[23]]),add.cell.ids=c(&quot;H3.I&quot;,&quot;H3.M&quot;,&quot;H3.O&quot;))
+objects[[47]] &lt;- merge(objects[[25]], y=c(objects[[27]],objects[[29]]),add.cell.ids=c(&quot;H4.I&quot;,&quot;H4.M&quot;,&quot;H4.O&quot;))
+objects[[48]] &lt;- merge(objects[[31]], y=c(objects[[33]],objects[[35]]),add.cell.ids=c(&quot;H5.I&quot;,&quot;H5.M&quot;,&quot;H5.O&quot;))
+objects[[49]] &lt;- merge(objects[[37]], y=c(objects[[39]],objects[[41]]),add.cell.ids=c(&quot;H6.I&quot;,&quot;H6.M&quot;,&quot;H6.O&quot;))
+objects[[50]] &lt;- merge(objects[[2]], y=c(objects[[4]],objects[[6]]),add.cell.ids=c(&quot;C1.I&quot;,&quot;C1.M&quot;,&quot;C1.O&quot;))
+objects[[51]] &lt;- merge(objects[[8]], y=c(objects[[10]],objects[[12]]),add.cell.ids=c(&quot;C1r2.I&quot;,&quot;C1r2.M&quot;,&quot;C1r2.O&quot;))
+objects[[52]] &lt;- merge(objects[[14]], y=c(objects[[16]],objects[[18]]),add.cell.ids=c(&quot;C2.I&quot;,&quot;C2.M&quot;,&quot;C2.O&quot;))
+objects[[53]] &lt;- merge(objects[[20]], y=c(objects[[22]],objects[[24]]),add.cell.ids=c(&quot;C3.I&quot;,&quot;C3.M&quot;,&quot;C3.O&quot;))
+objects[[54]] &lt;- merge(objects[[26]], y=c(objects[[28]],objects[[30]]),add.cell.ids=c(&quot;C4.I&quot;,&quot;C4.M&quot;,&quot;C4.O&quot;))
+objects[[55]] &lt;- merge(objects[[32]], y=c(objects[[34]],objects[[36]]),add.cell.ids=c(&quot;C5.I&quot;,&quot;C5.M&quot;,&quot;C5.O&quot;))
+objects[[56]] &lt;- merge(objects[[38]], y=c(objects[[40]],objects[[42]]),add.cell.ids=c(&quot;C6.I&quot;,&quot;C6.M&quot;,&quot;C6.O&quot;))
+
+#merge all T0 collections (.log.t0)
+objects[[57]] &lt;- merge(objects[[1]],
+                        y=c(objects[[7]],objects[[13]],objects[[19]],objects[[25]],objects[[31]],objects[[37]],
+                            objects[[2]],objects[[8]],objects[[14]],objects[[20]],objects[[26]],objects[[32]],objects[[38]]),
+                        add.cell.ids=c(&quot;H1.I&quot;,&quot;H1r2.I&quot;,&quot;H2.I&quot;,&quot;H3.I&quot;,&quot;H4.I&quot;,&quot;H5.I&quot;,&quot;H6.I&quot;,
+                                       &quot;C1.I&quot;,&quot;C1r2.I&quot;,&quot;C2.I&quot;,&quot;C3.I&quot;,&quot;C4.I&quot;,&quot;C5.I&quot;,&quot;C6.I&quot;))
+
+#merge all T1 collections (.log.t1)
+objects[[58]] &lt;- merge(objects[[3]],
+                        y=c(objects[[9]],objects[[15]],objects[[21]],objects[[27]],objects[[33]],objects[[39]],
+                            objects[[4]],objects[[10]],objects[[16]],objects[[22]],objects[[28]],objects[[34]],objects[[40]]),
+                        add.cell.ids=c(&quot;H1.M&quot;,&quot;H1r2.M&quot;,&quot;H2.M&quot;,&quot;H3.M&quot;,&quot;H4.M&quot;,&quot;H5.M&quot;,&quot;H6.M&quot;,
+                                       &quot;C1.M&quot;,&quot;C1r2.M&quot;,&quot;C2.M&quot;,&quot;C3.M&quot;,&quot;C4.M&quot;,&quot;C5.M&quot;,&quot;C6.M&quot;))
+
+#merge all T2 collections (.log.t2)
+objects[[59]] &lt;- merge(objects[[5]],
+                        y=c(objects[[11]],objects[[17]],objects[[23]],objects[[29]],objects[[35]],objects[[41]],
+                            objects[[6]],objects[[12]],objects[[18]],objects[[24]],objects[[30]],objects[[36]],objects[[42]]),
+                        add.cell.ids=c(&quot;H1.O&quot;,&quot;H1r2.O&quot;,&quot;H2.O&quot;,&quot;H3.O&quot;,&quot;H4.O&quot;,&quot;H5.O&quot;,&quot;H6.O&quot;,
+                                       &quot;C1.O&quot;,&quot;C1r2.O&quot;,&quot;C2.O&quot;,&quot;C3.O&quot;,&quot;C4.O&quot;,&quot;C5.O&quot;,&quot;C6.O&quot;))
+
+#merge all collections (.log.tot)
+objects[[60]] &lt;- merge(objects[[1]],
+                        y=c(objects[[7]],objects[[13]],objects[[19]],objects[[25]],objects[[31]],objects[[37]],
+                            objects[[2]],objects[[8]],objects[[14]],objects[[20]],objects[[26]],objects[[32]],objects[[38]],
+                            objects[[3]],objects[[9]],objects[[15]],objects[[21]],objects[[27]],objects[[33]],objects[[39]],
+                            objects[[4]],objects[[10]],objects[[16]],objects[[22]],objects[[28]],objects[[34]],objects[[40]],
+                            objects[[5]],objects[[11]],objects[[17]],objects[[23]],objects[[29]],objects[[35]],objects[[41]],
+                            objects[[6]],objects[[12]],objects[[18]],objects[[24]],objects[[30]],objects[[36]],objects[[42]]),
+                        add.cell.ids=c(&quot;H1.I&quot;,&quot;H1r2.I&quot;,&quot;H2.I&quot;,&quot;H3.I&quot;,&quot;H4.I&quot;,&quot;H5.I&quot;,&quot;H6.I&quot;,
+                                       &quot;C1.I&quot;,&quot;C1r2.I&quot;,&quot;C2.I&quot;,&quot;C3.I&quot;,&quot;C4.I&quot;,&quot;C5.I&quot;,&quot;C6.I&quot;,
+                                       &quot;H1.M&quot;,&quot;H1r2.M&quot;,&quot;H2.M&quot;,&quot;H3.M&quot;,&quot;H4.M&quot;,&quot;H5.M&quot;,&quot;H6.M&quot;,
+                                       &quot;C1.M&quot;,&quot;C1r2.M&quot;,&quot;C2.M&quot;,&quot;C3.M&quot;,&quot;C4.M&quot;,&quot;C5.M&quot;,&quot;C6.M&quot;,
+                                       &quot;H1.O&quot;,&quot;H1r2.O&quot;,&quot;H2.O&quot;,&quot;H3.O&quot;,&quot;H4.O&quot;,&quot;H5.O&quot;,&quot;H6.O&quot;,
+                                       &quot;C1.O&quot;,&quot;C1r2.O&quot;,&quot;C2.O&quot;,&quot;C3.O&quot;,&quot;C4.O&quot;,&quot;C5.O&quot;,&quot;C6.O&quot;))</code></pre>
+</div>
+<div id="find-variable-features-stabilize-variance-and-reduce-data-dimensionality" class="section level3">
+<h3>Find Variable Features, Stabilize Variance, and Reduce Data Dimensionality</h3>
+<p>Which variable features are identified depends on which samples are included in the seurat object. This is why different sets of merged data are first compiled before then assessing variable feature in the merged dataset.</p>
+<p>When scaling the data, no variables are regressed out at this time.</p>
+<p>To QC each data subset, dimensional reduction is also performed.</p>
+<pre class="r"><code>#Identify variable feature for each individual and cell type
+for (i in 1:length(objects)) {
+  print(i)
+  objects[[i]] &lt;- FindVariableFeatures(objects[[i]], selection.method=&quot;vst&quot;, nfeatures=3000, verbose=FALSE)
+  objects[[i]] &lt;- ScaleData(objects[[i]], vars.to.regress=NULL, verbose=FALSE)
+  objects[[i]] &lt;- RunPCA(objects[[i]], npcs=100, verbose=FALSE)
+  #keep all dims that explaim more than 0.1% of variance
+  pva &lt;- objects[[i]]@reductions$pca@stdev^2/objects[[i]]@reductions$pca@misc$total.variance
+  ndim &lt;- length(which(pva&gt;=0.001))
+  objects[[i]] &lt;- RunUMAP(objects[[i]], dims=1:ndim)
+}
+rm(pva,ndim,i)</code></pre>
+</div>
+<div id="save-data-subsets" class="section level3">
+<h3>Save Data Subsets</h3>
+<pre class="r"><code>#Save data
+saveRDS(objects[1:42], file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.rds&quot;))
+saveRDS(objects[43:56], file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv.rds&quot;))
+saveRDS(objects[57], file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.merge-t0.rds&quot;))
+saveRDS(objects[58], file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.merge-t1.rds&quot;))
+saveRDS(objects[59], file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.merge-t2.rds&quot;))
+saveRDS(objects[60], file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.merge-tot.rds&quot;))
+rm(batch, objects)</code></pre>
+</div>
+<div id="qc-of-data-subsets" class="section level3">
+<h3>QC of Data Subsets</h3>
+<p>All subsets show variation correlated with UMI counts per cell (nCount_RNA), gene counts per cell (nFeature_RNA), percent of mitochondrial reads (percent.mt), and cell cycle phase (Phase, S.Score, G2M.Score). For subsets containing three collections (Time 0, Time 1, Time 2) for one cell line, batch effects associated with collection are also correlated with expression variation (Collection, Stage, Sample, PrewashViability, PostwashViability, PostmixViability, CD90, CD73, CD105, CD45.CD34.CD11b.CD19.HLA.DR, Alizarin, OilRed). This is true across all cell filtering schemes (no filtering, lenient filtering, and conservative filtering).</p>
+<pre class="r"><code>#Define function for making heatmap of data reductions vs. batch correlations
+batchPlot &lt;- function(data,text,batch) {
+  
+  df &lt;- data@meta.data[,which(colnames(data@meta.data) %in% batch)]
+  df &lt;- cbind(df,data@reductions$pca@cell.embeddings[,1:10])
+  df &lt;- df[,colSums(is.na(df))&lt;nrow(df)]
+  
+  y &lt;- dim(df)[2]
+  x &lt;- y-10
+  
+  #Make correlation matrix
+  cov.cor &lt;- matrix(ncol=10, nrow=x, dimnames=list(colnames(df)[1:x], colnames(df)[(x+1):y]))
+  
+  j=1
+  while (j &lt;= 10) { 
+    k=1
+    while (k &lt;= x) { 
+      if (length(unique(df[,0+k]))&gt;1) {
+        lm_result &lt;- lm(df[,x+j] ~ df[,0+k]) 
+        r2 &lt;- summary(lm_result)$r.squared 
+        cov.cor[k, j] &lt;- r2 
+      }
+      if (length(unique(df[,0+k]))==1) {
+        cov.cor[k, j] &lt;- NA
+      }
+      k=k+1
+    }
+    j=j+1
+  }
+  
+  #Convert to long format to plot in ggplot2
+  cov.cor.df &lt;- as.data.frame(cov.cor) 
+  cov.cor.df$batch &lt;- rownames(cov.cor.df) 
+  cov.cor.df &lt;- gather(cov.cor.df, key=&quot;reduction&quot;, value=&quot;cor&quot;, -batch) 
+  head(cov.cor.df) 
+  
+  #Plot heatmap
+  cov.cor.df$batch &lt;- factor(cov.cor.df$batch, 
+                             levels = unique(cov.cor.df$batch), 
+                             labels = unique(cov.cor.df$batch))
+  
+  cov.cor.df$reduction &lt;- factor(cov.cor.df$reduction, 
+                                 levels = unique(cov.cor.df$reduction),
+                                 labels = unique(cov.cor.df$reduction)) 
+  
+  title &lt;- paste0(&quot;Correlation between data reductions and batch effects\n&quot;,text)
+  
+  return(print(ggplot(cov.cor.df, aes(x=reduction, y=batch, fill=cor)) +
+                 geom_tile(color=&quot;white&quot;) +
+                 scale_fill_gradient(low=&quot;white&quot;, high=&quot;darkgrey&quot;, limits=c(0, 1)) + 
+                 labs(title=title, x=&quot;&quot;, y=&quot;&quot;) +
+                 theme(axis.text.x=element_text(angle=90, hjust=1))))
+  
+}</code></pre>
+<pre class="r"><code>#Define function for making plots and output files
+qcPlots &lt;-function(data,text,batch) {
+  
+  batch.factor &lt;- c(&quot;Stage&quot;,&quot;Species&quot;,&quot;Collection&quot;,&quot;Pair&quot;,&quot;Individual&quot;,&quot;Replicate&quot;,&quot;MSCmedia&quot;,&quot;Sample&quot;,&quot;Sex&quot;,&quot;Age&quot;,&quot;Number6W&quot;,&quot;SequencingBatch&quot;,&quot;Phase&quot;)
+  batch.number &lt;- c(&quot;nCount_RNA&quot;,&quot;nFeature_RNA&quot;,&quot;percent.mt&quot;,&quot;PrewashViability&quot;,&quot;PostwashViability&quot;,&quot;PostmixViability&quot;,
+                    &quot;CD90&quot;,&quot;CD73&quot;,&quot;CD105&quot;,&quot;CD45.CD34.CD11b.CD19.HLA.DR&quot;,&quot;Alizarin&quot;,&quot;OilRed&quot;,&quot;S.Score&quot;,&quot;G2M.Score&quot;)
+  
+  plotList &lt;- list()
+  
+  i=1
+  while (i &lt;= length(batch)) {
+    
+    if (sum(is.na(data@meta.data[,batch[[i]]]))&lt;nrow(data@meta.data)) {
+      if (batch[[i]] %in% batch.factor) {
+        plotList[[i]] &lt;- CombinePlots(plots=list((DimPlot(data, group.by=batch[[i]], reduction=&quot;umap&quot;) + labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;)),
+                                                 (DimPlot(data, group.by=batch[[i]], reduction=&quot;pca&quot;, dims=c(1,2)) + labs(x=&quot;PC1&quot;,y=&quot;PC2&quot;)),
+                                                 (DimPlot(data, group.by=batch[[i]], reduction=&quot;pca&quot;, dims=c(3,4)) + labs(x=&quot;PC3&quot;,y=&quot;PC4&quot;)),
+                                                 (DimPlot(data, group.by=batch[[i]], reduction=&quot;pca&quot;, dims=c(5,6)) + labs(x=&quot;PC5&quot;,y=&quot;PC6&quot;)),
+                                                 (DimPlot(data, group.by=batch[[i]], reduction=&quot;pca&quot;, dims=c(7,8)) + labs(x=&quot;PC7&quot;,y=&quot;PC8&quot;)),
+                                                 (DimPlot(data, group.by=batch[[i]], reduction=&quot;pca&quot;, dims=c(9,10)) + labs(x=&quot;PC9&quot;,y=&quot;PC10&quot;))), ncol=6)
+      }
+      if (batch[[i]] %in% batch.number) {
+        plotList[[i]] &lt;- CombinePlots(plots=list((FeaturePlot(data, features=batch[[i]], reduction=&quot;umap&quot;) + labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;)),
+                                                 (FeaturePlot(data, features=batch[[i]], reduction=&quot;pca&quot;, dims=c(1,2)) + labs(x=&quot;PC1&quot;,y=&quot;PC2&quot;)),
+                                                 (FeaturePlot(data, features=batch[[i]], reduction=&quot;pca&quot;, dims=c(3,4)) + labs(x=&quot;PC3&quot;,y=&quot;PC4&quot;)),
+                                                 (FeaturePlot(data, features=batch[[i]], reduction=&quot;pca&quot;, dims=c(5,6)) + labs(x=&quot;PC5&quot;,y=&quot;PC6&quot;)),
+                                                 (FeaturePlot(data, features=batch[[i]], reduction=&quot;pca&quot;, dims=c(7,8)) + labs(x=&quot;PC7&quot;,y=&quot;PC8&quot;)),
+                                                 (FeaturePlot(data, features=batch[[i]], reduction=&quot;pca&quot;, dims=c(9,10)) + labs(x=&quot;PC9&quot;,y=&quot;PC10&quot;))), ncol=6)
+      }
+    }
+    
+    else {
+      plotList[[i]] &lt;- grid.rect(gp=gpar(col=&quot;white&quot;))
+    }
+      
+    i=i+1
+
+  }
+  
+  return(print(grid.arrange(grobs=plotList, ncol=1, top=textGrob(text,gp=gpar(fontsize=20)))))
+  
+}</code></pre>
+<pre class="r"><code>#Load information of data to be examined
+
+obj.set1 &lt;- readRDS(paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.rds&quot;))
+obj.set2 &lt;- readRDS(paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv.rds&quot;))
+objects &lt;- append(obj.set1,obj.set2)
+rm(obj.set1,obj.set2)
+
+batch &lt;- c(&quot;Stage&quot;,&quot;Species&quot;,&quot;Collection&quot;,&quot;Pair&quot;,&quot;Individual&quot;,&quot;Replicate&quot;,&quot;MSCmedia&quot;,&quot;Sample&quot;,&quot;Sex&quot;,&quot;Age&quot;,&quot;Number6W&quot;,&quot;SequencingBatch&quot;,
+           &quot;Phase&quot;,&quot;nCount_RNA&quot;,&quot;nFeature_RNA&quot;,&quot;percent.mt&quot;,&quot;PrewashViability&quot;,&quot;PostwashViability&quot;,&quot;PostmixViability&quot;,
+           &quot;CD90&quot;,&quot;CD73&quot;,&quot;CD105&quot;,&quot;CD45.CD34.CD11b.CD19.HLA.DR&quot;,&quot;Alizarin&quot;,&quot;OilRed&quot;,&quot;S.Score&quot;,&quot;G2M.Score&quot;)
+
+#Calculate and plot correlation of batch with first 10 PCs and UMAP
+pdf(file=paste0(&quot;./output/data-qc-post&quot;,str_remove(filter,&quot;.&quot;),&quot;-subsets-batchcor.pdf&quot;), onefile=TRUE, width=7, height=7)
+i=1
+for (i in 1:length(objects)) {
+  print(i)
+  text &lt;- paste0(&quot;subset &quot;,i)
+  data &lt;- objects[[i]]
+  batchPlot(data,text,batch)
+  i=i+1
+}
+dev.off()
+
+#Visualize batch effects in PC and UMAP space
+pdf(file=paste0(&quot;./output/data-qc-post&quot;,str_remove(filter,&quot;.&quot;),&quot;-subsets-batchviz.pdf&quot;), onefile=TRUE, width=18, height=81)
+i=1
+for (i in 1:length(objects)) {
+  text &lt;- paste0(&quot;subset &quot;,i)
+  data &lt;- objects[[i]]
+  print(text)
+  qcPlots(data,text,batch)
+  i=i+1
+}
+dev.off()</code></pre>
+</div>
+<div id="data-integration" class="section level3">
+<h3>Data Integration</h3>
+<p>Datasets used:</p>
+<ul>
+<li>separate individuals and cells types
+<ul>
+<li>integrated Time 0 cells</li>
+<li>integrated Time 1 cells</li>
+<li>integrated Time 2 cells</li>
+</ul></li>
+<li>separate individuals but keep all cell types together
+<ul>
+<li>integrated all cells</li>
+</ul></li>
+</ul>
+<p>Cells were integrated using different numbers of genes:</p>
+<ul>
+<li>all genes that have at least 1 UMI count across samples used as integration anchors (intNo0)
+<ul>
+<li>t0: 18053 genes</li>
+<li>t1: 17510 genes</li>
+<li>t2: 17476 genes</li>
+<li>tot: 18482 genes</li>
+</ul></li>
+<li>all 19377 genes used as integration anchors (int19k)</li>
+</ul>
+<p>Following integration, scale data involved either:</p>
+<ul>
+<li>no variables regressed out during scale data (intNo0, int19k)</li>
+<li>nCount_RNA and percent.mt regressed out during scale data following integration (intNo0.reg, int19k.reg)</li>
+</ul>
+<p>Steps for each integration:</p>
+<ul>
+<li>Define list subset</li>
+<li>Select features for downstream integration</li>
+<li>Identify anchors (used references + RPCA reduction method) [note: all other integration methods crash]</li>
+<li>Integrate datasets</li>
+<li>Reduce dimensionality</li>
+<li>Save data</li>
+</ul>
+<pre class="bash"><code>sinteractive --partition=gilad --time=48:00:00 --mem-per-cpu=83400
+module load R/3.6.1
+R</code></pre>
+<pre class="r"><code>#Define filter type
+#filter &lt;- &quot;&quot;
+#filter &lt;- &quot;.filterL&quot;
+filter &lt;- &quot;.filterC&quot;
+
+#Load objects
+dataCell &lt;- readRDS(paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.rds&quot;))
+#dataCell &lt;- readRDS(paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.reg.indv-cell.rds&quot;))</code></pre>
+<pre class="r"><code>#Combine Time 0 cells from all samples
+
+obj  &lt;- list(dataCell[[1]],dataCell[[2]],
+             dataCell[[7]],dataCell[[8]],
+             dataCell[[13]],dataCell[[14]],
+             dataCell[[19]],dataCell[[20]],
+             dataCell[[25]],dataCell[[26]],
+             dataCell[[31]],dataCell[[32]],
+             dataCell[[37]],dataCell[[38]])
+
+#all genes that have at least 1 UMI count across samples
+geneList &lt;- c()
+for(object in obj) {
+  geneList &lt;- c(geneList,rownames(object@assays$RNA@counts)[rowSums(object@assays$RNA@counts)!=0])
+}
+obj.features &lt;- unique(geneList)
+length(obj.features)
+#all 19377 genes
+#obj.features &lt;- rownames(dataCell[[1]]@assays$RNA@counts)
+
+ref.data &lt;- c(3:4) #H1-r2 and C1-r2 differentiated best
+
+obj &lt;- lapply(X=obj, FUN=function(x) {
+  x &lt;- ScaleData(x, features=obj.features, verbose=FALSE)
+  x &lt;- RunPCA(x, features=obj.features, verbose=FALSE)
+})
+
+obj.anchors &lt;- FindIntegrationAnchors(object.list=obj,
+                                      normalization.method=&quot;LogNormalize&quot;,
+                                      anchor.features=obj.features,
+                                      reference=ref.data,
+                                      reduction=&quot;rpca&quot;)
+
+integrate &lt;- IntegrateData(anchorset=obj.anchors,
+                           normalization.method=&quot;LogNormalize&quot;)
+
+#integrate &lt;- ScaleData(integrate, vars.to.regress=NULL, verbose=FALSE)
+integrate &lt;- ScaleData(integrate, vars.to.regress=c(&quot;nCount_RNA&quot;,&quot;percent.mt&quot;))
+
+integrate &lt;- RunPCA(object=integrate,
+                    npcs=100,
+                    verbose=FALSE)
+
+#keep all dims that explaim more than 0.1% of variance
+pva &lt;- integrate@reductions$pca@stdev^2/integrate@reductions$pca@misc$total.variance
+ndim &lt;- length(which(pva&gt;=0.001))
+print(ndim)
+
+integrate &lt;- RunUMAP(integrate,
+                     dims=1:ndim)
+
+#saveRDS(integrate, file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.intNo0-t0.rds&quot;))
+saveRDS(integrate, file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.intNo0.reg-t0.rds&quot;))
+#saveRDS(integrate, file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.int19k-t0.rds&quot;))
+#saveRDS(integrate, file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.int19k.reg-t0.rds&quot;))
+
+rm(obj,obj.features,obj.anchors,ref.data,integrate,pva,ndim)</code></pre>
+<pre class="r"><code>#Combine Time 1 cells from all samples
+
+obj   &lt;- list(dataCell[[3]],dataCell[[4]],
+              dataCell[[9]],dataCell[[10]],
+              dataCell[[15]],dataCell[[16]],
+              dataCell[[21]],dataCell[[22]],
+              dataCell[[27]],dataCell[[28]],
+              dataCell[[33]],dataCell[[34]],
+              dataCell[[39]],dataCell[[40]])
+
+#all genes that have at least 1 UMI count across samples
+geneList &lt;- c()
+for(object in obj) {
+  geneList &lt;- c(geneList,rownames(object@assays$RNA@counts)[rowSums(object@assays$RNA@counts)!=0])
+}
+obj.features &lt;- unique(geneList)
+length(obj.features)
+#all 19377 genes
+#obj.features &lt;- rownames(dataCell[[1]]@assays$RNA@counts)
+
+ref.data &lt;- c(3:4) #H1-r2 and C1-r2 differentiated best
+
+obj &lt;- lapply(X=obj, FUN=function(x) {
+  x &lt;- ScaleData(x, features=obj.features, verbose=FALSE)
+  x &lt;- RunPCA(x, features=obj.features, verbose=FALSE)
+})
+
+obj.anchors &lt;- FindIntegrationAnchors(object.list=obj,
+                                      normalization.method=&quot;LogNormalize&quot;,
+                                      anchor.features=obj.features,
+                                      reference=ref.data,
+                                      reduction=&quot;rpca&quot;)
+
+integrate &lt;- IntegrateData(anchorset=obj.anchors,
+                           normalization.method=&quot;LogNormalize&quot;)
+
+#integrate &lt;- ScaleData(integrate, vars.to.regress=NULL, verbose=FALSE)
+integrate &lt;- ScaleData(integrate, vars.to.regress=c(&quot;nCount_RNA&quot;,&quot;percent.mt&quot;))
+
+integrate &lt;- RunPCA(object=integrate,
+                    npcs=100,
+                    verbose=FALSE)
+
+#keep all dims that explaim more than 0.1% of variance
+pva &lt;- integrate@reductions$pca@stdev^2/integrate@reductions$pca@misc$total.variance
+ndim &lt;- length(which(pva&gt;=0.001))
+print(ndim)
+
+integrate &lt;- RunUMAP(integrate,
+                     dims=1:ndim)
+
+#saveRDS(integrate, file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.intNo0-t1.rds&quot;))
+saveRDS(integrate, file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.intNo0.reg-t1.rds&quot;))
+#saveRDS(integrate, file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.int19k-t1.rds&quot;))
+#saveRDS(integrate, file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.int19k.reg-t1.rds&quot;))
+
+rm(obj,obj.features,obj.anchors,ref.data,integrate,pva,ndim)</code></pre>
+<pre class="r"><code>#Combine Time 2 cells from all samples
+
+obj &lt;- list(dataCell[[5]],dataCell[[6]],
+            dataCell[[11]],dataCell[[12]],
+            dataCell[[17]],dataCell[[18]],
+            dataCell[[23]],dataCell[[24]],
+            dataCell[[29]],dataCell[[30]],
+            dataCell[[35]],dataCell[[36]],
+            dataCell[[41]],dataCell[[42]])
+
+#all genes that have at least 1 UMI count across samples
+geneList &lt;- c()
+for(object in obj) {
+  geneList &lt;- c(geneList,rownames(object@assays$RNA@counts)[rowSums(object@assays$RNA@counts)!=0])
+}
+obj.features &lt;- unique(geneList)
+length(obj.features)
+#all 19377 genes
+#obj.features &lt;- rownames(dataCell[[1]]@assays$RNA@counts)
+
+ref.data &lt;- c(3:4) #H1-r2 and C1-r2 differentiated best
+
+obj &lt;- lapply(X=obj, FUN=function(x) {
+  x &lt;- ScaleData(x, features=obj.features, verbose=FALSE)
+  x &lt;- RunPCA(x, features=obj.features, verbose=FALSE)
+})
+
+obj.anchors &lt;- FindIntegrationAnchors(object.list=obj,
+                                      normalization.method=&quot;LogNormalize&quot;,
+                                      anchor.features=obj.features,
+                                      reference=ref.data,
+                                      reduction=&quot;rpca&quot;)
+
+integrate &lt;- IntegrateData(anchorset=obj.anchors,
+                           normalization.method=&quot;LogNormalize&quot;)
+
+#integrate &lt;- ScaleData(integrate, vars.to.regress=NULL, verbose=FALSE)
+integrate &lt;- ScaleData(integrate, vars.to.regress=c(&quot;nCount_RNA&quot;,&quot;percent.mt&quot;))
+
+integrate &lt;- RunPCA(object=integrate,
+                    npcs=100,
+                    verbose=FALSE)
+
+#keep all dims that explaim more than 0.1% of variance
+pva &lt;- integrate@reductions$pca@stdev^2/integrate@reductions$pca@misc$total.variance
+ndim &lt;- length(which(pva&gt;=0.001))
+print(ndim)
+
+integrate &lt;- RunUMAP(integrate,
+                     dims=1:ndim)
+
+#saveRDS(integrate, file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.intNo0-t2.rds&quot;))
+saveRDS(integrate, file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.intNo0.reg-t2.rds&quot;))
+#saveRDS(integrate, file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.int19k-t2.rds&quot;))
+#saveRDS(integrate, file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.int19k.reg-t2.rds&quot;))
+
+rm(obj,obj.features,obj.anchors,ref.data,integrate,pva,ndim)</code></pre>
+<pre class="r"><code>rm(dataCell)</code></pre>
+<pre class="r"><code>#Combine all cells from all samples
+
+obj &lt;- readRDS(paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv.rds&quot;))
+
+#all genes that have at least 1 UMI count across samples
+geneList &lt;- c()
+for(object in obj) {
+  geneList &lt;- c(geneList,rownames(object@assays$RNA@counts)[rowSums(object@assays$RNA@counts)!=0])
+}
+obj.features &lt;- unique(geneList)
+length(obj.features)
+#all 19377 genes
+#obj.features &lt;- rownames(obj[[1]]@assays$RNA@counts)
+
+ref.data &lt;- c(2,9) #H1-r2 and C1-r2 differentiated best
+
+obj &lt;- lapply(X=obj, FUN=function(x) {
+  x &lt;- ScaleData(x, features=obj.features, verbose=FALSE)
+  x &lt;- RunPCA(x, features=obj.features, verbose=FALSE)
+})
+
+obj.anchors &lt;- FindIntegrationAnchors(object.list=obj,
+                                      normalization.method=&quot;LogNormalize&quot;,
+                                      anchor.features=obj.features,
+                                      reference=ref.data,
+                                      reduction=&quot;rpca&quot;)
+
+integrate &lt;- IntegrateData(anchorset=obj.anchors,
+                           normalization.method=&quot;LogNormalize&quot;)
+
+#integrate &lt;- ScaleData(integrate, vars.to.regress=NULL, verbose=FALSE)
+integrate &lt;- ScaleData(integrate, vars.to.regress=c(&quot;nCount_RNA&quot;,&quot;percent.mt&quot;))
+
+integrate &lt;- RunPCA(object=integrate,
+                    npcs=100,
+                    verbose=FALSE)
+
+#keep all dims that explaim more than 0.1% of variance
+pva &lt;- integrate@reductions$pca@stdev^2/integrate@reductions$pca@misc$total.variance
+ndim &lt;- length(which(pva&gt;=0.001))
+print(ndim)
+
+integrate &lt;- RunUMAP(integrate,
+                     dims=1:ndim)
+
+#saveRDS(integrate, file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.intNo0-tot.rds&quot;))
+saveRDS(integrate, file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.intNo0.reg-tot.rds&quot;))
+#saveRDS(integrate, file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.int19k-tot.rds&quot;))
+#saveRDS(integrate, file=paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.int19k.reg-tot.rds&quot;))
+
+rm(obj,obj.features,obj.anchors,ref.data,integrate,pva,ndim)</code></pre>
+</div>
+<div id="qc-of-merged-and-integrated-data" class="section level3">
+<h3>QC of Merged and Integrated Data</h3>
+<p>Results of correlations between expression data reductions and batch effects:</p>
+<ul>
+<li>Merged Data
+<ul>
+<li>variation correlated with UMI counts per cell (nCount_RNA), gene counts per cell (nFeature_RNA), and percent of mitochondrial reads (percent.mt)</li>
+<li>variation correlated with collection-associated batch effects (Sample, Individual, Pair, Age, CD90)</li>
+<li>variation correlated with species</li>
+<li>variation not correlated with cell cycle phase (Phase, S.Score, G2M.Score)</li>
+</ul></li>
+<li>Integrated Data (non-zero genes)
+<ul>
+<li>variation correlated with UMI counts per cell (nCount_RNA), gene counts per cell (nFeature_RNA), percent of mitochondrial reads (percent.mt), and cell cycle phase (Phase, S.Score, G2M.Score)</li>
+<li>variation not correlated with collection-associated batch effects (Sample, Individual, Pair, Age, CD90)</li>
+<li>variation not correlated with species</li>
+</ul></li>
+<li>Integrated Data (non-zero genes, with nCount_RNA and percent.mt regressed out during data scaling following integration)
+<ul>
+<li>variation correlated with cell cycle phase (Phase, S.Score, G2M.Score)</li>
+<li>variation not correlated with collection-associated batch effects (Sample, Individual, Pair, Age, CD90)</li>
+<li>variation not correlated with species, UMI counts per cell (nCount_RNA), gene counts per cell (nFeature_RNA), percent of mitochondrial reads (percent.mt)</li>
+</ul></li>
+<li>Integrated Data (19k genes)
+<ul>
+<li>variation correlated with UMI counts per cell (nCount_RNA), gene counts per cell (nFeature_RNA), percent of mitochondrial reads (percent.mt), and cell cycle phase (Phase, S.Score, G2M.Score)</li>
+<li>variation not correlated with collection-associated batch effects (Sample, Individual, Pair, Age, CD90)</li>
+<li>variation not correlated with species</li>
+</ul></li>
+<li>Integrated Data (19k genes, with nCount_RNA and percent.mt regressed out during data scaling following integration)
+<ul>
+<li>variation correlated with cell cycle phase (Phase, S.Score, G2M.Score)</li>
+<li>variation not correlated with collection-associated batch effects (Sample, Individual, Pair, Age, CD90)</li>
+<li>variation not correlated with species, UMI counts per cell (nCount_RNA), gene counts per cell (nFeature_RNA), percent of mitochondrial reads (percent.mt)</li>
+</ul></li>
+</ul>
+<p>Conservative and lenient filters produce similar results.</p>
+<pre class="r"><code>#Define function for making heatmap of data reductions vs. batch correlations
+batchPlot &lt;- function(data,text,batch) {
+  
+  df &lt;- data@meta.data[,which(colnames(data@meta.data) %in% batch)]
+  df &lt;- cbind(df,data@reductions$pca@cell.embeddings[,1:10])
+  df &lt;- cbind(df,data@reductions$umap@cell.embeddings[,1:2])
+  df &lt;- df[,colSums(is.na(df))&lt;nrow(df)]
+  
+  y &lt;- dim(df)[2]
+  x &lt;- y-12
+  
+  #Make correlation matrix
+  cov.cor &lt;- matrix(ncol=12, nrow=x, dimnames=list(colnames(df)[1:x], colnames(df)[(x+1):y]))
+  
+  j=1
+  while (j &lt;= 12) { 
+    k=1
+    while (k &lt;= x) { 
+      if (length(unique(df[,0+k]))&gt;1) {
+        lm_result &lt;- lm(df[,x+j] ~ df[,0+k]) 
+        r2 &lt;- summary(lm_result)$r.squared 
+        cov.cor[k, j] &lt;- r2 
+      }
+      if (length(unique(df[,0+k]))==1) {
+        cov.cor[k, j] &lt;- NA
+      }
+      k=k+1
+    }
+    j=j+1
+  }
+  
+  #Convert to long format to plot in ggplot2
+  cov.cor.df &lt;- as.data.frame(cov.cor) 
+  cov.cor.df$batch &lt;- rownames(cov.cor.df) 
+  cov.cor.df &lt;- gather(cov.cor.df, key=&quot;reduction&quot;, value=&quot;cor&quot;, -batch) 
+  head(cov.cor.df) 
+  
+  #Plot heatmap
+  cov.cor.df$batch &lt;- factor(cov.cor.df$batch, 
+                             levels = unique(cov.cor.df$batch), 
+                             labels = unique(cov.cor.df$batch))
+  
+  cov.cor.df$reduction &lt;- factor(cov.cor.df$reduction, 
+                                 levels = unique(cov.cor.df$reduction),
+                                 labels = unique(cov.cor.df$reduction)) 
+  
+  title &lt;- paste0(&quot;Correlation between data reductions and batch effects\n&quot;,text)
+  
+  return(print(ggplot(cov.cor.df, aes(x=reduction, y=batch, fill=cor)) +
+                 geom_tile(color=&quot;white&quot;) +
+                 scale_fill_gradient(low=&quot;white&quot;, high=&quot;darkgrey&quot;, limits=c(0, 1)) + 
+                 labs(title=title, x=&quot;&quot;, y=&quot;&quot;) +
+                 theme(axis.text.x=element_text(angle=90, hjust=1))))
+  
+}</code></pre>
+<pre class="r"><code>#Define function for making plots and output files
+qcPlots &lt;-function(data,text,batch) {
+  
+  batch.factor &lt;- c(&quot;Stage&quot;,&quot;Species&quot;,&quot;Collection&quot;,&quot;Pair&quot;,&quot;Individual&quot;,&quot;Replicate&quot;,&quot;MSCmedia&quot;,&quot;Sample&quot;,&quot;Sex&quot;,&quot;Age&quot;,&quot;Number6W&quot;,&quot;SequencingBatch&quot;,&quot;Phase&quot;)
+  batch.number &lt;- c(&quot;nCount_RNA&quot;,&quot;nFeature_RNA&quot;,&quot;percent.mt&quot;,&quot;PrewashViability&quot;,&quot;PostwashViability&quot;,&quot;PostmixViability&quot;,
+                    &quot;CD90&quot;,&quot;CD73&quot;,&quot;CD105&quot;,&quot;CD45.CD34.CD11b.CD19.HLA.DR&quot;,&quot;Alizarin&quot;,&quot;OilRed&quot;,&quot;S.Score&quot;,&quot;G2M.Score&quot;)
+  
+  plotList &lt;- list()
+  
+  i=1
+  while (i &lt;= length(batch)) {
+    
+    if (sum(is.na(data@meta.data[,batch[[i]]]))&lt;nrow(data@meta.data)) {
+      if (batch[[i]] %in% batch.factor) {
+        plotList[[i]] &lt;- CombinePlots(plots=list((DimPlot(data, group.by=batch[[i]], reduction=&quot;umap&quot;) + labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;)),
+                                                 (DimPlot(data, group.by=batch[[i]], reduction=&quot;pca&quot;, dims=c(1,2)) + labs(x=&quot;PC1&quot;,y=&quot;PC2&quot;)),
+                                                 (DimPlot(data, group.by=batch[[i]], reduction=&quot;pca&quot;, dims=c(3,4)) + labs(x=&quot;PC3&quot;,y=&quot;PC4&quot;)),
+                                                 (DimPlot(data, group.by=batch[[i]], reduction=&quot;pca&quot;, dims=c(5,6)) + labs(x=&quot;PC5&quot;,y=&quot;PC6&quot;)),
+                                                 (DimPlot(data, group.by=batch[[i]], reduction=&quot;pca&quot;, dims=c(7,8)) + labs(x=&quot;PC7&quot;,y=&quot;PC8&quot;)),
+                                                 (DimPlot(data, group.by=batch[[i]], reduction=&quot;pca&quot;, dims=c(9,10)) + labs(x=&quot;PC9&quot;,y=&quot;PC10&quot;))), ncol=6)
+      }
+      if (batch[[i]] %in% batch.number) {
+        plotList[[i]] &lt;- CombinePlots(plots=list((FeaturePlot(data, features=batch[[i]], reduction=&quot;umap&quot;) + labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;)),
+                                                 (FeaturePlot(data, features=batch[[i]], reduction=&quot;pca&quot;, dims=c(1,2)) + labs(x=&quot;PC1&quot;,y=&quot;PC2&quot;)),
+                                                 (FeaturePlot(data, features=batch[[i]], reduction=&quot;pca&quot;, dims=c(3,4)) + labs(x=&quot;PC3&quot;,y=&quot;PC4&quot;)),
+                                                 (FeaturePlot(data, features=batch[[i]], reduction=&quot;pca&quot;, dims=c(5,6)) + labs(x=&quot;PC5&quot;,y=&quot;PC6&quot;)),
+                                                 (FeaturePlot(data, features=batch[[i]], reduction=&quot;pca&quot;, dims=c(7,8)) + labs(x=&quot;PC7&quot;,y=&quot;PC8&quot;)),
+                                                 (FeaturePlot(data, features=batch[[i]], reduction=&quot;pca&quot;, dims=c(9,10)) + labs(x=&quot;PC9&quot;,y=&quot;PC10&quot;))), ncol=6)
+      }
+    }
+    
+    else {
+      plotList[[i]] &lt;- grid.rect(gp=gpar(col=&quot;white&quot;))
+    }
+      
+    i=i+1
+
+  }
+  
+  return(print(grid.arrange(grobs=plotList, ncol=1, top=textGrob(text,gp=gpar(fontsize=20)))))
+  
+}</code></pre>
+<pre class="r"><code>#Define filter type
+#filter &lt;- &quot;&quot;
+#filter &lt;- &quot;.filterL&quot;
+filter &lt;- &quot;.filterC&quot;</code></pre>
+<pre class="r"><code>#Load information of merged data to be examined
+
+obj.info &lt;- list(c(&quot;merge-t0&quot;,paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.merge-t0.rds&quot;)),
+                 c(&quot;merge-t1&quot;,paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.merge-t1.rds&quot;)),
+                 c(&quot;merge-t2&quot;,paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.merge-t2.rds&quot;)),
+                 c(&quot;merge-tot&quot;,paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.merge-tot.rds&quot;)))
+
+batch &lt;- c(&quot;Stage&quot;,&quot;Species&quot;,&quot;Collection&quot;,&quot;Pair&quot;,&quot;Individual&quot;,&quot;Replicate&quot;,&quot;MSCmedia&quot;,&quot;Sample&quot;,&quot;Sex&quot;,&quot;Age&quot;,&quot;Number6W&quot;,&quot;SequencingBatch&quot;,
+           &quot;Phase&quot;,&quot;nCount_RNA&quot;,&quot;nFeature_RNA&quot;,&quot;percent.mt&quot;,&quot;PrewashViability&quot;,&quot;PostwashViability&quot;,&quot;PostmixViability&quot;,
+           &quot;CD90&quot;,&quot;CD73&quot;,&quot;CD105&quot;,&quot;CD45.CD34.CD11b.CD19.HLA.DR&quot;,&quot;Alizarin&quot;,&quot;OilRed&quot;,&quot;S.Score&quot;,&quot;G2M.Score&quot;)
+
+#Calculate and plot correlation of batch with first 10 PCs and UMAP
+pdf(file=paste0(&quot;./output/data-qc-post&quot;,str_remove(filter,&quot;.&quot;),&quot;-subsets-merge-batchcor.pdf&quot;), onefile=TRUE, width=7, height=7)
+i=1
+for (i in 1:length(obj.info)) {
+  print(i)
+  text &lt;- obj.info[[i]][1]
+  data &lt;- readRDS(obj.info[[i]][2])
+  batchPlot(data[[1]],text,batch)
+  i=i+1
+}
+dev.off()
+
+#Visualize batch effects in PC and UMAP space
+pdf(file=paste0(&quot;./output/data-qc-post&quot;,str_remove(filter,&quot;.&quot;),&quot;-subsets-merge-batchviz.pdf&quot;), onefile=TRUE, width=18, height=81)
+i=1
+for (i in 1:length(obj.info)) {
+  text &lt;- obj.info[[i]][1]
+  data &lt;- readRDS(obj.info[[i]][2])
+  print(text)
+  qcPlots(data[[1]],text,batch)
+  i=i+1
+}
+dev.off()</code></pre>
+<pre class="r"><code>#Load information of integrated data (non-zero genes) to be examined
+
+obj.info &lt;- list(c(&quot;intNo0-t0&quot;,paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.intNo0-t0.rds&quot;)),
+                 c(&quot;intNo0-t1&quot;,paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.intNo0-t1.rds&quot;)),
+                 c(&quot;intNo0-t2&quot;,paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.intNo0-t2.rds&quot;)),
+                 c(&quot;intNo0-tot&quot;,paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.intNo0-tot.rds&quot;)))
+
+batch &lt;- c(&quot;Stage&quot;,&quot;Species&quot;,&quot;Collection&quot;,&quot;Pair&quot;,&quot;Individual&quot;,&quot;Replicate&quot;,&quot;MSCmedia&quot;,&quot;Sample&quot;,&quot;Sex&quot;,&quot;Age&quot;,&quot;Number6W&quot;,&quot;SequencingBatch&quot;,
+           &quot;Phase&quot;,&quot;nCount_RNA&quot;,&quot;nFeature_RNA&quot;,&quot;percent.mt&quot;,&quot;PrewashViability&quot;,&quot;PostwashViability&quot;,&quot;PostmixViability&quot;,
+           &quot;CD90&quot;,&quot;CD73&quot;,&quot;CD105&quot;,&quot;CD45.CD34.CD11b.CD19.HLA.DR&quot;,&quot;Alizarin&quot;,&quot;OilRed&quot;,&quot;S.Score&quot;,&quot;G2M.Score&quot;)
+
+#Calculate and plot correlation of batch with first 10 PCs and UMAP
+pdf(file=paste0(&quot;./output/data-qc-post&quot;,str_remove(filter,&quot;.&quot;),&quot;-subsets-intNo0-batchcor.pdf&quot;), onefile=TRUE, width=7, height=7)
+i=1
+for (i in 1:length(obj.info)) {
+  print(i)
+  text &lt;- obj.info[[i]][1]
+  data &lt;- readRDS(obj.info[[i]][2])
+  batchPlot(data,text,batch)
+  i=i+1
+}
+dev.off()
+
+#Visualize batch effects in PC and UMAP space
+pdf(file=paste0(&quot;./output/data-qc-post&quot;,str_remove(filter,&quot;.&quot;),&quot;-subsets-intNo0-batchviz.pdf&quot;), onefile=TRUE, width=18, height=81)
+i=1
+for (i in 1:length(obj.info)) {
+  text &lt;- obj.info[[i]][1]
+  data &lt;- readRDS(obj.info[[i]][2])
+  print(text)
+  qcPlots(data,text,batch)
+  i=i+1
+}
+dev.off()</code></pre>
+<pre class="r"><code>#Load information of integrated data (non-zero genes, with nCount_RNA and percent.mt regressed out during data scaling following integration) to be examined
+
+obj.info &lt;- list(c(&quot;intNo0.reg-t0&quot;,paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.intNo0.reg-t0.rds&quot;)),
+                 c(&quot;intNo0.reg-t1&quot;,paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.intNo0.reg-t1.rds&quot;)),
+                 c(&quot;intNo0.reg-t2&quot;,paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.intNo0.reg-t2.rds&quot;)),
+                 c(&quot;intNo0.reg-tot&quot;,paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.intNo0.reg-tot.rds&quot;)))
+
+batch &lt;- c(&quot;Stage&quot;,&quot;Species&quot;,&quot;Collection&quot;,&quot;Pair&quot;,&quot;Individual&quot;,&quot;Replicate&quot;,&quot;MSCmedia&quot;,&quot;Sample&quot;,&quot;Sex&quot;,&quot;Age&quot;,&quot;Number6W&quot;,&quot;SequencingBatch&quot;,
+           &quot;Phase&quot;,&quot;nCount_RNA&quot;,&quot;nFeature_RNA&quot;,&quot;percent.mt&quot;,&quot;PrewashViability&quot;,&quot;PostwashViability&quot;,&quot;PostmixViability&quot;,
+           &quot;CD90&quot;,&quot;CD73&quot;,&quot;CD105&quot;,&quot;CD45.CD34.CD11b.CD19.HLA.DR&quot;,&quot;Alizarin&quot;,&quot;OilRed&quot;,&quot;S.Score&quot;,&quot;G2M.Score&quot;)
+
+#Calculate and plot correlation of batch with first 10 PCs and UMAP
+pdf(file=paste0(&quot;./output/data-qc-post&quot;,str_remove(filter,&quot;.&quot;),&quot;-subsets-intNo0.reg-batchcor.pdf&quot;), onefile=TRUE, width=7, height=7)
+i=1
+for (i in 1:length(obj.info)) {
+  print(i)
+  text &lt;- obj.info[[i]][1]
+  data &lt;- readRDS(obj.info[[i]][2])
+  batchPlot(data,text,batch)
+  i=i+1
+}
+dev.off()
+
+#Visualize batch effects in PC and UMAP space
+pdf(file=paste0(&quot;./output/data-qc-post&quot;,str_remove(filter,&quot;.&quot;),&quot;-subsets-intNo0.reg-batchviz.pdf&quot;), onefile=TRUE, width=18, height=81)
+i=1
+for (i in 1:length(obj.info)) {
+  text &lt;- obj.info[[i]][1]
+  data &lt;- readRDS(obj.info[[i]][2])
+  print(text)
+  qcPlots(data,text,batch)
+  i=i+1
+}
+dev.off()</code></pre>
+<pre class="r"><code>#Load information of integrated data (19k genes) to be examined
+
+obj.info &lt;- list(c(&quot;int19k-t0&quot;,paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.int19k-t0.rds&quot;)),
+                 c(&quot;int19k-t1&quot;,paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.int19k-t1.rds&quot;)),
+                 c(&quot;int19k-t2&quot;,paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.int19k-t2.rds&quot;)),
+                 c(&quot;int19k-tot&quot;,paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.int19k-tot.rds&quot;)))
+
+batch &lt;- c(&quot;Stage&quot;,&quot;Species&quot;,&quot;Collection&quot;,&quot;Pair&quot;,&quot;Individual&quot;,&quot;Replicate&quot;,&quot;MSCmedia&quot;,&quot;Sample&quot;,&quot;Sex&quot;,&quot;Age&quot;,&quot;Number6W&quot;,&quot;SequencingBatch&quot;,
+           &quot;Phase&quot;,&quot;nCount_RNA&quot;,&quot;nFeature_RNA&quot;,&quot;percent.mt&quot;,&quot;PrewashViability&quot;,&quot;PostwashViability&quot;,&quot;PostmixViability&quot;,
+           &quot;CD90&quot;,&quot;CD73&quot;,&quot;CD105&quot;,&quot;CD45.CD34.CD11b.CD19.HLA.DR&quot;,&quot;Alizarin&quot;,&quot;OilRed&quot;,&quot;S.Score&quot;,&quot;G2M.Score&quot;)
+
+#Calculate and plot correlation of batch with first 10 PCs and UMAP
+pdf(file=paste0(&quot;./output/data-qc-post&quot;,str_remove(filter,&quot;.&quot;),&quot;-subsets-int19k-batchcor.pdf&quot;), onefile=TRUE, width=7, height=7)
+i=1
+for (i in 1:length(obj.info)) {
+  print(i)
+  text &lt;- obj.info[[i]][1]
+  data &lt;- readRDS(obj.info[[i]][2])
+  batchPlot(data,text,batch)
+  i=i+1
+}
+dev.off()
+
+#Visualize batch effects in PC and UMAP space
+pdf(file=paste0(&quot;./output/data-qc-post&quot;,str_remove(filter,&quot;.&quot;),&quot;-subsets-int19k-batchviz.pdf&quot;), onefile=TRUE, width=18, height=81)
+i=1
+for (i in 1:length(obj.info)) {
+  text &lt;- obj.info[[i]][1]
+  data &lt;- readRDS(obj.info[[i]][2])
+  print(text)
+  qcPlots(data,text,batch)
+  i=i+1
+}
+dev.off()</code></pre>
+<pre class="r"><code>#Load information of integrated data (19k genes, with nCount_RNA and percent.mt regressed out during data scaling following integration) to be examined
+
+obj.info &lt;- list(c(&quot;int19k.reg-t0&quot;,paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.int19k.reg-t0.rds&quot;)),
+                 c(&quot;int19k.reg-t1&quot;,paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.int19k.reg-t1.rds&quot;)),
+                 c(&quot;int19k.reg-t2&quot;,paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.int19k.reg-t2.rds&quot;)))
+                 #c(&quot;int19k.reg-t2&quot;,paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.int19k.reg-t2.rds&quot;)),
+                 #c(&quot;int19k.reg-tot&quot;,paste0(&quot;./data/cellranger-data-full/data&quot;,filter,&quot;.log.indv-cell.int19k.reg-tot.rds&quot;)))
+
+batch &lt;- c(&quot;Stage&quot;,&quot;Species&quot;,&quot;Collection&quot;,&quot;Pair&quot;,&quot;Individual&quot;,&quot;Replicate&quot;,&quot;MSCmedia&quot;,&quot;Sample&quot;,&quot;Sex&quot;,&quot;Age&quot;,&quot;Number6W&quot;,&quot;SequencingBatch&quot;,
+           &quot;Phase&quot;,&quot;nCount_RNA&quot;,&quot;nFeature_RNA&quot;,&quot;percent.mt&quot;,&quot;PrewashViability&quot;,&quot;PostwashViability&quot;,&quot;PostmixViability&quot;,
+           &quot;CD90&quot;,&quot;CD73&quot;,&quot;CD105&quot;,&quot;CD45.CD34.CD11b.CD19.HLA.DR&quot;,&quot;Alizarin&quot;,&quot;OilRed&quot;,&quot;S.Score&quot;,&quot;G2M.Score&quot;)
+
+#Calculate and plot correlation of batch with first 10 PCs and UMAP
+pdf(file=paste0(&quot;./output/data-qc-post&quot;,str_remove(filter,&quot;.&quot;),&quot;-subsets-int19k.reg-batchcor.pdf&quot;), onefile=TRUE, width=7, height=7)
+i=1
+for (i in 1:length(obj.info)) {
+  print(i)
+  text &lt;- obj.info[[i]][1]
+  data &lt;- readRDS(obj.info[[i]][2])
+  batchPlot(data,text,batch)
+  i=i+1
+}
+dev.off()
+
+#Visualize batch effects in PC and UMAP space
+pdf(file=paste0(&quot;./output/data-qc-post&quot;,str_remove(filter,&quot;.&quot;),&quot;-subsets-int19k.reg-batchviz.pdf&quot;), onefile=TRUE, width=18, height=81)
+i=1
+for (i in 1:length(obj.info)) {
+  text &lt;- obj.info[[i]][1]
+  data &lt;- readRDS(obj.info[[i]][2])
+  print(text)
+  qcPlots(data,text,batch)
+  i=i+1
+}
+dev.off()</code></pre>
+<p>Decided to move forward with conservative filter with data integrated across all genes with non-zero UMI counts and with nCount_RNA and percent.mt regressed out during data scaling following integration (data.filterC.log.indv-cell.intNo0.reg-tot.rds).</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.6.1 (2019-07-05)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Scientific Linux 7.4 (Nitrogen)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.2.19-el7-x86_64/lib/libopenblas_haswellp-r0.2.19.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] workflowr_1.6.2 Rcpp_1.0.5      rprojroot_2.0.2 digest_0.6.27  
+ [5] later_1.1.0.1   R6_2.5.0        git2r_0.26.1    magrittr_2.0.1 
+ [9] evaluate_0.14   stringi_1.4.3   rlang_0.4.9     fs_1.3.1       
+[13] promises_1.1.1  whisker_0.3-2   rmarkdown_1.13  tools_3.6.1    
+[17] stringr_1.4.0   glue_1.4.2      httpuv_1.5.1    xfun_0.8       
+[21] yaml_2.2.1      compiler_3.6.1  htmltools_0.5.0 knitr_1.23     </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

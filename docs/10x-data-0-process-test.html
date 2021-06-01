@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Genevieve Housman" />
+
+
+<title>10x-data-process-test</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">human-chimp-skeletal-scRNA</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">10x-data-process-test</h1>
+<h4 class="author">Genevieve Housman</h4>
+<h4 class="date">February 2021</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2021-02-14
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>human-chimp-skeletal-scRNA/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20190719code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20190719)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20190719code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20190719)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreeeb96bd86ac3c3e9182138d8b7162236c825e3b1dtargetblankeb96bd8a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/eb96bd86ac3c3e9182138d8b7162236c825e3b1d" target="_blank">eb96bd8</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreeeb96bd86ac3c3e9182138d8b7162236c825e3b1dtargetblankeb96bd8a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/eb96bd86ac3c3e9182138d8b7162236c825e3b1d" target="_blank">eb96bd8</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+    Ignored:    analysis/10x-data-0-process-test.html
+
+Untracked files:
+    Untracked:  analysis/TODO_10x-data-1-process.Rmd
+    Untracked:  analysis/TODO_10x-data-2-qc.Rmd
+    Untracked:  analysis/TODO_10x-data-3-integrate.Rmd
+    Untracked:  analysis/TODO_10x-data-4-classification-t2.Rmd
+    Untracked:  analysis/TODO_10x-data-4-classification-tot.Rmd
+    Untracked:  analysis/TODO_10x-data-4-classification.Rmd
+    Untracked:  analysis/TODO_10x-data-5-diffexp.Rmd
+    Untracked:  analysis/TODO_10x-data-6-conservexp.Rmd
+    Untracked:  analysis/TODO_10x-data-6-cormotif-t2.Rmd
+    Untracked:  analysis/TODO_10x-data-6-cormotif-tot.Rmd
+    Untracked:  analysis/TODO_10x-data-6-variance-t2.Rmd
+    Untracked:  analysis/TODO_10x-data-6-variance-tot.Rmd
+    Untracked:  analysis/TODO_10x-data-7-enrichment.Rmd
+    Untracked:  analysis/TODO_10x-data-8-batch-correlation.Rmd
+    Untracked:  analysis/TODO_10x-plot-classification.Rmd
+    Untracked:  analysis/TODO_10x-plot-diffexp.Rmd
+    Untracked:  analysis/TODO_10x-plot-replicate-correlation-t2.Rmd
+    Untracked:  analysis/TODO_10x-plot-replicate-correlation-tot.Rmd
+    Untracked:  analysis/TODO_10x-plot-utf1-tac3.Rmd
+    Untracked:  analysis/TODO_10x-view-batch-effects.Rmd
+    Untracked:  analysis/TODO_10x-view-data-metrics.Rmd
+    Untracked:  analysis/TODO_10x-view-species-assignments.Rmd
+    Untracked:  analysis/TODO_10x-view-validation-data.Rmd
+    Untracked:  analysis/v2/
+    Untracked:  code/FindMarkers.R
+    Untracked:  code/FindMarkers.sh
+    Untracked:  code/GoM.R
+    Untracked:  code/GoM.sh
+    Untracked:  code/fastTopics.R
+    Untracked:  code/fastTopics.sh
+    Untracked:  code/fastTopicsBC.R
+    Untracked:  code/fastTopicsBC.sh
+    Untracked:  code/fastTopicsSpp.R
+    Untracked:  code/fastTopicsSpp.sh
+    Untracked:  code/fastTopicsSppBC.R
+    Untracked:  code/fastTopicsSppBC.sh
+    Untracked:  code/v2/
+    Untracked:  data/HumanPrimaryCellAtlasData-SingleR
+    Untracked:  data/HumanPrimaryCellAtlasDetails-SingleR.csv
+    Untracked:  data/HumanPrimaryCellAtlasLabels-SingleR.csv
+    Untracked:  data/alizarin-red-quant-total.csv
+    Untracked:  data/cell_atlas_ref_panel
+    Untracked:  data/cellranger-data-full/
+    Untracked:  data/corrmatrix.ost
+    Untracked:  data/de-data/
+    Untracked:  data/facs-MSC-collection-summary-sample-avg.csv
+    Untracked:  data/facs-MSC-collection-summary-species-avg.csv
+    Untracked:  data/facs-MSC-collection-summary-total.csv
+    Untracked:  data/gom-data/
+    Untracked:  data/oil-red-quant-total.csv
+    Untracked:  data/scrna-batch-reformat.csv
+    Untracked:  data/scrna-batch.csv
+    Untracked:  output/v1/
+    Untracked:  output/v2/
+
+Unstaged changes:
+    Deleted:    analysis/10x-data-1-process.Rmd
+    Deleted:    analysis/10x-data-2-qc.Rmd
+    Deleted:    analysis/10x-data-3-integrate.Rmd
+    Deleted:    analysis/10x-data-4-classification-t2.Rmd
+    Deleted:    analysis/10x-data-4-classification-tot.Rmd
+    Deleted:    analysis/10x-data-4-classification.Rmd
+    Deleted:    analysis/10x-data-5-diffexp.Rmd
+    Deleted:    analysis/10x-data-6-conservexp.Rmd
+    Deleted:    analysis/10x-data-6-cormotif-t2.Rmd
+    Deleted:    analysis/10x-data-6-cormotif-tot.Rmd
+    Deleted:    analysis/10x-data-6-variance-t2.Rmd
+    Deleted:    analysis/10x-data-6-variance-tot.Rmd
+    Deleted:    analysis/10x-data-7-enrichment.Rmd
+    Deleted:    analysis/10x-data-8-batch-correlation.Rmd
+    Modified:   analysis/10x-plot-cellcalling.Rmd
+    Deleted:    analysis/10x-plot-classification.Rmd
+    Deleted:    analysis/10x-plot-diffexp.Rmd
+    Deleted:    analysis/10x-plot-replicate-correlation-t2.Rmd
+    Deleted:    analysis/10x-plot-replicate-correlation-tot.Rmd
+    Deleted:    analysis/10x-plot-utf1-tac3.Rmd
+    Deleted:    analysis/10x-view-batch-effects.Rmd
+    Deleted:    analysis/10x-view-data-metrics.Rmd
+    Deleted:    analysis/10x-view-species-assignments.Rmd
+    Deleted:    analysis/10x-view-validation-data.Rmd
+    Deleted:    analysis/asbmr2020-plots.Rmd
+    Deleted:    analysis/ashg2020-plots.Rmd
+    Deleted:    analysis/temp-code.Rmd
+    Deleted:    analysis/v1/index.Rmd
+    Deleted:    analysis/v1/license.Rmd
+    Modified:   code/DEdream.R
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_FALSE.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_stage.out
+    Modified:   code/DEdreamsubset.R
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_adhoc.err
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_adhoc.out
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_cluster.err
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_cluster.out
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_ostadhoc.err
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_ostadhoc.out
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_stage.err
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_stage.out
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_adhoc.err
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_adhoc.out
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_cluster.err
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_cluster.out
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_ostadhoc.err
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_ostadhoc.out
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_stage.err
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_stage.out
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_adhoc.err
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_adhoc.out
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_cluster.err
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_cluster.out
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_ostadhoc.err
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_ostadhoc.out
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_stage.err
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_stage.out
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_adhoc.err
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_adhoc.out
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_cluster.err
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_cluster.out
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_ostadhoc.err
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_ostadhoc.out
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_stage.err
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_stage.out
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/10x-data-0-process-test.Rmd</code>) and HTML (<code>docs/10x-data-0-process-test.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/36b68dc3190f181b0708a4c398517ac41a38935a/analysis/10x-data-0-process-test.Rmd" target="_blank">36b68dc</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-02-11
+</td>
+<td>
+testing new species assignments
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="x-data-cellranger-analysis---data-processing-test" class="section level1">
+<h1>10X Data Cellranger Analysis - Data Processing Test</h1>
+<p>Using cellranger to assign cells in human/chimp mixtures is somewhat problematic. Here, I test how well cells are assigned using cell ranger when all cells are known to be human cells.</p>
+<p>Human-Only Data (samples collected for Anthony’s pilot eQTL project + external data)</p>
+<ul>
+<li>/project2/gilad/anthonyhung/Projects/OAStrain_project/YriMultiplex/fastq/</li>
+<li>YG-AH-2S-ANT-1 containing a mixture of 3 humans</li>
+<li>Species-specific maturation profiles of human, chimpanzee and bonobo neural cells</li>
+<li>Human_NPC_10X (scRNA-seq): GSE124706 - GSM3543690 - SRX5212502 - SRR8403264</li>
+<li><a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE124706" class="uri">https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE124706</a></li>
+<li><a href="ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR840/004/SRR8403264/SRR8403264.fastq.gz" class="uri">ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR840/004/SRR8403264/SRR8403264.fastq.gz</a></li>
+</ul>
+<p>Chimp-Only Data (external data)</p>
+<ul>
+<li>Species-specific maturation profiles of human, chimpanzee and bonobo neural cells</li>
+<li>Chimp_NPC_10X (scRNA-seq): GSE124706 - GSM3543691 - SRX5212503 - SRR8403265</li>
+<li><a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE124706" class="uri">https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE124706</a></li>
+<li><a href="ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR840/005/SRR8403265/SRR8403265.fastq.gz" class="uri">ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR840/005/SRR8403265/SRR8403265.fastq.gz</a></li>
+</ul>
+<p>References</p>
+<ul>
+<li><a href="https://www.imm.ox.ac.uk/files/ccb/downloading_fastq_geo" class="uri">https://www.imm.ox.ac.uk/files/ccb/downloading_fastq_geo</a></li>
+<li><a href="https://hbctraining.github.io/Accessing_public_genomic_data/lessons/accessing_public_experimental_data.html" class="uri">https://hbctraining.github.io/Accessing_public_genomic_data/lessons/accessing_public_experimental_data.html</a></li>
+</ul>
+<div id="download-external-data" class="section level3">
+<h3>Download external data</h3>
+<pre class="bash"><code>cd /project2/gilad/ghousman/external-data
+module load sra_toolkit/2.8
+
+#chimp data
+mkdir SRR8403265
+cd SRR8403265/
+wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR840/005/SRR8403265/SRR8403265.fastq.gz
+fastq-dump --split-files SRR8403265
+#rename and zip files to conform to cellranger specifications
+mv SRR8403265_1.fastq SRR8403265_S1_L001_R1_001.fastq
+mv SRR8403265_2.fastq SRR8403265_S1_L001_R2_001.fastq
+mv SRR8403265_3.fastq SRR8403265_S1_L001_I1_001.fastq
+gzip *.fastq
+#check file names
+zcat SRR8403265_S1_L001_R1_001.fastq.gz | head -n 10
+zcat SRR8403265_S1_L001_R2_001.fastq.gz | head -n 10
+zcat SRR8403265_S1_L001_I1_001.fastq.gz | head -n 10
+rm SRR8403265.fastq.gz
+
+#human data
+mkdir SRR8403264
+cd SRR8403264/
+wget ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR840/004/SRR8403264/SRR8403264.fastq.gz
+fastq-dump --split-files SRR8403264
+#rename and zip files to conform to cellranger specifications
+mv SRR8403264_1.fastq SRR8403264_S1_L001_R1_001.fastq
+mv SRR8403264_2.fastq SRR8403264_S1_L001_R2_001.fastq
+mv SRR8403264_3.fastq SRR8403264_S1_L001_I1_001.fastq
+gzip *.fastq
+#check file names
+zcat SRR8403264_S1_L001_R1_001.fastq.gz | head -n 10
+zcat SRR8403264_S1_L001_R2_001.fastq.gz | head -n 10
+zcat SRR8403264_S1_L001_I1_001.fastq.gz | head -n 10
+rm SRR8403264.fastq.gz</code></pre>
+</div>
+<div id="process-fastq-files" class="section level3">
+<h3>Process fastq files</h3>
+<p>Fastq files were processed into count matrices (genes x cells) and cell types assigned using cellranger 3.1.0.</p>
+<p>The cellranger reference was made using the hg38 and panTro6 genomes and ortho-exon v2 annotation (completed by KB):</p>
+<ul>
+<li>combined_genome_index: /project2/gilad/kenneth/References/HumanChimpCellranger/HumanOrthoV2_and_ChimpOrthoV2</li>
+</ul>
+<p>Notes on what cellranger does to compute count matrices:</p>
+<ul>
+<li>genome alignment
+<ul>
+<li>aligner (STAR) peforms splicing-aware alignment of reads to genome</li>
+<li>transcript annotation (GTF) buckets reads into exonic/intronic/intergenic and whether reads align (confidently) to genome</li>
+<li>[read = exonic if &gt;=50% of it intersects an exon]</li>
+<li>[read = intronic if it is non-exonic and intersects an intron]</li>
+<li>[read = intergenic in all other cases]</li>
+</ul></li>
+<li>MAPQ adjustment (MAPQ 255)</li>
+<li>for reads that align to a single exonic locus and to 1+ non-exonic loci, the exonic locus is prioritized and read is considered to be confidently mapped to exonic locus</li>
+<li>transcriptome alignment
+<ul>
+<li>aligns exonic reads to annotated transcripts and looks for compatibility</li>
+<li>read is mapped to transcriptome if: read that is compatible with exons of annotated transcript and aligned to same strand</li>
+<li>read is uniquely (confidently) mapped to transcriptome if: read is compatible with a single gene annotation</li>
+<li>[uniquely (confidently) mapped reads are only ones considered for UMI counting]</li>
+</ul></li>
+<li>UMI counting
+<ul>
+<li>before counting UMIs, corrections for sequencing errors in UMI sequences are attempted</li>
+<li>reads confidently mapped to transcriptome are grouped according to shared barcodes, UMIs, and gene annotations</li>
+<li>filter 1: if two groups of reads have same barcode and gene, but UMIs differ by a single base (Hamming distance 1 apart), then one UMI was likely introduced by substitution error in sequencing, and UMI of less-supported read group is corrected to UMI with higher support</li>
+<li>reads confidently mapped to transcriptome are grouped according to shared barcodes, UMIs (possibly corrected), and gene annotations</li>
+<li>filter 2: if two or more groups of reads have same barcode and UMI, but different gene annotations, gene annotation with most supporting reads is kept for UMI counting and other read groups are discarded (ties for maximal read support: all read groups are discarded as gene cannot be confidently assigned)</li>
+<li>each observed barcode-UMI-gene combination is recorded as UMI count in unfiltered feature-barcode matrix (number of reads supporting each counted UMI also recorded in molecule info file)</li>
+</ul></li>
+<li>calling cell barcodes
+<ul>
+<li>[improved cell-calling algorithm that better identifies populations of low RNA content cells, especially when low RNA content cells are mixed into population of high RNA content cells, based on EmptyDrops method by Lun et al. 2018]</li>
+<li>step 1:
+<ul>
+<li>uses cutoff based on total UMI counts of each barcode to identify cells - identifies primary mode of high RNA content cells</li>
+<li>(takes as input expected number of recovered cells, N)</li>
+<li>(let m be 99th percentile of top N barcodes by total UMI counts)</li>
+<li>(all barcodes whose total UMI counts exceed m/10 are called as cells)</li>
+</ul></li>
+<li>step 2:
+<ul>
+<li>uses RNA profile of each remaining barcode to determine if it is “empty” or cell containing partition - captures low RNA content cells whose total UMI counts may be similar to empty GEMs</li>
+<li>(creates background model of RNA profiles from selected barcodes - multinomial distribution over genes - using Simple Good-Turing smoothing to provide a non-zero model estimate for genes not observed in representative empty GEM set)</li>
+<li>(RNA profile of each barcode not called as cell in step 1 is compared to background model)</li>
+<li>(barcodes whose RNA profile strongly disagrees with background model are added to set of positive cell calls)</li>
+<li>(to remedy cases in which set of barcodes called as cells does not match desired set of barcodes based on visual inspection: re-run count/reanalyze with –force-cells option, select desired barcodes from raw feature-barcode matrix in downstream analysis, or select custom barcodes in reanalyze using –barcodes)</li>
+</ul></li>
+</ul></li>
+<li>estimating multiplet rates
+<ul>
+<li>cell-associated barcodes are classified as species1 or species2 based on which genome has more total UMI counts for that barcode</li>
+<li>cell-associated barcodes with total UMI counts that exceed the 10th percentile of the distributions for both species1 and species2 are classified as multiplets</li>
+<li>computes inferred multiplet rate by estimating the total number of multiplets (including (species1, species1) and (species2, species2))
+<ul>
+<li>estimates via ML the total number of multiplet GEMs from the observed multiplets and the inferred ratio of species1 to species2 cells</li>
+<li>if ratio is 1:1, the inferred multiplet rate is approximately twice the observed (species1, species2) multiplets</li>
+</ul></li>
+</ul></li>
+</ul>
+<pre class="bash"><code>cd /project2/gilad/ghousman/skeletal-human-chimp/scRNA/cellranger-data-full/cellranger-data-HumanOrthoV2_and_ChimpOrthoV2
+
+sbatch ./../../../human-chimp-skeletal-scRNA/code/submit-cellranger-count-multispp.sh YG-AH-2S-ANT-1 /project2/gilad/kenneth/References/HumanChimpCellranger/cellranger3.1/HumanOrthoV2_and_ChimpOrthoV2 /project2/gilad/anthonyhung/Projects/OAStrain_project/YriMultiplex/fastq/
+
+sbatch ./../../../human-chimp-skeletal-scRNA/code/submit-cellranger-count-multispp.sh SRR8403265 /project2/gilad/kenneth/References/HumanChimpCellranger/cellranger3.1/HumanOrthoV2_and_ChimpOrthoV2 /project2/gilad/ghousman/external-data/SRR8403265
+
+sbatch ./../../../human-chimp-skeletal-scRNA/code/submit-cellranger-count-multispp.sh SRR8403264 /project2/gilad/kenneth/References/HumanChimpCellranger/cellranger3.1/HumanOrthoV2_and_ChimpOrthoV2 /project2/gilad/ghousman/external-data/SRR8403264</code></pre>
+<pre class="r"><code>library(ggplot2)
+library(gridExtra)</code></pre>
+</div>
+<div id="examine-human-only-data-yg-ah-2s-ant-1" class="section level3">
+<h3>Examine human-only data (YG-AH-2S-ANT-1)</h3>
+<pre class="r"><code>#load data
+dir_data &lt;- paste0(&#39;./../scRNA/cellranger-data-full/cellranger-data-HumanOrthoV2_and_ChimpOrthoV2/YG-AH-2S-ANT-1/outs/analysis/&#39;)
+temp &lt;- read.csv(file=paste0(dir_data,&#39;gem_classification.csv&#39;))
+
+#make 10x calls a factor
+temp$call &lt;- factor(temp$call, levels=c(&quot;ChimpOrthoV2&quot;,&quot;HumanOrthoV2&quot;,&quot;Multiplet&quot;), labels=c(&quot;chimp&quot;,&quot;human&quot;,&quot;multiplet&quot;))
+
+#number of species assignments
+table(temp$call)</code></pre>
+<pre><code>
+    chimp     human multiplet 
+        0       407      2614 </code></pre>
+<pre class="r"><code>#maximum number of UMIs/cell that aligned to each genome
+max(temp$ChimpOrthoV2)</code></pre>
+<pre><code>[1] 1924</code></pre>
+<pre class="r"><code>max(temp$HumanOrthoV2)</code></pre>
+<pre><code>[1] 46245</code></pre>
+<pre class="r"><code>max_umi &lt;- max(c(temp$ChimpOrthoV2,temp$HumanOrthoV2))
+
+p1 &lt;- ggplot(temp, aes(x=HumanOrthoV2, y=ChimpOrthoV2, color=call)) +
+        geom_point() +
+        scale_color_manual(drop=FALSE, values=c(&quot;blue&quot;,&quot;red&quot;,&quot;grey&quot;)) +
+        lims(x=c(0,max_umi), y=c(0,max_umi)) +
+        labs(x=&quot;UMI Aligned to Human Genome&quot;, y=&quot;UMI Aligned to Chimp Genome&quot;, color=&quot;CellRanger Calls&quot;) +
+        theme(legend.position=c(0.8,0.8))
+
+p2 &lt;- ggplot(temp, aes(x=call, fill=call)) +
+        geom_bar() +
+        scale_x_discrete(drop=FALSE) +
+        scale_fill_manual(drop=FALSE, values=c(&quot;blue&quot;,&quot;red&quot;,&quot;grey&quot;)) +
+        ylim(0,3100) +
+        theme(legend.position=&quot;none&quot;) +
+        labs(x=&quot;CellRanger Calls&quot;, y=&quot;Frequency&quot;)
+
+grid.arrange(p1,p2, ncol=2, widths=c(2,1))</code></pre>
+<p><img src="figure/10x-data-0-process-test.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#calculate total number of umis
+temp$TotalOrthoV2 &lt;- temp$HumanOrthoV2 + temp$ChimpOrthoV2
+#calculate ratio of human umis to total umis
+temp$RatioOrthoV2 &lt;- temp$HumanOrthoV2 / temp$TotalOrthoV2
+
+#mean ratio
+mean(temp$RatioOrthoV2)</code></pre>
+<pre><code>[1] 0.9734871</code></pre>
+<pre class="r"><code>#human RatioOrthoV2 cutoff
+cutoff &lt;- min(temp$RatioOrthoV2)
+round(cutoff,2)</code></pre>
+<pre><code>[1] 0.94</code></pre>
+<pre class="r"><code>ggplot(temp, aes(x=RatioOrthoV2)) +
+       geom_histogram(binwidth=0.01, color=&quot;black&quot;, fill=&quot;white&quot;, alpha=0.2) +
+       xlim(0,1) +
+       geom_vline(xintercept=cutoff, color=&quot;red&quot;) +
+       labs(x=&quot;Ratio of Human UMIs to Total UMIs&quot;, y=&quot;Frequency&quot;)</code></pre>
+<pre><code>Warning: Removed 2 rows containing missing values (geom_bar).</code></pre>
+<p><img src="figure/10x-data-0-process-test.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#assign new human/chimp cells
+temp$NEWcall &lt;- &quot;multiplet&quot;
+temp$NEWcall[which(temp$RatioOrthoV2&gt;=cutoff)] &lt;- &quot;human&quot;
+temp$NEWcall[which(temp$RatioOrthoV2&lt;=0.1)] &lt;- &quot;chimp&quot;
+temp$NEWcall &lt;- factor(temp$NEWcall, levels=c(&quot;chimp&quot;,&quot;human&quot;,&quot;multiplet&quot;), labels=c(&quot;chimp&quot;,&quot;human&quot;,&quot;multiplet&quot;))
+
+#number of species assignments
+table(temp$NEWcall)</code></pre>
+<pre><code>
+    chimp     human multiplet 
+        0      3021         0 </code></pre>
+<pre class="r"><code>p1 &lt;- ggplot(temp, aes(x=HumanOrthoV2, y=ChimpOrthoV2, color=NEWcall)) +
+        geom_point() +
+        scale_color_manual(drop=FALSE, values=c(&quot;blue&quot;,&quot;red&quot;,&quot;grey&quot;)) +
+        lims(x=c(0,max_umi), y=c(0,max_umi)) +
+        labs(x=&quot;UMI Aligned to Human Genome&quot;, y=&quot;UMI Aligned to Chimp Genome&quot;, color=&quot;New Calls&quot;) +
+        theme(legend.position=c(0.8,0.8))
+
+p2 &lt;- ggplot(temp, aes(x=NEWcall, fill=NEWcall)) +
+        geom_bar() +
+        scale_x_discrete(drop=FALSE) +
+        scale_fill_manual(drop=FALSE, values=c(&quot;blue&quot;,&quot;red&quot;,&quot;grey&quot;)) +
+        ylim(0,3100) +
+        theme(legend.position=&quot;none&quot;) +
+        labs(x=&quot;New Calls&quot;, y=&quot;Frequency&quot;)
+
+grid.arrange(p1,p2, ncol=2, widths=c(2,1))</code></pre>
+<p><img src="figure/10x-data-0-process-test.Rmd/unnamed-chunk-4-3.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="examine-chimp-only-data-srr8403265" class="section level3">
+<h3>Examine chimp-only data (SRR8403265)</h3>
+<pre class="r"><code>#load data
+dir_data &lt;- paste0(&#39;./../scRNA/cellranger-data-full/cellranger-data-HumanOrthoV2_and_ChimpOrthoV2/SRR8403265/outs/analysis/&#39;)
+temp &lt;- read.csv(file=paste0(dir_data,&#39;gem_classification.csv&#39;))
+
+#make 10x calls a factor
+temp$call &lt;- factor(temp$call, levels=c(&quot;ChimpOrthoV2&quot;,&quot;HumanOrthoV2&quot;,&quot;Multiplet&quot;), labels=c(&quot;chimp&quot;,&quot;human&quot;,&quot;multiplet&quot;))
+
+#number of species assignments
+table(temp$call)</code></pre>
+<pre><code>
+    chimp     human multiplet 
+        6         0      5802 </code></pre>
+<pre class="r"><code>#maximum number of UMIs/cell that aligned to each genome
+max(temp$ChimpOrthoV2)</code></pre>
+<pre><code>[1] 15138</code></pre>
+<pre class="r"><code>max(temp$HumanOrthoV2)</code></pre>
+<pre><code>[1] 625</code></pre>
+<pre class="r"><code>max_umi &lt;- max(c(temp$ChimpOrthoV2,temp$HumanOrthoV2))
+
+p1 &lt;- ggplot(temp, aes(x=HumanOrthoV2, y=ChimpOrthoV2, color=call)) +
+        geom_point() +
+        scale_color_manual(drop=FALSE, values=c(&quot;blue&quot;,&quot;red&quot;,&quot;grey&quot;)) +
+        lims(x=c(0,max_umi), y=c(0,max_umi)) +
+        labs(x=&quot;UMI Aligned to Human Genome&quot;, y=&quot;UMI Aligned to Chimp Genome&quot;, color=&quot;CellRanger Calls&quot;) +
+        theme(legend.position=c(0.8,0.8))
+
+p2 &lt;- ggplot(temp, aes(x=call, fill=call)) +
+        geom_bar() +
+        scale_x_discrete(drop=FALSE) +
+        scale_fill_manual(drop=FALSE, values=c(&quot;blue&quot;,&quot;red&quot;,&quot;grey&quot;)) +
+        ylim(0,5900) +
+        theme(legend.position=&quot;none&quot;) +
+        labs(x=&quot;CellRanger Calls&quot;, y=&quot;Frequency&quot;)
+
+grid.arrange(p1,p2, ncol=2, widths=c(2,1))</code></pre>
+<p><img src="figure/10x-data-0-process-test.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#calculate total number of umis
+temp$TotalOrthoV2 &lt;- temp$HumanOrthoV2 + temp$ChimpOrthoV2
+#calculate ratio of human umis to total umis
+temp$RatioOrthoV2 &lt;- temp$HumanOrthoV2 / temp$TotalOrthoV2
+
+#mean ratio
+mean(temp$RatioOrthoV2)</code></pre>
+<pre><code>[1] 0.04402577</code></pre>
+<pre class="r"><code>#chimp RatioOrthoV2 cutoff
+cutoff &lt;- max(temp$RatioOrthoV2)
+round(cutoff,2)</code></pre>
+<pre><code>[1] 0.09</code></pre>
+<pre class="r"><code>ggplot(temp, aes(x=RatioOrthoV2)) +
+       geom_histogram(binwidth=0.01, color=&quot;black&quot;, fill=&quot;white&quot;, alpha=0.2) +
+       xlim(0,1) +
+       geom_vline(xintercept=cutoff, color=&quot;blue&quot;) +
+       labs(x=&quot;Ratio of Human UMIs to Total UMIs&quot;, y=&quot;Frequency&quot;)</code></pre>
+<pre><code>Warning: Removed 2 rows containing missing values (geom_bar).</code></pre>
+<p><img src="figure/10x-data-0-process-test.Rmd/unnamed-chunk-5-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#assign new human/chimp cells
+temp$NEWcall &lt;- &quot;multiplet&quot;
+temp$NEWcall[which(temp$RatioOrthoV2&gt;=0.1)] &lt;- &quot;human&quot;
+temp$NEWcall[which(temp$RatioOrthoV2&lt;=cutoff)] &lt;- &quot;chimp&quot;
+temp$NEWcall &lt;- factor(temp$NEWcall, levels=c(&quot;chimp&quot;,&quot;human&quot;,&quot;multiplet&quot;), labels=c(&quot;chimp&quot;,&quot;human&quot;,&quot;multiplet&quot;))
+
+#number of species assignments
+table(temp$NEWcall)</code></pre>
+<pre><code>
+    chimp     human multiplet 
+     5808         0         0 </code></pre>
+<pre class="r"><code>p1 &lt;- ggplot(temp, aes(x=HumanOrthoV2, y=ChimpOrthoV2, color=NEWcall)) +
+        geom_point() +
+        scale_color_manual(drop=FALSE, values=c(&quot;blue&quot;,&quot;red&quot;,&quot;grey&quot;)) +
+        lims(x=c(0,max_umi), y=c(0,max_umi)) +
+        labs(x=&quot;UMI Aligned to Human Genome&quot;, y=&quot;UMI Aligned to Chimp Genome&quot;, color=&quot;New Calls&quot;) +
+        theme(legend.position=c(0.8,0.8))
+
+p2 &lt;- ggplot(temp, aes(x=NEWcall, fill=NEWcall)) +
+        geom_bar() +
+        scale_x_discrete(drop=FALSE) +
+        scale_fill_manual(drop=FALSE, values=c(&quot;blue&quot;,&quot;red&quot;,&quot;grey&quot;)) +
+        ylim(0,5900) +
+        theme(legend.position=&quot;none&quot;) +
+        labs(x=&quot;New Calls&quot;, y=&quot;Frequency&quot;)
+
+grid.arrange(p1,p2, ncol=2, widths=c(2,1))</code></pre>
+<p><img src="figure/10x-data-0-process-test.Rmd/unnamed-chunk-5-3.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="examine-human-only-data-srr8403264" class="section level3">
+<h3>Examine human-only data (SRR8403264)</h3>
+<pre class="r"><code>#load data
+dir_data &lt;- paste0(&#39;./../scRNA/cellranger-data-full/cellranger-data-HumanOrthoV2_and_ChimpOrthoV2/SRR8403264/outs/analysis/&#39;)
+temp &lt;- read.csv(file=paste0(dir_data,&#39;gem_classification.csv&#39;))
+
+#make 10x calls a factor
+temp$call &lt;- factor(temp$call, levels=c(&quot;ChimpOrthoV2&quot;,&quot;HumanOrthoV2&quot;,&quot;Multiplet&quot;), labels=c(&quot;chimp&quot;,&quot;human&quot;,&quot;multiplet&quot;))
+
+#number of species assignments
+table(temp$call)</code></pre>
+<pre><code>
+    chimp     human multiplet 
+        0        12      7228 </code></pre>
+<pre class="r"><code>#maximum number of UMIs/cell that aligned to each genome
+max(temp$ChimpOrthoV2)</code></pre>
+<pre><code>[1] 406</code></pre>
+<pre class="r"><code>max(temp$HumanOrthoV2)</code></pre>
+<pre><code>[1] 11362</code></pre>
+<pre class="r"><code>max_umi &lt;- max(c(temp$ChimpOrthoV2,temp$HumanOrthoV2))
+
+p1 &lt;- ggplot(temp, aes(x=HumanOrthoV2, y=ChimpOrthoV2, color=call)) +
+        geom_point() +
+        scale_color_manual(drop=FALSE, values=c(&quot;blue&quot;,&quot;red&quot;,&quot;grey&quot;)) +
+        lims(x=c(0,max_umi), y=c(0,max_umi)) +
+        labs(x=&quot;UMI Aligned to Human Genome&quot;, y=&quot;UMI Aligned to Chimp Genome&quot;, color=&quot;CellRanger Calls&quot;) +
+        theme(legend.position=c(0.8,0.8))
+
+p2 &lt;- ggplot(temp, aes(x=call, fill=call)) +
+        geom_bar() +
+        scale_x_discrete(drop=FALSE) +
+        scale_fill_manual(drop=FALSE, values=c(&quot;blue&quot;,&quot;red&quot;,&quot;grey&quot;)) +
+        ylim(0,7300) +
+        theme(legend.position=&quot;none&quot;) +
+        labs(x=&quot;CellRanger Calls&quot;, y=&quot;Frequency&quot;)
+
+grid.arrange(p1,p2, ncol=2, widths=c(2,1))</code></pre>
+<p><img src="figure/10x-data-0-process-test.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#calculate total number of umis
+temp$TotalOrthoV2 &lt;- temp$HumanOrthoV2 + temp$ChimpOrthoV2
+#calculate ratio of human umis to total umis
+temp$RatioOrthoV2 &lt;- temp$HumanOrthoV2 / temp$TotalOrthoV2
+
+#mean ratio
+mean(temp$RatioOrthoV2)</code></pre>
+<pre><code>[1] 0.9663014</code></pre>
+<pre class="r"><code>#human RatioOrthoV2 cutoff
+cutoff &lt;- min(temp$RatioOrthoV2)
+round(cutoff,2)</code></pre>
+<pre><code>[1] 0.94</code></pre>
+<pre class="r"><code>ggplot(temp, aes(x=RatioOrthoV2)) +
+       geom_histogram(binwidth=0.01, color=&quot;black&quot;, fill=&quot;white&quot;, alpha=0.2) +
+       xlim(0,1) +
+       geom_vline(xintercept=cutoff, color=&quot;red&quot;) +
+       labs(x=&quot;Ratio of Human UMIs to Total UMIs&quot;, y=&quot;Frequency&quot;)</code></pre>
+<pre><code>Warning: Removed 2 rows containing missing values (geom_bar).</code></pre>
+<p><img src="figure/10x-data-0-process-test.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#assign new human/chimp cells
+temp$NEWcall &lt;- &quot;multiplet&quot;
+temp$NEWcall[which(temp$RatioOrthoV2&gt;=cutoff)] &lt;- &quot;human&quot;
+temp$NEWcall[which(temp$RatioOrthoV2&lt;=0.1)] &lt;- &quot;chimp&quot;
+temp$NEWcall &lt;- factor(temp$NEWcall, levels=c(&quot;chimp&quot;,&quot;human&quot;,&quot;multiplet&quot;), labels=c(&quot;chimp&quot;,&quot;human&quot;,&quot;multiplet&quot;))
+
+#number of species assignments
+table(temp$NEWcall)</code></pre>
+<pre><code>
+    chimp     human multiplet 
+        0      7240         0 </code></pre>
+<pre class="r"><code>p1 &lt;- ggplot(temp, aes(x=HumanOrthoV2, y=ChimpOrthoV2, color=NEWcall)) +
+        geom_point() +
+        scale_color_manual(drop=FALSE, values=c(&quot;blue&quot;,&quot;red&quot;,&quot;grey&quot;)) +
+        lims(x=c(0,max_umi), y=c(0,max_umi)) +
+        labs(x=&quot;UMI Aligned to Human Genome&quot;, y=&quot;UMI Aligned to Chimp Genome&quot;, color=&quot;New Calls&quot;) +
+        theme(legend.position=c(0.8,0.8))
+
+p2 &lt;- ggplot(temp, aes(x=NEWcall, fill=NEWcall)) +
+        geom_bar() +
+        scale_x_discrete(drop=FALSE) +
+        scale_fill_manual(drop=FALSE, values=c(&quot;blue&quot;,&quot;red&quot;,&quot;grey&quot;)) +
+        ylim(0,7300) +
+        theme(legend.position=&quot;none&quot;) +
+        labs(x=&quot;New Calls&quot;, y=&quot;Frequency&quot;)
+
+grid.arrange(p1,p2, ncol=2, widths=c(2,1))</code></pre>
+<p><img src="figure/10x-data-0-process-test.Rmd/unnamed-chunk-6-3.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="conclusions" class="section level3">
+<h3>Conclusions</h3>
+<p>Cellranger is really bad at human/chimp assignments, so using a cutoff based on the ratio of human-aligned UMIs per cells vs. the total number of aligned UMIs per cells (bars near 0 are likely chimp cells and bars near 1 are likely human cells) seems like a better option.</p>
+<p>Chimp reads in human droplets and human reads in chimp droplets may come from two things</p>
+<ul>
+<li>chance alignment of reads to either the chimp or human genome</li>
+<li>background coming from lysed cells</li>
+</ul>
+<p>The first thing is empirically measured here. Based on the human-only and chimp-only datasets, on average ~3% of human reads align to the chimp genome, and ~4% of chimp reads align to the human genome. However, a ~6% cutoff was needed to correctly assign all human cells, and a ~9% cutoff was needed to correctly assign all chimp cells. On top of this, we expect that some mixed species reads will come from lysed cells. Some batches may have more lysed cell read backgrounds than others. Nevertheless, we propose that using a 10% cutoff for human and chimp cells allows some flexibility for background reads while remaining close to the cutoffs calculated here.</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.6.1 (2019-07-05)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Scientific Linux 7.4 (Nitrogen)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.2.19-el7-x86_64/lib/libopenblas_haswellp-r0.2.19.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] gridExtra_2.3 ggplot2_3.3.2
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.5       compiler_3.6.1   pillar_1.4.7     later_1.1.0.1   
+ [5] git2r_0.26.1     workflowr_1.6.2  tools_3.6.1      digest_0.6.27   
+ [9] evaluate_0.14    lifecycle_0.2.0  tibble_3.0.4     gtable_0.3.0    
+[13] pkgconfig_2.0.3  rlang_0.4.9      yaml_2.2.1       xfun_0.8        
+[17] withr_2.3.0      stringr_1.4.0    dplyr_1.0.2      knitr_1.23      
+[21] generics_0.1.0   fs_1.3.1         vctrs_0.3.5      rprojroot_2.0.2 
+[25] grid_3.6.1       tidyselect_1.1.0 glue_1.4.2       R6_2.5.0        
+[29] rmarkdown_1.13   farver_2.0.3     purrr_0.3.4      magrittr_2.0.1  
+[33] whisker_0.3-2    scales_1.1.1     promises_1.1.1   htmltools_0.5.0 
+[37] ellipsis_0.3.1   colorspace_2.0-0 httpuv_1.5.1     labeling_0.4.2  
+[41] stringi_1.4.3    munsell_0.5.0    crayon_1.3.4    </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

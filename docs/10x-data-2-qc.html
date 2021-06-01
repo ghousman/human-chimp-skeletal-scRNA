@@ -1,0 +1,2685 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Genevieve Housman" />
+
+
+<title>10x-data-qc</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">human-chimp-skeletal-scRNA</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">10x-data-qc</h1>
+<h4 class="author">Genevieve Housman</h4>
+<h4 class="date">Februrary 2021</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2021-05-11
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong> <code>human-chimp-skeletal-scRNA/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown file has unstaged changes. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20190719code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20190719)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20190719code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20190719)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreef3876a3c393ccf9434fed33f4b0aeee9914f5815targetblankf3876a3a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/f3876a3c393ccf9434fed33f4b0aeee9914f5815" target="_blank">f3876a3</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreef3876a3c393ccf9434fed33f4b0aeee9914f5815targetblankf3876a3a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/f3876a3c393ccf9434fed33f4b0aeee9914f5815" target="_blank">f3876a3</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+
+Untracked files:
+    Untracked:  analysis/10x-plot-enrichment-gom.Rmd
+    Untracked:  analysis/TODO_10x-data-4-classification-t2.Rmd
+    Untracked:  analysis/TODO_10x-data-4-classification-tot.Rmd
+    Untracked:  analysis/TODO_10x-data-4-classification.Rmd
+    Untracked:  analysis/TODO_10x-data-4-reclassification-tot.Rmd
+    Untracked:  analysis/TODO_10x-data-5-diffexp.Rmd
+    Untracked:  analysis/TODO_10x-data-6-conservexp.Rmd
+    Untracked:  analysis/TODO_10x-data-6-cormotif-t2.Rmd
+    Untracked:  analysis/TODO_10x-data-6-cormotif-tot.Rmd
+    Untracked:  analysis/TODO_10x-data-6-variance-t2.Rmd
+    Untracked:  analysis/TODO_10x-data-6-variance-tot.Rmd
+    Untracked:  analysis/TODO_10x-data-7-enrichment.Rmd
+    Untracked:  analysis/TODO_10x-data-8-batch-correlation.Rmd
+    Untracked:  analysis/TODO_10x-plot-classification.Rmd
+    Untracked:  analysis/TODO_10x-plot-diffexp.Rmd
+    Untracked:  analysis/TODO_10x-plot-replicate-correlation-t2.Rmd
+    Untracked:  analysis/TODO_10x-plot-replicate-correlation-tot.Rmd
+    Untracked:  analysis/TODO_10x-plot-utf1-tac3.Rmd
+    Untracked:  analysis/TODO_10x-view-batch-effects.Rmd
+    Untracked:  analysis/TODO_10x-view-data-metrics.Rmd
+    Untracked:  analysis/TODO_10x-view-species-assignments.Rmd
+    Untracked:  analysis/TODO_10x-view-validation-data.Rmd
+    Untracked:  analysis/v2/
+    Untracked:  code/FindMarkers.R
+    Untracked:  code/FindMarkers.sh
+    Untracked:  code/FindMarkers_0.1.err
+    Untracked:  code/FindMarkers_0.1.out
+    Untracked:  code/FindMarkers_0.25.err
+    Untracked:  code/FindMarkers_0.25.out
+    Untracked:  code/FindMarkers_0.5.err
+    Untracked:  code/FindMarkers_0.5.out
+    Untracked:  code/FindMarkers_0.75.err
+    Untracked:  code/FindMarkers_0.75.out
+    Untracked:  code/FindMarkers_1.err
+    Untracked:  code/FindMarkers_1.out
+    Untracked:  code/GoM.R
+    Untracked:  code/GoM.sh
+    Untracked:  code/fastTopics.R
+    Untracked:  code/fastTopics.sh
+    Untracked:  code/fastTopicsBC.R
+    Untracked:  code/fastTopicsBC.sh
+    Untracked:  code/fastTopicsBC_3_tot.err
+    Untracked:  code/fastTopicsBC_3_tot.out
+    Untracked:  code/fastTopicsBC_4_tot.err
+    Untracked:  code/fastTopicsBC_4_tot.out
+    Untracked:  code/fastTopicsBC_5_tot.err
+    Untracked:  code/fastTopicsBC_5_tot.out
+    Untracked:  code/fastTopicsBC_6_tot.err
+    Untracked:  code/fastTopicsBC_6_tot.out
+    Untracked:  code/fastTopicsBC_7_tot.err
+    Untracked:  code/fastTopicsBC_7_tot.out
+    Untracked:  code/fastTopicsSpp.R
+    Untracked:  code/fastTopicsSpp.sh
+    Untracked:  code/fastTopicsSppBC.R
+    Untracked:  code/fastTopicsSppBC.sh
+    Untracked:  code/fastTopicsSppBC_3_tot.err
+    Untracked:  code/fastTopicsSppBC_3_tot.out
+    Untracked:  code/fastTopicsSppBC_4_tot.err
+    Untracked:  code/fastTopicsSppBC_4_tot.out
+    Untracked:  code/fastTopicsSppBC_5_tot.err
+    Untracked:  code/fastTopicsSppBC_5_tot.out
+    Untracked:  code/fastTopicsSppBC_6_tot.err
+    Untracked:  code/fastTopicsSppBC_6_tot.out
+    Untracked:  code/fastTopicsSppBC_7_tot.err
+    Untracked:  code/fastTopicsSppBC_7_tot.out
+    Untracked:  code/fastTopicsSpp_3_tot.err
+    Untracked:  code/fastTopicsSpp_3_tot.out
+    Untracked:  code/fastTopicsSpp_4_tot.err
+    Untracked:  code/fastTopicsSpp_4_tot.out
+    Untracked:  code/fastTopicsSpp_5_tot.err
+    Untracked:  code/fastTopicsSpp_5_tot.out
+    Untracked:  code/fastTopicsSpp_6_tot.err
+    Untracked:  code/fastTopicsSpp_6_tot.out
+    Untracked:  code/fastTopicsSpp_7_tot.err
+    Untracked:  code/fastTopicsSpp_7_tot.out
+    Untracked:  code/fastTopics_3_tot.err
+    Untracked:  code/fastTopics_3_tot.out
+    Untracked:  code/fastTopics_4_tot.err
+    Untracked:  code/fastTopics_4_tot.out
+    Untracked:  code/fastTopics_5_tot.err
+    Untracked:  code/fastTopics_5_tot.out
+    Untracked:  code/fastTopics_6_tot.err
+    Untracked:  code/fastTopics_6_tot.out
+    Untracked:  code/fastTopics_7_tot.err
+    Untracked:  code/fastTopics_7_tot.out
+    Untracked:  code/slurm-9586807.out
+    Untracked:  code/slurm-9586811.out
+    Untracked:  code/slurm-9586968.out
+    Untracked:  code/slurm-9586970.out
+    Untracked:  code/slurm-9587058.out
+    Untracked:  code/slurm-9587061.out
+    Untracked:  code/slurm-9588977.out
+    Untracked:  code/slurm-9588979.out
+    Untracked:  code/slurm-9588980.out
+    Untracked:  code/slurm-9588981.out
+    Untracked:  code/slurm-9588982.out
+    Untracked:  code/slurm-9598502.out
+    Untracked:  code/slurm-9598587.out
+    Untracked:  code/slurm-9611792.out
+    Untracked:  code/slurm-9611794.out
+    Untracked:  code/slurm-9612244.out
+    Untracked:  code/slurm-9614956.out
+    Untracked:  code/slurm-9619833.out
+    Untracked:  code/slurm-9622390.out
+    Untracked:  code/slurm-9626666.out
+    Untracked:  code/slurm-9626667.out
+    Untracked:  code/slurm-9649495.out
+    Untracked:  code/slurm-9649496.out
+    Untracked:  code/slurm-9649497.out
+    Untracked:  code/slurm-9649498.out
+    Untracked:  code/slurm-9649500.out
+    Untracked:  code/slurm-9688894.out
+    Untracked:  code/slurm-9688895.out
+    Untracked:  code/slurm-9688896.out
+    Untracked:  code/slurm-9688897.out
+    Untracked:  code/slurm-9688902.out
+    Untracked:  code/v2/
+    Untracked:  data/HumanPrimaryCellAtlasData-SingleR
+    Untracked:  data/HumanPrimaryCellAtlasDetails-SingleR.csv
+    Untracked:  data/HumanPrimaryCellAtlasLabels-SingleR.csv
+    Untracked:  data/alizarin-red-quant-total.csv
+    Untracked:  data/cell_atlas_ref_panel
+    Untracked:  data/cellranger-data-full/
+    Untracked:  data/corrmatrix.ost
+    Untracked:  data/de-data/
+    Untracked:  data/facs-MSC-collection-summary-sample-avg.csv
+    Untracked:  data/facs-MSC-collection-summary-species-avg.csv
+    Untracked:  data/facs-MSC-collection-summary-total.csv
+    Untracked:  data/gom-data/
+    Untracked:  data/oil-red-quant-total.csv
+    Untracked:  data/scrna-batch-reformat.csv
+    Untracked:  data/scrna-batch.csv
+    Untracked:  output/data-qc-post-subsets-batchcor.pdf
+    Untracked:  output/data-qc-post-subsets-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-batchcor.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-int19k-batchcor.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-int19k-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-int19k.reg-batchcor.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-int19k.reg-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-intNo0-batchcor.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-intNo0-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-intNo0.reg-batchcor.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-intNo0.reg-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-merge-batchcor.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-merge-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-batchcor.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-batchviz.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-intNo0.reg-batchcor.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-intNo0.reg-batchviz.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-merge-batchcor.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-merge-batchviz.pdf
+    Untracked:  output/data-qc-postfilterL.pdf
+    Untracked:  output/data-qc-prefilter.pdf
+    Untracked:  output/markers0.05-I.data.filterC.log.indv-cell.intNo0.reg-tot..rds
+    Untracked:  output/markers0.05-M.data.filterC.log.indv-cell.intNo0.reg-tot..rds
+    Untracked:  output/markers0.05-O.data.filterC.log.indv-cell.intNo0.reg-tot..rds
+    Untracked:  output/markers0.05.data.filterC.log.indv-cell.intNo0.reg-tot..rds
+    Untracked:  output/markers0.1.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  output/markers0.25.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  output/markers0.5.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  output/markers0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  output/markers1.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  output/v1/
+    Untracked:  output/v2/
+
+Unstaged changes:
+    Modified:   analysis/10x-data-2-qc.Rmd
+    Deleted:    analysis/10x-data-4-classification-t2.Rmd
+    Deleted:    analysis/10x-data-4-classification-tot.Rmd
+    Deleted:    analysis/10x-data-4-classification.Rmd
+    Deleted:    analysis/10x-data-5-diffexp.Rmd
+    Deleted:    analysis/10x-data-6-conservexp.Rmd
+    Deleted:    analysis/10x-data-6-cormotif-t2.Rmd
+    Deleted:    analysis/10x-data-6-cormotif-tot.Rmd
+    Deleted:    analysis/10x-data-6-variance-t2.Rmd
+    Deleted:    analysis/10x-data-6-variance-tot.Rmd
+    Deleted:    analysis/10x-data-7-enrichment.Rmd
+    Deleted:    analysis/10x-data-8-batch-correlation.Rmd
+    Modified:   analysis/10x-plot-classification-adhoc.Rmd
+    Deleted:    analysis/10x-plot-classification.Rmd
+    Deleted:    analysis/10x-plot-diffexp.Rmd
+    Deleted:    analysis/10x-plot-replicate-correlation-t2.Rmd
+    Deleted:    analysis/10x-plot-replicate-correlation-tot.Rmd
+    Deleted:    analysis/10x-plot-utf1-tac3.Rmd
+    Deleted:    analysis/10x-view-batch-effects.Rmd
+    Deleted:    analysis/10x-view-data-metrics.Rmd
+    Deleted:    analysis/10x-view-species-assignments.Rmd
+    Deleted:    analysis/10x-view-validation-data.Rmd
+    Deleted:    analysis/asbmr2020-plots.Rmd
+    Deleted:    analysis/ashg2020-plots.Rmd
+    Modified:   analysis/index.Rmd
+    Deleted:    analysis/temp-code.Rmd
+    Deleted:    analysis/v1/index.Rmd
+    Deleted:    analysis/v1/license.Rmd
+    Modified:   code/DEdream.R
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_FALSE.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_stage.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_adhoc.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_adhoc.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_cluster.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_cluster.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_ostadhoc.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_ostadhoc.out
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_stage.err
+    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_stage.out
+    Modified:   code/DEdreamsubset.R
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_adhoc.err
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_adhoc.out
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_cluster.err
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_cluster.out
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_ostadhoc.err
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_ostadhoc.out
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_stage.err
+    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_stage.out
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_adhoc.err
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_adhoc.out
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_cluster.err
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_cluster.out
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_ostadhoc.err
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_ostadhoc.out
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_stage.err
+    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_stage.out
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_adhoc.err
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_adhoc.out
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_cluster.err
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_cluster.out
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_ostadhoc.err
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_ostadhoc.out
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_stage.err
+    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_stage.out
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_adhoc.err
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_adhoc.out
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_cluster.err
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_cluster.out
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_ostadhoc.err
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_ostadhoc.out
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_stage.err
+    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_stage.out
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/10x-data-2-qc.Rmd</code>) and HTML (<code>docs/10x-data-2-qc.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/b7644578e8eff733edc2e66effd79f2d1add3c48/analysis/10x-data-2-qc.Rmd" target="_blank">b764457</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-02-24
+</td>
+<td>
+minor fix to data qc
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/e6e7122113971ce3d73f5e5c74bd837fb8b52233/analysis/10x-data-2-qc.Rmd" target="_blank">e6e7122</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-02-21
+</td>
+<td>
+updated data qc
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/0fa4613db51c156d544c26a1c24cf22a64621c06/analysis/10x-data-2-qc.Rmd" target="_blank">0fa4613</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2020-08-13
+</td>
+<td>
+Data QC updated
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/f918f2b3e5531a109d05b2b42ffc8af09ab4fed5/analysis/10x-data-2-qc.Rmd" target="_blank">f918f2b</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2020-08-12
+</td>
+<td>
+Starting ortho-exon v2 reanalysis
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="x-data-cellranger-analysis---data-qc" class="section level1">
+<h1>10X Data Cellranger Analysis - Data QC</h1>
+<p>Examine QC metrics of processed 10X data using seurat.</p>
+<pre class="r"><code>library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(grid)
+library(gridExtra)
+library(colorspace)
+library(RColorBrewer)</code></pre>
+<pre class="r"><code>#Load batch info
+batch &lt;- read.csv(file=&#39;./data/scrna-batch.csv&#39;, header=TRUE, sep=&quot;,&quot;)
+
+#Read in files
+data &lt;- readRDS(&quot;./data/cellranger-data-full/data.rds&quot;)</code></pre>
+<div id="data-qc-before-barcode-filtering" class="section level3">
+<h3>Data QC before barcode filtering</h3>
+<pre class="r"><code>pdf(file=&quot;./output/data-qc-prefilter.pdf&quot;, onefile=TRUE, width=21, height=21)
+
+for (i in 1:length(data)) {
+  
+  collection &lt;- paste0(data[[i]]@meta.data$Stage[1],&quot;: &quot;,data[[i]]@meta.data$Pair[1])
+  
+  print(paste0(&quot;QC of &quot;,collection))
+  
+  #Check and visualize numbers of cells per species
+  print(&quot;Species Assignments&quot;)
+  print(table(data[[i]]@meta.data$Species, useNA=&quot;always&quot;))
+
+  p1a &lt;- ggplot(data[[i]]@meta.data, aes(x=Species)) +
+           geom_bar() +
+           labs(title=collection) +
+           ylim(0,5000)
+  
+  #Check and visualize QC metrics
+  # - number of umi per cell (count depth)
+  # - number of genes per cell
+  # - percent of mitochondrial reads (cell viability)
+  # - expressed genes per cell (complexity)
+  # - rarity of genes (cells expressing genes)
+  
+  #Not looking into expression of housekeeping genes at this time
+  #https://broadinstitute.github.io/2019_scWorkshop/data-wrangling-scrnaseq.html
+  
+  #nCount_RNA: total number of molecules (umi) detected within a cell
+  print(&quot;UMIs/Cell (Chimp and Human)&quot;)
+  print(summary(data[[i]]@meta.data$nCount_RNA[which(data[[i]]@meta.data$Species==&quot;Chimp&quot;)]))
+  print(summary(data[[i]]@meta.data$nCount_RNA[which(data[[i]]@meta.data$Species==&quot;Human&quot;)]))
+  #nFeature_RNA: number of unique genes detected in each cell
+  print(&quot;Genes/Cell (Chimp and Human)&quot;)
+  print(summary(data[[i]]@meta.data$nFeature_RNA[which(data[[i]]@meta.data$Species==&quot;Chimp&quot;)]))
+  print(summary(data[[i]]@meta.data$nFeature_RNA[which(data[[i]]@meta.data$Species==&quot;Human&quot;)]))
+  #percent.mt: percentage of reads that map to the mitochondrial genome
+  print(&quot;Percent.Mito/Cell (Chimp and Human)&quot;)
+  print(summary(data[[i]]@meta.data$percent.mt[which(data[[i]]@meta.data$Species==&quot;Chimp&quot;)]))
+  print(summary(data[[i]]@meta.data$percent.mt[which(data[[i]]@meta.data$Species==&quot;Human&quot;)]))
+  #complexity
+  data[[i]]@meta.data$Complexity &lt;- log10(data[[i]]@meta.data$nCount_RNA/data[[i]]@meta.data$nFeature_RNA)
+  print(&quot;Complexity (Chimp and Human)&quot;)
+  print(summary(data[[i]]@meta.data$Complexity[which(data[[i]]@meta.data$Species==&quot;Chimp&quot;)]))
+  print(summary(data[[i]]@meta.data$Complexity[which(data[[i]]@meta.data$Species==&quot;Human&quot;)]))
+  
+  p1b &lt;- ggplot(data[[i]]@meta.data, aes(x=nCount_RNA,color=Species)) +
+           geom_histogram(fill=&quot;white&quot;, alpha=0.1, position=&quot;identity&quot;, binwidth=100) +
+           labs(title=collection,x=&quot;UMI per Cell&quot;,y=&quot;Count&quot;) +
+           xlim(0,100000) +
+           facet_grid(Species ~ .)
+  p1c &lt;- ggplot(data[[i]]@meta.data, aes(x=nFeature_RNA,color=Species)) +
+           geom_histogram(fill=&quot;white&quot;, alpha=0.1, position=&quot;identity&quot;, binwidth=10) +
+           labs(title=collection,x=&quot;Genes per Cell&quot;,y=&quot;Count&quot;) +
+           xlim(0,10000) +
+           facet_grid(Species ~ .)
+  p1d &lt;- ggplot(data[[i]]@meta.data, aes(x=percent.mt,color=Species)) +
+           geom_histogram(fill=&quot;white&quot;, alpha=0.1, position=&quot;identity&quot;, binwidth=0.005) +
+           labs(title=collection,x=&quot;Percent of Mitochondrial Reads&quot;,y=&quot;Count&quot;) +
+           xlim(0,100) +
+           facet_grid(Species ~ .)
+    
+  p2a &lt;- ggplot(data[[i]]@meta.data, aes(x=Species, y=nCount_RNA, fill=Species)) +
+           geom_violin() +
+           geom_boxplot(fill=&quot;white&quot;, alpha=0.5, width=0.1) +
+           labs(title=collection, x=&quot;Cell Type&quot;, y=&quot;UMI per Cell&quot;) +
+           ylim(0,100000)
+  p2b &lt;- ggplot(data[[i]]@meta.data, aes(x=Species, y=nFeature_RNA, fill=Species)) +
+           geom_violin() +
+           geom_boxplot(fill=&quot;white&quot;, alpha=0.5, width=0.1) +
+           labs(title=collection, x=&quot;Cell Type&quot;, y=&quot;Genes per Cell&quot;) +
+           ylim(0,10000)
+  p2c &lt;- ggplot(data[[i]]@meta.data, aes(x=nCount_RNA, y=nFeature_RNA, color=Species)) +
+           geom_point(size=2,alpha=0.3) +
+           xlim(0,100000) +
+           ylim(0,10000) +
+           facet_grid(Species ~ .) +
+           labs(title=collection,x=&quot;UMI per Cell&quot;,y=&quot;Genes per Cell&quot;)
+  p2d &lt;- ggplot(data[[i]]@meta.data, aes(x=Species, y=percent.mt, fill=Species)) +
+           geom_violin() +
+           geom_boxplot(fill=&quot;white&quot;, alpha=0.5, width=0.1, outlier.shape=NA) +
+           labs(title=collection, x=&quot;Cell Type&quot;, y=&quot;Percent Mitochondrial Reads&quot;) +
+           ylim(0,100)
+  
+  #possible threshold options: umi per cell &gt; 1000 | genes per cell &gt; 700 | percent mito &lt; 25
+  print(&quot;Species Assignments with Potential Filters Applied&quot;)
+  print(&quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;)
+  print(table(data[[i]]@meta.data$Species[which(data[[i]]@meta.data$nCount_RNA &gt; 1000 &amp;
+                                                data[[i]]@meta.data$nCount_RNA &lt; 60000 &amp;
+                                                data[[i]]@meta.data$nFeature_RNA &gt; 250 &amp;
+                                                data[[i]]@meta.data$nFeature_RNA &lt; 7500 &amp;
+                                                data[[i]]@meta.data$percent.mt &lt; 25)], useNA=&quot;always&quot;))
+  print(&quot;[percent.mt &lt; 25]&quot;)
+  print(table(data[[i]]@meta.data$Species[which(data[[i]]@meta.data$percent.mt &lt; 25)], useNA=&quot;always&quot;))
+
+  p3a  &lt;- ggplot(data[[i]]@meta.data, aes(x=Complexity,color=Species,fill=Species)) +
+           geom_density(alpha=0.1, position=&quot;identity&quot;) +
+           labs(title=collection,x=&quot;Complexity(log10GenesPerUMI)&quot;,y=&quot;Count&quot;) +
+           xlim(0,2)
+  p3b &lt;- ggplot(data[[i]]@meta.data, aes(x=nCount_RNA,color=Species,fill=Species)) +
+           geom_density(alpha=0.1, position=&quot;identity&quot;) +
+           labs(title=collection,x=&quot;UMI per Cell&quot;,y=&quot;Count&quot;) +
+           geom_vline(xintercept=c(1000,60000), linetype=&quot;dashed&quot;) +
+           xlim(0,100000)
+  p3c &lt;- ggplot(data[[i]]@meta.data, aes(x=nFeature_RNA,color=Species,fill=Species)) +
+           geom_density(alpha=0.1, position=&quot;identity&quot;) +
+           labs(title=collection,x=&quot;Genes per Cell&quot;,y=&quot;Count&quot;) +
+           geom_vline(xintercept=c(250,7500), linetype=&quot;dashed&quot;) +
+           xlim(0,10000)
+  p3d &lt;- ggplot(data[[i]]@meta.data, aes(x=nCount_RNA, y=nFeature_RNA, color=percent.mt)) +
+           geom_point(size=0.5, alpha=0.3) +
+           scale_color_gradient2(low=&quot;black&quot;,mid=&quot;black&quot;,high=&quot;red&quot;,midpoint=25) +
+           labs(title=collection,x=&quot;UMI per Cell&quot;,y=&quot;Genes per Cell&quot;) +
+           xlim(0,100000) +
+           ylim(0,10000) +
+           geom_vline(xintercept=c(1000,60000), linetype=&quot;dashed&quot;) +
+           geom_hline(yintercept=c(250,7500), linetype=&quot;dashed&quot;) +
+           facet_grid(Species ~ .)
+
+  #investigate potential that cells are actually failed libraries (lower end outliers) or are cell doublets (higher end outliers)
+  p4a &lt;- ggplot(subset(data[[i]]@meta.data,Species%in%&quot;Chimp&quot;),
+                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+           geom_point(size=0.5,alpha=0.5,color=&quot;#F8766D&quot;) +
+           labs(title=collection, x=&quot;Cell Rank&quot;, y=&quot;UMI per Cell&quot;) +
+           ylim(0,100000) +
+           geom_hline(yintercept=c(1000,60000), linetype=&quot;dashed&quot;)
+  p4b &lt;- ggplot(subset(data[[i]]@meta.data,Species%in%&quot;Human&quot;),
+                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+           geom_point(size=0.5,alpha=0.5,color=&quot;#00BFC4&quot;) +
+           labs(title=collection, x=&quot;Cell Rank&quot;, y=&quot;UMI per Cell&quot;) +
+           ylim(0,100000) +
+           geom_hline(yintercept=c(1000,60000), linetype=&quot;dashed&quot;)
+  p4c &lt;- ggplot(subset(data[[i]]@meta.data,Species%in%&quot;Chimp&quot;),
+                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+           geom_point(size=0.5,alpha=0.5,color=&quot;#F8766D&quot;) +
+           labs(title=collection, x=&quot;Cell Rank&quot;, y=&quot;Genes per Cell&quot;) +
+           ylim(0,10000) +
+           geom_hline(yintercept=c(250,7500), linetype=&quot;dashed&quot;)
+  p4d &lt;- ggplot(subset(data[[i]]@meta.data,Species%in%&quot;Human&quot;),
+                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+           geom_point(size=0.5,alpha=0.5,color=&quot;#00BFC4&quot;) +
+           labs(title=collection, x=&quot;Cell Rank&quot;, y=&quot;Genes per Cell&quot;) +
+           ylim(0,10000) +
+           geom_hline(yintercept=c(250,7500), linetype=&quot;dashed&quot;)
+  
+  #look at genes instead of cells
+  #umis per gene &amp; rarity of genes (cells expressing genes)
+  #thresholds: umi per gene &gt; 1
+  df &lt;- data.frame(
+    counts_per_gene_chimp &lt;- Matrix::rowSums(data[[i]]@assays$RNA@counts[,which(data[[i]]@meta.data$Species==&quot;Chimp&quot;)]),
+    counts_per_gene_human &lt;- Matrix::rowSums(data[[i]]@assays$RNA@counts[,which(data[[i]]@meta.data$Species==&quot;Human&quot;)]),
+    cells_per_gene_chimp &lt;- Matrix::rowSums(data[[i]]@assays$RNA@counts[,which(data[[i]]@meta.data$Species==&quot;Chimp&quot;)]&gt;0),
+    cells_per_gene_human &lt;- Matrix::rowSums(data[[i]]@assays$RNA@counts[,which(data[[i]]@meta.data$Species==&quot;Human&quot;)]&gt;0)
+  )
+  rm(counts_per_gene_chimp,counts_per_gene_human,cells_per_gene_chimp,cells_per_gene_human)
+  colnames(df) &lt;- c(&quot;counts_per_gene_chimp&quot;,&quot;counts_per_gene_human&quot;,&quot;cells_per_gene_chimp&quot;,&quot;cells_per_gene_human&quot;)
+
+  print(paste0(&quot;Total Genes: &quot;,length(rownames(data[[i]]@assays$RNA@counts))))
+  print(&quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;)
+  print(table(Matrix::rowSums(data[[i]]@assays$RNA@counts[,which(data[[i]]@meta.data$Species==&quot;Chimp&quot;)])&gt;0))
+  print(table(Matrix::rowSums(data[[i]]@assays$RNA@counts[,which(data[[i]]@meta.data$Species==&quot;Human&quot;)])&gt;0))
+  print(table(Matrix::rowSums(data[[i]]@assays$RNA@counts)&gt;0))
+
+  p5a &lt;- ggplot(df, aes(x=log10(counts_per_gene_chimp+1))) +
+           geom_histogram(color=&quot;#F8766D&quot;, fill=&quot;white&quot;, alpha=0.1, binwidth=0.05) +
+           ylim(0,6000) +
+           geom_vline(xintercept=log10(1.5), linetype=&quot;dashed&quot;) +
+           labs(title=collection, x=&quot;Log10 UMIs per Gene (Chimp)&quot;, y=&quot;Count&quot;)
+  p5b &lt;- ggplot(df, aes(x=log10(counts_per_gene_human+1))) +
+           geom_histogram(color=&quot;#00BFC4&quot;, fill=&quot;white&quot;, alpha=0.1, binwidth=0.05) +
+           ylim(0,6000) +
+           geom_vline(xintercept=log10(1.5), linetype=&quot;dashed&quot;) +
+           labs(title=collection, x=&quot;Log10 UMIs per Gene (Human)&quot;, y=&quot;Count&quot;)
+  p5c &lt;- ggplot(df, aes(x=log10(cells_per_gene_chimp+1))) +
+           geom_histogram(color=&quot;#F8766D&quot;, fill=&quot;white&quot;, alpha=0.1, binwidth=0.05) +
+           ylim(0,6000) +
+           geom_vline(xintercept=log10(1.5), linetype=&quot;dashed&quot;) +
+           labs(title=collection,x=&quot;Log10 Cells per Gene (Chimp)&quot;,y=&quot;Count&quot;)
+  p5d &lt;- ggplot(df, aes(x=log10(cells_per_gene_human+1))) +
+           geom_histogram(color=&quot;#00BFC4&quot;, fill=&quot;white&quot;, alpha=0.1, binwidth=0.05) +
+           ylim(0,6000) +
+           geom_vline(xintercept=log10(1.5), linetype=&quot;dashed&quot;) +
+           labs(title=collection,x=&quot;Log10 Cells per Gene (Human)&quot;,y=&quot;Count&quot;)
+  
+  grid.arrange(grobs=list(p1a,p1b,p1c,p1d,
+                          p2a,p2b,p2c,p2d,
+                          p3a,p3b,p3c,p3d,
+                          p4a,p4b,p4c,p4d,
+                          p5a,p5b,p5c,p5d), ncol=4)
+
+  rm(p1a,p1b,p1c,p1d, p2a,p2b,p2c,p2d, p3a,p3b,p3c,p3d, p4a,p4b,p4c,p4d, p5a,p5b,p5c,p5d)
+  
+}</code></pre>
+<pre><code>[1] &quot;QC of Time 0: H1+C1&quot;
+[1] &quot;Species Assignments&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 3509  2939     0 
+[1] &quot;UMIs/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    575   11717   14966   15411   18942   48371 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    861    5777   18576   19521   28604   66887 
+[1] &quot;Genes/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     46    3337    3825    3705    4388    7135 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     51    1999    4130    3693    5148    7379 
+[1] &quot;Percent.Mito/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   3.006   3.445   5.425   3.967  93.144 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   5.024   6.465  15.585   9.006  97.530 
+[1] &quot;Complexity (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1768  0.5454  0.5967  0.5834  0.6451  1.1295 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1406  0.5962  0.6847  0.6941  0.7955  1.5616 
+[1] &quot;Species Assignments with Potential Filters Applied&quot;
+[1] &quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 3415  2590     0 
+[1] &quot;[percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 3416  2594     0 
+[1] &quot;Total Genes: 19377&quot;
+[1] &quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;
+
+FALSE  TRUE 
+ 3137 16240 
+
+FALSE  TRUE 
+ 3089 16288 
+
+FALSE  TRUE 
+ 2499 16878 </code></pre>
+<pre><code>[1] &quot;QC of Time 1: H1+C1&quot;
+[1] &quot;Species Assignments&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 3189  2575     0 
+[1] &quot;UMIs/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    591   12438   17089   18352   23301   54208 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    861   16478   22852   22621   28363   76989 
+[1] &quot;Genes/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     75    3327    3917    3885    4578    7062 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     46    3888    4503    4294    4968    7225 
+[1] &quot;Percent.Mito/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   1.749   2.021   2.615   2.372  88.776 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   2.867   3.285   4.671   3.830  97.372 
+[1] &quot;Complexity (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1611  0.5730  0.6395  0.6285  0.7103  0.9555 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1404  0.6281  0.7062  0.6841  0.7634  1.5215 
+[1] &quot;Species Assignments with Potential Filters Applied&quot;
+[1] &quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 3165  2524     0 
+[1] &quot;[percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 3165  2528     0 
+[1] &quot;Total Genes: 19377&quot;
+[1] &quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;
+
+FALSE  TRUE 
+ 4416 14961 
+
+FALSE  TRUE 
+ 4266 15111 
+
+FALSE  TRUE 
+ 3541 15836 </code></pre>
+<pre><code>[1] &quot;QC of Time 2: H1+C1&quot;
+[1] &quot;Species Assignments&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2236  2168     0 
+[1] &quot;UMIs/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    647    6178   19802   20781   30076   89561 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    910    3058   16032   20787   34617  118170 
+[1] &quot;Genes/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     47    1664    4356    3755    5277    8141 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    263    1158    4500    3788    5948    8605 
+[1] &quot;Percent.Mito/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   1.931   2.406   6.374   3.069  95.263 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   2.675   3.609   5.521   5.426  58.345 
+[1] &quot;Complexity (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1125  0.5527  0.6862  0.6567  0.7817  1.4829 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1269  0.4258  0.6150  0.5974  0.7693  1.1378 
+[1] &quot;Species Assignments with Potential Filters Applied&quot;
+[1] &quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2049  2014     0 
+[1] &quot;[percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2094  2096     0 
+[1] &quot;Total Genes: 19377&quot;
+[1] &quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;
+
+FALSE  TRUE 
+ 4487 14890 
+
+FALSE  TRUE 
+ 4170 15207 
+
+FALSE  TRUE 
+ 3484 15893 </code></pre>
+<pre><code>[1] &quot;QC of Time 0: H1+C1&quot;
+[1] &quot;Species Assignments&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2876  3598     0 
+[1] &quot;UMIs/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    598    7203   10456   12968   17234   45278 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    679    6944   10736   13503   17807   50564 
+[1] &quot;Genes/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    119    2512    3143    3282    4182    6973 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     91    2376    3078    3192    4100    6540 
+[1] &quot;Percent.Mito/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   1.833   2.370   2.657   2.948  79.766 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   4.139   5.251   7.128   6.976  89.607 
+[1] &quot;Complexity (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1295  0.4563  0.5249  0.5260  0.6113  0.8277 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1494  0.4764  0.5489  0.5586  0.6459  1.0262 
+[1] &quot;Species Assignments with Potential Filters Applied&quot;
+[1] &quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2864  3508     0 
+[1] &quot;[percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2865  3511     0 
+[1] &quot;Total Genes: 19377&quot;
+[1] &quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;
+
+FALSE  TRUE 
+ 3309 16068 
+
+FALSE  TRUE 
+ 3039 16338 
+
+FALSE  TRUE 
+ 2534 16843 </code></pre>
+<pre><code>[1] &quot;QC of Time 1: H1+C1&quot;
+[1] &quot;Species Assignments&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2548  4013     0 
+[1] &quot;UMIs/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    639    9076   12660   13855   17949   41853 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    737   11675   16222   17753   22738   69456 
+[1] &quot;Genes/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     46    2649    3260    3289    3951    6178 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     55    3206    3786    3790    4472    7201 
+[1] &quot;Percent.Mito/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   2.857   3.231   3.628   3.631  96.371 
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+ 0.03131  4.23796  4.78474  6.23820  5.48939 97.67794 
+[1] &quot;Complexity (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.2016  0.5309  0.5912  0.5903  0.6606  1.4307 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1567  0.5644  0.6376  0.6409  0.7140  1.5565 
+[1] &quot;Species Assignments with Potential Filters Applied&quot;
+[1] &quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2533  3937     0 
+[1] &quot;[percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2533  3939     0 
+[1] &quot;Total Genes: 19377&quot;
+[1] &quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;
+
+FALSE  TRUE 
+ 4716 14661 
+
+FALSE  TRUE 
+ 3926 15451 
+
+FALSE  TRUE 
+ 3398 15979 </code></pre>
+<pre><code>[1] &quot;QC of Time 2: H1+C1&quot;
+[1] &quot;Species Assignments&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2042  1932     0 
+[1] &quot;UMIs/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    835    5934   13640   16521   24898   62550 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    833    2430   11271   20611   35564  132184 
+[1] &quot;Genes/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    176    1846    3336    3226    4487    6937 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   90.0   946.8  3500.0  3574.3  6066.5  9153.0 
+[1] &quot;Percent.Mito/Cell (Chimp and Human)&quot;
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+ 0.05196  1.31599  1.67220  2.50246  2.32773 81.68605 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   2.761   3.864  10.011   6.839  93.759 
+[1] &quot;Complexity (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1127  0.4559  0.6358  0.6106  0.7706  1.1895 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.09791 0.38429 0.60114 0.59928 0.80018 1.20291 
+[1] &quot;Species Assignments with Potential Filters Applied&quot;
+[1] &quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2025  1640     0 
+[1] &quot;[percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2032  1767     0 
+[1] &quot;Total Genes: 19377&quot;
+[1] &quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;
+
+FALSE  TRUE 
+ 4697 14680 
+
+FALSE  TRUE 
+ 4239 15138 
+
+FALSE  TRUE 
+ 3517 15860 </code></pre>
+<pre><code>[1] &quot;QC of Time 0: H2+C2&quot;
+[1] &quot;Species Assignments&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 1456  2458     0 
+[1] &quot;UMIs/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    566    2939   12511   21485   35042   89721 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    596    9088   20771   23478   31906  102341 
+[1] &quot;Genes/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     72    1160    3468    3591    5798    8094 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     41    2858    4710    4234    5722    8402 
+[1] &quot;Percent.Mito/Cell (Chimp and Human)&quot;
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+ 0.00000  0.09173  2.57898 10.42345  4.24208 92.45861 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   2.384   3.545  11.932   5.647  95.583 
+[1] &quot;Complexity (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1343  0.4397  0.6642  0.6341  0.8105  1.1871 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1097  0.5488  0.6698  0.6645  0.7768  1.2391 
+[1] &quot;Species Assignments with Potential Filters Applied&quot;
+[1] &quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 1195  2017     0 
+[1] &quot;[percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 1295  2154     0 
+[1] &quot;Total Genes: 19377&quot;
+[1] &quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;
+
+FALSE  TRUE 
+ 3426 15951 
+
+FALSE  TRUE 
+ 2898 16479 
+
+FALSE  TRUE 
+ 2457 16920 </code></pre>
+<pre><code>[1] &quot;QC of Time 1: H2+C2&quot;
+[1] &quot;Species Assignments&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2177  3095     0 
+[1] &quot;UMIs/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    604   14074   18953   19382   24482   52158 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    896   16000   20525   22819   27805   88792 
+[1] &quot;Genes/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     33    3613    4213    4128    4769    6718 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     28    3913    4434    4448    5131    7915 
+[1] &quot;Percent.Mito/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   6.030   6.871   8.253   7.820  98.374 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   5.961   6.694   8.724   7.642  98.910 
+[1] &quot;Complexity (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1805  0.5928  0.6571  0.6510  0.7144  1.6920 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.2532  0.6135  0.6706  0.6873  0.7423  1.8874 
+[1] &quot;Species Assignments with Potential Filters Applied&quot;
+[1] &quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2133  2985     0 
+[1] &quot;[percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2133  3010     0 
+[1] &quot;Total Genes: 19377&quot;
+[1] &quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;
+
+FALSE  TRUE 
+ 4560 14817 
+
+FALSE  TRUE 
+ 4130 15247 
+
+FALSE  TRUE 
+ 3417 15960 </code></pre>
+<pre><code>[1] &quot;QC of Time 2: H2+C2&quot;
+[1] &quot;Species Assignments&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2633  2868     0 
+[1] &quot;UMIs/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    790    7784   13495   14029   19478   58565 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    738    8527   16160   16914   23098   78676 
+[1] &quot;Genes/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    132    2628    3615    3419    4370    7331 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     71    2825    3930    3607    4692    7761 
+[1] &quot;Percent.Mito/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1214  2.5253  3.0020  4.8411  3.6708 92.1804 
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+ 0.07527  3.66893  4.31862 10.53465  6.62821 95.06173 
+[1] &quot;Complexity (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.08141 0.48307 0.57524 0.55611 0.65385 1.13377 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1080  0.5174  0.6250  0.6088  0.7113  1.3242 
+[1] &quot;Species Assignments with Potential Filters Applied&quot;
+[1] &quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2534  2556     0 
+[1] &quot;[percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2544  2568     0 
+[1] &quot;Total Genes: 19377&quot;
+[1] &quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;
+
+FALSE  TRUE 
+ 4695 14682 
+
+FALSE  TRUE 
+ 4178 15199 
+
+FALSE  TRUE 
+ 3465 15912 </code></pre>
+<pre><code>[1] &quot;QC of Time 0: H3+C3&quot;
+[1] &quot;Species Assignments&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2495  2457     0 
+[1] &quot;UMIs/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    569    7039   15180   15202   21782   44491 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    908   10572   17979   19709   28457   58602 
+[1] &quot;Genes/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     76    2675    3961    3673    4898    6973 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     78    3170    4206    3998    5294    7290 
+[1] &quot;Percent.Mito/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   3.122   3.749   6.742   4.874  91.964 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   6.516   8.198  13.207  10.767  96.325 
+[1] &quot;Complexity (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1425  0.4952  0.5918  0.5571  0.6540  1.1691 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1354  0.5564  0.6492  0.6481  0.7544  1.4901 
+[1] &quot;Species Assignments with Potential Filters Applied&quot;
+[1] &quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2380  2265     0 
+[1] &quot;[percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2381  2265     0 
+[1] &quot;Total Genes: 19377&quot;
+[1] &quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;
+
+FALSE  TRUE 
+ 3306 16071 
+
+FALSE  TRUE 
+ 3033 16344 
+
+FALSE  TRUE 
+ 2546 16831 </code></pre>
+<pre><code>[1] &quot;QC of Time 1: H3+C3&quot;
+[1] &quot;Species Assignments&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2473  2421     0 
+[1] &quot;UMIs/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    615   16060   21582   20674   26323   54245 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    729   11618   19754   20046   27225   78119 
+[1] &quot;Genes/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     90    3828    4405    4123    4858    6634 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     77    3350    4417    4052    5027    7113 
+[1] &quot;Percent.Mito/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   2.048   2.374   3.895   2.849  85.518 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   2.984   3.613   6.110   4.590  95.194 
+[1] &quot;Complexity (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1206  0.6198  0.6891  0.6545  0.7388  0.9374 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.09746 0.56262 0.66203 0.64045 0.74366 1.31928 
+[1] &quot;Species Assignments with Potential Filters Applied&quot;
+[1] &quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2414  2314     0 
+[1] &quot;[percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2414  2318     0 
+[1] &quot;Total Genes: 19377&quot;
+[1] &quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;
+
+FALSE  TRUE 
+ 4196 15181 
+
+FALSE  TRUE 
+ 4043 15334 
+
+FALSE  TRUE 
+ 3250 16127 </code></pre>
+<pre><code>[1] &quot;QC of Time 2: H3+C3&quot;
+[1] &quot;Species Assignments&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 1794   382     0 
+[1] &quot;UMIs/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    969   15532   44074   41184   60702  195080 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    540    1110    1930    7363    5675   96902 
+[1] &quot;Genes/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    205    4075    6772    5692    7350    9507 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   55.0   354.5   754.0  1490.3  1494.2  8404.0 
+[1] &quot;Percent.Mito/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.0000  0.5698  0.9029  1.8504  1.3415 78.6358 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   1.631   3.909  24.618  53.867  92.049 
+[1] &quot;Complexity (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.08808 0.56980 0.81463 0.72834 0.91366 1.31217 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1216  0.3859  0.5497  0.5682  0.7390  1.1686 
+[1] &quot;Species Assignments with Potential Filters Applied&quot;
+[1] &quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 1273   251     0 
+[1] &quot;[percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 1780   265     0 
+[1] &quot;Total Genes: 19377&quot;
+[1] &quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;
+
+FALSE  TRUE 
+ 3495 15882 
+
+FALSE  TRUE 
+ 6029 13348 
+
+FALSE  TRUE 
+ 3278 16099 </code></pre>
+<pre><code>[1] &quot;QC of Time 0: H4+C4&quot;
+[1] &quot;Species Assignments&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2478  2065     0 
+[1] &quot;UMIs/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    561   15917   20612   22444   29878   59740 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    619    5295   16031   20009   29569   74746 
+[1] &quot;Genes/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     90    4006    4597    4608    5574    7539 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     71    1774    3777    3615    5213    7835 
+[1] &quot;Percent.Mito/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   2.368   2.737   4.500   3.307  90.749 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   3.369   5.197   9.770   6.594  96.699 
+[1] &quot;Complexity (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1694  0.5993  0.6586  0.6513  0.7304  1.0787 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1401  0.5122  0.6517  0.6484  0.7886  1.4520 
+[1] &quot;Species Assignments with Potential Filters Applied&quot;
+[1] &quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2418  1845     0 
+[1] &quot;[percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2421  1904     0 
+[1] &quot;Total Genes: 19377&quot;
+[1] &quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;
+
+FALSE  TRUE 
+ 2976 16401 
+
+FALSE  TRUE 
+ 2727 16650 
+
+FALSE  TRUE 
+ 2172 17205 </code></pre>
+<pre><code>[1] &quot;QC of Time 1: H4+C4&quot;
+[1] &quot;Species Assignments&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2876  1285     0 
+[1] &quot;UMIs/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    586   13522   19072   21085   27134   82678 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    594    8907   27719   27670   40175  109704 
+[1] &quot;Genes/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     52    3466    4140    4176    4950    7727 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     43    2178    5113    4303    5943    8492 
+[1] &quot;Percent.Mito/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   2.825   3.237   3.843   3.721  92.150 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   3.001   3.808   9.345   5.061  97.832 
+[1] &quot;Complexity (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.2038  0.5876  0.6619  0.6605  0.7458  1.0519 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1246  0.6339  0.7685  0.7373  0.8564  1.5969 
+[1] &quot;Species Assignments with Potential Filters Applied&quot;
+[1] &quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2847  1110     0 
+[1] &quot;[percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2855  1191     0 
+[1] &quot;Total Genes: 19377&quot;
+[1] &quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;
+
+FALSE  TRUE 
+ 4131 15246 
+
+FALSE  TRUE 
+ 4296 15081 
+
+FALSE  TRUE 
+ 3335 16042 </code></pre>
+<pre><code>[1] &quot;QC of Time 2: H4+C4&quot;
+[1] &quot;Species Assignments&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 3481   951     0 
+[1] &quot;UMIs/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    533    8198   13212   15936   20665   93203 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    735    1448    2690    9424    9370   60824 
+[1] &quot;Genes/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     75    3066    3972    4009    4946    8940 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     71     627     984    2055    2610    7302 
+[1] &quot;Percent.Mito/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.0257  1.6047  2.1547  2.9812  2.8766 85.3658 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1361  5.1229  8.3634 11.6750 13.6996 97.6589 
+[1] &quot;Complexity (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1179  0.4291  0.5255  0.5275  0.6246  1.0249 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1527  0.3520  0.4488  0.4918  0.5975  1.5787 
+[1] &quot;Species Assignments with Potential Filters Applied&quot;
+[1] &quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 3408   841     0 
+[1] &quot;[percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 3454   887     0 
+[1] &quot;Total Genes: 19377&quot;
+[1] &quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;
+
+FALSE  TRUE 
+ 3820 15557 
+
+FALSE  TRUE 
+ 5496 13881 
+
+FALSE  TRUE 
+ 3422 15955 </code></pre>
+<pre><code>[1] &quot;QC of Time 0: H5+C5&quot;
+[1] &quot;Species Assignments&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 3180  2734     0 
+[1] &quot;UMIs/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    548   10531   14246   14485   17785   48820 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    800    9994   16799   18469   25718   59155 
+[1] &quot;Genes/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     60    3344    3972    3788    4563    7495 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     63    3163    4208    3933    5202    7661 
+[1] &quot;Percent.Mito/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   4.189   4.978   7.241   5.870  96.142 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   8.238   9.971  16.710  13.004  96.884 
+[1] &quot;Complexity (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1490  0.5033  0.5567  0.5436  0.6009  1.3973 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1184  0.5493  0.6201  0.6364  0.7274  1.4833 
+[1] &quot;Species Assignments with Potential Filters Applied&quot;
+[1] &quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 3056  2430     0 
+[1] &quot;[percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 3056  2432     0 
+[1] &quot;Total Genes: 19377&quot;
+[1] &quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;
+
+FALSE  TRUE 
+ 3224 16153 
+
+FALSE  TRUE 
+ 3084 16293 
+
+FALSE  TRUE 
+ 2504 16873 </code></pre>
+<pre><code>[1] &quot;QC of Time 1: H5+C5&quot;
+[1] &quot;Species Assignments&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 3946  2818     0 
+[1] &quot;UMIs/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    934    9843   15092   15323   20342   48690 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    646   10886   16216   16970   22164   63768 
+[1] &quot;Genes/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    231    2913    3584    3472    4174    6161 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     50    3015    3658    3490    4238    6254 
+[1] &quot;Percent.Mito/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   1.712   2.028   2.256   2.364  45.800 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   2.202   2.646   4.158   3.199  95.435 
+[1] &quot;Complexity (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1648  0.5236  0.6220  0.6007  0.6921  0.9943 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.07803 0.56126 0.64691 0.63336 0.72772 1.27508 
+[1] &quot;Species Assignments with Potential Filters Applied&quot;
+[1] &quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 3936  2730     0 
+[1] &quot;[percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 3940  2739     0 
+[1] &quot;Total Genes: 19377&quot;
+[1] &quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;
+
+FALSE  TRUE 
+ 4195 15182 
+
+FALSE  TRUE 
+ 4053 15324 
+
+FALSE  TRUE 
+ 3323 16054 </code></pre>
+<pre><code>[1] &quot;QC of Time 2: H5+C5&quot;
+[1] &quot;Species Assignments&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 1947  1785     0 
+[1] &quot;UMIs/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    602    4163    7081    9364   12146   66683 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    868    2927   14313   26765   49083  171727 
+[1] &quot;Genes/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     80    1934    2654    2749    3490    7784 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     89    1161    3203    3675    6213    8929 
+[1] &quot;Percent.Mito/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   1.618   2.192   3.605   3.340  86.608 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   1.527   2.229   4.979   3.881  97.448 
+[1] &quot;Complexity (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1058  0.3383  0.4365  0.4490  0.5536  1.0110 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.09816 0.37991 0.67354 0.64777 0.90797 1.56807 
+[1] &quot;Species Assignments with Potential Filters Applied&quot;
+[1] &quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 1913  1399     0 
+[1] &quot;[percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 1922  1692     0 
+[1] &quot;Total Genes: 19377&quot;
+[1] &quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;
+
+FALSE  TRUE 
+ 4955 14422 
+
+FALSE  TRUE 
+ 4070 15307 
+
+FALSE  TRUE 
+ 3581 15796 </code></pre>
+<pre><code>[1] &quot;QC of Time 0: H6+C6&quot;
+[1] &quot;Species Assignments&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 3651  2207     0 
+[1] &quot;UMIs/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    550   11308   14457   15005   18135   49189 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    595   12757   17245   18939   24587   64929 
+[1] &quot;Genes/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     72    3313    3790    3723    4356    7301 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     76    3302    3859    3721    4613    7084 
+[1] &quot;Percent.Mito/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   2.597   3.003   4.967   3.563  92.623 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   4.353   5.160  10.637   6.374  96.580 
+[1] &quot;Complexity (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1137  0.5342  0.5819  0.5709  0.6271  1.1594 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1762  0.6047  0.6656  0.6712  0.7532  1.4660 
+[1] &quot;Species Assignments with Potential Filters Applied&quot;
+[1] &quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 3564  2041     0 
+[1] &quot;[percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 3565  2042     0 
+[1] &quot;Total Genes: 19377&quot;
+[1] &quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;
+
+FALSE  TRUE 
+ 3138 16239 
+
+FALSE  TRUE 
+ 3336 16041 
+
+FALSE  TRUE 
+ 2511 16866 </code></pre>
+<pre><code>[1] &quot;QC of Time 1: H6+C6&quot;
+[1] &quot;Species Assignments&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 1917  2835     0 
+[1] &quot;UMIs/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    530   16205   21605   20796   26166   61905 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    926   13701   22099   22034   29000   78721 
+[1] &quot;Genes/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     35    3831    4351    4084    4768    6566 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     45    3468    4474    4208    5222    7569 
+[1] &quot;Percent.Mito/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   2.129   2.537   3.981   3.154  96.610 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   2.464   2.936   4.969   3.485  97.297 
+[1] &quot;Complexity (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1679  0.6317  0.6984  0.6700  0.7472  1.4057 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.09179 0.60843 0.69273 0.66266 0.75435 1.49980 
+[1] &quot;Species Assignments with Potential Filters Applied&quot;
+[1] &quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 1879  2721     0 
+[1] &quot;[percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 1880  2738     0 
+[1] &quot;Total Genes: 19377&quot;
+[1] &quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;
+
+FALSE  TRUE 
+ 4339 15038 
+
+FALSE  TRUE 
+ 3965 15412 
+
+FALSE  TRUE 
+ 3323 16054 </code></pre>
+<pre><code>[1] &quot;QC of Time 2: H6+C6&quot;
+[1] &quot;Species Assignments&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2609  3847     0 
+[1] &quot;UMIs/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    855    3903    7754    7723   10605   28663 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    776    1856    9025    9306   15021   38451 
+[1] &quot;Genes/Cell (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    354    2065    3074    2854    3595    5898 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  236.0   936.5  2932.0  2508.9  3664.0  5709.0 
+[1] &quot;Percent.Mito/Cell (Chimp and Human)&quot;
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+ 0.04687  1.34197  1.93990  2.76660  3.06879 50.55310 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1019  1.7544  2.2628  4.2926  3.8662 48.4546 
+[1] &quot;Complexity (Chimp and Human)&quot;
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.06569 0.27960 0.40234 0.38179 0.47450 0.77015 
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.0873  0.3033  0.4976  0.4666  0.6134  0.8816 
+[1] &quot;Species Assignments with Potential Filters Applied&quot;
+[1] &quot;[umi/cell &gt; 1000 &amp; &lt; 60000 | gene/cell &gt; 250 &amp; &lt; 7500 | percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2589  3692     0 
+[1] &quot;[percent.mt &lt; 25]&quot;
+
+Chimp Human  &lt;NA&gt; 
+ 2598  3751     0 
+[1] &quot;Total Genes: 19377&quot;
+[1] &quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;
+
+FALSE  TRUE 
+ 4366 15011 
+
+FALSE  TRUE 
+ 4176 15201 
+
+FALSE  TRUE 
+ 3358 16019 </code></pre>
+<pre class="r"><code>dev.off()</code></pre>
+<pre><code>png 
+  2 </code></pre>
+</div>
+<div id="barcode-filtering" class="section level3">
+<h3>Barcode filtering</h3>
+<p>External Resources:</p>
+<ul>
+<li><a href="https://scrnaseq-course.cog.sanger.ac.uk/website/cleaning-the-expression-matrix.html" class="uri">https://scrnaseq-course.cog.sanger.ac.uk/website/cleaning-the-expression-matrix.html</a></li>
+<li><a href="https://broadinstitute.github.io/2019_scWorkshop/data-wrangling-scrnaseq.html#preprocessing-step-1-filter-out-low-quality-cells" class="uri">https://broadinstitute.github.io/2019_scWorkshop/data-wrangling-scrnaseq.html#preprocessing-step-1-filter-out-low-quality-cells</a></li>
+<li><a href="https://hbctraining.github.io/scRNA-seq/lessons/04_SC_quality_control.html" class="uri">https://hbctraining.github.io/scRNA-seq/lessons/04_SC_quality_control.html</a></li>
+</ul>
+<p>Filtering can be based on:</p>
+<ol style="list-style-type: decimal">
+<li>number of read counts in each cell (count depth)</li>
+<li>number of unique genes detected in each cell (complexity)</li>
+<li>detectable genes
+<ul>
+<li>detectable gene: &gt;=1 UMI in &gt;=2 cells (&gt;=5 reads in &gt;=2 cells)</li>
+<li>genes must be filtered after cell filtering since some genes may only be detected in poor quality cells</li>
+<li>notes: no filtering on genes at this time (should do this before constructing a seurat object)</li>
+</ul></li>
+<li>mitochondrial RNA content
+<ul>
+<li>rationale: cells lyse more easily than mitochondria, so high mito RNA content can signal cell lysis and RNA degradation (ideally percent.mt should be &lt;5%)</li>
+</ul></li>
+</ol>
+<p>Based on the QC of my scRNA-seq data:</p>
+<ul>
+<li>some variability in reasonable UMIs/cell and genes/cell cutoff thresholds across collections</li>
+<li>percent.mt &lt; 25 seems like a better threshold than percent.mt &lt; 20/15/10 for retaining a good number of cells</li>
+<li>setting a cutoff for percent.mt &lt; 25 filters out some cells but fewer than when adding UMI and gene cutoffs</li>
+<li>setting a cutoff for UMI count &gt; 1000 &amp; &lt; 60000, gene count &gt; 250 &amp; &lt; 7500, and percent.mt &lt; 25 seems relatively good across datasets</li>
+</ul>
+<p>Decided to filter cells using percent percent mitochondrial reads &lt; 25 cutoff threshold as a lenient threshold and UMI counts per cell &gt; 1000 &amp; &lt; 60000, gene counts per cell &gt; 250 &amp; &lt; 7500, and percent mitochondrial reads &lt; 25 as a conservative threshold.</p>
+<pre class="r"><code>#lenient threshold: percent.mt &lt; 25
+
+data.filter &lt;- list()
+i=1
+while (i &lt;= length(data)) {
+  data.filter[[i]] &lt;- subset(data[[i]], subset=percent.mt&lt;25)
+  i=i+1
+}
+
+#Save data
+saveRDS(data.filter, file=&quot;./data/cellranger-data-full/data.filterL.rds&quot;)</code></pre>
+<pre class="r"><code>#conservative threshold: umi per cell &gt; 1000 | genes per cell &gt; 700 | percent mito &lt; 25
+
+data.filter &lt;- list()
+i=1
+while (i &lt;= length(data)) {
+  data.filter[[i]] &lt;- subset(data[[i]], subset=(percent.mt&lt;25 &amp; nCount_RNA&gt;1000 &amp; nCount_RNA&lt;60000 &amp; nFeature_RNA&gt;250 &amp; nFeature_RNA&lt;7500))
+  i=i+1
+}
+
+#Save data
+saveRDS(data.filter, file=&quot;./data/cellranger-data-full/data.filterC.rds&quot;)</code></pre>
+</div>
+<div id="data-qc-after-barcode-filtering-lenient" class="section level3">
+<h3>Data QC after barcode filtering (lenient)</h3>
+<pre class="r"><code>data.filter &lt;- readRDS(&quot;./data/cellranger-data-full/data.filterL.rds&quot;)
+
+pdf(file=&quot;./output/data-qc-postfilterL.pdf&quot;, onefile=TRUE, width=21, height=21)
+
+for (i in 1:length(data.filter)) {
+  
+  collection &lt;- paste0(data.filter[[i]]@meta.data$Stage[1],&quot;: &quot;,data.filter[[i]]@meta.data$Pair[1])
+  
+  print(paste0(&quot;QC of &quot;,collection))
+  
+  #Check and visualize numbers of cells per species
+  print(&quot;Species Assignments&quot;)
+  print(table(data.filter[[i]]@meta.data$Species, useNA=&quot;always&quot;))
+
+  p1a &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=Species)) +
+           geom_bar() +
+           labs(title=collection) +
+           ylim(0,5000)
+  
+  #Check and visualize QC metrics
+  # - number of umi per cell (count depth)
+  # - number of genes per cell
+  # - percent of mitochondrial reads (cell viability)
+  # - expressed genes per cell (complexity)
+  # - rarity of genes (cells expressing genes)
+  
+  #Not looking into expression of housekeeping genes at this time
+  #https://broadinstitute.github.io/2019_scWorkshop/data-wrangling-scrnaseq.html
+  
+  #nCount_RNA: total number of molecules (umi) detected within a cell
+  print(&quot;UMIs/Cell (Chimp and Human)&quot;)
+  print(summary(data.filter[[i]]@meta.data$nCount_RNA[which(data.filter[[i]]@meta.data$Species==&quot;Chimp&quot;)]))
+  print(summary(data.filter[[i]]@meta.data$nCount_RNA[which(data.filter[[i]]@meta.data$Species==&quot;Human&quot;)]))
+  #nFeature_RNA: number of unique genes detected in each cell
+  print(&quot;Genes/Cell (Chimp and Human)&quot;)
+  print(summary(data.filter[[i]]@meta.data$nFeature_RNA[which(data.filter[[i]]@meta.data$Species==&quot;Chimp&quot;)]))
+  print(summary(data.filter[[i]]@meta.data$nFeature_RNA[which(data.filter[[i]]@meta.data$Species==&quot;Human&quot;)]))
+  #percent.mt: percentage of reads that map to the mitochondrial genome
+  print(&quot;Percent.Mito/Cell (Chimp and Human)&quot;)
+  print(summary(data.filter[[i]]@meta.data$percent.mt[which(data.filter[[i]]@meta.data$Species==&quot;Chimp&quot;)]))
+  print(summary(data.filter[[i]]@meta.data$percent.mt[which(data.filter[[i]]@meta.data$Species==&quot;Human&quot;)]))
+  #complexity
+  data.filter[[i]]@meta.data$Complexity &lt;- log10(data.filter[[i]]@meta.data$nCount_RNA/data.filter[[i]]@meta.data$nFeature_RNA)
+  print(&quot;Complexity (Chimp and Human)&quot;)
+  print(summary(data.filter[[i]]@meta.data$Complexity[which(data.filter[[i]]@meta.data$Species==&quot;Chimp&quot;)]))
+  print(summary(data.filter[[i]]@meta.data$Complexity[which(data.filter[[i]]@meta.data$Species==&quot;Human&quot;)]))
+  
+  p1b &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=nCount_RNA,color=Species)) +
+           geom_histogram(fill=&quot;white&quot;, alpha=0.1, position=&quot;identity&quot;, binwidth=100) +
+           labs(title=collection,x=&quot;UMI per Cell&quot;,y=&quot;Count&quot;) +
+           xlim(0,100000) +
+           facet_grid(Species ~ .)
+  p1c &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=nFeature_RNA,color=Species)) +
+           geom_histogram(fill=&quot;white&quot;, alpha=0.1, position=&quot;identity&quot;, binwidth=10) +
+           labs(title=collection,x=&quot;Genes per Cell&quot;,y=&quot;Count&quot;) +
+           xlim(0,10000) +
+           facet_grid(Species ~ .)
+  p1d &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=percent.mt,color=Species)) +
+           geom_histogram(fill=&quot;white&quot;, alpha=0.1, position=&quot;identity&quot;, binwidth=0.005) +
+           labs(title=collection,x=&quot;Percent of Mitochondrial Reads&quot;,y=&quot;Count&quot;) +
+           xlim(0,100) +
+           facet_grid(Species ~ .)
+    
+  p2a &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=Species, y=nCount_RNA, fill=Species)) +
+           geom_violin() +
+           geom_boxplot(fill=&quot;white&quot;, alpha=0.5, width=0.1) +
+           labs(title=collection, x=&quot;Cell Type&quot;, y=&quot;UMI per Cell&quot;) +
+           ylim(0,100000)
+  p2b &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=Species, y=nFeature_RNA, fill=Species)) +
+           geom_violin() +
+           geom_boxplot(fill=&quot;white&quot;, alpha=0.5, width=0.1) +
+           labs(title=collection, x=&quot;Cell Type&quot;, y=&quot;Genes per Cell&quot;) +
+           ylim(0,10000)
+  p2c &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=nCount_RNA, y=nFeature_RNA, color=Species)) +
+           geom_point(size=2,alpha=0.3) +
+           xlim(0,100000) +
+           ylim(0,10000) +
+           facet_grid(Species ~ .) +
+           labs(title=collection,x=&quot;UMI per Cell&quot;,y=&quot;Genes per Cell&quot;)
+  p2d &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=Species, y=percent.mt, fill=Species)) +
+           geom_violin() +
+           geom_boxplot(fill=&quot;white&quot;, alpha=0.5, width=0.1, outlier.shape=NA) +
+           labs(title=collection, x=&quot;Cell Type&quot;, y=&quot;Percent Mitochondrial Reads&quot;) +
+           ylim(0,100)
+
+  p3a  &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=Complexity,color=Species,fill=Species)) +
+           geom_density(alpha=0.1, position=&quot;identity&quot;) +
+           labs(title=collection,x=&quot;Complexity(log10GenesPerUMI)&quot;,y=&quot;Count&quot;) +
+           xlim(0,2)
+  p3b &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=nCount_RNA,color=Species,fill=Species)) +
+           geom_density(alpha=0.1, position=&quot;identity&quot;) +
+           labs(title=collection,x=&quot;UMI per Cell&quot;,y=&quot;Count&quot;) +
+           xlim(0,100000)
+  p3c &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=nFeature_RNA,color=Species,fill=Species)) +
+           geom_density(alpha=0.1, position=&quot;identity&quot;) +
+           labs(title=collection,x=&quot;Genes per Cell&quot;,y=&quot;Count&quot;) +
+           xlim(0,10000)
+  p3d &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=nCount_RNA, y=nFeature_RNA, color=percent.mt)) +
+           geom_point(size=0.5, alpha=0.3) +
+           scale_color_gradient2(low=&quot;black&quot;,mid=&quot;black&quot;,high=&quot;red&quot;,midpoint=25) +
+           labs(title=collection,x=&quot;UMI per Cell&quot;,y=&quot;Genes per Cell&quot;) +
+           xlim(0,100000) +
+           ylim(0,10000) +
+           facet_grid(Species ~ .)
+
+  #investigate potential that cells are actually failed libraries (lower end outliers) or are cell doublets (higher end outliers)
+  p4a &lt;- ggplot(subset(data.filter[[i]]@meta.data,Species%in%&quot;Chimp&quot;),
+                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+           geom_point(size=0.5,alpha=0.5,color=&quot;#F8766D&quot;) +
+           labs(title=collection, x=&quot;Cell Rank&quot;, y=&quot;UMI per Cell&quot;) +
+           ylim(0,100000)
+  p4b &lt;- ggplot(subset(data.filter[[i]]@meta.data,Species%in%&quot;Human&quot;),
+                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+           geom_point(size=0.5,alpha=0.5,color=&quot;#00BFC4&quot;) +
+           labs(title=collection, x=&quot;Cell Rank&quot;, y=&quot;UMI per Cell&quot;) +
+           ylim(0,100000)
+  p4c &lt;- ggplot(subset(data.filter[[i]]@meta.data,Species%in%&quot;Chimp&quot;),
+                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+           geom_point(size=0.5,alpha=0.5,color=&quot;#F8766D&quot;) +
+           labs(title=collection, x=&quot;Cell Rank&quot;, y=&quot;Genes per Cell&quot;) +
+           ylim(0,10000)
+  p4d &lt;- ggplot(subset(data.filter[[i]]@meta.data,Species%in%&quot;Human&quot;),
+                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+           geom_point(size=0.5,alpha=0.5,color=&quot;#00BFC4&quot;) +
+           labs(title=collection, x=&quot;Cell Rank&quot;, y=&quot;Genes per Cell&quot;) +
+           ylim(0,10000)
+  
+  #look at genes instead of cells
+  #umis per gene &amp; rarity of genes (cells expressing genes)
+  #thresholds: umi per gene &gt; 1
+  df &lt;- data.frame(
+    counts_per_gene_chimp &lt;- Matrix::rowSums(data.filter[[i]]@assays$RNA@counts[,which(data.filter[[i]]@meta.data$Species==&quot;Chimp&quot;)]),
+    counts_per_gene_human &lt;- Matrix::rowSums(data.filter[[i]]@assays$RNA@counts[,which(data.filter[[i]]@meta.data$Species==&quot;Human&quot;)]),
+    cells_per_gene_chimp &lt;- Matrix::rowSums(data.filter[[i]]@assays$RNA@counts[,which(data.filter[[i]]@meta.data$Species==&quot;Chimp&quot;)]&gt;0),
+    cells_per_gene_human &lt;- Matrix::rowSums(data.filter[[i]]@assays$RNA@counts[,which(data.filter[[i]]@meta.data$Species==&quot;Human&quot;)]&gt;0)
+  )
+  rm(counts_per_gene_chimp,counts_per_gene_human,cells_per_gene_chimp,cells_per_gene_human)
+  colnames(df) &lt;- c(&quot;counts_per_gene_chimp&quot;,&quot;counts_per_gene_human&quot;,&quot;cells_per_gene_chimp&quot;,&quot;cells_per_gene_human&quot;)
+
+  print(paste0(&quot;Total Genes: &quot;,length(rownames(data.filter[[i]]@assays$RNA@counts))))
+  print(&quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;)
+  print(table(Matrix::rowSums(data.filter[[i]]@assays$RNA@counts[,which(data.filter[[i]]@meta.data$Species==&quot;Chimp&quot;)])&gt;0))
+  print(table(Matrix::rowSums(data.filter[[i]]@assays$RNA@counts[,which(data.filter[[i]]@meta.data$Species==&quot;Human&quot;)])&gt;0))
+  print(table(Matrix::rowSums(data.filter[[i]]@assays$RNA@counts)&gt;0))
+  
+  p5a &lt;- ggplot(df, aes(x=log10(counts_per_gene_chimp+1))) +
+           geom_histogram(color=&quot;#F8766D&quot;, fill=&quot;white&quot;, alpha=0.1, binwidth=0.05) +
+           ylim(0,6000) +
+           geom_vline(xintercept=log10(1.5), linetype=&quot;dashed&quot;) +
+           labs(title=collection, x=&quot;Log10 UMIs per Gene (Chimp)&quot;, y=&quot;Count&quot;)
+  p5b &lt;- ggplot(df, aes(x=log10(counts_per_gene_human+1))) +
+           geom_histogram(color=&quot;#00BFC4&quot;, fill=&quot;white&quot;, alpha=0.1, binwidth=0.05) +
+           ylim(0,6000) +
+           geom_vline(xintercept=log10(1.5), linetype=&quot;dashed&quot;) +
+           labs(title=collection, x=&quot;Log10 UMIs per Gene (Human)&quot;, y=&quot;Count&quot;)
+  p5c &lt;- ggplot(df, aes(x=log10(cells_per_gene_chimp+1))) +
+           geom_histogram(color=&quot;#F8766D&quot;, fill=&quot;white&quot;, alpha=0.1, binwidth=0.05) +
+           ylim(0,6000) +
+           geom_vline(xintercept=log10(1.5), linetype=&quot;dashed&quot;) +
+           labs(title=collection,x=&quot;Log10 Cells per Gene (Chimp)&quot;,y=&quot;Count&quot;)
+  p5d &lt;- ggplot(df, aes(x=log10(cells_per_gene_human+1))) +
+           geom_histogram(color=&quot;#00BFC4&quot;, fill=&quot;white&quot;, alpha=0.1, binwidth=0.05) +
+           ylim(0,6000) +
+           geom_vline(xintercept=log10(1.5), linetype=&quot;dashed&quot;) +
+           labs(title=collection,x=&quot;Log10 Cells per Gene (Human)&quot;,y=&quot;Count&quot;)
+
+  grid.arrange(grobs=list(p1a,p1b,p1c,p1d,
+                          p2a,p2b,p2c,p2d,
+                          p3a,p3b,p3c,p3d,
+                          p4a,p4b,p4c,p4d,
+                          p5a,p5b,p5c,p5d), ncol=4)
+  
+  rm(p1a,p1b,p1c,p1d, p2a,p2b,p2c,p2d, p3a,p3b,p3c,p3d, p4a,p4b,p4c,p4d, p5a,p5b,p5c,p5d)
+  
+}
+
+dev.off()</code></pre>
+</div>
+<div id="data-qc-after-barcode-filtering-conservative" class="section level3">
+<h3>Data QC after barcode filtering (conservative)</h3>
+<pre class="r"><code>data.filter &lt;- readRDS(&quot;./data/cellranger-data-full/data.filterC.rds&quot;)
+
+pdf(file=&quot;./output/data-qc-postfilterC.pdf&quot;, onefile=TRUE, width=21, height=21)
+
+for (i in 1:length(data.filter)) {
+  
+  collection &lt;- paste0(data.filter[[i]]@meta.data$Stage[1],&quot;: &quot;,data.filter[[i]]@meta.data$Pair[1])
+  
+  print(paste0(&quot;QC of &quot;,collection))
+  
+  #Check and visualize numbers of cells per species
+  print(&quot;Species Assignments&quot;)
+  print(table(data.filter[[i]]@meta.data$Species, useNA=&quot;always&quot;))
+
+  p1a &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=Species)) +
+           geom_bar() +
+           labs(title=collection) +
+           ylim(0,5000)
+  
+  #Check and visualize QC metrics
+  # - number of umi per cell (count depth)
+  # - number of genes per cell
+  # - percent of mitochondrial reads (cell viability)
+  # - expressed genes per cell (complexity)
+  # - rarity of genes (cells expressing genes)
+  
+  #Not looking into expression of housekeeping genes at this time
+  #https://broadinstitute.github.io/2019_scWorkshop/data-wrangling-scrnaseq.html
+  
+  #nCount_RNA: total number of molecules (umi) detected within a cell
+  print(&quot;UMIs/Cell (Chimp and Human)&quot;)
+  print(summary(data.filter[[i]]@meta.data$nCount_RNA[which(data.filter[[i]]@meta.data$Species==&quot;Chimp&quot;)]))
+  print(summary(data.filter[[i]]@meta.data$nCount_RNA[which(data.filter[[i]]@meta.data$Species==&quot;Human&quot;)]))
+  #nFeature_RNA: number of unique genes detected in each cell
+  print(&quot;Genes/Cell (Chimp and Human)&quot;)
+  print(summary(data.filter[[i]]@meta.data$nFeature_RNA[which(data.filter[[i]]@meta.data$Species==&quot;Chimp&quot;)]))
+  print(summary(data.filter[[i]]@meta.data$nFeature_RNA[which(data.filter[[i]]@meta.data$Species==&quot;Human&quot;)]))
+  #percent.mt: percentage of reads that map to the mitochondrial genome
+  print(&quot;Percent.Mito/Cell (Chimp and Human)&quot;)
+  print(summary(data.filter[[i]]@meta.data$percent.mt[which(data.filter[[i]]@meta.data$Species==&quot;Chimp&quot;)]))
+  print(summary(data.filter[[i]]@meta.data$percent.mt[which(data.filter[[i]]@meta.data$Species==&quot;Human&quot;)]))
+  #complexity
+  data.filter[[i]]@meta.data$Complexity &lt;- log10(data.filter[[i]]@meta.data$nCount_RNA/data.filter[[i]]@meta.data$nFeature_RNA)
+  print(&quot;Complexity (Chimp and Human)&quot;)
+  print(summary(data.filter[[i]]@meta.data$Complexity[which(data.filter[[i]]@meta.data$Species==&quot;Chimp&quot;)]))
+  print(summary(data.filter[[i]]@meta.data$Complexity[which(data.filter[[i]]@meta.data$Species==&quot;Human&quot;)]))
+  
+  p1b &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=nCount_RNA,color=Species)) +
+           geom_histogram(fill=&quot;white&quot;, alpha=0.1, position=&quot;identity&quot;, binwidth=100) +
+           labs(title=collection,x=&quot;UMI per Cell&quot;,y=&quot;Count&quot;) +
+           xlim(0,100000) +
+           facet_grid(Species ~ .)
+  p1c &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=nFeature_RNA,color=Species)) +
+           geom_histogram(fill=&quot;white&quot;, alpha=0.1, position=&quot;identity&quot;, binwidth=10) +
+           labs(title=collection,x=&quot;Genes per Cell&quot;,y=&quot;Count&quot;) +
+           xlim(0,10000) +
+           facet_grid(Species ~ .)
+  p1d &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=percent.mt,color=Species)) +
+           geom_histogram(fill=&quot;white&quot;, alpha=0.1, position=&quot;identity&quot;, binwidth=0.005) +
+           labs(title=collection,x=&quot;Percent of Mitochondrial Reads&quot;,y=&quot;Count&quot;) +
+           xlim(0,100) +
+           facet_grid(Species ~ .)
+    
+  p2a &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=Species, y=nCount_RNA, fill=Species)) +
+           geom_violin() +
+           geom_boxplot(fill=&quot;white&quot;, alpha=0.5, width=0.1) +
+           labs(title=collection, x=&quot;Cell Type&quot;, y=&quot;UMI per Cell&quot;) +
+           ylim(0,100000)
+  p2b &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=Species, y=nFeature_RNA, fill=Species)) +
+           geom_violin() +
+           geom_boxplot(fill=&quot;white&quot;, alpha=0.5, width=0.1) +
+           labs(title=collection, x=&quot;Cell Type&quot;, y=&quot;Genes per Cell&quot;) +
+           ylim(0,10000)
+  p2c &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=nCount_RNA, y=nFeature_RNA, color=Species)) +
+           geom_point(size=2,alpha=0.3) +
+           xlim(0,100000) +
+           ylim(0,10000) +
+           facet_grid(Species ~ .) +
+           labs(title=collection,x=&quot;UMI per Cell&quot;,y=&quot;Genes per Cell&quot;)
+  p2d &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=Species, y=percent.mt, fill=Species)) +
+           geom_violin() +
+           geom_boxplot(fill=&quot;white&quot;, alpha=0.5, width=0.1, outlier.shape=NA) +
+           labs(title=collection, x=&quot;Cell Type&quot;, y=&quot;Percent Mitochondrial Reads&quot;) +
+           ylim(0,100)
+
+  p3a  &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=Complexity,color=Species,fill=Species)) +
+           geom_density(alpha=0.1, position=&quot;identity&quot;) +
+           labs(title=collection,x=&quot;Complexity(log10GenesPerUMI)&quot;,y=&quot;Count&quot;) +
+           xlim(0,2)
+  p3b &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=nCount_RNA,color=Species,fill=Species)) +
+           geom_density(alpha=0.1, position=&quot;identity&quot;) +
+           labs(title=collection,x=&quot;UMI per Cell&quot;,y=&quot;Count&quot;) +
+           xlim(0,100000)
+  p3c &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=nFeature_RNA,color=Species,fill=Species)) +
+           geom_density(alpha=0.1, position=&quot;identity&quot;) +
+           labs(title=collection,x=&quot;Genes per Cell&quot;,y=&quot;Count&quot;) +
+           xlim(0,10000)
+  p3d &lt;- ggplot(data.filter[[i]]@meta.data, aes(x=nCount_RNA, y=nFeature_RNA, color=percent.mt)) +
+           geom_point(size=0.5, alpha=0.3) +
+           scale_color_gradient2(low=&quot;black&quot;,mid=&quot;black&quot;,high=&quot;red&quot;,midpoint=25) +
+           labs(title=collection,x=&quot;UMI per Cell&quot;,y=&quot;Genes per Cell&quot;) +
+           xlim(0,100000) +
+           ylim(0,10000) +
+           facet_grid(Species ~ .)
+
+  #investigate potential that cells are actually failed libraries (lower end outliers) or are cell doublets (higher end outliers)
+  p4a &lt;- ggplot(subset(data.filter[[i]]@meta.data,Species%in%&quot;Chimp&quot;),
+                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+           geom_point(size=0.5,alpha=0.5,color=&quot;#F8766D&quot;) +
+           labs(title=collection, x=&quot;Cell Rank&quot;, y=&quot;UMI per Cell&quot;) +
+           ylim(0,100000)
+  p4b &lt;- ggplot(subset(data.filter[[i]]@meta.data,Species%in%&quot;Human&quot;),
+                aes(x=1:length(nCount_RNA),y=sort(nCount_RNA))) +
+           geom_point(size=0.5,alpha=0.5,color=&quot;#00BFC4&quot;) +
+           labs(title=collection, x=&quot;Cell Rank&quot;, y=&quot;UMI per Cell&quot;) +
+           ylim(0,100000)
+  p4c &lt;- ggplot(subset(data.filter[[i]]@meta.data,Species%in%&quot;Chimp&quot;),
+                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+           geom_point(size=0.5,alpha=0.5,color=&quot;#F8766D&quot;) +
+           labs(title=collection, x=&quot;Cell Rank&quot;, y=&quot;Genes per Cell&quot;) +
+           ylim(0,10000)
+  p4d &lt;- ggplot(subset(data.filter[[i]]@meta.data,Species%in%&quot;Human&quot;),
+                aes(x=1:length(nFeature_RNA),y=sort(nFeature_RNA))) +
+           geom_point(size=0.5,alpha=0.5,color=&quot;#00BFC4&quot;) +
+           labs(title=collection, x=&quot;Cell Rank&quot;, y=&quot;Genes per Cell&quot;) +
+           ylim(0,10000)
+  
+  #look at genes instead of cells
+  #umis per gene &amp; rarity of genes (cells expressing genes)
+  #thresholds: umi per gene &gt; 1
+  df &lt;- data.frame(
+    counts_per_gene_chimp &lt;- Matrix::rowSums(data.filter[[i]]@assays$RNA@counts[,which(data.filter[[i]]@meta.data$Species==&quot;Chimp&quot;)]),
+    counts_per_gene_human &lt;- Matrix::rowSums(data.filter[[i]]@assays$RNA@counts[,which(data.filter[[i]]@meta.data$Species==&quot;Human&quot;)]),
+    cells_per_gene_chimp &lt;- Matrix::rowSums(data.filter[[i]]@assays$RNA@counts[,which(data.filter[[i]]@meta.data$Species==&quot;Chimp&quot;)]&gt;0),
+    cells_per_gene_human &lt;- Matrix::rowSums(data.filter[[i]]@assays$RNA@counts[,which(data.filter[[i]]@meta.data$Species==&quot;Human&quot;)]&gt;0)
+  )
+  rm(counts_per_gene_chimp,counts_per_gene_human,cells_per_gene_chimp,cells_per_gene_human)
+  colnames(df) &lt;- c(&quot;counts_per_gene_chimp&quot;,&quot;counts_per_gene_human&quot;,&quot;cells_per_gene_chimp&quot;,&quot;cells_per_gene_human&quot;)
+
+  print(paste0(&quot;Total Genes: &quot;,length(rownames(data.filter[[i]]@assays$RNA@counts))))
+  print(&quot;Genes with at least one UMI (Chimp, Human, and Total)&quot;)
+  print(table(Matrix::rowSums(data.filter[[i]]@assays$RNA@counts[,which(data.filter[[i]]@meta.data$Species==&quot;Chimp&quot;)])&gt;0))
+  print(table(Matrix::rowSums(data.filter[[i]]@assays$RNA@counts[,which(data.filter[[i]]@meta.data$Species==&quot;Human&quot;)])&gt;0))
+  print(table(Matrix::rowSums(data.filter[[i]]@assays$RNA@counts)&gt;0))
+  
+  p5a &lt;- ggplot(df, aes(x=log10(counts_per_gene_chimp+1))) +
+           geom_histogram(color=&quot;#F8766D&quot;, fill=&quot;white&quot;, alpha=0.1, binwidth=0.05) +
+           ylim(0,6000) +
+           geom_vline(xintercept=log10(1.5), linetype=&quot;dashed&quot;) +
+           labs(title=collection, x=&quot;Log10 UMIs per Gene (Chimp)&quot;, y=&quot;Count&quot;)
+  p5b &lt;- ggplot(df, aes(x=log10(counts_per_gene_human+1))) +
+           geom_histogram(color=&quot;#00BFC4&quot;, fill=&quot;white&quot;, alpha=0.1, binwidth=0.05) +
+           ylim(0,6000) +
+           geom_vline(xintercept=log10(1.5), linetype=&quot;dashed&quot;) +
+           labs(title=collection, x=&quot;Log10 UMIs per Gene (Human)&quot;, y=&quot;Count&quot;)
+  p5c &lt;- ggplot(df, aes(x=log10(cells_per_gene_chimp+1))) +
+           geom_histogram(color=&quot;#F8766D&quot;, fill=&quot;white&quot;, alpha=0.1, binwidth=0.05) +
+           ylim(0,6000) +
+           geom_vline(xintercept=log10(1.5), linetype=&quot;dashed&quot;) +
+           labs(title=collection,x=&quot;Log10 Cells per Gene (Chimp)&quot;,y=&quot;Count&quot;)
+  p5d &lt;- ggplot(df, aes(x=log10(cells_per_gene_human+1))) +
+           geom_histogram(color=&quot;#00BFC4&quot;, fill=&quot;white&quot;, alpha=0.1, binwidth=0.05) +
+           ylim(0,6000) +
+           geom_vline(xintercept=log10(1.5), linetype=&quot;dashed&quot;) +
+           labs(title=collection,x=&quot;Log10 Cells per Gene (Human)&quot;,y=&quot;Count&quot;)
+
+  grid.arrange(grobs=list(p1a,p1b,p1c,p1d,
+                          p2a,p2b,p2c,p2d,
+                          p3a,p3b,p3c,p3d,
+                          p4a,p4b,p4c,p4d,
+                          p5a,p5b,p5c,p5d), ncol=4)
+  
+  rm(p1a,p1b,p1c,p1d, p2a,p2b,p2c,p2d, p3a,p3b,p3c,p3d, p4a,p4b,p4c,p4d, p5a,p5b,p5c,p5d)
+  
+}
+
+dev.off()</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.6.1 (2019-07-05)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Scientific Linux 7.4 (Nitrogen)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.2.19-el7-x86_64/lib/libopenblas_haswellp-r0.2.19.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] grid      stats     graphics  grDevices utils     datasets  methods  
+[8] base     
+
+other attached packages:
+[1] RColorBrewer_1.1-2 colorspace_2.0-0   gridExtra_2.3     
+[4] ggplot2_3.3.2      stringr_1.4.0      stringi_1.4.3     
+[7] dplyr_1.0.2        Seurat_3.1.3      
+
+loaded via a namespace (and not attached):
+ [1] tsne_0.1-3          nlme_3.1-140        bitops_1.0-6       
+ [4] fs_1.3.1            RcppAnnoy_0.0.12    httr_1.4.2         
+ [7] rprojroot_2.0.2     sctransform_0.2.0   tools_3.6.1        
+[10] R6_2.5.0            irlba_2.3.3         KernSmooth_2.23-15 
+[13] uwot_0.1.5          lazyeval_0.2.2      withr_2.3.0        
+[16] npsurv_0.4-0        tidyselect_1.1.0    compiler_3.6.1     
+[19] git2r_0.26.1        plotly_4.9.2.1      labeling_0.4.2     
+[22] caTools_1.17.1.2    scales_1.1.1        lmtest_0.9-37      
+[25] ggridges_0.5.1      pbapply_1.4-0       rappdirs_0.3.1     
+[28] digest_0.6.27       rmarkdown_1.13      pkgconfig_2.0.3    
+[31] htmltools_0.5.0     bibtex_0.4.2        htmlwidgets_1.5.2  
+[34] rlang_0.4.9         farver_2.0.3        generics_0.1.0     
+[37] zoo_1.8-6           jsonlite_1.7.1      ica_1.0-2          
+[40] gtools_3.8.1        magrittr_2.0.1      Matrix_1.2-18      
+[43] Rcpp_1.0.5          munsell_0.5.0       ape_5.4-1          
+[46] reticulate_1.16     lifecycle_0.2.0     whisker_0.3-2      
+[49] yaml_2.2.1          gbRd_0.4-11         MASS_7.3-51.4      
+[52] gplots_3.0.1.1      Rtsne_0.15          plyr_1.8.4         
+[55] parallel_3.6.1      gdata_2.18.0        listenv_0.7.0      
+[58] promises_1.1.1      ggrepel_0.8.2       crayon_1.3.4       
+[61] lattice_0.20-38     cowplot_1.1.0       splines_3.6.1      
+[64] knitr_1.23          pillar_1.4.7        igraph_1.2.4.1     
+[67] reshape2_1.4.3      future.apply_1.3.0  codetools_0.2-16   
+[70] leiden_0.3.1        glue_1.4.2          evaluate_0.14      
+[73] lsei_1.2-0          metap_1.1           RcppParallel_5.0.2 
+[76] data.table_1.13.2   png_0.1-7           vctrs_0.3.5        
+[79] httpuv_1.5.1        Rdpack_0.11-0       gtable_0.3.0       
+[82] RANN_2.6.1          purrr_0.3.4         tidyr_1.1.2        
+[85] future_1.14.0       xfun_0.8            rsvd_1.0.1         
+[88] later_1.1.0.1       survival_2.44-1.1   viridisLite_0.3.0  
+[91] tibble_3.0.4        workflowr_1.6.2     cluster_2.1.0      
+[94] globals_0.12.4      fitdistrplus_1.0-14 ellipsis_0.3.1     
+[97] ROCR_1.0-7         </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
