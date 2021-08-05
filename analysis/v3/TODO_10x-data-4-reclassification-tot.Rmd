@@ -1,0 +1,94 @@
+---
+title: "Untitled"
+author: "Genevieve Housman"
+date: "4/30/2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+#Load libraries
+library(ggplot2)
+library(grid)
+library(gridExtra)
+library(Seurat)
+library(UpSetR)
+
+```
+
+```{r}
+
+#Load data
+#data integrated across individuals - total (conservative cell filter + non-zero genes + regress out UMI/mito)
+scrna <- "./data/cellranger-data-full/data.filterC.log.indv-cell.intNo0.reg-tot.assign.rds"
+test <- readRDS(scrna)
+
+```
+
+```{r}
+
+genes <- c("POU5F1","TDGF1","SOX2","EPCAM",
+           "THY1","NT5E","ENG","CD44",
+           "RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1",
+           "COL1A1","COL1A2","ALPL",
+           "ACAN","COL2A1","SOX9",
+           "FABP4","PPARG","EBF2",
+           "TNC","PDPN","FBLN7")
+
+
+```
+
+```{r}
+
+test <- RunPCA(test, features=genes, npcs=20)
+dim(test@reductions$pca)
+test <- RunUMAP(test,dims=1:20)
+
+DimPlot(test, group.by="Stage", reduction="pca")
+DimPlot(test, group.by="Species", reduction="pca")
+
+DimPlot(test, group.by="Stage", reduction="umap") + labs(x="UMAP1",y="UMAP2")
+DimPlot(test, group.by="Species", reduction="umap") + labs(x="UMAP1",y="UMAP2")
+
+FeaturePlot(test, features=genes, reduction="umap") + labs(x="UMAP1",y="UMAP2")
+
+```
+
+```{r}
+
+test <- RunPCA(test, features=genes[1:25], npcs=20)
+dim(test@reductions$pca)
+test <- RunUMAP(test,dims=1:20)
+
+DimPlot(test, group.by="Stage", reduction="pca")
+DimPlot(test, group.by="Species", reduction="pca")
+
+DimPlot(test, group.by="Stage", reduction="umap") + labs(x="UMAP1",y="UMAP2")
+DimPlot(test, group.by="Species", reduction="umap") + labs(x="UMAP1",y="UMAP2")
+
+FeaturePlot(test, features=genes[1:19], reduction="umap") + labs(x="UMAP1",y="UMAP2")
+FeaturePlot(test, features=genes[20:25], reduction="umap") + labs(x="UMAP1",y="UMAP2")
+
+```
+
+```{r}
+
+test <- RunPCA(test, features=genes[1:19], npcs=20)
+dim(test@reductions$pca)
+test <- RunUMAP(test,dims=1:18)
+
+DimPlot(test, group.by="Stage", reduction="pca")
+DimPlot(test, group.by="Species", reduction="pca")
+
+DimPlot(test, group.by="Stage", reduction="umap") + labs(x="UMAP1",y="UMAP2")
+DimPlot(test, group.by="Species", reduction="umap") + labs(x="UMAP1",y="UMAP2")
+
+FeaturePlot(test, features=genes[1:19], reduction="umap") + labs(x="UMAP1",y="UMAP2")
+
+```

@@ -1,0 +1,1246 @@
+---
+title: "10x-data-cormotif-tot"
+author: "Genevieve Housman"
+date: "September 2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 10X Data Cellranger Analysis - Correlation Motifs
+
+Test for differential expression correlation motifs between stages of cell differentiation in humans and chimpanzees.
+
+```{r, message=FALSE}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(grid)
+library(gbm)
+library(colorspace)
+library(RColorBrewer)
+library(edgeR)
+library(scran)
+library(SingleCellExperiment)
+library(Cormotif)
+library(gplots)
+
+```
+
+```{r}
+
+#Load data
+#scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds" #integrate across individuals - total (19k genes + regress out UMI/mito)
+scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.assign.rds" #integrate across individuals - total (19k genes)
+data <- readRDS(scrna)
+
+data
+
+```
+
+Define genes of interest: all except mitochondrial genes and ribosomal genes
+
+```{r}
+
+genes <- rownames(data@assays$RNA@counts)
+genes.mito <- c("MT-ATP6","MT-ATP8","MT-CO1","MT-CO2","MT-CO3","MT-CYB","MT-ND1","MT-ND2","MT-ND3","MT-ND4","MT-ND4L","MT-ND5")
+genes.ribo <- grep('^RP',genes,value=T)
+genes.no.mito.ribo <- genes[which(!(genes %in% c(genes.mito,genes.ribo)))]
+rm(genes,genes.mito,genes.ribo)
+
+```
+
+Assemble normalized gene counts and run cormotif.
+https://www.biostars.org/p/317701/
+
+### Cormotif: Species vs. Stages - 2 time point comparisons each (single-cell counts, filter genes across full dataset with pch=0.2)
+
+```{r}
+
+# Cormotif: Species vs. Stages (filter genes across full dataset with pch=0.2)
+
+# Compile log2 normalized gene expression data
+#make count matrix and metadata for edgeR object
+counts <- as.matrix(GetAssayData(data, assay="RNA", slot="counts"))
+metadata <- data@meta.data[,c("Species","Stage")]
+metadata <- metadata[colnames(counts),]
+#remove mitochodrial and ribosomal genes
+counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
+#make edgeR object
+dge <- DGEList(counts)
+meta_dge <- dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, metadata)
+dge$samples <- meta_dge
+rm(counts,metadata,meta_dge)
+#filter genes
+dge$counts <- dge$counts[rowSums(dge$counts!=0)>=(0.2*dim(dge$counts)[2]),]
+#normalize data
+dge <- calcNormFactors(dge, method="TMM")
+#log2 transformed cpm
+tmm <- edgeR::cpm(dge,normalized.lib.sizes=TRUE,log=TRUE,prior.count=0.25)
+
+# Compile group labels of each sample
+groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$Stage,function(x)sub(" ","",x)),sep = "."),
+                      levels=c("Human.Time0","Human.Time1","Human.Time2","Chimp.Time0","Chimp.Time1","Chimp.Time2"))
+groupID <- as.numeric(groupFactor)
+
+# Compile comparison pattern
+#(condiditions to compare = time0, time1, and time2 for each species)
+compareID <- data.frame(c1 = c(1, 2, 4, 5),
+                        c2 = c(2, 3, 5, 6))
+
+# Assess differences during differentiation
+set.seed(1)
+cormotifData <- cormotiffit(exprs = tmm,
+                            groupid = groupID,
+                            compid = compareID,
+                            K = 1:10,
+                            max.iter=1000,
+                            BIC=TRUE)
+
+#which BIC and AIC are lowest? - 3 motifs
+cormotifData$bic
+plotIC(cormotifData)
+cormotifData$bestmotif$loglike
+
+#what motif patterns were learned by the algorithm
+plotMotif(cormotifData)
+
+#posterior probability of DE for each gene
+head(cormotifData$bestmotif$p.post)
+
+#obtain DE pattern at 0.5 posterior distribution cutoff
+gene.prob <- cormotifData$bestmotif$p.post
+rownames(gene.prob) <- rownames(tmm)
+colnames(gene.prob) <- c("H.t0-t1","H.t1-t2","C.t0-t1","C.t1-t2")
+head(gene.prob)
+
+heatmap.2(gene.prob,
+          dendrogram="none",
+          Colv=FALSE,
+          breaks=c(0,0.2,0.4,0.6,0.8,1),
+          col=c("#fef0d9","#fdcc8a","#fc8d59","#e34a33","#b30000"),
+          margins=c(3,0),
+          trace="none",
+          key.title="",
+          key.xlab="posterior prob.",
+          key.ylab="",
+          #ylab=paste0(length(rownames(gene.prob))," genes"),
+          keysize=1,
+          key.par=list(mar=c(3.5,0,3,0)),
+          lmat=rbind(c(5,4,2),c(6,1,3)),
+          lhei=c(2.5,5),
+          lwid=c(1,10,1),
+          labRow=FALSE,
+          cexCol=1,
+          srtCol=0,
+          adjCol=c(0.5,0))
+
+# Test degree of conservation for time 0-2: posterior probability difference between the humans and the chimps within a motif 
+#0.3 (5793 genes) -> 87.88%
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,3]) <= 0.3) & (abs(gene.prob[,2] - gene.prob[,4]) <= 0.3), ]))
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,3]) <= 0.3) & (abs(gene.prob[,2] - gene.prob[,4]) <= 0.3), ]))/dim(tmm)[1]
+#0.2 (5690 genes) -> 86.31%
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,3]) <= 0.2) & (abs(gene.prob[,2] - gene.prob[,4]) <= 0.2), ]))
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,3]) <= 0.2) & (abs(gene.prob[,2] - gene.prob[,4]) <= 0.2), ]))/dim(tmm)[1]
+#0.1 (5558 genes) -> 84.31%
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,3]) <= 0.1) & (abs(gene.prob[,2] - gene.prob[,4]) <= 0.1), ]))
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,3]) <= 0.1) & (abs(gene.prob[,2] - gene.prob[,4]) <= 0.1), ]))/dim(tmm)[1]
+
+# Examine genes from each motif
+prob.motif1  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]<0.5 & gene.prob[,3]>0.5 & gene.prob[,4]<0.5),])
+length(prob.motif1)
+head(prob.motif1)
+#boxplot(tmm[prob.motif1[1],]~groupFactor)
+
+prob.motif2  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]>0.5 & gene.prob[,3]<0.5 & gene.prob[,4]>0.5),])
+length(prob.motif2)
+head(prob.motif2)
+#boxplot(tmm[prob.motif2[1],]~groupFactor)
+
+prob.motif3  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]>0.5 & gene.prob[,3]>0.5 & gene.prob[,4]>0.5),])
+length(prob.motif3)
+head(prob.motif3)
+#boxplot(tmm[prob.motif3[1],]~groupFactor)
+
+# Examine human/chimp differences
+prob.motifC  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]>0.5 & gene.prob[,4]>0.5),])
+length(prob.motifC)
+head(prob.motifC)
+#boxplot(tmm[prob.motifC[1],]~groupFactor)
+
+prob.motifC1  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]>0.5 & gene.prob[,4]<0.5),])
+length(prob.motifC1)
+head(prob.motifC1)
+#boxplot(tmm[prob.motifC1[1],]~groupFactor)
+
+prob.motifC2  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]>0.5),])
+length(prob.motifC2)
+head(prob.motifC2)
+#boxplot(tmm[prob.motifC2[1],]~groupFactor)
+
+prob.motifH  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]>0.5 & gene.prob[,3]<0.5 & gene.prob[,4]<0.5),])
+length(prob.motifH)
+head(prob.motifH)
+#boxplot(tmm[prob.motifH[1],]~groupFactor)
+
+prob.motifH1  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]<0.5),])
+length(prob.motifH1)
+head(prob.motifH1)
+#boxplot(tmm[prob.motifH1[1],]~groupFactor)
+
+prob.motifH2  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]>0.5 & gene.prob[,3]<0.5 & gene.prob[,4]<0.5),])
+length(prob.motifH2)
+head(prob.motifH2)
+#boxplot(tmm[prob.motifH2[1],]~groupFactor)
+
+```
+
+```{r, eval=FALSE}
+
+saveRDS(gene.prob,"./output/cormotif.sc4.data.filter.log.indv-cell.int19k-tot.rds")
+
+```
+
+### Cormotif: Species vs. Stages - 3 time point comparisons each (single-cell counts, filter genes across full dataset with pch=0.2)
+
+This produces strange results.
+
+```{r}
+
+# Cormotif: Species vs. Stages (filter genes across full dataset with pch=0.2)
+
+# Compile log2 normalized gene expression data
+#make count matrix and metadata for edgeR object
+counts <- as.matrix(GetAssayData(data, assay="RNA", slot="counts"))
+metadata <- data@meta.data[,c("Species","Stage")]
+metadata <- metadata[colnames(counts),]
+#remove mitochodrial and ribosomal genes
+counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
+#make edgeR object
+dge <- DGEList(counts)
+meta_dge <- dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, metadata)
+dge$samples <- meta_dge
+rm(counts,metadata,meta_dge)
+#filter genes
+dge$counts <- dge$counts[rowSums(dge$counts!=0)>=(0.2*dim(dge$counts)[2]),]
+#normalize data
+dge <- calcNormFactors(dge, method="TMM")
+#log2 transformed cpm
+tmm <- edgeR::cpm(dge,normalized.lib.sizes=TRUE,log=TRUE,prior.count=0.25)
+
+# Compile group labels of each sample
+groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$Stage,function(x)sub(" ","",x)),sep = "."),
+                      levels=c("Human.Time0","Human.Time1","Human.Time2","Chimp.Time0","Chimp.Time1","Chimp.Time2"))
+groupID <- as.numeric(groupFactor)
+
+# Compile comparison pattern
+#(condiditions to compare = time0, time1, and time2 for each species)
+compareID <- data.frame(c1 = c(1, 2, 1, 4, 5, 4),
+                        c2 = c(2, 3, 3, 5, 6, 6))
+
+# Assess differences during differentiation
+set.seed(1)
+cormotifData <- cormotiffit(exprs = tmm,
+                            groupid = groupID,
+                            compid = compareID,
+                            K = 1:10,
+                            max.iter=1000,
+                            BIC=TRUE)
+
+#which BIC and AIC are lowest? - 1 motif (WHAT?!)
+cormotifData$bic
+plotIC(cormotifData)
+cormotifData$bestmotif$loglike
+
+#what motif patterns were learned by the algorithm
+plotMotif(cormotifData)
+
+#posterior probability of DE for each gene
+head(cormotifData$bestmotif$p.post)
+
+#obtain DE pattern at 0.5 posterior distribution cutoff
+gene.prob <- cormotifData$bestmotif$p.post
+rownames(gene.prob) <- rownames(tmm)
+colnames(gene.prob) <- c("H.t0-t1","H.t1-t2","H.t0-t2","C.t0-t1","C.t1-t2","C.t0-t2")
+head(gene.prob)
+
+heatmap.2(gene.prob,
+          dendrogram="none",
+          Colv=FALSE,
+          breaks=c(0,0.2,0.4,0.6,0.8,1),
+          col=c("#fef0d9","#fdcc8a","#fc8d59","#e34a33","#b30000"),
+          margins=c(3,0),
+          trace="none",
+          key.title="",
+          key.xlab="posterior prob.",
+          key.ylab="",
+          #ylab=paste0(length(rownames(gene.prob))," genes"),
+          keysize=1,
+          key.par=list(mar=c(3.5,0,3,0)),
+          lmat=rbind(c(5,4,2),c(6,1,3)),
+          lhei=c(2.5,5),
+          lwid=c(1,10,1),
+          labRow=FALSE,
+          cexCol=1,
+          srtCol=0,
+          adjCol=c(0.5,0))
+
+# Test degree of conservation for time 0-2: posterior probability difference between the humans and the chimps within a motif 
+#0.3 (5396 genes) -> 81.25%
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,4]) <= 0.3) & (abs(gene.prob[,2] - gene.prob[,5]) <= 0.3) & (abs(gene.prob[,3] - gene.prob[,6]) <= 0.3), ]))
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,4]) <= 0.3) & (abs(gene.prob[,2] - gene.prob[,5]) <= 0.3) & (abs(gene.prob[,3] - gene.prob[,6]) <= 0.3), ]))/dim(tmm)[1]
+#0.2 (5244 genes) -> 79.55%
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,4]) <= 0.2) & (abs(gene.prob[,2] - gene.prob[,5]) <= 0.2) & (abs(gene.prob[,3] - gene.prob[,6]) <= 0.2), ]))
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,4]) <= 0.2) & (abs(gene.prob[,2] - gene.prob[,5]) <= 0.2) & (abs(gene.prob[,3] - gene.prob[,6]) <= 0.2), ]))/dim(tmm)[1]
+#0.1 (5064 genes) -> 76.82%
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,4]) <= 0.1) & (abs(gene.prob[,2] - gene.prob[,5]) <= 0.1) & (abs(gene.prob[,3] - gene.prob[,6]) <= 0.1), ]))
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,4]) <= 0.1) & (abs(gene.prob[,2] - gene.prob[,5]) <= 0.1) & (abs(gene.prob[,3] - gene.prob[,6]) <= 0.1), ]))/dim(tmm)[1]
+
+# Examine genes from each motif
+prob.motif1  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]>0.5 & gene.prob[,3]<0.5 & gene.prob[,4]<0.5 & gene.prob[,5]<0.5 & gene.prob[,6]>0.5),])
+length(prob.motif1)
+head(prob.motif1)
+#boxplot(tmm[prob.motif1[1],]~groupFactor)
+
+# Examine human/chimp differences
+prob.motifC  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]>0.5 & gene.prob[,5]>0.5 & gene.prob[,6]>0.5),])
+length(prob.motifC)
+head(prob.motifC)
+#boxplot(tmm[prob.motifC[1],]~groupFactor)
+
+prob.motifC0  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]>0.5 & gene.prob[,5]<0.5 & gene.prob[,6]>0.5),])
+length(prob.motifC0)
+head(prob.motifC0)
+#boxplot(tmm[prob.motifC0[1],]~groupFactor)
+
+prob.motifC1  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]>0.5 & gene.prob[,5]>0.5 & gene.prob[,6]<0.5),])
+length(prob.motifC1)
+head(prob.motifC1)
+#boxplot(tmm[prob.motifC1[1],]~groupFactor)
+
+prob.motifC2  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]<0.5 & gene.prob[,5]>0.5 & gene.prob[,6]>0.5),])
+length(prob.motifC2)
+head(prob.motifC2)
+#boxplot(tmm[prob.motifC2[1],]~groupFactor)
+
+prob.motifH  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]>0.5 & gene.prob[,3]>0.5 & gene.prob[,4]<0.5 & gene.prob[,5]<0.5 & gene.prob[,6]<0.5),])
+length(prob.motifH)
+head(prob.motifH)
+#boxplot(tmm[prob.motifH[1],]~groupFactor)
+
+prob.motifH0  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]<0.5 & gene.prob[,3]>0.5 & gene.prob[,4]<0.5 & gene.prob[,5]<0.5 & gene.prob[,6]<0.5),])
+length(prob.motifH0)
+head(prob.motifH0)
+#boxplot(tmm[prob.motifH0[1],]~groupFactor)
+
+prob.motifH1  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]>0.5 & gene.prob[,3]<0.5 & gene.prob[,4]<0.5 & gene.prob[,5]<0.5 & gene.prob[,6]<0.5),])
+length(prob.motifH1)
+head(prob.motifH1)
+#boxplot(tmm[prob.motifH1[1],]~groupFactor)
+
+prob.motifH2  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]>0.5 & gene.prob[,3]>0.5 & gene.prob[,4]<0.5 & gene.prob[,5]<0.5 & gene.prob[,6]<0.5),])
+length(prob.motifH2)
+head(prob.motifH2)
+#boxplot(tmm[prob.motifH2[1],]~groupFactor)
+
+```
+
+```{r, eval=FALSE}
+
+saveRDS(gene.prob,"./output/cormotif.sc6.data.filter.log.indv-cell.int19k-tot.rds")
+
+```
+
+### Cormotif: Species vs. Stages - 2 time point comparisons each (pseudocounts, filter genes mean(log2cpm)>0)
+
+```{r}
+
+# Cormotif: Species vs. Stages (pseudocounts, filter genes mean(log2cpm)>0)
+
+# Compile log2 normalized gene expression data
+#make count matrix and metadata for edgeR object - pseudobulk
+counts <- c()
+metadata <- c()
+labels <- c()
+for (i in unique(data@meta.data$Sample)) {
+  x.lab <- i
+  w <- which(data@meta.data$Sample==i)
+  if (length(w)>0) {
+    x.spp <- data@meta.data$Species[w][1]
+    x.stg <- data@meta.data$Stage[w][1]
+    if (length(w)==1) {
+      x.cnt <- data@assays$RNA@counts[,w]
+    } else {
+      x.cnt <- Matrix::rowSums(data@assays$RNA@counts[,w])
+    }
+    counts <- cbind(counts, x.cnt)
+    metadata <- rbind(metadata, c(x.lab, x.spp, x.stg))
+    labels <- c(labels, x.lab)
+  }
+}
+colnames(counts) <- labels
+rownames(metadata) <- labels
+colnames(metadata) <- c("Sample","Species","Stage")
+metadata <- as.data.frame(metadata)
+rm(labels)
+#remove mitochodrial and ribosomal genes
+counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
+#make edgeR object
+dge <- DGEList(counts)
+meta_dge <- dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, metadata)
+dge$samples <- meta_dge
+rm(counts,metadata,meta_dge)
+#filter genes
+keep <- rowMeans(edgeR::cpm(dge,log=TRUE,prior.count=0.25))>0
+dge$counts <- dge$counts[keep,]
+#normalize data
+dge <- calcNormFactors(dge, method="TMM")
+#log2 transformed cpm
+tmm <- edgeR::cpm(dge,normalized.lib.sizes=TRUE,log=TRUE,prior.count=0.25)
+##boxplot(tmm,xlab="",ylab="Log2 counts per million",las=2)
+
+# Compile group labels of each sample
+groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$Stage,function(x)sub(" ","",x)),sep = "."),
+                      levels=c("Human.Time0","Human.Time1","Human.Time2","Chimp.Time0","Chimp.Time1","Chimp.Time2"))
+groupID <- as.numeric(groupFactor)
+
+# Compile comparison pattern
+#(condiditions to compare = time0, time1, and time2 for each species)
+compareID <- data.frame(c1 = c(1, 2, 4, 5),
+                        c2 = c(2, 3, 5, 6))
+
+# Assess differences during differentiation
+set.seed(1)
+cormotifData <- cormotiffit(exprs = tmm,
+                            groupid = groupID,
+                            compid = compareID,
+                            K = 1:10,
+                            max.iter=1000,
+                            BIC=TRUE)
+
+#which BIC and AIC are lowest? - 4 motifs
+cormotifData$bic
+plotIC(cormotifData)
+cormotifData$bestmotif$loglike
+
+#what motif patterns were learned by the algorithm
+plotMotif(cormotifData)
+
+#posterior probability of DE for each gene
+head(cormotifData$bestmotif$p.post)
+
+#obtain DE pattern at 0.5 posterior distribution cutoff
+gene.prob <- cormotifData$bestmotif$p.post
+rownames(gene.prob) <- rownames(tmm)
+colnames(gene.prob) <- c("H.t0-t1","H.t1-t2","C.t0-t1","C.t1-t2")
+head(gene.prob)
+
+heatmap.2(gene.prob,
+          dendrogram="none",
+          Colv=FALSE,
+          breaks=c(0,0.2,0.4,0.6,0.8,1),
+          col=c("#fef0d9","#fdcc8a","#fc8d59","#e34a33","#b30000"),
+          margins=c(3,0),
+          trace="none",
+          key.title="",
+          key.xlab="posterior prob.",
+          key.ylab="",
+          #ylab=paste0(length(rownames(gene.prob))," genes"),
+          keysize=1,
+          key.par=list(mar=c(3.5,0,3,0)),
+          lmat=rbind(c(5,4,2),c(6,1,3)),
+          lhei=c(2.5,5),
+          lwid=c(1,10,1),
+          labRow=FALSE,
+          cexCol=1,
+          srtCol=0,
+          adjCol=c(0.5,0))
+
+# Test degree of conservation for time 0-2: posterior probability difference between the humans and the chimps within a motif 
+#0.3 (10144 genes) -> 87.58%
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,3]) <= 0.3) & (abs(gene.prob[,2] - gene.prob[,4]) <= 0.3), ]))
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,3]) <= 0.3) & (abs(gene.prob[,2] - gene.prob[,4]) <= 0.3), ]))/dim(tmm)[1]
+#0.2 ( 9175 genes) -> 79.22%
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,3]) <= 0.2) & (abs(gene.prob[,2] - gene.prob[,4]) <= 0.2), ]))
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,3]) <= 0.2) & (abs(gene.prob[,2] - gene.prob[,4]) <= 0.2), ]))/dim(tmm)[1]
+#0.1 ( 7404 genes) -> 63.93%
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,3]) <= 0.1) & (abs(gene.prob[,2] - gene.prob[,4]) <= 0.1), ]))
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,3]) <= 0.1) & (abs(gene.prob[,2] - gene.prob[,4]) <= 0.1), ]))/dim(tmm)[1]
+
+# Examine genes from each motif
+prob.motif1  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]<0.5),])
+length(prob.motif1)
+head(prob.motif1)
+#boxplot(tmm[prob.motif1[1],]~groupFactor)
+
+prob.motif2  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]<0.5 & gene.prob[,3]>0.5 & gene.prob[,4]<0.5),])
+length(prob.motif2)
+head(prob.motif2)
+#boxplot(tmm[prob.motif2[1],]~groupFactor)
+
+prob.motif3  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]>0.5 & gene.prob[,3]<0.5 & gene.prob[,4]>0.5),])
+length(prob.motif3)
+head(prob.motif3)
+#boxplot(tmm[prob.motif3[1],]~groupFactor)
+
+prob.motif4  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]>0.5 & gene.prob[,3]>0.5 & gene.prob[,4]>0.5),])
+length(prob.motif4)
+head(prob.motif4)
+#boxplot(tmm[prob.motif4[1],]~groupFactor)
+
+# Examine human/chimp differences
+prob.motifC  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]>0.5 & gene.prob[,4]>0.5),])
+length(prob.motifC)
+head(prob.motifC)
+#boxplot(tmm[prob.motifC[1],]~groupFactor)
+
+prob.motifC1  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]>0.5 & gene.prob[,4]<0.5),])
+length(prob.motifC1)
+head(prob.motifC1)
+#boxplot(tmm[prob.motifC1[1],]~groupFactor)
+
+prob.motifC2  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]>0.5),])
+length(prob.motifC2)
+head(prob.motifC2)
+#boxplot(tmm[prob.motifC2[1],]~groupFactor)
+
+prob.motifH  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]>0.5 & gene.prob[,3]<0.5 & gene.prob[,4]<0.5),])
+length(prob.motifH)
+head(prob.motifH)
+#boxplot(tmm[prob.motifH[1],]~groupFactor)
+
+prob.motifH1  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]<0.5),])
+length(prob.motifH1)
+head(prob.motifH1)
+#boxplot(tmm[prob.motifH1[1],]~groupFactor)
+
+prob.motifH2  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]>0.5 & gene.prob[,3]<0.5 & gene.prob[,4]<0.5),])
+length(prob.motifH2)
+head(prob.motifH2)
+#boxplot(tmm[prob.motifH2[1],]~groupFactor)
+
+```
+
+```{r, eval=FALSE}
+
+saveRDS(gene.prob,"./output/cormotif.pseudo4.data.filter.log.indv-cell.int19k-tot.rds")
+
+```
+
+### Cormotif: Species vs. Stages - 3 time point comparisons each (pseudocounts, filter genes mean(log2cpm)>0)
+
+```{r}
+
+# Cormotif: Species vs. Stages (pseudocounts, filter genes mean(log2cpm)>0)
+
+# Compile log2 normalized gene expression data
+#make count matrix and metadata for edgeR object - pseudobulk
+counts <- c()
+metadata <- c()
+labels <- c()
+for (i in unique(data@meta.data$Sample)) {
+  x.lab <- i
+  w <- which(data@meta.data$Sample==i)
+  if (length(w)>0) {
+    x.spp <- data@meta.data$Species[w][1]
+    x.stg <- data@meta.data$Stage[w][1]
+    if (length(w)==1) {
+      x.cnt <- data@assays$RNA@counts[,w]
+    } else {
+      x.cnt <- Matrix::rowSums(data@assays$RNA@counts[,w])
+    }
+    counts <- cbind(counts, x.cnt)
+    metadata <- rbind(metadata, c(x.lab, x.spp, x.stg))
+    labels <- c(labels, x.lab)
+  }
+}
+colnames(counts) <- labels
+rownames(metadata) <- labels
+colnames(metadata) <- c("Sample","Species","Stage")
+metadata <- as.data.frame(metadata)
+rm(labels)
+#remove mitochodrial and ribosomal genes
+counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
+#make edgeR object
+dge <- DGEList(counts)
+meta_dge <- dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, metadata)
+dge$samples <- meta_dge
+rm(counts,metadata,meta_dge)
+#filter genes
+keep <- rowMeans(edgeR::cpm(dge,log=TRUE,prior.count=0.25))>0
+dge$counts <- dge$counts[keep,]
+#normalize data
+dge <- calcNormFactors(dge, method="TMM")
+#log2 transformed cpm
+tmm <- edgeR::cpm(dge,normalized.lib.sizes=TRUE,log=TRUE,prior.count=0.25)
+#boxplot(tmm,xlab="",ylab="Log2 counts per million",las=2)
+
+# Compile group labels of each sample
+groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$Stage,function(x)sub(" ","",x)),sep = "."),
+                      levels=c("Human.Time0","Human.Time1","Human.Time2","Chimp.Time0","Chimp.Time1","Chimp.Time2"))
+groupID <- as.numeric(groupFactor)
+
+# Compile comparison pattern
+#(condiditions to compare = time0, time1, and time2 for each species)
+compareID <- data.frame(c1 = c(1, 2, 1, 4, 5, 4),
+                        c2 = c(2, 3, 3, 5, 6, 6))
+
+# Assess differences during differentiation
+set.seed(1)
+cormotifData <- cormotiffit(exprs = tmm,
+                            groupid = groupID,
+                            compid = compareID,
+                            K = 1:10,
+                            max.iter=1000,
+                            BIC=TRUE)
+
+#which BIC and AIC are lowest? - 7 motifs
+cormotifData$bic
+plotIC(cormotifData)
+cormotifData$bestmotif$loglike
+
+#what motif patterns were learned by the algorithm
+plotMotif(cormotifData)
+
+#posterior probability of DE for each gene
+head(cormotifData$bestmotif$p.post)
+
+#obtain DE pattern at 0.5 posterior distribution cutoff
+gene.prob <- cormotifData$bestmotif$p.post
+rownames(gene.prob) <- rownames(tmm)
+colnames(gene.prob) <- c("H.t0-t1","H.t1-t2","H.t0-t2","C.t0-t1","C.t1-t2","C.t0-t2")
+head(gene.prob)
+
+heatmap.2(gene.prob,
+          dendrogram="none",
+          Colv=FALSE,
+          breaks=c(0,0.2,0.4,0.6,0.8,1),
+          col=c("#fef0d9","#fdcc8a","#fc8d59","#e34a33","#b30000"),
+          margins=c(3,0),
+          trace="none",
+          key.title="",
+          key.xlab="posterior prob.",
+          key.ylab="",
+          #ylab=paste0(length(rownames(gene.prob))," genes"),
+          keysize=1,
+          key.par=list(mar=c(3.5,0,3,0)),
+          lmat=rbind(c(5,4,2),c(6,1,3)),
+          lhei=c(2.5,5),
+          lwid=c(1,10,1),
+          labRow=FALSE,
+          cexCol=1,
+          srtCol=0,
+          adjCol=c(0.5,0))
+
+# Test degree of conservation for time 0-2: posterior probability difference between the humans and the chimps within a motif 
+#0.3 (8871 genes) -> 76.59%
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,4]) <= 0.3) & (abs(gene.prob[,2] - gene.prob[,5]) <= 0.3) & (abs(gene.prob[,3] - gene.prob[,6]) <= 0.3), ]))
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,4]) <= 0.3) & (abs(gene.prob[,2] - gene.prob[,5]) <= 0.3) & (abs(gene.prob[,3] - gene.prob[,6]) <= 0.3), ]))/dim(tmm)[1]
+#0.2 (8072 genes) -> 69.69%
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,4]) <= 0.2) & (abs(gene.prob[,2] - gene.prob[,5]) <= 0.2) & (abs(gene.prob[,3] - gene.prob[,6]) <= 0.2), ]))
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,4]) <= 0.2) & (abs(gene.prob[,2] - gene.prob[,5]) <= 0.2) & (abs(gene.prob[,3] - gene.prob[,6]) <= 0.2), ]))/dim(tmm)[1]
+#0.1 (6632 genes) -> 57.26%
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,4]) <= 0.1) & (abs(gene.prob[,2] - gene.prob[,5]) <= 0.1) & (abs(gene.prob[,3] - gene.prob[,6]) <= 0.1), ]))
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,4]) <= 0.1) & (abs(gene.prob[,2] - gene.prob[,5]) <= 0.1) & (abs(gene.prob[,3] - gene.prob[,6]) <= 0.1), ]))/dim(tmm)[1]
+
+# Examine genes from each motif
+prob.motif1  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]<0.5 & gene.prob[,5]<0.5 & gene.prob[,6]<0.5),])
+length(prob.motif1)
+head(prob.motif1)
+#boxplot(tmm[prob.motif1[1],]~groupFactor)
+
+prob.motif2  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]>0.5 & gene.prob[,3]>0.5 & gene.prob[,4]<0.5 & gene.prob[,5]>0.5 & gene.prob[,6]>0.5),])
+length(prob.motif2)
+head(prob.motif2)
+#boxplot(tmm[prob.motif2[1],]~groupFactor)
+
+prob.motif3  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]>0.5 & gene.prob[,3]>0.5 & gene.prob[,4]>0.5 & gene.prob[,5]>0.5 & gene.prob[,6]>0.5),])
+length(prob.motif3)
+head(prob.motif3)
+#boxplot(tmm[prob.motif3[1],]~groupFactor)
+
+prob.motif4  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]<0.5 & gene.prob[,3]>0.5 & gene.prob[,4]>0.5 & gene.prob[,5]<0.5 & gene.prob[,6]>0.5),])
+length(prob.motif4)
+head(prob.motif4)
+#boxplot(tmm[prob.motif4[1],]~groupFactor)
+
+prob.motif5  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]>0.5 & gene.prob[,3]<0.5 & gene.prob[,4]>0.5 & gene.prob[,5]>0.5 & gene.prob[,6]<0.5),])
+length(prob.motif5)
+head(prob.motif5)
+#boxplot(tmm[prob.motif5[1],]~groupFactor)
+
+prob.motif6  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]<0.5 & gene.prob[,3]>0.5 & gene.prob[,4]<0.5 & gene.prob[,5]<0.5 & gene.prob[,6]<0.5),])
+length(prob.motif6)
+head(prob.motif6)
+#boxplot(tmm[prob.motif6[1],]~groupFactor)
+
+prob.motif7  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]>0.5 & gene.prob[,5]<0.5 & gene.prob[,6]>0.5),])
+length(prob.motif7)
+head(prob.motif7)
+#boxplot(tmm[prob.motif7[1],]~groupFactor)
+
+# Examine human/chimp differences
+prob.motifC  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]>0.5 & gene.prob[,5]>0.5 & gene.prob[,6]>0.5),])
+length(prob.motifC)
+head(prob.motifC)
+#boxplot(tmm[prob.motifC[1],]~groupFactor)
+
+prob.motifC0  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]>0.5 & gene.prob[,5]<0.5 & gene.prob[,6]>0.5),])
+length(prob.motifC0)
+head(prob.motifC0)
+#boxplot(tmm[prob.motifC0[1],]~groupFactor)
+
+prob.motifC1  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]>0.5 & gene.prob[,5]>0.5 & gene.prob[,6]<0.5),])
+length(prob.motifC1)
+head(prob.motifC1)
+#boxplot(tmm[prob.motifC1[1],]~groupFactor)
+
+prob.motifC2  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]<0.5 & gene.prob[,5]>0.5 & gene.prob[,6]>0.5),])
+length(prob.motifC2)
+head(prob.motifC2)
+#boxplot(tmm[prob.motifC2[1],]~groupFactor)
+
+prob.motifH  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]>0.5 & gene.prob[,3]>0.5 & gene.prob[,4]<0.5 & gene.prob[,5]<0.5 & gene.prob[,6]<0.5),])
+length(prob.motifH)
+head(prob.motifH)
+#boxplot(tmm[prob.motifH[1],]~groupFactor)
+
+prob.motifH0  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]<0.5 & gene.prob[,3]>0.5 & gene.prob[,4]<0.5 & gene.prob[,5]<0.5 & gene.prob[,6]<0.5),])
+length(prob.motifH0)
+head(prob.motifH0)
+#boxplot(tmm[prob.motifH0[1],]~groupFactor)
+
+prob.motifH1  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]>0.5 & gene.prob[,3]<0.5 & gene.prob[,4]<0.5 & gene.prob[,5]<0.5 & gene.prob[,6]<0.5),])
+length(prob.motifH1)
+head(prob.motifH1)
+#boxplot(tmm[prob.motifH1[1],]~groupFactor)
+
+prob.motifH2  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]>0.5 & gene.prob[,3]>0.5 & gene.prob[,4]<0.5 & gene.prob[,5]<0.5 & gene.prob[,6]<0.5),])
+length(prob.motifH2)
+head(prob.motifH2)
+#boxplot(tmm[prob.motifH2[1],]~groupFactor)
+
+```
+
+```{r, eval=FALSE}
+
+saveRDS(gene.prob,"./output/cormotif.pseudo6.data.filter.log.indv-cell.int19k-tot.rds")
+
+```
+
+### Other parameters were also tested
+
+```{r, eval=FALSE, echo=FALSE}
+
+# Cormotif: Species vs. Stages (no gene filtering)
+
+# Compile log2 normalized gene expression data
+#make count matrix and metadata for edgeR object
+counts <- as.matrix(GetAssayData(data, assay="RNA", slot="counts"))
+metadata <- data@meta.data[,c("Species","Stage")]
+metadata <- metadata[colnames(counts),]
+#remove mitochodrial and ribosomal genes
+counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
+#make edgeR object
+dge <- DGEList(counts)
+meta_dge <- dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, metadata)
+dge$samples <- meta_dge
+rm(counts,metadata,meta_dge)
+#normalize data
+dge <- calcNormFactors(dge, method="TMM")
+#log2 transformed cpm
+tmm <- edgeR::cpm(dge,normalized.lib.sizes=TRUE,log=TRUE,prior.count=0.25)
+
+# Compile group labels of each sample
+groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$Stage,function(x)sub(" ","",x)),sep = "."),
+                      levels=c("Human.Time0","Human.Time1","Human.Time2","Chimp.Time0","Chimp.Time1","Chimp.Time2"))
+groupID <- as.numeric(groupFactor)
+
+# Compile comparison pattern
+#(condiditions to compare = time0, time1, and time2 for each species)
+compareID <- data.frame(c1 = c(1, 2, 4, 5),
+                        c2 = c(2, 3, 5, 6))
+#(condiditions to compare = time0 to time1 and time2 for each species)
+#compareID <- data.frame(c1 = c(1, 1, 4, 4),
+#                        c2 = c(2, 3, 5, 6))
+#(condiditions to compare = human and chimp for each time point)
+#compareID <- data.frame(c1 = c(1, 2, 3),
+#                        c2 = c(4, 5, 6))
+
+# Assess differences during differentiation
+set.seed(1)
+cormotifData <- cormotiffit(exprs = tmm,
+                            groupid = groupID,
+                            compid = compareID,
+                            K = 1:10,
+                            max.iter=1000,
+                            BIC=TRUE)
+
+#which BIC and AIC are lowest? - 4 motifs
+cormotifData$bic
+plotIC(cormotifData)
+cormotifData$bestmotif$loglike
+
+#what motif patterns were learned by the algorithm
+plotMotif(cormotifData)
+
+#posterior probability of DE for each gene
+head(cormotifData$bestmotif$p.post)
+
+#obtain DE pattern at 0.5 posterior distribution cutoff
+gene.prob <- cormotifData$bestmotif$p.post
+rownames(gene.prob) <- rownames(tmm)
+colnames(gene.prob) <- c("H.t0-t1","H.t1-t2","C.t0-t1","C.t1-t2")
+head(gene.prob)
+
+heatmap.2(gene.prob,
+          dendrogram="none",
+          Colv=FALSE,
+          breaks=c(0,0.2,0.4,0.6,0.8,1),
+          col=c("#fef0d9","#fdcc8a","#fc8d59","#e34a33","#b30000"),
+          margins=c(3,0),
+          trace="none",
+          key.title="",
+          key.xlab="posterior prob.",
+          key.ylab="",
+          #ylab=paste0(length(rownames(gene.prob))," genes"),
+          keysize=1,
+          key.par=list(mar=c(3.5,0,3,0)),
+          lmat=rbind(c(5,4,2),c(6,1,3)),
+          lhei=c(2.5,5),
+          lwid=c(1,10,1),
+          labRow=FALSE,
+          cexCol=1,
+          srtCol=0,
+          adjCol=c(0.5,0))
+
+# Test degree of conservation for time 0-2: posterior probability difference between the humans and the chimps within a motif 
+#0.3 (14356 genes)
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,3]) <= 0.3) & (abs(gene.prob[,2] - gene.prob[,4]) <= 0.3), ]))
+#0.2 (13955 genes)
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,3]) <= 0.2) & (abs(gene.prob[,2] - gene.prob[,4]) <= 0.2), ]))
+#0.1 (13354 genes)
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,3]) <= 0.1) & (abs(gene.prob[,2] - gene.prob[,4]) <= 0.1), ]))
+
+# Examine genes from each motif
+prob.motif1  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]<0.5),])
+length(prob.motif1)
+head(prob.motif1)
+VlnPlot(data,assay="RNA",slot="data",group.by="Stage",split.by="Species",features=prob.motif1[1:3],pt.size=0)
+#boxplot(tmm[prob.motif1[1],]~groupFactor)
+
+prob.motif2  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]<0.5 & gene.prob[,3]>0.5 & gene.prob[,4]<0.5),])
+length(prob.motif2)
+head(prob.motif2)
+VlnPlot(data,assay="RNA",slot="data",group.by="Stage",split.by="Species",features=prob.motif2[1:3],pt.size=0)
+#boxplot(tmm[prob.motif2[1],]~groupFactor)
+
+prob.motif3  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]>0.5 & gene.prob[,3]<0.5 & gene.prob[,4]>0.5),])
+length(prob.motif3)
+head(prob.motif3)
+VlnPlot(data,assay="RNA",slot="data",group.by="Stage",split.by="Species",features=prob.motif3[1:3],pt.size=0)
+#boxplot(tmm[prob.motif3[1],]~groupFactor)
+
+prob.motif4  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]>0.5 & gene.prob[,3]>0.5 & gene.prob[,4]>0.5),])
+length(prob.motif4)
+head(prob.motif4)
+VlnPlot(data,assay="RNA",slot="data",group.by="Stage",split.by="Species",features=prob.motif4[1:3],pt.size=0)
+#boxplot(tmm[prob.motif4[1],]~groupFactor)
+
+#SOME GENES DE AND OTHERS NOT
+
+```
+
+```{r, eval=FALSE, echo=FALSE}
+
+# Cormotif: Species vs. Stages (pseudocounts, no gene filters)
+
+# Compile log2 normalized gene expression data
+#make count matrix and metadata for edgeR object - pseudobulk
+counts <- c()
+metadata <- c()
+labels <- c()
+for (i in unique(data@meta.data$Sample)) {
+  x.lab <- i
+  w <- which(data@meta.data$Sample==i)
+  if (length(w)>0) {
+    x.spp <- data@meta.data$Species[w][1]
+    x.stg <- data@meta.data$Stage[w][1]
+    if (length(w)==1) {
+      x.cnt <- data@assays$RNA@counts[,w]
+    } else {
+      x.cnt <- Matrix::rowSums(data@assays$RNA@counts[,w])
+    }
+    counts <- cbind(counts, x.cnt)
+    metadata <- rbind(metadata, c(x.lab, x.spp, x.stg))
+    labels <- c(labels, x.lab)
+  }
+}
+colnames(counts) <- labels
+rownames(metadata) <- labels
+colnames(metadata) <- c("Sample","Species","Stage")
+metadata <- as.data.frame(metadata)
+rm(labels)
+#remove mitochodrial and ribosomal genes
+counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
+#make edgeR object
+dge <- DGEList(counts)
+meta_dge <- dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, metadata)
+dge$samples <- meta_dge
+rm(counts,metadata,meta_dge)
+#normalize data
+dge <- calcNormFactors(dge, method="TMM")
+#log2 transformed cpm
+tmm <- edgeR::cpm(dge,normalized.lib.sizes=TRUE,log=TRUE,prior.count=0.25)
+#boxplot(tmm,xlab="",ylab="Log2 counts per million",las=2)
+
+# Compile group labels of each sample
+groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$Stage,function(x)sub(" ","",x)),sep = "."),
+                      levels=c("Human.Time0","Human.Time1","Human.Time2","Chimp.Time0","Chimp.Time1","Chimp.Time2"))
+groupID <- as.numeric(groupFactor)
+
+# Compile comparison pattern
+#(condiditions to compare = time0, time1, and time2 for each species)
+compareID <- data.frame(c1 = c(1, 2, 4, 5),
+                        c2 = c(2, 3, 5, 6))
+#(condiditions to compare = time0 to time1 and time2 for each species)
+#compareID <- data.frame(c1 = c(1, 1, 4, 4),
+#                        c2 = c(2, 3, 5, 6))
+#(condiditions to compare = human and chimp for each time point)
+#compareID <- data.frame(c1 = c(1, 2, 3),
+#                        c2 = c(4, 5, 6))
+
+
+# Assess differences during differentiation
+set.seed(1)
+cormotifData <- cormotiffit(exprs = tmm,
+                            groupid = groupID,
+                            compid = compareID,
+                            K = 1:10,
+                            max.iter=1000,
+                            BIC=TRUE)
+
+#which BIC and AIC are lowest? - 4 motifs
+cormotifData$bic
+plotIC(cormotifData)
+cormotifData$bestmotif$loglike
+
+#what motif patterns were learned by the algorithm
+plotMotif(cormotifData)
+
+#posterior probability of DE for each gene
+head(cormotifData$bestmotif$p.post)
+
+#obtain DE pattern at 0.5 posterior distribution cutoff
+gene.prob <- cormotifData$bestmotif$p.post
+rownames(gene.prob) <- rownames(tmm)
+colnames(gene.prob) <- c("H.t0-t1","H.t1-t2","C.t0-t1","C.t1-t2")
+head(gene.prob)
+
+heatmap.2(gene.prob,
+          dendrogram="none",
+          Colv=FALSE,
+          breaks=c(0,0.2,0.4,0.6,0.8,1),
+          col=c("#fef0d9","#fdcc8a","#fc8d59","#e34a33","#b30000"),
+          margins=c(3,0),
+          trace="none",
+          key.title="",
+          key.xlab="posterior prob.",
+          key.ylab="",
+          #ylab=paste0(length(rownames(gene.prob))," genes"),
+          keysize=1,
+          key.par=list(mar=c(3.5,0,3,0)),
+          lmat=rbind(c(5,4,2),c(6,1,3)),
+          lhei=c(2.5,5),
+          lwid=c(1,10,1),
+          labRow=FALSE,
+          cexCol=1,
+          srtCol=0,
+          adjCol=c(0.5,0))
+
+# Test degree of conservation for time 0-2: posterior probability difference between the humans and the chimps within a motif 
+#0.3 (17038 genes)
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,3]) <= 0.3) & (abs(gene.prob[,2] - gene.prob[,4]) <= 0.3), ]))
+#0.2 (15967 genes)
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,3]) <= 0.2) & (abs(gene.prob[,2] - gene.prob[,4]) <= 0.2), ]))
+#0.1 (13996 genes)
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,3]) <= 0.1) & (abs(gene.prob[,2] - gene.prob[,4]) <= 0.1), ]))
+
+# Examine genes from each motif
+prob.motif1  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]<0.5),])
+length(prob.motif1)
+head(prob.motif1)
+#VlnPlot(data,assay="RNA",slot="data",group.by="Stage",split.by="Species",features=prob.motif1[1:3],pt.size=0)
+#boxplot(tmm[prob.motif1[1],]~groupFactor)
+
+prob.motif2  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]<0.5 & gene.prob[,3]>0.5 & gene.prob[,4]<0.5),])
+length(prob.motif2)
+head(prob.motif2)
+#VlnPlot(data,assay="RNA",slot="data",group.by="Stage",split.by="Species",features=prob.motif2[1:3],pt.size=0)
+#boxplot(tmm[prob.motif2[1],]~groupFactor)
+
+prob.motif3  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]>0.5 & gene.prob[,3]<0.5 & gene.prob[,4]>0.5),])
+length(prob.motif3)
+head(prob.motif3)
+#VlnPlot(data,assay="RNA",slot="data",group.by="Stage",split.by="Species",features=prob.motif3[1:3],pt.size=0)
+#boxplot(tmm[prob.motif3[1],]~groupFactor)
+
+prob.motif4  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]>0.5 & gene.prob[,3]>0.5 & gene.prob[,4]>0.5),])
+length(prob.motif4)
+head(prob.motif4)
+#VlnPlot(data,assay="RNA",slot="data",group.by="Stage",split.by="Species",features=prob.motif4[1:3],pt.size=0)
+#boxplot(tmm[prob.motif4[1],]~groupFactor)
+
+# Examine human/chimp differences
+prob.motifC  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]>0.5 & gene.prob[,4]>0.5),])
+length(prob.motifC)
+head(prob.motifC)
+#boxplot(tmm[prob.motifC[1],]~groupFactor)
+
+prob.motifC1  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]>0.5 & gene.prob[,4]<0.5),])
+length(prob.motifC1)
+head(prob.motifC1)
+#boxplot(tmm[prob.motifC1[1],]~groupFactor)
+
+prob.motifC2  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]>0.5),])
+length(prob.motifC2)
+head(prob.motifC2)
+#boxplot(tmm[prob.motifC2[1],]~groupFactor)
+
+prob.motifH  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]>0.5 & gene.prob[,3]<0.5 & gene.prob[,4]<0.5),])
+length(prob.motifH)
+head(prob.motifH)
+#boxplot(tmm[prob.motifH[1],]~groupFactor)
+
+prob.motifH1  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]<0.5),])
+length(prob.motifH1)
+head(prob.motifH1)
+#boxplot(tmm[prob.motifH1[1],]~groupFactor)
+
+prob.motifH2  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]>0.5 & gene.prob[,3]<0.5 & gene.prob[,4]<0.5),])
+length(prob.motifH2)
+head(prob.motifH2)
+#boxplot(tmm[prob.motifH2[1],]~groupFactor)
+
+```
+
+```{r, eval=FALSE, echo=FALSE}
+
+# Cormotif: Species vs. Stages (pseudocounts, no gene filters)
+
+# Compile log2 normalized gene expression data
+#make count matrix and metadata for edgeR object - pseudobulk
+counts <- c()
+metadata <- c()
+labels <- c()
+for (i in unique(data@meta.data$Sample)) {
+  x.lab <- i
+  w <- which(data@meta.data$Sample==i)
+  if (length(w)>0) {
+    x.spp <- data@meta.data$Species[w][1]
+    x.stg <- data@meta.data$Stage[w][1]
+    if (length(w)==1) {
+      x.cnt <- data@assays$RNA@counts[,w]
+    } else {
+      x.cnt <- Matrix::rowSums(data@assays$RNA@counts[,w])
+    }
+    counts <- cbind(counts, x.cnt)
+    metadata <- rbind(metadata, c(x.lab, x.spp, x.stg))
+    labels <- c(labels, x.lab)
+  }
+}
+colnames(counts) <- labels
+rownames(metadata) <- labels
+colnames(metadata) <- c("Sample","Species","Stage")
+metadata <- as.data.frame(metadata)
+rm(labels)
+#remove mitochodrial and ribosomal genes
+counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
+#make edgeR object
+dge <- DGEList(counts)
+meta_dge <- dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, metadata)
+dge$samples <- meta_dge
+rm(counts,metadata,meta_dge)
+#normalize data
+dge <- calcNormFactors(dge, method="TMM")
+#log2 transformed cpm
+tmm <- edgeR::cpm(dge,normalized.lib.sizes=TRUE,log=TRUE,prior.count=0.25)
+#boxplot(tmm,xlab="",ylab="Log2 counts per million",las=2)
+
+# Compile group labels of each sample
+groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$Stage,function(x)sub(" ","",x)),sep = "."),
+                      levels=c("Human.Time0","Human.Time1","Human.Time2","Chimp.Time0","Chimp.Time1","Chimp.Time2"))
+groupID <- as.numeric(groupFactor)
+
+# Compile comparison pattern
+#(condiditions to compare = time0, time1, and time2 for each species)
+compareID <- data.frame(c1 = c(1, 2, 1, 4, 5, 4),
+                        c2 = c(2, 3, 3, 5, 6, 6))
+#(condiditions to compare = time0 to time1 and time2 for each species)
+#compareID <- data.frame(c1 = c(1, 1, 4, 4),
+#                        c2 = c(2, 3, 5, 6))
+#(condiditions to compare = human and chimp for each time point)
+#compareID <- data.frame(c1 = c(1, 2, 3),
+#                        c2 = c(4, 5, 6))
+
+# Assess differences during differentiation
+set.seed(1)
+cormotifData <- cormotiffit(exprs = tmm,
+                            groupid = groupID,
+                            compid = compareID,
+                            K = 1:10,
+                            max.iter=1000,
+                            BIC=TRUE)
+
+#which BIC and AIC are lowest? - 9 motifs
+cormotifData$bic
+plotIC(cormotifData)
+cormotifData$bestmotif$loglike
+
+#what motif patterns were learned by the algorithm
+plotMotif(cormotifData)
+
+#posterior probability of DE for each gene
+head(cormotifData$bestmotif$p.post)
+
+#obtain DE pattern at 0.5 posterior distribution cutoff
+gene.prob <- cormotifData$bestmotif$p.post
+rownames(gene.prob) <- rownames(tmm)
+colnames(gene.prob) <- c("H.t0-t1","H.t1-t2","H.t0-t2","C.t0-t1","C.t1-t2","C.t0-t2")
+head(gene.prob)
+
+heatmap.2(gene.prob,
+          dendrogram="none",
+          Colv=FALSE,
+          breaks=c(0,0.2,0.4,0.6,0.8,1),
+          col=c("#fef0d9","#fdcc8a","#fc8d59","#e34a33","#b30000"),
+          margins=c(3,0),
+          trace="none",
+          key.title="",
+          key.xlab="posterior prob.",
+          key.ylab="",
+          #ylab=paste0(length(rownames(gene.prob))," genes"),
+          keysize=1,
+          key.par=list(mar=c(3.5,0,3,0)),
+          lmat=rbind(c(5,4,2),c(6,1,3)),
+          lhei=c(2.5,5),
+          lwid=c(1,10,1),
+          labRow=FALSE,
+          cexCol=1,
+          srtCol=0,
+          adjCol=c(0.5,0))
+
+# Test degree of conservation for time 0-2: posterior probability difference between the humans and the chimps within a motif 
+#0.3 (15104 genes)
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,4]) <= 0.3) & (abs(gene.prob[,2] - gene.prob[,5]) <= 0.3) & (abs(gene.prob[,3] - gene.prob[,6]) <= 0.3), ]))
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,4]) <= 0.3) & (abs(gene.prob[,2] - gene.prob[,5]) <= 0.3) & (abs(gene.prob[,3] - gene.prob[,6]) <= 0.3), ]))/dim(tmm)[1]
+#0.2 (14143 genes)
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,4]) <= 0.2) & (abs(gene.prob[,2] - gene.prob[,5]) <= 0.2) & (abs(gene.prob[,3] - gene.prob[,6]) <= 0.2), ]))
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,4]) <= 0.2) & (abs(gene.prob[,2] - gene.prob[,5]) <= 0.2) & (abs(gene.prob[,3] - gene.prob[,6]) <= 0.2), ]))/dim(tmm)[1]
+#0.1 (12512 genes)
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,4]) <= 0.1) & (abs(gene.prob[,2] - gene.prob[,5]) <= 0.1) & (abs(gene.prob[,3] - gene.prob[,6]) <= 0.1), ]))
+length(rownames(gene.prob[(abs(gene.prob[,1] - gene.prob[,4]) <= 0.1) & (abs(gene.prob[,2] - gene.prob[,5]) <= 0.1) & (abs(gene.prob[,3] - gene.prob[,6]) <= 0.1), ]))/dim(tmm)[1]
+
+# Examine genes from each motif
+prob.motif1  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]<0.5 & gene.prob[,5]<0.5 & gene.prob[,6]<0.5),])
+length(prob.motif1)
+head(prob.motif1)
+#boxplot(tmm[prob.motif1[1],]~groupFactor)
+
+prob.motif2  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]<0.5 & gene.prob[,3]>0.5 & gene.prob[,4]<0.5 & gene.prob[,5]<0.5 & gene.prob[,6]<0.5),])
+length(prob.motif2)
+head(prob.motif2)
+#boxplot(tmm[prob.motif2[1],]~groupFactor)
+
+prob.motif3  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]<0.5 & gene.prob[,3]>0.5 & gene.prob[,4]>0.5 & gene.prob[,5]<0.5 & gene.prob[,6]>0.5),])
+length(prob.motif3)
+head(prob.motif3)
+#boxplot(tmm[prob.motif3[1],]~groupFactor)
+
+prob.motif4  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]<0.5 & gene.prob[,3]>0.5 & gene.prob[,4]>0.5 & gene.prob[,5]>0.5 & gene.prob[,6]<0.5),])
+length(prob.motif4)
+head(prob.motif4)
+#boxplot(tmm[prob.motif4[1],]~groupFactor)
+
+prob.motif5  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]>0.5 & gene.prob[,3]>0.5 & gene.prob[,4]<0.5 & gene.prob[,5]<0.5 & gene.prob[,6]<0.5),])
+length(prob.motif5)
+head(prob.motif5)
+#boxplot(tmm[prob.motif5[1],]~groupFactor)
+
+prob.motif6  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]>0.5 & gene.prob[,3]<0.5 & gene.prob[,4]>0.5 & gene.prob[,5]>0.5 & gene.prob[,6]<0.5),])
+length(prob.motif6)
+head(prob.motif6)
+#boxplot(tmm[prob.motif6[1],]~groupFactor)
+
+prob.motif7  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]>0.5 & gene.prob[,5]<0.5 & gene.prob[,6]>0.5),])
+length(prob.motif7)
+head(prob.motif7)
+#boxplot(tmm[prob.motif7[1],]~groupFactor)
+
+prob.motif8  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]>0.5 & gene.prob[,3]>0.5 & gene.prob[,4]<0.5 & gene.prob[,5]>0.5 & gene.prob[,6]>0.5),])
+length(prob.motif8)
+head(prob.motif8)
+#boxplot(tmm[prob.motif8[1],]~groupFactor)
+
+prob.motif9  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]>0.5 & gene.prob[,3]>0.5 & gene.prob[,4]>0.5 & gene.prob[,5]>0.5 & gene.prob[,6]>0.5),])
+length(prob.motif9)
+head(prob.motif9)
+#boxplot(tmm[prob.motif9[1],]~groupFactor)
+
+# Examine human/chimp differences
+prob.motifC  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]>0.5 & gene.prob[,5]>0.5 & gene.prob[,6]>0.5),])
+length(prob.motifC)
+head(prob.motifC)
+#boxplot(tmm[prob.motifC[1],]~groupFactor)
+
+prob.motifC0  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]>0.5 & gene.prob[,5]<0.5 & gene.prob[,6]>0.5),])
+length(prob.motifC0)
+head(prob.motifC0)
+#boxplot(tmm[prob.motifC0[1],]~groupFactor)
+
+prob.motifC1  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]>0.5 & gene.prob[,5]>0.5 & gene.prob[,6]<0.5),])
+length(prob.motifC1)
+head(prob.motifC1)
+#boxplot(tmm[prob.motifC1[1],]~groupFactor)
+
+prob.motifC2  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]<0.5 & gene.prob[,3]<0.5 & gene.prob[,4]<0.5 & gene.prob[,5]>0.5 & gene.prob[,6]>0.5),])
+length(prob.motifC2)
+head(prob.motifC2)
+#boxplot(tmm[prob.motifC2[1],]~groupFactor)
+
+prob.motifH  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]>0.5 & gene.prob[,3]>0.5 & gene.prob[,4]<0.5 & gene.prob[,5]<0.5 & gene.prob[,6]<0.5),])
+length(prob.motifH)
+head(prob.motifH)
+#boxplot(tmm[prob.motifH[1],]~groupFactor)
+
+prob.motifH0  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]<0.5 & gene.prob[,3]>0.5 & gene.prob[,4]<0.5 & gene.prob[,5]<0.5 & gene.prob[,6]<0.5),])
+length(prob.motifH0)
+head(prob.motifH0)
+#boxplot(tmm[prob.motifH0[1],]~groupFactor)
+
+prob.motifH1  <- rownames(gene.prob[(gene.prob[,1]>0.5 & gene.prob[,2]>0.5 & gene.prob[,3]<0.5 & gene.prob[,4]<0.5 & gene.prob[,5]<0.5 & gene.prob[,6]<0.5),])
+length(prob.motifH1)
+head(prob.motifH1)
+#boxplot(tmm[prob.motifH1[1],]~groupFactor)
+
+prob.motifH2  <- rownames(gene.prob[(gene.prob[,1]<0.5 & gene.prob[,2]>0.5 & gene.prob[,3]>0.5 & gene.prob[,4]<0.5 & gene.prob[,5]<0.5 & gene.prob[,6]<0.5),])
+length(prob.motifH2)
+head(prob.motifH2)
+#boxplot(tmm[prob.motifH2[1],]~groupFactor)
+
+```

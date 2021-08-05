@@ -21,6 +21,8 @@ If you are running the files in this repository to recreate the analyses, runnin
 * [Pre-processing of raw 10x fastq files into count matrices and assigning species of origin](10x-data-1-process.html)
 
     + [Analyses justifying method the used to assign species of origin](10x-data-0-process-test.html)
+    
+    + [Visualized cell calls](10x-plot-cellcalling.html)
 
 * [QC of count matricies and barcode filtering](10x-data-2-qc.html)
 
@@ -68,10 +70,34 @@ If you are running the files in this repository to recreate the analyses, runnin
 
 ## Differential expression
 
-* [Performed pairwise DE tests](10x-data-5-diffexp.Rmd)
+* Performed:
 
-* [Performed DE tests using Cormotif](10x-data-5-diffexp.Rmd)
+    + [Pairwise DE tests](10x-data-5-diffexp.html) & [Visualized results] (10x-plot-diffexp.html)
+
+    + [DE tests using Cormotif](10x-data-6-cormotif-cnts.html) & [Visualized results] (10x-plot-cormotif-cnts.html)
+    
+* [Examined variance in gene expression](10x-data-7-variance.html)
 
 ## Enrichment analyses
 
+* Examined enrichment of GO categories and external gene sets in DE genes identified using:
+
+    + [Pairwise tests] (10x-plot-diffexp.html)
+
+    + [Cormotif] (10x-plot-cormotif-cnts.html)
+
 ## Standard validation analyses
+
+* [Analyzed flow cytometry, staining, and qPCR data](10x-view-validation-data.html)
+
+## Additional analyses and visualizations
+
+* [Viewed correlation of batch effects](10x-view-batch-effects.html)
+
+* [Viewed 10x sequencing data metrics](10x-view-data-metrics.html)
+
+* [Viewed species assignments](10x-view-species assignments.html)
+
+* [Viewed 10x data subset by stage of differentiation](10x-data-subsets.html)
+
+* [Analyzed technical replicate correlations](10x-plot-replicate-correlations.html)

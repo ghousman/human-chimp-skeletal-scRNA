@@ -76,14 +76,14 @@ goEnrich <- function(totGenes, deGenes, ontology) {
 
 #Define function to plot GO functional enrichment results
 goEnPlot <- function(goTot, title) {
-  print(ggplot(goTot, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+  print(ggplot(goTot, aes(x=GeneRatio, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
           geom_point() +
           theme(axis.text.x=element_text(angle=-40, hjust=0)) +
           facet_grid(ONTOLOGY~., scale="free") +
           scale_size_area(max_size=6) +
           scale_color_viridis(option="C") +
           theme_bw() +
-          labs(title=title))
+          labs(title=title, x="Gene Ratio", y=""))
 }
 
 #Get total genes
@@ -907,6 +907,18 @@ DimPlot(data,
         reduction="umap",
         cols=c("grey99","dodgerblue","navyblue")) +
   labs(x="UMAP1",y="UMAP2")
+DimPlot(data,
+        group.by="OstCluster0.05",
+        split.by="OstCluster0.05",
+        reduction="umap",
+        cols=c("grey99","dodgerblue","navyblue")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(subset(data,subset=Stage=="Time 2"),
+        group.by="OstCluster0.05",
+        split.by="OstCluster0.05",
+        reduction="umap",
+        cols=c("grey99","dodgerblue","navyblue")) +
+  labs(x="UMAP1",y="UMAP2")
 
 #cell counts
 ggplot(data@meta.data, aes(x=OstCluster0.05, fill=OstCluster0.05)) +
@@ -920,12 +932,33 @@ ggplot(data@meta.data, aes(x=OstCluster0.05, fill=OstCluster0.05)) +
         legend.text=element_text(size=12),
         strip.text.x=element_text(size=12),
         axis.text.x=element_text(angle=90))
+ggplot(data@meta.data[which(data@meta.data$Stage=="Time 2"),], aes(x=OstCluster0.05, fill=OstCluster0.05)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("grey99","dodgerblue","navyblue")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
 
 #umi counts
 ggplot(data@meta.data, aes(x=OstCluster0.05, y=nCount_RNA, fill=OstCluster0.05)) +
   geom_violin(width=0.8) +
   labs(y="UMIs per Cell", x="") +
-  scale_fill_manual(name="", valuesc("grey99","dodgerblue","navyblue")) +
+  scale_fill_manual(name="", values=c("grey99","dodgerblue","navyblue")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12),
+        axis.text.x=element_text(angle=90))
+ggplot(data@meta.data[which(data@meta.data$Stage=="Time 2"),], aes(x=OstCluster0.05, y=nCount_RNA, fill=OstCluster0.05)) +
+  geom_violin(width=0.8) +
+  labs(y="UMIs per Cell", x="") +
+  scale_fill_manual(name="", values=c("grey99","dodgerblue","navyblue")) +
   facet_grid(~Species)+
   theme_classic() +
   theme(axis.text=element_text(size=12),
@@ -936,6 +969,17 @@ ggplot(data@meta.data, aes(x=OstCluster0.05, y=nCount_RNA, fill=OstCluster0.05))
 
 #gene counts
 ggplot(data@meta.data, aes(x=OstCluster0.05, y=nFeature_RNA, fill=OstCluster0.05)) +
+  geom_violin(width=0.8) +
+  labs(y="Genes per Cell", x="") +
+  scale_fill_manual(name="", values=c("grey99","dodgerblue","navyblue")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12),
+        axis.text.x=element_text(angle=90))
+ggplot(data@meta.data[which(data@meta.data$Stage=="Time 2"),], aes(x=OstCluster0.05, y=nFeature_RNA, fill=OstCluster0.05)) +
   geom_violin(width=0.8) +
   labs(y="Genes per Cell", x="") +
   scale_fill_manual(name="", values=c("grey99","dodgerblue","navyblue")) +
@@ -1001,9 +1045,31 @@ DimPlot(data,
         reduction="umap",
         cols=c("grey99","dodgerblue","dodgerblue4","navyblue")) +
   labs(x="UMAP1",y="UMAP2")
+DimPlot(data,
+        group.by="OstCluster0.25",
+        split.by="OstCluster0.25",
+        reduction="umap",
+        cols=c("grey99","dodgerblue","dodgerblue4","navyblue")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(subset(data,subset=Stage=="Time 2"),
+        group.by="OstCluster0.25",
+        split.by="OstCluster0.25",
+        reduction="umap",
+        cols=c("grey99","dodgerblue","dodgerblue4","navyblue")) +
+  labs(x="UMAP1",y="UMAP2")
 
 #cell counts
 ggplot(data@meta.data, aes(x=OstCluster0.25, fill=OstCluster0.25)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("grey99","dodgerblue","dodgerblue4","navyblue")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+ggplot(data@meta.data[which(data@meta.data$Stage=="Time 2"),], aes(x=OstCluster0.25, fill=OstCluster0.25)) +
   geom_bar(position="dodge") +
   labs(y="Number of Cells", x="") +
   scale_fill_manual(name="", values=c("grey99","dodgerblue","dodgerblue4","navyblue")) +
@@ -1025,9 +1091,29 @@ ggplot(data@meta.data, aes(x=OstCluster0.25, y=nCount_RNA, fill=OstCluster0.25))
         axis.title=element_text(size=12),
         legend.text=element_text(size=12),
         strip.text.x=element_text(size=12))
+ggplot(data@meta.data[which(data@meta.data$Stage=="Time 2"),], aes(x=OstCluster0.25, y=nCount_RNA, fill=OstCluster0.25)) +
+  geom_violin(width=0.8) +
+  labs(y="UMIs per Cell", x="") +
+  scale_fill_manual(name="", values=c("grey99","dodgerblue","dodgerblue4","navyblue")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
 
 #gene counts
 ggplot(data@meta.data, aes(x=OstCluster0.25, y=nFeature_RNA, fill=OstCluster0.25)) +
+  geom_violin(width=0.8) +
+  labs(y="Genes per Cell", x="") +
+  scale_fill_manual(name="", values=c("grey99","dodgerblue","dodgerblue4","navyblue")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+ggplot(data@meta.data[which(data@meta.data$Stage=="Time 2"),], aes(x=OstCluster0.25, y=nFeature_RNA, fill=OstCluster0.25)) +
   geom_violin(width=0.8) +
   labs(y="Genes per Cell", x="") +
   scale_fill_manual(name="", values=c("grey99","dodgerblue","dodgerblue4","navyblue")) +
@@ -1092,9 +1178,54 @@ DimPlot(data,
         reduction="umap",
         cols=c("grey99","dodgerblue","deepskyblue2","dodgerblue4","navyblue")) +
   labs(x="UMAP1",y="UMAP2")
+DimPlot(data,
+        group.by="OstCluster0.50",
+        split.by="OstCluster0.50",
+        reduction="umap",
+        cols=c("grey99","dodgerblue","deepskyblue2","dodgerblue4","navyblue")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(data,
+        group.by="OstCluster0.50",
+        split.by="OstCluster0.50",
+        reduction="umap",
+        cols=c("grey99","dodgerblue","deepskyblue2","dodgerblue4","navyblue")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(subset(data,subset=Stage=="Time 2"),
+        group.by="OstCluster0.50",
+        split.by="OstCluster0.50",
+        reduction="umap",
+        cols=c("grey99","dodgerblue","deepskyblue2","dodgerblue4","navyblue")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(subset(data,subset=Stage=="Time 2"),
+        group.by="OstCluster0.50",
+        split.by="OstCluster0.50",
+        reduction="umap",
+        cols=c("grey99","dodgerblue","deepskyblue2","dodgerblue4","navyblue")) +
+  labs(x="UMAP1",y="UMAP2")
 
 #cell counts
 ggplot(data@meta.data, aes(x=OstCluster0.50, fill=OstCluster0.50)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("grey99","dodgerblue","deepskyblue2","dodgerblue4","navyblue")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+ggplot(data@meta.data[which(data@meta.data$OstCluster0.50!="not osteogenic"),], aes(x=OstCluster0.50, fill=OstCluster0.50)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("dodgerblue","deepskyblue2","dodgerblue4","navyblue")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12),
+        axis.text.x=element_text(angle=90))
+ggplot(data@meta.data[which(data@meta.data$Stage=="Time 2"),], aes(x=OstCluster0.50, fill=OstCluster0.50)) +
   geom_bar(position="dodge") +
   labs(y="Number of Cells", x="") +
   scale_fill_manual(name="", values=c("grey99","dodgerblue","deepskyblue2","dodgerblue4","navyblue")) +
@@ -1116,9 +1247,29 @@ ggplot(data@meta.data, aes(x=OstCluster0.50, y=nCount_RNA, fill=OstCluster0.50))
         axis.title=element_text(size=12),
         legend.text=element_text(size=12),
         strip.text.x=element_text(size=12))
+ggplot(data@meta.data[which(data@meta.data$Stage=="Time 2"),], aes(x=OstCluster0.50, y=nCount_RNA, fill=OstCluster0.50)) +
+  geom_violin(width=0.8) +
+  labs(y="UMIs per Cell", x="") +
+  scale_fill_manual(name="", values=c("grey99","dodgerblue","deepskyblue2","dodgerblue4","navyblue")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
 
 #gene counts
 ggplot(data@meta.data, aes(x=OstCluster0.50, y=nFeature_RNA, fill=OstCluster0.50)) +
+  geom_violin(width=0.8) +
+  labs(y="Genes per Cell", x="") +
+  scale_fill_manual(name="", values=c("grey99","dodgerblue","deepskyblue2","dodgerblue4","navyblue")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+ggplot(data@meta.data[which(data@meta.data$Stage=="Time 2"),], aes(x=OstCluster0.50, y=nFeature_RNA, fill=OstCluster0.50)) +
   geom_violin(width=0.8) +
   labs(y="Genes per Cell", x="") +
   scale_fill_manual(name="", values=c("grey99","dodgerblue","deepskyblue2","dodgerblue4","navyblue")) +
@@ -1165,6 +1316,18 @@ DotPlot(subset(data,subset=Species=="Chimp"),
         dot.scale=20,
         cols=c("grey99","black"),
         col.max=5)
+DotPlot(subset(data,subset=Species=="Human" & data@meta.data$OstCluster0.50!="not osteogenic"),
+        features=c("MEPE","PHEX","BGLAP","RUNX2"),
+        group.by="OstCluster0.50",
+        dot.scale=20,
+        cols=c("grey99","dodgerblue"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp" & data@meta.data$OstCluster0.50!="not osteogenic"),
+        features=c("MEPE","PHEX","BGLAP","RUNX2"),
+        group.by="OstCluster0.50",
+        dot.scale=20,
+        cols=c("grey99","dodgerblue"),
+        col.max=5)
 
 ```
 
@@ -1188,9 +1351,37 @@ DimPlot(data,
                "dodgerblue","dodgerblue4","deepskyblue2","navyblue",
                "lightblue1","royalblue3","grey","black")) +
   labs(x="UMAP1",y="UMAP2")
+DimPlot(data,
+        group.by="OstCluster0.75",
+        split.by="OstCluster0.75",
+        reduction="umap",
+        cols=c("grey99",
+               "dodgerblue","dodgerblue4","deepskyblue2","navyblue",
+               "lightblue1","royalblue3","grey","black")) +
+  labs(x="UMAP1",y="UMAP2")
+DimPlot(subset(data,subset=Stage=="Time 2"),
+        group.by="OstCluster0.75",
+        split.by="OstCluster0.75",
+        reduction="umap",
+        cols=c("grey99",
+               "dodgerblue","dodgerblue4","deepskyblue2","navyblue",
+               "lightblue1","royalblue3","grey","black")) +
+  labs(x="UMAP1",y="UMAP2")
 
 #cell counts
 ggplot(data@meta.data, aes(x=OstCluster0.75, fill=OstCluster0.75)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("grey99",
+                                      "dodgerblue","dodgerblue4","deepskyblue2","navyblue",
+                                      "lightblue1","royalblue3","grey","black")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+ggplot(data@meta.data[which(data@meta.data$Stage=="Time 2"),], aes(x=OstCluster0.75, fill=OstCluster0.75)) +
   geom_bar(position="dodge") +
   labs(y="Number of Cells", x="") +
   scale_fill_manual(name="", values=c("grey99",
@@ -1216,9 +1407,33 @@ ggplot(data@meta.data, aes(x=OstCluster0.75, y=nCount_RNA, fill=OstCluster0.75))
         axis.title=element_text(size=12),
         legend.text=element_text(size=12),
         strip.text.x=element_text(size=12))
+ggplot(data@meta.data[which(data@meta.data$Stage=="Time 2"),], aes(x=OstCluster0.75, y=nCount_RNA, fill=OstCluster0.75)) +
+  geom_violin(width=0.8) +
+  labs(y="UMIs per Cell", x="") +
+  scale_fill_manual(name="", values=c("grey99",
+                                      "dodgerblue","dodgerblue4","deepskyblue2","navyblue",
+                                      "lightblue1","royalblue3","grey","black")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
 
 #gene counts
 ggplot(data@meta.data, aes(x=OstCluster0.75, y=nFeature_RNA, fill=OstCluster0.75)) +
+  geom_violin(width=0.8) +
+  labs(y="Genes per Cell", x="") +
+  scale_fill_manual(name="", values=c("grey99",
+                                      "dodgerblue","dodgerblue4","deepskyblue2","navyblue",
+                                      "lightblue1","royalblue3","grey","black")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+ggplot(data@meta.data[which(data@meta.data$Stage=="Time 2"),], aes(x=OstCluster0.75, y=nFeature_RNA, fill=OstCluster0.75)) +
   geom_violin(width=0.8) +
   labs(y="Genes per Cell", x="") +
   scale_fill_manual(name="", values=c("grey99",
@@ -4449,7 +4664,63 @@ DotPlot(subset(data,subset=Species=="Chimp"),
 ```
 
 ### Enrichment
-GO functional enrichment not assessed because classifications were determined based on candidate genes.
+Assess GO functional enrichment of genes defining each ad hoc classification.
+
+```{r, eval=FALSE}
+
+#Find markers for each stage of differentiation
+markers.i <- FindMarkers(data, ident.1="iPSC", group.by="AdHoc.Assign.thresh0", only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)       #ipsc
+markers.m <- FindMarkers(data, ident.1="MSC", group.by="AdHoc.Assign.thresh0", only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)        #msc
+markers.o <- FindMarkers(data, ident.1="Osteogenic", group.by="AdHoc.Assign.thresh0", only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25) #osteo
+markers.x <- FindMarkers(data, ident.1="other", group.by="AdHoc.Assign.thresh0", only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)      #other
+saveRDS(markers.i, file="./output/markersAdHoc-I.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+saveRDS(markers.m, file="./output/markersAdHoc-M.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+saveRDS(markers.o, file="./output/markersAdHoc-O.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+saveRDS(markers.x, file="./output/markersAdHoc-X.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+
+```
+
+```{r}
+
+#AdHoc-iPSC
+genes <- readRDS("./output/markersAdHoc-I.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+#Find top 100 markers, report only the positive ones
+geneSub <- genes %>% top_n(n=100, wt=avg_logFC)
+#Test for functional enrichment
+goTot <- goEnrich(totGenes=geneTot, deGenes=rownames(geneSub), ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Ad Hoc iPSC Genes")
+
+#AdHoc-MSC
+genes <- readRDS("./output/markersAdHoc-M.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+#Find top 100 markers, report only the positive ones
+geneSub <- genes %>% top_n(n=100, wt=avg_logFC)
+#Test for functional enrichment
+goTot <- goEnrich(totGenes=geneTot, deGenes=rownames(geneSub), ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Ad Hoc MSC Genes")
+
+#AdHoc-Osteogenic
+genes <- readRDS("./output/markersAdHoc-O.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+#Find top 100 markers, report only the positive ones
+geneSub <- genes %>% top_n(n=100, wt=avg_logFC)
+#Test for functional enrichment
+goTot <- goEnrich(totGenes=geneTot, deGenes=rownames(geneSub), ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Ad Hoc Osteogenic Genes")
+
+#AdHoc-other
+genes <- readRDS("./output/markersAdHoc-X.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+#Find top 100 markers, report only the positive ones
+geneSub <- genes %>% top_n(n=100, wt=avg_logFC)
+#Test for functional enrichment
+goTot <- goEnrich(totGenes=geneTot, deGenes=rownames(geneSub), ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Ad Hoc other Genes")
+
+rm(genes,geneSub,goTot)
+
+```
 
 ### Correlations (pseudobulk: sum)
 Visualize gene expression correlations across cell classifications.
@@ -5717,6 +5988,18 @@ DotPlot(subset(data,subset=Species=="Chimp"),
         dot.scale=20,
         cols=c("grey99","black"),
         col.max=5)
+DotPlot(subset(data,subset=Species=="Human" & data@meta.data$OstAdHoc.Assign.4gene.thresh0!="not osteogenic"),
+        features=c("MEPE","PHEX","BGLAP","RUNX2"),
+        group.by="OstAdHoc.Assign.4gene.thresh0",
+        dot.scale=20,
+        cols=c("grey99","dodgerblue"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp" & data@meta.data$OstAdHoc.Assign.4gene.thresh0!="not osteogenic"),
+        features=c("MEPE","PHEX","BGLAP","RUNX2"),
+        group.by="OstAdHoc.Assign.4gene.thresh0",
+        dot.scale=20,
+        cols=c("grey99","dodgerblue"),
+        col.max=5)
 
 ```
 
@@ -5937,7 +6220,189 @@ DotPlot(subset(data,subset=Species=="Chimp"),
 ```
 
 ### Enrichment
-GO functional enrichment not assessed because classifications were determined based on candidate genes.
+Assess GO functional enrichment of genes defining each ad hoc classification (only 4 genes and 4 genes.x).
+
+#### 4 genes
+
+```{r, eval=FALSE}
+
+#Find markers for each stage of differentiation
+markers.pre <- FindMarkers(data, ident.1="preosteoblast", group.by="OstAdHoc.Assign.4gene.thresh0", only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)          #pre
+markers.obl <- FindMarkers(data, ident.1="osteoblast", group.by="OstAdHoc.Assign.4gene.thresh0", only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)             #obl
+markers.emb <- FindMarkers(data, ident.1="embedding osteoblast", group.by="OstAdHoc.Assign.4gene.thresh0", only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)   #emb
+markers.min <- FindMarkers(data, ident.1="mineralizing osteoblast", group.by="OstAdHoc.Assign.4gene.thresh0", only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)#min
+markers.mat <- FindMarkers(data, ident.1="maturing osteocyte", group.by="OstAdHoc.Assign.4gene.thresh0", only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)     #mat
+markers.ukn <- FindMarkers(data, ident.1="unknown osteogenic", group.by="OstAdHoc.Assign.4gene.thresh0", only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)     #ukn
+markers.nan <- FindMarkers(data, ident.1="not osteogenic", group.by="OstAdHoc.Assign.4gene.thresh0", only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)         #nan
+saveRDS(markers.pre, file="./output/markersOstAdHoc-pre.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+saveRDS(markers.obl, file="./output/markersOstAdHoc-obl.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+saveRDS(markers.emb, file="./output/markersOstAdHoc-emb.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+saveRDS(markers.min, file="./output/markersOstAdHoc-min.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+saveRDS(markers.mat, file="./output/markersOstAdHoc-mat.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+saveRDS(markers.ukn, file="./output/markersOstAdHoc-ukn.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+saveRDS(markers.nan, file="./output/markersOstAdHoc-nan.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+
+```
+
+```{r}
+
+#OstAdHoc-preosteoblast
+genes <- readRDS("./output/markersOstAdHoc-pre.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+#Find top 100 markers, report only the positive ones
+geneSub <- genes %>% top_n(n=100, wt=avg_logFC)
+#Test for functional enrichment
+goTot <- goEnrich(totGenes=geneTot, deGenes=rownames(geneSub), ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Ost Ad Hoc Pre Genes")
+
+#OstAdHoc-osteoblast
+genes <- readRDS("./output/markersOstAdHoc-obl.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+#Find top 100 markers, report only the positive ones
+geneSub <- genes %>% top_n(n=100, wt=avg_logFC)
+#Test for functional enrichment
+goTot <- goEnrich(totGenes=geneTot, deGenes=rownames(geneSub), ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Ost Ad Hoc Obl Genes")
+
+#OstAdHoc-embedding osteoblast
+genes <- readRDS("./output/markersOstAdHoc-emb.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+#Find top 100 markers, report only the positive ones
+geneSub <- genes %>% top_n(n=100, wt=avg_logFC)
+#Test for functional enrichment
+goTot <- goEnrich(totGenes=geneTot, deGenes=rownames(geneSub), ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Ost Ad Hoc Emb Genes")
+
+#OstAdHoc-mineralizing osteoblast
+genes <- readRDS("./output/markersOstAdHoc-min.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+#Find top 100 markers, report only the positive ones
+geneSub <- genes %>% top_n(n=100, wt=avg_logFC)
+#Test for functional enrichment
+goTot <- goEnrich(totGenes=geneTot, deGenes=rownames(geneSub), ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Ost Ad Hoc Min Genes")
+
+#OstAdHoc-maturing osteoblast
+genes <- readRDS("./output/markersOstAdHoc-mat.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+#Find top 100 markers, report only the positive ones
+geneSub <- genes %>% top_n(n=100, wt=avg_logFC)
+#Test for functional enrichment
+goTot <- goEnrich(totGenes=geneTot, deGenes=rownames(geneSub), ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Ost Ad Hoc Mat Genes")
+
+#OstAdHoc-unknown osteogenic
+genes <- readRDS("./output/markersOstAdHoc-ukn.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+#Find top 100 markers, report only the positive ones
+geneSub <- genes %>% top_n(n=100, wt=avg_logFC)
+#Test for functional enrichment
+goTot <- goEnrich(totGenes=geneTot, deGenes=rownames(geneSub), ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Ost Ad Hoc Ukn Genes")
+
+#OstAdHoc-not osteogenic
+genes <- readRDS("./output/markersOstAdHoc-nan.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+#Find top 100 markers, report only the positive ones
+geneSub <- genes %>% top_n(n=100, wt=avg_logFC)
+#Test for functional enrichment
+goTot <- goEnrich(totGenes=geneTot, deGenes=rownames(geneSub), ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Ost Ad Hoc NaN Genes")
+
+rm(genes,geneSub,goTot)
+
+```
+
+#### 4 genes.x
+
+```{r, eval=FALSE}
+
+#Find markers for each stage of differentiation
+markers.pre <- FindMarkers(data, ident.1="preosteoblast", group.by="OstAdHoc.Assign.x.4gene.thresh0", only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)          #pre
+markers.obl <- FindMarkers(data, ident.1="osteoblast", group.by="OstAdHoc.Assign.x.4gene.thresh0", only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)             #obl
+markers.emb <- FindMarkers(data, ident.1="embedding osteoblast", group.by="OstAdHoc.Assign.x.4gene.thresh0", only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)   #emb
+markers.min <- FindMarkers(data, ident.1="mineralizing osteoblast", group.by="OstAdHoc.Assign.x.4gene.thresh0", only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)#min
+markers.mat <- FindMarkers(data, ident.1="maturing osteocyte", group.by="OstAdHoc.Assign.x.4gene.thresh0", only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)     #mat
+markers.ukn <- FindMarkers(data, ident.1="unknown osteogenic", group.by="OstAdHoc.Assign.x.4gene.thresh0", only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)     #ukn
+markers.nan <- FindMarkers(data, ident.1="not osteogenic", group.by="OstAdHoc.Assign.x.4gene.thresh0", only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)         #nan
+saveRDS(markers.pre, file="./output/markersOstAdHocX-pre.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+saveRDS(markers.obl, file="./output/markersOstAdHocX-obl.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+saveRDS(markers.emb, file="./output/markersOstAdHocX-emb.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+saveRDS(markers.min, file="./output/markersOstAdHocX-min.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+saveRDS(markers.mat, file="./output/markersOstAdHocX-mat.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+saveRDS(markers.ukn, file="./output/markersOstAdHocX-ukn.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+saveRDS(markers.nan, file="./output/markersOstAdHocX-nan.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+
+```
+
+```{r}
+
+#OstAdHoc-preosteoblast
+genes <- readRDS("./output/markersOstAdHocX-pre.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+#Find top 100 markers, report only the positive ones
+geneSub <- genes %>% top_n(n=100, wt=avg_logFC)
+#Test for functional enrichment
+goTot <- goEnrich(totGenes=geneTot, deGenes=rownames(geneSub), ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Ost Ad Hoc Pre Genes")
+
+#OstAdHoc-osteoblast
+genes <- readRDS("./output/markersOstAdHocX-obl.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+#Find top 100 markers, report only the positive ones
+geneSub <- genes %>% top_n(n=100, wt=avg_logFC)
+#Test for functional enrichment
+goTot <- goEnrich(totGenes=geneTot, deGenes=rownames(geneSub), ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Ost Ad Hoc Obl Genes")
+
+#OstAdHoc-embedding osteoblast
+genes <- readRDS("./output/markersOstAdHocX-emb.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+#Find top 100 markers, report only the positive ones
+geneSub <- genes %>% top_n(n=100, wt=avg_logFC)
+#Test for functional enrichment
+goTot <- goEnrich(totGenes=geneTot, deGenes=rownames(geneSub), ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Ost Ad Hoc Emb Genes")
+
+#OstAdHoc-mineralizing osteoblast
+genes <- readRDS("./output/markersOstAdHocX-min.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+#Find top 100 markers, report only the positive ones
+geneSub <- genes %>% top_n(n=100, wt=avg_logFC)
+#Test for functional enrichment
+goTot <- goEnrich(totGenes=geneTot, deGenes=rownames(geneSub), ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Ost Ad Hoc Min Genes")
+
+#OstAdHoc-maturing osteoblast
+genes <- readRDS("./output/markersOstAdHocX-mat.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+#Find top 100 markers, report only the positive ones
+geneSub <- genes %>% top_n(n=100, wt=avg_logFC)
+#Test for functional enrichment
+goTot <- goEnrich(totGenes=geneTot, deGenes=rownames(geneSub), ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Ost Ad Hoc Mat Genes")
+
+#OstAdHoc-unknown osteogenic
+genes <- readRDS("./output/markersOstAdHocX-ukn.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+#Find top 100 markers, report only the positive ones
+geneSub <- genes %>% top_n(n=100, wt=avg_logFC)
+#Test for functional enrichment
+goTot <- goEnrich(totGenes=geneTot, deGenes=rownames(geneSub), ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Ost Ad Hoc Ukn Genes")
+
+#OstAdHoc-not osteogenic
+genes <- readRDS("./output/markersOstAdHocX-nan.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+#Find top 100 markers, report only the positive ones
+geneSub <- genes %>% top_n(n=100, wt=avg_logFC)
+#Test for functional enrichment
+goTot <- goEnrich(totGenes=geneTot, deGenes=rownames(geneSub), ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Ost Ad Hoc NaN Genes")
+
+rm(genes,geneSub,goTot)
+
+```
 
 ### Correlations (pseudobulk: sum)
 Visualize gene expression correlations across cell classifications.
@@ -7305,63 +7770,199 @@ rm(avg)
 
 ```
 
+## Examine overlap of cells across classification schemes
 
+```{r}
 
-###EDIT
-## Examine overlap of cells across classification schemes.
+cellassign <- data@meta.data[,c("Stage",
+                                "Cluster0.05",
+                                "Cluster0.25",
+                                "Cluster0.50",
+                                "Cluster0.75",
+                                "AdHoc.Assign.thresh0",
+                                "OstCluster0.05",
+                                "OstCluster0.25",
+                                "OstCluster0.50",
+                                "OstCluster0.75",
+                                "OstAdHoc.Assign.4gene.thresh0",
+                                "OstAdHoc.Assign.x.4gene.thresh0")]
 
-Assess the overlap of general ad hoc assignments between tot and t2:
-
-```{r, eval=FALSE}
-
-compare <- inner_join(
-  t2 %>%
-    select(Cell,AdHoc.Assign.thresh0),
-  tot %>%
-    filter(Stage=="Time 2") %>% 
-    select(Cell,AdHoc.Assign.thresh0),
-  by="Cell"
-)
-colnames(compare) <- c("cell","t2","tot")
-compare
-
-conf_mat <- confusion_matrix(targets = compare$t2,
-                             predictions = compare$tot)
-
-plot_confusion_matrix(conf_mat$`Confusion Matrix`[[1]],
-                      add_normalized=FALSE)
+cellassign["Cell"] <- rownames(cellassign)
 
 ```
 
-Assess the overlap of osteogenic ad hoc assignments between tot and t2:
+### Stage vs. Cluster
 
-```{r, eval=FALSE}
+```{r}
 
-compare <- inner_join(
-  t2 %>%
-    select(Cell,OstAdHoc.Assign.4geneA.median),
-  tot %>%
-    filter(Stage=="Time 2") %>% 
-    select(Cell,OstAdHoc.Assign.4geneA.median),
-  by="Cell"
-)
+conf_mat <- confusion_matrix(targets=cellassign$Stage,
+                             predictions=cellassign$Cluster0.05)
 
-compare <- inner_join(
-  t2 %>%
-    select(Cell,OstAdHoc.Assign.5gene.thresh0),
-  tot %>%
-    filter(Stage=="Time 2") %>% 
-    select(Cell,OstAdHoc.Assign.5gene.thresh0),
-  by="Cell"
-)
+conf_mat_edit <- conf_mat$`Confusion Matrix`[[1]][which(conf_mat$`Confusion Matrix`[[1]]$Target %in% unique(cellassign$Stage) &
+                                                        conf_mat$`Confusion Matrix`[[1]]$Prediction %in% unique(cellassign$Cluster0.05)),]
 
-colnames(compare) <- c("cell","t2","tot")
-compare
+plot_confusion_matrix(conf_mat_edit,
+                      add_counts=TRUE,
+                      add_normalized=FALSE,
+                      add_row_percentages=FALSE,
+                      add_col_percentages=TRUE,
+                      add_arrows=FALSE,
+                      add_zero_shading=FALSE)
 
-conf_mat <- confusion_matrix(targets = compare$t2,
-                             predictions = compare$tot)
+rm(conf_mat,conf_mat_edit)
 
-plot_confusion_matrix(conf_mat$`Confusion Matrix`[[1]],
-                      add_normalized=FALSE)
+```
+
+### Stage vs. General Ad Hoc
+
+```{r}
+
+conf_mat <- confusion_matrix(targets=cellassign$Stage,
+                             predictions=cellassign$AdHoc.Assign.thresh0)
+
+conf_mat_edit <- conf_mat$`Confusion Matrix`[[1]][which(conf_mat$`Confusion Matrix`[[1]]$Target %in% unique(cellassign$Stage) &
+                                                        conf_mat$`Confusion Matrix`[[1]]$Prediction %in% unique(cellassign$AdHoc.Assign.thresh0)),]
+
+plot_confusion_matrix(conf_mat_edit,
+                      add_counts=TRUE,
+                      add_normalized=FALSE,
+                      add_row_percentages=FALSE,
+                      add_col_percentages=TRUE,
+                      add_arrows=FALSE,
+                      add_zero_shading=FALSE)
+
+rm(conf_mat,conf_mat_edit)
+
+```
+
+### Cluster vs. General Ad Hoc
+
+```{r}
+
+conf_mat <- confusion_matrix(targets=cellassign$Cluster0.05,
+                             predictions=cellassign$AdHoc.Assign.thresh0)
+
+conf_mat_edit <- conf_mat$`Confusion Matrix`[[1]][which(conf_mat$`Confusion Matrix`[[1]]$Target %in% unique(cellassign$Cluster0.05) &
+                                                        conf_mat$`Confusion Matrix`[[1]]$Prediction %in% unique(cellassign$AdHoc.Assign.thresh0)),]
+
+plot_confusion_matrix(conf_mat_edit,
+                      add_counts=TRUE,
+                      add_normalized=FALSE,
+                      add_row_percentages=FALSE,
+                      add_col_percentages=TRUE,
+                      add_arrows=FALSE,
+                      add_zero_shading=FALSE)
+
+rm(conf_mat,conf_mat_edit)
+
+```
+
+### Stage vs. Osteogenic Cluster (res=0.50)
+
+```{r}
+
+conf_mat <- confusion_matrix(targets=cellassign$Stage,
+                             predictions=cellassign$OstCluster0.50)
+
+conf_mat_edit <- conf_mat$`Confusion Matrix`[[1]][which(conf_mat$`Confusion Matrix`[[1]]$Target %in% unique(cellassign$Stage) &
+                                                        conf_mat$`Confusion Matrix`[[1]]$Prediction %in% unique(cellassign$OstCluster0.505)),]
+
+plot_confusion_matrix(conf_mat_edit,
+                      add_counts=TRUE,
+                      add_normalized=FALSE,
+                      add_row_percentages=FALSE,
+                      add_col_percentages=TRUE,
+                      add_arrows=FALSE,
+                      add_zero_shading=FALSE)
+
+rm(conf_mat,conf_mat_edit)
+
+```
+
+### Stage vs. Osteogenic Ad Hoc (4 gene flexible)
+
+```{r}
+
+conf_mat <- confusion_matrix(targets=cellassign$OstAdHoc.Assign.4gene.thresh0,
+                             predictions=cellassign$Stage)
+
+conf_mat_edit <- conf_mat$`Confusion Matrix`[[1]][which(conf_mat$`Confusion Matrix`[[1]]$Target %in% unique(cellassign$OstAdHoc.Assign.4gene.thresh0) &
+                                                        conf_mat$`Confusion Matrix`[[1]]$Prediction %in% unique(cellassign$Stage)),]
+
+plot_confusion_matrix(conf_mat_edit,
+                      add_counts=TRUE,
+                      add_normalized=FALSE,
+                      add_row_percentages=FALSE,
+                      add_col_percentages=TRUE,
+                      add_arrows=FALSE,
+                      add_zero_shading=FALSE)
+
+rm(conf_mat,conf_mat_edit)
+
+```
+
+### Stage vs. Osteogenic Ad Hoc (4 gene strict)
+
+```{r}
+
+conf_mat <- confusion_matrix(targets=cellassign$OstAdHoc.Assign.x.4gene.thresh0,
+                             predictions=cellassign$Stage)
+
+conf_mat_edit <- conf_mat$`Confusion Matrix`[[1]][which(conf_mat$`Confusion Matrix`[[1]]$Target %in% unique(cellassign$OstAdHoc.Assign.x.4gene.thresh0) &
+                                                        conf_mat$`Confusion Matrix`[[1]]$Prediction %in% unique(cellassign$Stage)),]
+
+plot_confusion_matrix(conf_mat_edit,
+                      add_counts=TRUE,
+                      add_normalized=FALSE,
+                      add_row_percentages=FALSE,
+                      add_col_percentages=TRUE,
+                      add_arrows=FALSE,
+                      add_zero_shading=FALSE)
+
+rm(conf_mat,conf_mat_edit)
+
+```
+
+### Osteogenic Ad Hoc (4 gene flexible) vs Osteogenic Cluster (res=0.50) 
+
+```{r}
+
+conf_mat <- confusion_matrix(targets=cellassign$OstAdHoc.Assign.4gene.thresh0,
+                             predictions=cellassign$OstCluster0.50)
+
+conf_mat_edit <- conf_mat$`Confusion Matrix`[[1]][which(conf_mat$`Confusion Matrix`[[1]]$Target %in% unique(cellassign$OstAdHoc.Assign.4gene.thresh0) &
+                                                        conf_mat$`Confusion Matrix`[[1]]$Prediction %in% unique(cellassign$OstCluster0.50)),]
+
+plot_confusion_matrix(conf_mat_edit,
+                      add_counts=TRUE,
+                      add_normalized=FALSE,
+                      add_row_percentages=FALSE,
+                      add_col_percentages=TRUE,
+                      add_arrows=FALSE,
+                      add_zero_shading=FALSE)
+
+rm(conf_mat,conf_mat_edit)
+
+```
+
+### Osteogenic Ad Hoc (4 gene strict) vs Osteogenic Cluster (res=0.50) 
+
+```{r}
+
+conf_mat <- confusion_matrix(targets=cellassign$OstAdHoc.Assign.x.4gene.thresh0,
+                             predictions=cellassign$OstCluster0.50)
+
+conf_mat_edit <- conf_mat$`Confusion Matrix`[[1]][which(conf_mat$`Confusion Matrix`[[1]]$Target %in% unique(cellassign$OstAdHoc.Assign.x.4gene.thresh0) &
+                                                        conf_mat$`Confusion Matrix`[[1]]$Prediction %in% unique(cellassign$OstCluster0.50)),]
+
+plot_confusion_matrix(conf_mat_edit,
+                      add_counts=TRUE,
+                      add_normalized=FALSE,
+                      add_row_percentages=FALSE,
+                      add_col_percentages=TRUE,
+                      add_arrows=FALSE,
+                      add_zero_shading=FALSE)
+
+rm(conf_mat,conf_mat_edit)
 
 ```

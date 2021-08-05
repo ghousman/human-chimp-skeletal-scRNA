@@ -349,6 +349,360 @@ VlnPlot(data, features=top5$gene[21:25], group.by="Cluster", slot="data", pt.siz
 
 ```
 
+### Grades of Membership (Topic Modeling - unsupervised)
+
+Alternative way to look at data structure. A topic model explains each sample (an expression profile) as a mixture of “gene programs” that are estimated from the data. In a topic modeling analysis, the gene expression programs are the topics. Overall, the topic modeling analysis retains the benefits of the clustering analysis while also revealing additional substructure that cannot be identified by standard clustering methods. We are interested in identifying which topics show major differences across groups of cells (what genes/pathways are enriched in these topics).
+
+* fastTopics
+  + This analytical method implements fast optimization algorithms that fit topic models and Poisson non-negative matrix factorizations to scRNA-seq count data. The methods exploit the close relationship between topic modeling and Poisson non-negative matrix factorization (NMF).
+  + fit_poisson_nmf computes maximum-likelihood estimates of the Poisson NMF parameters and stores these parameters into a loadings matrix (fit$L) and a factors matrix (fit$F).
+  + poisson2multinom recovers the multinomial topic model as a reparameterization of the Poisson NMF model
+* CountClust
+  + FitGoM fits a grade of membership model to count data using the topics() function implemented in Matt Taddy's maptpx pacakge
+
+Reference: https://github.com/stephenslab/fastTopics
+
+```{r, eval=FALSE, echo=TRUE}
+
+#Load libraries
+library(Seurat)
+library(CountClust)
+library(classtpx)
+library(fastTopics)
+
+#Load data
+scrna <- "./data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.rds"
+data <- readRDS(scrna)
+
+#Prepare data (unintegrated count data)
+counts <- as.matrix(data@assays$RNA@counts) #do not use integrated data
+counts <- counts[rowSums(counts>0)>0,]      #remove genes with 0 counts across cells
+counts <- t(as.matrix(counts))              #fix matrix orientation (barcodes x features)
+rm(data)
+
+#Batch correct counts - don't correct for species
+labelBatch1 <- as.factor(paste0(data@meta.data$Pair,data@meta.data$Replicate)[which(rownames(data@meta.data) %in% rownames(counts))])
+countsBC1 <- BatchCorrectedCounts(counts, labelBatch1, use_parallel=FALSE)
+#labelBatch2 <- as.factor(data@meta.data$Sample[which(rownames(data@meta.data) %in% rownames(counts))])
+#countsBC2 <- BatchCorrectedCounts(counts, labelBatch2, use_parallel=FALSE)
+#labelBatch3 <- as.factor(data@meta.data$Species[which(rownames(data@meta.data) %in% rownames(counts))])
+#countsBC3 <- BatchCorrectedCounts(counts, labelBatch3, use_parallel=FALSE)
+#head(colSums(ifelse(counts==countsBC1, 0, 1) != 0))
+#head(colSums(ifelse(counts==countsBC2, 0, 1) != 0))
+#head(colSums(ifelse(counts==countsBC3, 0, 1) != 0))
+#head(colSums(ifelse(countsBC1==countsBC2, 0, 1) != 0))
+#head(colSums(ifelse(countsBC1==countsBC3, 0, 1) != 0))
+#head(colSums(ifelse(countsBC2==countsBC3, 0, 1) != 0))
+#rm(data)
+
+#Fit fastTopics model and save data
+fit <- fit_poisson_nmf(counts, k=3, numiter=100)
+saveRDS(fit, file="./data/gom-data/topics3.log.indv-cell.int19k.reg-t2.rds")
+#fit <- fit_poisson_nmf(countsBC1, k=3, numiter=100)
+#saveRDS(fit, file="./data/gom-data/topics3.log.indv-cell.int19k.reg-t2.bc1.rds")
+fit <- fit_poisson_nmf(countsBC2, k=3, numiter=100)
+saveRDS(fit, file="./data/gom-data/topics3.log.indv-cell.int19k.reg-t2.bc2.rds")
+#fit <- fit_poisson_nmf(countsBC3, k=3, numiter=100)
+#saveRDS(fit, file="./data/gom-data/topics3.log.indv-cell.int19k.reg-t2.bc3.rds")
+
+#Fit GoM model (OLD METHOD) and save data
+fit <- CountClust::FitGoM(counts, K=7, tol=1, control=list(tmax=100))
+saveRDS(fit, file="./data/gom-data/gom7.log.indv-cell.int19k.reg-t2.rds")
+
+```
+
+```{bash}
+#easties to run these scripts on the cluster
+cd /project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA/code/
+
+sbatch ./GoM.sh 3 t2
+sbatch ./GoM.sh 4 t2
+sbatch ./GoM.sh 5 t2
+sbatch ./GoM.sh 6 t2
+sbatch ./GoM.sh 7 t2
+sbatch ./GoM.sh 8 t2
+sbatch ./GoM.sh 9 t2
+sbatch ./GoM.sh 10 t2
+
+sbatch ./fastTopics.sh 3 t2
+sbatch ./fastTopics.sh 4 t2
+sbatch ./fastTopics.sh 5 t2
+sbatch ./fastTopics.sh 6 t2
+sbatch ./fastTopics.sh 7 t2
+sbatch ./fastTopics.sh 8 t2
+sbatch ./fastTopics.sh 9 t2
+sbatch ./fastTopics.sh 10 t2
+sbatch ./fastTopics.sh 15 t2
+sbatch ./fastTopics.sh 20 t2
+sbatch ./fastTopics.sh 30 t2
+
+sbatch ./fastTopicsSpp.sh 3 t2
+sbatch ./fastTopicsSpp.sh 7 t2
+sbatch ./fastTopicsSpp.sh 10 t2
+sbatch ./fastTopicsSpp.sh 15 t2
+sbatch ./fastTopicsSpp.sh 20 t2
+sbatch ./fastTopicsSpp.sh 30 t2
+
+```
+
+```{r}
+
+#GoM Functions
+
+plot_structure_plot <- function(omega, labels){
+     annotation <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=labels)
+     rownames(omega) <- annotation$sample_id
+     StructureGGplot(omega=omega, annotation=annotation, order_sample=TRUE,
+                     axis_tick=list(axis_ticks_length = .1,
+                                    axis_ticks_lwd_y = .1,
+                                    axis_ticks_lwd_x = .1,
+                                    axis_label_size = 7,
+                                    axis_label_face = "bold"))
+     }
+
+make_topic_plots <- function(omega, labels) {
+  i=1
+  omega <- as.data.frame(omega)
+  colNames <- names(omega)
+  omega <- cbind(omega,labels)
+  names(omega)
+  p <- list()
+  for (k in colNames) {
+    p[[i]] <- ggplot(data=omega, mapping=aes(x=labels)) +
+      geom_violin(mapping=aes_string(y=k),width=1,fill="lightgrey",color="lightgrey") +
+      geom_boxplot(mapping=aes_string(y=k),width=0.1,outlier.shape=NA, alpha=0.2) +
+      labs(y=paste0("Topic ", k, " value"), x=paste0("")) +
+      theme(axis.text.x=element_text(angle=-45, hjust=0, vjust=0))
+    i=i+1
+  }
+  do.call(grid.arrange,c(p,ncol=1))
+}
+
+annotate_clusters <- function(theta_mat){
+  top_features <- ExtractTopFeatures(theta_mat, top_features=100, method="poisson", options="min")
+  gene_vector <- do.call(rbind, lapply(1:dim(top_features[[1]])[1], function(x) rownames(theta_mat)[top_features[[1]][x,]]))
+  scores_vector <- do.call(rbind, lapply(1:dim(top_features[[1]])[1], function(x) top_features[[2]][x,]))
+  return(list(gene_vector, scores_vector))
+}
+
+```
+
+Assess fastTopics results
+
+```{r}
+
+#Check BIC
+
+numclust <- 30
+#numclust <- "30.human"
+#numclust <- "30.chimp"
+
+#Read fastTopics data
+fit <- readRDS(paste0("./data/gom-data/topics",numclust,".log.indv-cell.int19k.reg-t2.rds"))
+#fit <- readRDS(paste0("./data/gom-data/topics",numclust,".log.indv-cell.int19k.reg-t2.bc1.rds"))
+#fit <- readRDS(paste0("./data/gom-data/topics",numclust,".log.indv-cell.int19k.reg-t2.bc2.rds"))
+#fit <- readRDS(paste0("./data/gom-data/topics",numclust,".log.indv-cell.int19k.reg-t2.bc3.rds"))
+
+#Compute omega (weights, cells x k) and theta (topics, genes x k) (need to add up to 1)
+l <- fit$L
+f <- fit$F
+omega <- sweep(l, MARGIN=2, colSums(f), `*`)
+scale <- rowSums(omega)
+omega <- omega / scale
+theta <- f/colSums(f)
+
+#BIC
+loglik <- fit$progress$loglik[length(fit$progress$loglik)]
+BIC <- -2*loglik + nrow(theta)*(ncol(theta)-1)*log(nrow(omega))
+BIC
+
+```
+
+```{r}
+
+#Plot BIC
+
+par(mfrow=c(1,1))
+
+#fastTopics BIC
+x=c(3,4,5,6,7,8,9,10,15,20,30)
+y=c(521487311,507922510,495232478,486388734,478418694,474067758,469719239,467162020,454878366,448704431,442474271)
+plot(x,y,xlab="Topics (k)",ylab="BIC")
+lines(x[order(x)],y[order(x)],xlim=range(x),ylim=range(y),pch=16)
+
+#fastTopics.Human BIC
+x=c(3,7,10,15,20,30)
+y=c(229821623,215821206,212393848,208487051,206794048,205458593)
+plot(x,y,xlab="Topics (k)",ylab="BIC")
+lines(x[order(x)],y[order(x)],xlim=range(x),ylim=range(y),pch=16)
+
+#fastTopics.Chimp BIC
+x=c(3,7,10,15,20,30)
+y=c(265188479,246079015,241270004,237446404,235454947,233695411)
+plot(x,y,xlab="Topics (k)",ylab="BIC")
+lines(x[order(x)],y[order(x)],xlim=range(x),ylim=range(y),pch=16)
+
+```
+
+```{r}
+
+#Examine structure plots and gene contributions to topics
+
+numclust <- 3
+#numclust <- "7.human"
+#numclust <- "7.chimp"
+
+colclust <- c("dodgerblue","grey30","grey70")
+#colclust <- c("dodgerblue4","dodgerblue1","grey30")
+#colclust <- c("dodgerblue4","dodgerblue1","grey70")
+
+#Read fastTopics data
+fit <- readRDS(paste0("./data/gom-data/topics",numclust,".log.indv-cell.int19k.reg-t2.rds"))
+#fit <- readRDS(paste0("./data/gom-data/topics",numclust,".log.indv-cell.int19k.reg-t2.bc1.rds"))
+#fit <- readRDS(paste0("./data/gom-data/topics",numclust,".log.indv-cell.int19k.reg-t2.bc2.rds"))
+#fit <- readRDS(paste0("./data/gom-data/topics",numclust,".log.indv-cell.int19k.reg-t2.bc3.rds"))
+
+#Check fitting procedure
+quickplot(x=1:length(fit$progress$loglik),
+          y=fit$progress$loglik,
+          geom=c("point","line"),
+          xlab="iteration",
+          ylab="loglik")
+
+#Compute omega (weights, cells x k) and theta (topics, genes x k) (need to add up to 1)
+l <- fit$L
+f <- fit$F
+omega <- sweep(l, MARGIN=2, colSums(f), `*`)
+scale <- rowSums(omega)
+omega <- omega / scale
+theta <- f/colSums(f)
+
+#BIC
+loglik <- fit$progress$loglik[length(fit$progress$loglik)]
+BIC <- -2*loglik + nrow(theta)*(ncol(theta)-1)*log(nrow(omega))
+BIC
+
+#Recover the multinomial topic model
+fit.multinom <- poisson2multinom(fit)
+range(rowSums(fit.multinom$L))
+range(colSums(fit.multinom$F))
+
+#Create labels
+labels <- data@meta.data$Sample[which(rownames(data@meta.data) %in% rownames(omega))]
+annotation1 <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=as.factor(labels))
+celltype <- labels
+celltype[celltype %in% c("C1-O","C1-O-r2","C2-O","C3-O","C4-O","C5-O","C6-O")] <- "Chimp"
+celltype[celltype %in% c("H1-O","H1-O-r2","H2-O","H3-O","H4-O","H5-O","H6-O")] <- "Human"
+annotation2 <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=as.factor(celltype))
+
+#Reorder k
+omega <- omega[,c(2,1,3)]
+
+#Plot of topic membership
+make_topic_plots(omega=omega, labels=labels)
+make_topic_plots(omega=omega, labels=celltype)
+
+#Structure plots
+#plot_structure_plot(omega=omega, labels=labels)
+#plot_structure_plot(omega=omega, labels=celltype)
+rownames(omega) <- annotation1$sample_id
+CountClust::StructureGGplot(omega=omega,
+                annotation=annotation1,
+                palette=colclust,
+                yaxis_label="Samples",
+                order_sample=TRUE,
+                axis_tick=list(axis_ticks_length=0.1,
+                               axis_ticks_lwd_y=0.1,
+                               axis_ticks_lwd_x=0.1,
+                               axis_label_size=7,
+                               axis_label_face="bold"))
+rownames(omega) <- annotation2$sample_id
+CountClust::StructureGGplot(omega=omega,
+                annotation=annotation2,
+                palette=colclust,
+                yaxis_label="Species",
+                order_sample=TRUE,
+                axis_tick=list(axis_ticks_length=0.1,
+                               axis_ticks_lwd_y=0.1,
+                               axis_ticks_lwd_x=0.1,
+                               axis_label_size=7,
+                               axis_label_face="bold"))
+
+#Topic annotations
+genes <- annotate_clusters(theta_mat=theta)
+genes[[1]][,1:10]
+saveRDS(genes, file=paste0("./data/gom-data/topics",numclust,".100genes.log.indv-cell.int19k.reg-t2.rds"))
+#saveRDS(genes, file=paste0("./data/gom-data/topics",numclust,".100genes.log.indv-cell.int19k.reg-t2.bc1.rds"))
+#saveRDS(genes, file=paste0("./data/gom-data/topics",numclust,".100genes.log.indv-cell.int19k.reg-t2.bc2.rds"))
+#saveRDS(genes, file=paste0("./data/gom-data/topics",numclust,".100genes.log.indv-cell.int19k.reg-t2.bc3.rds"))
+
+#Heatmap of topic weights (omega)
+annotation <- data.frame(row.names=paste0("X", c(1:NROW(omega))), labels=as.factor(labels))
+rownames(omega) <- rownames(annotation)
+pheatmap(omega,
+         cluster_cols=FALSE,
+         cluster_rows=TRUE,
+         annotation_row=annotation,
+         show_rownames=FALSE,
+         main="Heatmap of topic weights")
+annotation <- data.frame(row.names=paste0("X", c(1:NROW(omega))), labels=as.factor(celltype))
+rownames(omega) <- rownames(annotation)
+pheatmap(omega,
+         cluster_cols=FALSE,
+         cluster_rows=TRUE,
+         annotation_row=annotation,
+         show_rownames=FALSE,
+         main="Heatmap of topic weights")
+
+```
+
+Assess CountClust results - Do not use these moving forward.
+
+```{r, eval=FALSE}
+
+numclust <- 10
+colclust <- c("dodgerblue","grey30","grey70")
+
+#Read GoM data
+fit <- readRDS(paste0("./data/gom-data/gom",numclust,".log.indv-cell.int19k.reg-t2.rds"))
+
+#BIC
+fit$BIC
+
+#Create labels
+omega <- as.matrix(fit$fit$omega)
+colnames(omega) <- paste0("k",1:ncol(omega))
+labels <- data@meta.data$Sample[which(rownames(data@meta.data) %in% rownames(omega))]
+celltype <- labels
+celltype[celltype %in% c("C1-O","C1-O-r2","C2-O","C3-O","C4-O","C5-O","C6-O")] <- "Chimp"
+celltype[celltype %in% c("H1-O","H1-O-r2","H2-O","H3-O","H4-O","H5-O","H6-O")] <- "Human"
+annotation <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=as.factor(celltype))
+
+#Plot of topic membership
+make_topic_plots(omega=omega, labels=labels)
+make_topic_plots(omega=omega, labels=celltype)
+
+#Structure plots
+plot_structure_plot(omega=omega, labels=labels)
+rownames(omega) <- annotation$sample_id
+CountClust::StructureGGplot(omega=omega,
+                annotation=annotation,
+                palette=colclust,
+                yaxis_label="Tissue/Cell Type",
+                order_sample=TRUE,
+                axis_tick=list(axis_ticks_length=0.1,
+                               axis_ticks_lwd_y=0.1,
+                               axis_ticks_lwd_x=0.1,
+                               axis_label_size=7,
+                               axis_label_face="bold"))
+
+#Topic annotations
+genes <- annotate_clusters(theta_mat=fit$fit$theta)
+genes[[1]][,1:10]
+saveRDS(genes, file=paste0("./data/gom-data/gom",numclust,".100genes.log.indv-cell.int19k.reg-t2.rds"))
+
+```
+
 ### Ad Hoc Assignments
 
 ```{r, eval=FALSE}

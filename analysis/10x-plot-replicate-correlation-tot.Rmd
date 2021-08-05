@@ -16,11 +16,13 @@ knitr::opts_chunk$set(echo = TRUE)
 Replicate Correlation Findings:
 
 * across stages of differentiation: Time 0 > Time 1 > Time 2
-* across unsupervized clusters (res=0.05): iPSC.c1 ~ iPCS.c2 > iPSC.c3 > MSC.c1 > Osteogenic.c1 ~ Osteogenic.c2
+* across general unsupervized clusters (res=0.05): iPSC.c1 ~ iPCS.c2 > iPSC.c3 > MSC.c1 > Osteogenic.c1 ~ Osteogenic.c2
 * across general ad hoc assignments: iPSC > MSC > Osteogenic
+* across osteogenic unsupervized clusters (res=0.50): Osteogenic.c4 > Osteogenic.c1 > Osteogenic.c3 (cannot assess Osteogenic.c2)
+* across osteogenic unsupervized clusters (res=0.75): Osteogenic.c4 > Osteogenic.c5 > Osteogenic.c2 > Osteogenic.c1 > Osteogenic.c3 > Osteogenic.c7 > Osteogenic.c8 (cannot assess Osteogenic.c6)
 * across osteogenic ad hoc assignments:
-    + 4 genes ( strict ): preosteoblast ~ osteoblast ~ embedding osteoblast ~ mineralizing osteoblast ~ maturing osteocyte
-    + 4 genes (flexible): 
+    + 4 genes ( strict ): maturing osteocyte > preosteoblast > mineralizing osteoblast > embedding osteoblast > osteoblast
+    + 4 genes (flexible): preosteoblast > embedding osteoblast > osteoblast > maturing osteocyte > mineralizing osteoblast
 * for osteogenic cells, osteogenic ad hoc assignments ~ general ad hoc assignments ~ unsupervised clusters > stages
 
 ```{r}
@@ -303,7 +305,7 @@ rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
 
 ```
 
-## Unsupervised clustering (res=0.05)
+## General unsupervised clustering (res=0.05)
 
 ### iPSC.c1 Replicates
 
@@ -1047,6 +1049,1006 @@ cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.87836
 ggplot(rep.avg, aes(rep1, rep2)) +
   geom_point(size=1) +
   geom_smooth(method=lm, se=FALSE, col="dodgerblue", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+## Osteogenic unsupervised clustering (res=0.50)
+
+### Osteogenic.c1 Replicates
+
+Keep human and chimp samples together.
+
+```{r}
+
+rep1 <- subset(data, subset=(OstCluster0.50=="Osteogenic.c1" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(OstCluster0.50=="Osteogenic.c1" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.9352983
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="dodgerblue", size=2) +
+  labs(x="Average Gene Expression in Replicate 1",y="Average Gene Expression in Replicate 2") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at humans separately.
+
+```{r}
+
+rep1 <- subset(data, subset=(Species=="Human" & OstCluster0.50=="Osteogenic.c1" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Human" & OstCluster0.50=="Osteogenic.c1" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.9805494
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="dodgerblue", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Human)",y="Average Gene Expression in Replicate 2 (Human)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at chimps separately.
+
+```{r}
+
+rep1 <- subset(data, subset=(Species=="Chimp" & OstCluster0.50=="Osteogenic.c1" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Chimp" & OstCluster0.50=="Osteogenic.c1" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.8805291
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="dodgerblue", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+### Osteogenic.c2 Replicates
+
+Keep human and chimp samples together.(no H1-r2, C1-r1, or C1-r2 cells are Osteogenic.c2)
+
+```{r, eval=FALSE}
+
+rep1 <- subset(data, subset=(OstCluster0.50=="Osteogenic.c2" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(OstCluster0.50=="Osteogenic.c2" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson")
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="deepskyblue2", size=2) +
+  labs(x="Average Gene Expression in Replicate 1",y="Average Gene Expression in Replicate 2") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at humans separately. (no H1-r2, C1-r1, or C1-r2 cells are Osteogenic.c2)
+
+```{r, eval=FALSE}
+
+rep1 <- subset(data, subset=(Species=="Human" & OstCluster0.50=="Osteogenic.c2" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Human" & OstCluster0.50=="Osteogenic.c2" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson")
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="deepskyblue2", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Human)",y="Average Gene Expression in Replicate 2 (Human)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at chimps separately. (no H1-r2, C1-r1, or C1-r2 cells are Osteogenic.c2)
+
+```{r, eval=FALSE}
+
+rep1 <- subset(data, subset=(Species=="Chimp" & OstCluster0.50=="Osteogenic.c2" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Chimp" & OstCluster0.50=="Osteogenic.c2" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.8812231
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="deepskyblue2", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+### Osteogenic.c3 Replicates
+
+Keep human and chimp samples together.
+
+```{r}
+
+rep1 <- subset(data, subset=(OstCluster0.50=="Osteogenic.c3" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(OstCluster0.50=="Osteogenic.c3" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.9293588
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="dodgerblue4", size=2) +
+  labs(x="Average Gene Expression in Replicate 1",y="Average Gene Expression in Replicate 2") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at humans separately.
+
+```{r}
+
+rep1 <- subset(data, subset=(Species=="Human" & OstCluster0.50=="Osteogenic.c3" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Human" & OstCluster0.50=="Osteogenic.c3" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.9710619
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="dodgerblue4", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Human)",y="Average Gene Expression in Replicate 2 (Human)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at chimps separately.
+
+```{r}
+
+rep1 <- subset(data, subset=(Species=="Chimp" & OstCluster0.50=="Osteogenic.c3" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Chimp" & OstCluster0.50=="Osteogenic.c3" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.8400385
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="dodgerblue4", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+### Osteogenic.c4 Replicates
+
+Keep human and chimp samples together.
+
+```{r}
+
+rep1 <- subset(data, subset=(OstCluster0.50=="Osteogenic.c4" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(OstCluster0.50=="Osteogenic.c4" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.9672193
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="navyblue", size=2) +
+  labs(x="Average Gene Expression in Replicate 1",y="Average Gene Expression in Replicate 2") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at humans separately.
+
+```{r}
+
+rep1 <- subset(data, subset=(Species=="Human" & OstCluster0.50=="Osteogenic.c4" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Human" & OstCluster0.50=="Osteogenic.c4" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.9827074
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="navyblue", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Human)",y="Average Gene Expression in Replicate 2 (Human)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at chimps separately.
+
+```{r}
+
+rep1 <- subset(data, subset=(Species=="Chimp" & OstCluster0.50=="Osteogenic.c4" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Chimp" & OstCluster0.50=="Osteogenic.c4" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.881707
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="navyblue", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+## Osteogenic unsupervised clustering (res=0.75)
+
+### Osteogenic.c1 Replicates
+
+Keep human and chimp samples together.
+
+```{r}
+
+rep1 <- subset(data, subset=(OstCluster0.75=="Osteogenic.c1" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(OstCluster0.75=="Osteogenic.c1" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.9301917
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="dodgerblue", size=2) +
+  labs(x="Average Gene Expression in Replicate 1",y="Average Gene Expression in Replicate 2") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at humans separately.
+
+```{r}
+
+rep1 <- subset(data, subset=(Species=="Human" & OstCluster0.75=="Osteogenic.c1" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Human" & OstCluster0.75=="Osteogenic.c1" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.9673952
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="dodgerblue", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Human)",y="Average Gene Expression in Replicate 2 (Human)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at chimps separately.
+
+```{r}
+
+rep1 <- subset(data, subset=(Species=="Chimp" & OstCluster0.75=="Osteogenic.c1" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Chimp" & OstCluster0.75=="Osteogenic.c1" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.8686117
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="dodgerblue", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+### Osteogenic.c2 Replicates
+
+Keep human and chimp samples together.
+
+```{r}
+
+rep1 <- subset(data, subset=(OstCluster0.75=="Osteogenic.c2" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(OstCluster0.75=="Osteogenic.c2" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.9361407
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="dodgerblue4", size=2) +
+  labs(x="Average Gene Expression in Replicate 1",y="Average Gene Expression in Replicate 2") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at humans separately.
+
+```{r}
+
+rep1 <- subset(data, subset=(Species=="Human" & OstCluster0.75=="Osteogenic.c2" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Human" & OstCluster0.75=="Osteogenic.c2" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.9761505
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="dodgerblue4", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Human)",y="Average Gene Expression in Replicate 2 (Human)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at chimps separately.
+
+```{r}
+
+rep1 <- subset(data, subset=(Species=="Chimp" & OstCluster0.75=="Osteogenic.c2" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Chimp" & OstCluster0.75=="Osteogenic.c2" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.83729
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="dodgerblue4", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+### Osteogenic.c3 Replicates
+
+Keep human and chimp samples together.
+
+```{r}
+
+rep1 <- subset(data, subset=(OstCluster0.75=="Osteogenic.c3" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(OstCluster0.75=="Osteogenic.c3" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.8821633
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="deepskyblue2", size=2) +
+  labs(x="Average Gene Expression in Replicate 1",y="Average Gene Expression in Replicate 2") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at humans separately.
+
+```{r}
+
+rep1 <- subset(data, subset=(Species=="Human" & OstCluster0.75=="Osteogenic.c3" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Human" & OstCluster0.75=="Osteogenic.c3" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.9768584
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="deepskyblue2", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Human)",y="Average Gene Expression in Replicate 2 (Human)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at chimps separately.
+
+```{r}
+
+rep1 <- subset(data, subset=(Species=="Chimp" & OstCluster0.75=="Osteogenic.c3" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Chimp" & OstCluster0.75=="Osteogenic.c3" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.8724352
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="deepskyblue2", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+### Osteogenic.c4 Replicates
+
+Keep human and chimp samples together.
+
+```{r}
+
+rep1 <- subset(data, subset=(OstCluster0.75=="Osteogenic.c4" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(OstCluster0.75=="Osteogenic.c4" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.9678718
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="navyblue", size=2) +
+  labs(x="Average Gene Expression in Replicate 1",y="Average Gene Expression in Replicate 2") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at humans separately.
+
+```{r}
+
+rep1 <- subset(data, subset=(Species=="Human" & OstCluster0.75=="Osteogenic.c4" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Human" & OstCluster0.75=="Osteogenic.c4" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.982715
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="navyblue", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Human)",y="Average Gene Expression in Replicate 2 (Human)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at chimps separately.
+
+```{r}
+
+rep1 <- subset(data, subset=(Species=="Chimp" & OstCluster0.75=="Osteogenic.c4" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Chimp" & OstCluster0.75=="Osteogenic.c4" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.8793292
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="navyblue", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+### Osteogenic.c5 Replicates
+
+Keep human and chimp samples together.
+
+```{r}
+
+rep1 <- subset(data, subset=(OstCluster0.75=="Osteogenic.c5" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(OstCluster0.75=="Osteogenic.c5" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.9575549
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="lightblue1", size=2) +
+  labs(x="Average Gene Expression in Replicate 1",y="Average Gene Expression in Replicate 2") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at humans separately.
+
+```{r}
+
+rep1 <- subset(data, subset=(Species=="Human" & OstCluster0.75=="Osteogenic.c5" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Human" & OstCluster0.75=="Osteogenic.c5" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.9815715
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="lightblue1", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Human)",y="Average Gene Expression in Replicate 2 (Human)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at chimps separately.
+
+```{r}
+
+rep1 <- subset(data, subset=(Species=="Chimp" & OstCluster0.75=="Osteogenic.c5" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Chimp" & OstCluster0.75=="Osteogenic.c5" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.8760115
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="lightblue1", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+### Osteogenic.c6 Replicates
+
+Keep human and chimp samples together. (no H1-r1, H1-r2, C1-r1, or C1-r2 cells are Osteogenic.c2)
+
+```{r, eval=FALSE}
+
+rep1 <- subset(data, subset=(OstCluster0.75=="Osteogenic.c6" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(OstCluster0.75=="Osteogenic.c6" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.9667704
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="royalblue3", size=2) +
+  labs(x="Average Gene Expression in Replicate 1",y="Average Gene Expression in Replicate 2") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at humans separately. (no H1-r1, H1-r2, C1-r1, or C1-r2 cells are Osteogenic.c2)
+
+```{r, eval=FALSE}
+
+rep1 <- subset(data, subset=(Species=="Human" & OstCluster0.75=="Osteogenic.c6" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Human" & OstCluster0.75=="Osteogenic.c6" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.9825803
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="royalblue3", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Human)",y="Average Gene Expression in Replicate 2 (Human)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at chimps separately. (no H1-r1, H1-r2, C1-r1, or C1-r2 cells are Osteogenic.c2)
+
+```{r, eval=FALSE}
+
+rep1 <- subset(data, subset=(Species=="Chimp" & OstCluster0.75=="Osteogenic.c6" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Chimp" & OstCluster0.75=="Osteogenic.c6" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.8812231
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="royalblue3", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+### Osteogenic.c7 Replicates
+
+Keep human and chimp samples together.
+
+```{r}
+
+rep1 <- subset(data, subset=(OstCluster0.75=="Osteogenic.c7" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(OstCluster0.75=="Osteogenic.c7" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.8790707
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="grey", size=2) +
+  labs(x="Average Gene Expression in Replicate 1",y="Average Gene Expression in Replicate 2") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at humans separately.
+
+```{r}
+
+rep1 <- subset(data, subset=(Species=="Human" & OstCluster0.75=="Osteogenic.c7" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Human" & OstCluster0.75=="Osteogenic.c7" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.8099209
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="grey", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Human)",y="Average Gene Expression in Replicate 2 (Human)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at chimps separately.
+
+```{r}
+
+rep1 <- subset(data, subset=(Species=="Chimp" & OstCluster0.75=="Osteogenic.c7" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Chimp" & OstCluster0.75=="Osteogenic.c7" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.8276301
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="grey", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+### Osteogenic.c8 Replicates
+
+Keep human and chimp samples together.
+
+```{r}
+
+rep1 <- subset(data, subset=(OstCluster0.75=="Osteogenic.c8" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(OstCluster0.75=="Osteogenic.c8" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.7861775
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="black", size=2) +
+  labs(x="Average Gene Expression in Replicate 1",y="Average Gene Expression in Replicate 2") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at humans separately.
+
+```{r}
+
+rep1 <- subset(data, subset=(Species=="Human" & OstCluster0.75=="Osteogenic.c8" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Human" & OstCluster0.75=="Osteogenic.c8" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.7234223
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="black", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Human)",y="Average Gene Expression in Replicate 2 (Human)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+Look at chimps separately.
+
+```{r}
+
+rep1 <- subset(data, subset=(Species=="Chimp" & OstCluster0.75=="Osteogenic.c8" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Chimp" & OstCluster0.75=="Osteogenic.c8" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.7144325
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="black", size=2) +
   labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)") +
   theme_classic()
 

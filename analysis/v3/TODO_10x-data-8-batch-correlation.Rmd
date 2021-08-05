@@ -1,0 +1,379 @@
+---
+title: "10x-data-batch-correlation"
+author: "Genevieve Housman"
+date: "4/24/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 10X Data Cellranger Analysis - Correlation of Data with Batch
+
+Assess whether and how much variation in 10X data is due to batch.
+
+Data being examined comes from 6 humans and 6 chimpanzees.
+- GHO-1:  H1-I + C1-I (iPSCs from H23555 and C8861)
+- GHO-2:  H1-M + C1-M (iPSC-derived MSCs from H23555 and C8861)
+- GHO-4:  H1-O + C1-O (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+- HOU-10: H1-I-r2 + C1-I-r2 (iPSCs from H23555 and C8861)
+- HOU-12: H1-M-r2 + C1-M-r2 (iPSC-derived MSCs from H23555 and C8861)
+- HOU-16: H1-O-r2 + C1-O-r2 (iPSC-MSC-derived osteoblasts from H23555 and C8861)
+- HOU-1:  H2-I + C2-I (iPSCs from H20157 and C3647)
+- HOU-2:  H2-M + C2-M (iPSC-derived MSCs from H20157 and C3647)
+- HOU-4:  H2-O + C2-O (iPSC-MSC-derived osteoblasts from H20157 and C3647)
+- HOU-9:  H3-I + C3-I (iPSCs from H28126 and C3649)
+- HOU-11: H3-M + C3-M (iPSC-derived MSCs from H28126 and C3649)
+- HOU-15: H3-O + C3-O (iPSC-MSC-derived osteoblasts from H28126 and C3649)
+- HOU-5:  H4-I + C4-I (iPSCs from H28834 and C40210)
+- HOU-6:  H4-M + C4-M (iPSC-derived MSCs from H28834 and C40210)
+- HOU-8:  H4-O + C4-O (iPSC-MSC-derived osteoblasts from H28834 and C40210)
+- HOU-17:	H5-I + C5-I (iPSCs from H21792 and C40280)
+- HOU-19:	H5-M + C5-M (iPSC-derived MSCs from H21792 and C40280)
+- HOU-21:	H5-O + C5-O (iPSC-MSC-derived osteoblasts from H21792 and C40280)
+- HOU-18:	H6-I + C6-I (iPSCs from H20961 and C3624)
+- HOU-20:	H6-M + C6-M (iPSC-derived MSCs from H20961 and C3624)
+- HOU-22:	H6-O + C6-O (iPSC-MSC-derived osteoblasts from H20961 and C3624)
+
+Each dataset being evaluated comprises gene count data that were seperately calculated using both the hg38 human genome and the panTro6 chimpanzee genome, as well as the corresponding ortho-exon annotation in cellranger.Species-specific assignments were determined using human-chimpanzee genome combination with ortho-exon annotation.
+
+```{r load libraries}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(grid)
+library(gbm)
+library(colorspace)
+library(RColorBrewer)
+
+```
+
+```{r load data}
+
+#Define main directory
+dir <- '/project2/gilad/ghousman/skeletal-human-chimp/'
+dir2 <- paste0(dir,"/human-chimp-skeletal-scRNA/data/cellranger-data-full")
+
+#Load data
+scrna <- "/data.filter.reg.indv.log.10k.int.rds"       #integrate across individuals - total
+#scrna <- "/data.indv-cell.log.int.ipsc.rds"  #integrate across individuals - ipsc
+#scrna <- "/data.indv-cell.log.int.msc.rds"   #integrate across individuals - msc
+#scrna <- "/data.indv-cell.log.int.osteo.rds" #integrate across individuals - osteo
+indv <- readRDS(paste0(dir2,scrna))
+
+```
+
+```{r correlations between batch and scrna pcs}
+
+#Make correlation matrix between batch and PCs
+pcs <- c("PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8","PC9","PC10","PC11","PC12","PC13","PC14","PC15","PC16","PC17","PC18","PC19","PC20")
+#batch <- indv@meta.data[,c(2:4,7:33)] #ipsc: include all flow cytometry data + exclude alizarin/oil data
+#batch <- indv@meta.data[,c(2:4,7:25,30:33)] #msc: include some flow cytometry data + exclude alizarin/oil data
+#batch <- indv@meta.data[,c(2:4,7:25,34:35)] #osteoblasts: exclude flow cytometry data + include alizarin/oil data
+batch <- indv@meta.data[,c(2:4,6:35)] #tot: include Cell.Type
+cor <- matrix(ncol=20, nrow=ncol(batch), dimnames=list(colnames(batch), pcs))
+pval <- matrix(ncol=20, nrow=ncol(batch), dimnames=list(colnames(batch), pcs))
+
+i=1
+while (i <= 20) { 
+  j=1
+  while (j <= length(colnames(batch))) { 
+    lm_result <- lm(FetchData(object=indv,vars=paste0('PC_',i))[,1] ~ batch[,j]) 
+    #correlation value
+    r2 <- summary(lm_result)$r.squared 
+    cor[j, i] <- r2
+    #p-value of f-statistic
+    fstat <- as.data.frame(summary(lm_result)$fstatistic)
+    p.fstat <- 1-pf(fstat[1,], fstat[2,], fstat[3,])
+    pval[j, i] <- p.fstat
+    j=j+1
+  }
+  i=i+1
+}
+
+#Convert to long format to plot in ggplot2
+cor.df <- as.data.frame(cor) 
+cor.df$variable <- rownames(cor.df) 
+cor.df <- gather(cor.df, key="batch", value="cor", -variable) 
+head(cor.df) 
+pval.df <- as.data.frame(pval) 
+pval.df$variable <- rownames(pval.df) 
+pval.df <- gather(pval.df, key="batch", value="pval", -variable) 
+head(pval.df)
+cor.df <- cbind(cor.df, pval=pval.df$pval)
+
+#Plot p-values
+hist(pval, xlab="Unadjusted p-values", ylab="Frequency", breaks=100)
+fdr.val <- p.adjust(pval, method="fdr", n=length(pval))
+hist(fdr.val, xlab="BH-adjusted p-values", ylab="Frequency", breaks=100)
+
+#Plot heatmap
+cor.df$batch <- factor(cor.df$batch, 
+                       levels = c("PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8","PC9","PC10",
+                                  "PC11","PC12","PC13","PC14","PC15","PC16","PC17","PC18","PC19","PC20"),
+                       labels = c("PC1","PC2","PC3","PC4","PC5","PC6","PC7","PC8","PC9","PC10",
+                                  "PC11","PC12","PC13","PC14","PC15","PC16","PC17","PC18","PC19","PC20")) 
+
+ggplot(cor.df, aes(x=batch, y=variable, fill=cor)) +
+  geom_tile(color="white") +
+  scale_fill_gradient(low="white", high="black", na.value="darkred", limits=c(0, 1)) + 
+  labs(title="Correlation between known batch effects and PCs", x="", y="") +
+  theme(axis.text.x=element_text(angle=90, hjust=1))
+
+
+```
+
+```{r plots of different dimensional reductions}
+
+#Plot Dimensional Reductions
+#CombinePlots(plots=list((DimPlot(indv, group.by="Cell.Type", reduction="pca") + labs(x="PC1",y="PC2")),
+#                        (DimPlot(indv, group.by="species", reduction="pca") + labs(x="PC1",y="PC2")),
+#                        (DimPlot(indv, group.by="Sample", reduction="pca") + labs(x="PC1",y="PC2")),
+#                        (DimPlot(indv, group.by="Cell.Type", reduction="umap") + labs(x="UMAP1",y="UMAP2")),
+#                        (DimPlot(indv, group.by="species", reduction="umap") + labs(x="UMAP1",y="UMAP2")),
+#                        (DimPlot(indv, group.by="Sample", reduction="umap") + labs(x="UMAP1",y="UMAP2"))), ncol=6)
+
+pva <- indv@reductions$pca@stdev^2/indv@reductions$pca@misc$total.variance
+pva[1:10] #percent variance explained by first 10 PCs
+
+DimHeatmap(indv, reduction="pca", dims=1:10, nfeatures=20, cells=500, balanced=TRUE, ncol=5)
+
+CombinePlots(plots=list((DimPlot(indv, group.by="species", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (DimPlot(indv, group.by="species", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (DimPlot(indv, group.by="species", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (DimPlot(indv, group.by="species", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (DimPlot(indv, group.by="species", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+#CombinePlots(plots=list((DimPlot(indv, group.by="Sample", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+#                        (DimPlot(indv, group.by="Sample", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+#                        (DimPlot(indv, group.by="Sample", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+#                        (DimPlot(indv, group.by="Sample", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+#                        (DimPlot(indv, group.by="Sample", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+CombinePlots(plots=list((DimPlot(indv, group.by="Cell.Type", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (DimPlot(indv, group.by="Cell.Type", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (DimPlot(indv, group.by="Cell.Type", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (DimPlot(indv, group.by="Cell.Type", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (DimPlot(indv, group.by="Cell.Type", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+CombinePlots(plots=list((DimPlot(indv, group.by="Individual", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (DimPlot(indv, group.by="Individual", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (DimPlot(indv, group.by="Individual", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (DimPlot(indv, group.by="Individual", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (DimPlot(indv, group.by="Individual", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+
+CombinePlots(plots=list((FeaturePlot(indv, features="nCount_RNA", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (FeaturePlot(indv, features="nCount_RNA", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (FeaturePlot(indv, features="nCount_RNA", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (FeaturePlot(indv, features="nCount_RNA", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (FeaturePlot(indv, features="nCount_RNA", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+CombinePlots(plots=list((FeaturePlot(indv, features="nFeature_RNA", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (FeaturePlot(indv, features="nFeature_RNA", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (FeaturePlot(indv, features="nFeature_RNA", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (FeaturePlot(indv, features="nFeature_RNA", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (FeaturePlot(indv, features="nFeature_RNA", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+CombinePlots(plots=list((FeaturePlot(indv, features="percent.mt", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (FeaturePlot(indv, features="percent.mt", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (FeaturePlot(indv, features="percent.mt", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (FeaturePlot(indv, features="percent.mt", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (FeaturePlot(indv, features="percent.mt", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+
+CombinePlots(plots=list((DimPlot(indv, group.by="MSCmedia", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (DimPlot(indv, group.by="MSCmedia", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (DimPlot(indv, group.by="MSCmedia", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (DimPlot(indv, group.by="MSCmedia", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (DimPlot(indv, group.by="MSCmedia", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+CombinePlots(plots=list((FeaturePlot(indv, features="Number6W", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (FeaturePlot(indv, features="Number6W", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (FeaturePlot(indv, features="Number6W", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (FeaturePlot(indv, features="Number6W", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (FeaturePlot(indv, features="Number6W", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+CombinePlots(plots=list((DimPlot(indv, group.by="SequencingBatch", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (DimPlot(indv, group.by="SequencingBatch", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (DimPlot(indv, group.by="SequencingBatch", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (DimPlot(indv, group.by="SequencingBatch", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (DimPlot(indv, group.by="SequencingBatch", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+
+CombinePlots(plots=list((DimPlot(indv, group.by="Sex", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (DimPlot(indv, group.by="Sex", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (DimPlot(indv, group.by="Sex", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (DimPlot(indv, group.by="Sex", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (DimPlot(indv, group.by="Sex", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+CombinePlots(plots=list((FeaturePlot(indv, features="Age", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (FeaturePlot(indv, features="Age", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (FeaturePlot(indv, features="Age", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (FeaturePlot(indv, features="Age", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (FeaturePlot(indv, features="Age", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+
+#CombinePlots(plots=list((DimPlot(indv, group.by="DateCollection", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+#                        (DimPlot(indv, group.by="DateCollection", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+#                        (DimPlot(indv, group.by="DateCollection", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+#                        (DimPlot(indv, group.by="DateCollection", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+#                        (DimPlot(indv, group.by="DateCollection", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+#CombinePlots(plots=list((DimPlot(indv, group.by="DatecDNA", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+#                        (DimPlot(indv, group.by="DatecDNA", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+#                        (DimPlot(indv, group.by="DatecDNA", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+#                        (DimPlot(indv, group.by="DatecDNA", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+#                        (DimPlot(indv, group.by="DatecDNA", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+#CombinePlots(plots=list((DimPlot(indv, group.by="DateLibrary", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+#                        (DimPlot(indv, group.by="DateLibrary", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+#                        (DimPlot(indv, group.by="DateLibrary", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+#                        (DimPlot(indv, group.by="DateLibrary", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+#                        (DimPlot(indv, group.by="DateLibrary", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+
+#CombinePlots(plots=list((FeaturePlot(indv, features="PrewashCount", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+#                        (FeaturePlot(indv, features="PrewashCount", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+#                        (FeaturePlot(indv, features="PrewashCount", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+#                        (FeaturePlot(indv, features="PrewashCount", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+#                        (FeaturePlot(indv, features="PrewashCount", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+#CombinePlots(plots=list((FeaturePlot(indv, features="PostwashCount", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+#                        (FeaturePlot(indv, features="PostwashCount", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+#                        (FeaturePlot(indv, features="PostwashCount", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+#                        (FeaturePlot(indv, features="PostwashCount", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+#                        (FeaturePlot(indv, features="PostwashCount", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+#CombinePlots(plots=list((FeaturePlot(indv, features="PostmixCount", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+#                        (FeaturePlot(indv, features="PostmixCount", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+#                        (FeaturePlot(indv, features="PostmixCount", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+#                        (FeaturePlot(indv, features="PostmixCount", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+#                        (FeaturePlot(indv, features="PostmixCount", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+
+CombinePlots(plots=list((FeaturePlot(indv, features="PrewashViability", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (FeaturePlot(indv, features="PrewashViability", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (FeaturePlot(indv, features="PrewashViability", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (FeaturePlot(indv, features="PrewashViability", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (FeaturePlot(indv, features="PrewashViability", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+CombinePlots(plots=list((FeaturePlot(indv, features="PostwashViability", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (FeaturePlot(indv, features="PostwashViability", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (FeaturePlot(indv, features="PostwashViability", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (FeaturePlot(indv, features="PostwashViability", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (FeaturePlot(indv, features="PostwashViability", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+CombinePlots(plots=list((FeaturePlot(indv, features="PostmixViability", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (FeaturePlot(indv, features="PostmixViability", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (FeaturePlot(indv, features="PostmixViability", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (FeaturePlot(indv, features="PostmixViability", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (FeaturePlot(indv, features="PostmixViability", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))), ncol=5)
+
+#CombinePlots(plots=list((FeaturePlot(subset(indv,subset=Cell.Type=="iPSC"), features="CD90_Control", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type=="iPSC"), features="CD90_Control", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type=="iPSC"), features="CD90_Control", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type=="iPSC"), features="CD90_Control", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type=="iPSC"), features="CD90_Control", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))),
+#             ncol=5)
+#CombinePlots(plots=list((FeaturePlot(subset(indv,subset=Cell.Type=="iPSC"), features="CD73_Control", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type=="iPSC"), features="CD73_Control", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type=="iPSC"), features="CD73_Control", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type=="iPSC"), features="CD73_Control", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type=="iPSC"), features="CD73_Control", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))),
+#             ncol=5)
+#CombinePlots(plots=list((FeaturePlot(subset(indv,subset=Cell.Type=="iPSC"), features="CD105_Control", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type=="iPSC"), features="CD105_Control", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type=="iPSC"), features="CD105_Control", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type=="iPSC"), features="CD105_Control", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type=="iPSC"), features="CD105_Control", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))),
+#             ncol=5)
+#CombinePlots(plots=list((FeaturePlot(subset(indv,subset=Cell.Type=="iPSC"), features="CD45.CD34.CD11b.CD19.HLA.DR_Control", reduction="pca", dims=c(1,2)) +
+#                           labs(x="PC1",y="PC2")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type=="iPSC"), features="CD45.CD34.CD11b.CD19.HLA.DR_Control", reduction="pca", dims=c(3,4)) +
+#                           labs(x="PC3",y="PC4")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type=="iPSC"), features="CD45.CD34.CD11b.CD19.HLA.DR_Control", reduction="pca", dims=c(5,6)) +
+#                           labs(x="PC5",y="PC6")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type=="iPSC"), features="CD45.CD34.CD11b.CD19.HLA.DR_Control", reduction="pca", dims=c(7,8)) +
+#                           labs(x="PC7",y="PC8")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type=="iPSC"), features="CD45.CD34.CD11b.CD19.HLA.DR_Control", reduction="pca", dims=c(9,10)) +
+#                           labs(x="PC9",y="PC10"))),
+#             ncol=5)
+CombinePlots(plots=list((FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD90", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD90", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD90", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD90", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD90", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))),
+             ncol=5)
+CombinePlots(plots=list((FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD73", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD73", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD73", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD73", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD73", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))),
+             ncol=5)
+CombinePlots(plots=list((FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD105", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD105", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD105", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD105", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD105", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))),
+             ncol=5)
+#CombinePlots(plots=list((FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD45.CD34.CD11b.CD19.HLA.DR", reduction="pca", dims=c(1,2)) +
+#                           labs(x="PC1",y="PC2")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD45.CD34.CD11b.CD19.HLA.DR", reduction="pca", dims=c(3,4)) +
+#                           labs(x="PC3",y="PC4")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD45.CD34.CD11b.CD19.HLA.DR", reduction="pca", dims=c(5,6)) +
+#                           labs(x="PC5",y="PC6")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD45.CD34.CD11b.CD19.HLA.DR", reduction="pca", dims=c(7,8)) +
+#                           labs(x="PC7",y="PC8")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD45.CD34.CD11b.CD19.HLA.DR", reduction="pca", dims=c(9,10)) +
+#                           labs(x="PC9",y="PC10"))),
+#             ncol=5)
+
+CombinePlots(plots=list((FeaturePlot(subset(indv,subset=Cell.Type!="iPSC"), features="Alizarin", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+                        (FeaturePlot(subset(indv,subset=Cell.Type!="iPSC"), features="Alizarin", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+                        (FeaturePlot(subset(indv,subset=Cell.Type!="iPSC"), features="Alizarin", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+                        (FeaturePlot(subset(indv,subset=Cell.Type!="iPSC"), features="Alizarin", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+                        (FeaturePlot(subset(indv,subset=Cell.Type!="iPSC"), features="Alizarin", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))),
+             ncol=5)
+#CombinePlots(plots=list((FeaturePlot(subset(indv,subset=Cell.Type!="iPSC"), features="OilRed", reduction="pca", dims=c(1,2)) + labs(x="PC1",y="PC2")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type!="iPSC"), features="OilRed", reduction="pca", dims=c(3,4)) + labs(x="PC3",y="PC4")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type!="iPSC"), features="OilRed", reduction="pca", dims=c(5,6)) + labs(x="PC5",y="PC6")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type!="iPSC"), features="OilRed", reduction="pca", dims=c(7,8)) + labs(x="PC7",y="PC8")),
+#                        (FeaturePlot(subset(indv,subset=Cell.Type!="iPSC"), features="OilRed", reduction="pca", dims=c(9,10)) + labs(x="PC9",y="PC10"))),
+#            ncol=5)
+
+
+CombinePlots(plots=list((DimPlot(indv, group.by="species", reduction="umap") + labs(x="UMAP1",y="UMAP2")),
+                        (DimPlot(indv, group.by="Cell.Type", reduction="umap") + labs(x="UMAP1",y="UMAP2")),
+                        (DimPlot(indv, group.by="Individual", reduction="umap") + labs(x="UMAP1",y="UMAP2"))), ncol=3)
+#CombinePlots(plots=list((DimPlot(indv, group.by="species", reduction="umap") + labs(x="UMAP1",y="UMAP2")),
+#                        (DimPlot(indv, group.by="Sample", reduction="umap") + labs(x="UMAP1",y="UMAP2"))), ncol=3)
+
+CombinePlots(plots=list((FeaturePlot(indv, features="nCount_RNA", reduction="umap") + labs(x="UMAP1",y="UMAP2")),
+                        (FeaturePlot(indv, features="nFeature_RNA", reduction="umap") + labs(x="UMAP1",y="UMAP2")),
+                        (FeaturePlot(indv, features="percent.mt", reduction="umap") + labs(x="UMAP1",y="UMAP2"))), ncol=3)
+CombinePlots(plots=list((DimPlot(indv, group.by="MSCmedia", reduction="umap") + labs(x="UMAP1",y="UMAP2")),
+                        (FeaturePlot(indv, features="Number6W", reduction="umap") + labs(x="UMAP1",y="UMAP2")),
+                        (DimPlot(indv, group.by="SequencingBatch", reduction="umap") + labs(x="UMAP1",y="UMAP2"))), ncol=3)
+CombinePlots(plots=list((FeaturePlot(indv, features="PrewashViability", reduction="umap") + labs(x="UMAP1",y="UMAP2")),
+                        (FeaturePlot(indv, features="PostwashViability", reduction="umap") + labs(x="UMAP1",y="UMAP2")),
+                        (FeaturePlot(indv, features="PostmixViability", reduction="umap") + labs(x="UMAP1",y="UMAP2"))), ncol=3)
+CombinePlots(plots=list((FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD90", reduction="umap") + labs(x="UMAP1",y="UMAP2")),
+                        (FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD73", reduction="umap") + labs(x="UMAP1",y="UMAP2")),
+                        (FeaturePlot(subset(indv,subset=Cell.Type!="Osteoblast"), features="CD105", reduction="umap") + labs(x="UMAP1",y="UMAP2"))), ncol=3)
+CombinePlots(plots=list((FeaturePlot(subset(indv,subset=Cell.Type!="iPSC"), features="Alizarin", reduction="umap") + labs(x="UMAP1",y="UMAP2")),
+                        (DimPlot(indv, group.by="Sex", reduction="umap") + labs(x="UMAP1",y="UMAP2")),
+                        (DimPlot(indv, group.by="Age", reduction="umap") + labs(x="UMAP1",y="UMAP2"))), ncol=3)
+
+#CombinePlots(plots=list((DimPlot(subset(indv,subset=species=="Human"), group.by="Cell.Type", split.by="Individual", reduction="umap") +
+#                           labs(x="UMAP1",y="UMAP2")),
+#                        (DimPlot(subset(indv,subset=species=="Chimp"), group.by="Cell.Type", split.by="Individual", reduction="umap") +
+#                           labs(x="UMAP1",y="UMAP2"))), ncol=1)
+
+```
+
+```{r random plots}
+
+DimPlot(indv, group.by="Cell.Type", reduction="umap", cols=c("pink","mediumorchid","dodgerblue")) + labs(x="UMAP1",y="UMAP2")
+DimPlot(indv.i, group.by="Cell.Type", reduction="umap", cols="pink") + labs(x="UMAP1",y="UMAP2")
+DimPlot(indv.m, group.by="Cell.Type", reduction="umap", cols="mediumorchid") + labs(x="UMAP1",y="UMAP2")
+DimPlot(indv.o, group.by="Cell.Type", reduction="umap", cols="dodgerblue") + labs(x="UMAP1",y="UMAP2")
+
+DimPlot(indv, group.by="species", reduction="umap", cols=c("grey","black")) + labs(x="UMAP1",y="UMAP2")
+DimPlot(indv.i, group.by="species", reduction="umap", cols=c("grey","black")) + labs(x="UMAP1",y="UMAP2")
+DimPlot(indv.m, group.by="species", reduction="umap", cols=c("grey","black")) + labs(x="UMAP1",y="UMAP2")
+DimPlot(indv.o, group.by="species", reduction="umap", cols=c("grey","black")) + labs(x="UMAP1",y="UMAP2")
+
+DimPlot(indv, group.by="Individual", reduction="umap") + labs(x="UMAP1",y="UMAP2")
+DimPlot(indv.i, group.by="Individual", reduction="umap") + labs(x="UMAP1",y="UMAP2")
+DimPlot(indv.m, group.by="Individual", reduction="umap") + labs(x="UMAP1",y="UMAP2")
+DimPlot(indv.o, group.by="Individual", reduction="umap") + labs(x="UMAP1",y="UMAP2")
+
+```

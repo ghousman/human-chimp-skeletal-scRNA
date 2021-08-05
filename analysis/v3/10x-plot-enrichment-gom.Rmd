@@ -1,0 +1,87 @@
+---
+title: "10x-plot-enrichment-gom"
+author: "Genevieve Housman"
+date: "May 2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### NEED TO UPDATE THESE SCRIPTS ###
+
+# 10X Data Cellranger Analysis - Functional Enrichment of Cell Classifications (Grades of Membership)
+
+Assess GO Functional Enrichment of Genes Defining Each Topic
+
+```{r}
+
+#Load libraries for GO enrichment analysis
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(viridis)
+
+#Define functions to assess GO functional enrichment
+goEnrich <- function(totGenes, deGenes, ontology) {
+  ref.df <- bitr(totGenes, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+  gene.df <- bitr(deGenes, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+  ego <- enrichGO(gene          = gene.df$ENSEMBL,
+                  OrgDb         = org.Hs.eg.db,
+                  universe      = ref.df$ENSEMBL,
+                  keyType       = 'ENSEMBL',
+                  ont           = ontology,
+                  pAdjustMethod = "BH",
+                  pvalueCutoff  = 0.01,
+                  qvalueCutoff  = 0.05,
+                  readable      = TRUE)
+  return(ego)
+}
+
+```
+
+```{r}
+
+#Get total genes included in topics modeling
+counts <- as.matrix(data@assays$RNA@counts) #do not use integrated data
+counts <- counts[rowSums(counts>0)>0,]      #remove genes with 0 counts across cells
+geneTot <- rownames(counts)
+
+dataTmp <- subset(data, subset=Species=="Human")
+counts <- as.matrix(dataTmp@assays$RNA@counts) #do not use integrated data
+counts <- counts[rowSums(counts>0)>0,]         #remove genes with 0 counts across cells
+geneTotH <- rownames(counts)
+
+dataTmp <- subset(data, subset=Species=="Chimp")
+counts <- as.matrix(dataTmp@assays$RNA@counts) #do not use integrated data
+counts <- counts[rowSums(counts>0)>0,]         #remove genes with 0 counts across cells
+geneTotC <- rownames(counts)
+
+rm(dataTmp,counts)
+
+
+#Get top 100 genes defining topics
+numclust <- 7
+numclust <- "7.human"
+numclust <- "7.chimp"
+
+#genes <- readRDS(paste0("./data/gom-data/topics",numclust,".100genes.log.indv-cell.int19k.reg-tot.rds"))
+genes <- readRDS(paste0("./data/gom-data/topics",numclust,".100genes.log.indv-cell.int19k.reg-tot.bc1.rds"))
+
+
+#Test for functional enrichment
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][1,], ontology="ALL")
+
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+ggplot(goTot, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+  geom_point() +
+  theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+  facet_grid(ONTOLOGY~., scale="free") +
+  scale_size_area(max_size=6) +
+  scale_color_viridis(option="C") +
+  theme_bw() +
+  labs(title="GoM Genes")
+
+```

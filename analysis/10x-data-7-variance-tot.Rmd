@@ -1,0 +1,2622 @@
+---
+title: "10x-data-variance-tot"
+author: "Genevieve Housman"
+date: "June 2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 10X Data Cellranger Analysis - Variance in Gene Expression
+
+Examine whether variance in gene expression differs across time points in humans and chimpanzees.
+
+```{r, message=FALSE}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(grid)
+library(gbm)
+library(colorspace)
+library(RColorBrewer)
+library(edgeR)
+library(scran)
+library(SingleCellExperiment)
+library(reshape2)
+
+```
+
+```{r}
+
+#Load data
+#data integrated across individuals - total (conservative cell filter + non-zero genes + regress out UMI/mito)
+scrna <- "./data/cellranger-data-full/data.filterC.log.indv-cell.intNo0.reg-tot.assign.rds"
+data <- readRDS(scrna)
+
+#Define individual-replicate sets
+data@meta.data$Individual.Replicate <- paste0(data@meta.data$Individual,".",data@meta.data$Replicate)
+
+```
+
+Define genes of interest: all except mitochondrial genes and ribosomal genes.
+
+```{r}
+
+genes <- rownames(data@assays$RNA@counts)
+genes.mito <- c("MT-ATP6","MT-ATP8","MT-CO1","MT-CO2","MT-CO3","MT-CYB","MT-ND1","MT-ND2","MT-ND3","MT-ND4","MT-ND4L","MT-ND5")
+genes.ribo <- grep('^RP',genes,value=T)
+genes.no.mito.ribo <- genes[which(!(genes %in% c(genes.mito,genes.ribo)))]
+rm(genes,genes.mito,genes.ribo)
+
+```
+
+Decided to proceed with pseudobulk, but also looked as single-cell data.
+
+### Examine variance in log2cpm (pseudobulk resolution)
+
+Can only look at variance across species, not individuals.
+
+#### Pseudobulk: Stages vs. Species
+
+```{r}
+
+# Compile log2 normalized gene expression data
+#make count matrix and metadata for edgeR object - pseudobulk
+cell.subset <- c("Time 0","Time 1","Time 2")
+counts <- c()
+metadata <- c()
+labels <- c()
+for(j in cell.subset) {
+  dataSub <- subset(data,subset=Stage==j)
+  for (i in unique(dataSub@meta.data$Individual.Replicate)) {
+    x.lab <- paste0(i,"_",j)
+    w <- which(dataSub@meta.data$Individual.Replicate==i)
+    if (length(w)>0) {
+      x.spp <- dataSub@meta.data$Species[w][1]
+      x.col <- dataSub@meta.data$Collection[w][1]
+      x.ind <- dataSub@meta.data$Individual[w][1]
+      x.rep <- dataSub@meta.data$Replicate[w][1]
+      x.idr <- dataSub@meta.data$Individual.Replicate[w][1]
+      x.stg <- dataSub@meta.data$Stage[w][1]
+      if (length(w)==1) {
+        x.cnt <- dataSub@assays$RNA@counts[,w]
+      } else {
+        x.cnt <- Matrix::rowSums(dataSub@assays$RNA@counts[,w])
+      }
+      counts <- cbind(counts, x.cnt)
+      metadata <- rbind(metadata, c(x.lab, x.spp, x.col, x.ind, x.rep, x.idr, x.stg))
+      labels <- c(labels, x.lab)
+    }
+  }
+}
+colnames(counts) <- labels
+rownames(metadata) <- labels
+colnames(metadata) <- c("Sample","Species","Collection","Individual","Replicate","Individual.Replicate","Stage")
+metadata <- as.data.frame(metadata)
+
+#remove mitochodrial and ribosomal genes
+counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
+#make edgeR object
+dge <- DGEList(counts)
+meta_dge <- dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, metadata)
+dge$samples <- meta_dge
+rm(counts,metadata,meta_dge)
+#filter genes
+keep <- rowMeans(edgeR::cpm(dge,log=TRUE,prior.count=0.25))>0
+dge$counts <- dge$counts[keep,]
+#normalize data
+dge <- calcNormFactors(dge, method="TMM")
+#log2 transformed cpm
+tmm <- edgeR::cpm(dge,normalized.lib.sizes=TRUE,log=TRUE,prior.count=0.25)
+
+rm(cell.subset,labels,i,j,w,keep,dataSub)
+rm(x.cnt,x.lab,x.spp,x.col,x.ind,x.rep,x.idr,x.stg)
+
+# Compile group labels of each species
+groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$Stage,function(x)sub(" ","",x)),sep = "."),
+                      levels=c("Human.Time0","Human.Time1","Human.Time2","Chimp.Time0","Chimp.Time1","Chimp.Time2"))
+
+# Calculate log2cpm means within species
+HC.mean <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.mean["gene"] <- rownames(tmm)
+HC.mean["Human.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human.Time0")],1, mean))
+HC.mean["Human.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human.Time1")],1, mean))
+HC.mean["Human.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human.Time2")],1, mean))
+HC.mean["Chimp.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp.Time0")],1, mean))
+HC.mean["Chimp.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp.Time1")],1, mean))
+HC.mean["Chimp.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp.Time2")],1, mean))
+HC.mean.melt <- melt(HC.mean,id.vars="gene",measure.vars=c("Human.Time0","Human.Time1","Human.Time2","Chimp.Time0","Chimp.Time1","Chimp.Time2"))
+HC.mean.melt$species <- sapply(HC.mean.melt$variable,function(x)str_split(x,"[.]")[[1]][1])
+HC.mean.melt$stage <- sapply(HC.mean.melt$variable,function(x)str_split(x,"[.]")[[1]][2])
+
+ggplot(HC.mean.melt, aes(x=species, y=value, fill=stage)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('Mean Gene Expression') +
+  scale_fill_manual(name="Stage", labels=c("Time 0","Time 1","Time 2"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.mean$Human.Time0,HC.mean$Human.Time1) #p=0.4101
+t.test(HC.mean$Human.Time1,HC.mean$Human.Time2) #p=0.8676
+t.test(HC.mean$Chimp.Time0,HC.mean$Chimp.Time1) #p=0.02706
+t.test(HC.mean$Chimp.Time1,HC.mean$Chimp.Time2) #p=0.9422
+
+# Calculate log2cpm variances within species
+HC.var <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.var["gene"] <- rownames(tmm)
+HC.var["Human.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human.Time0")],1, var))
+HC.var["Human.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human.Time1")],1, var))
+HC.var["Human.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human.Time2")],1, var))
+HC.var["Chimp.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp.Time0")],1, var))
+HC.var["Chimp.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp.Time1")],1, var))
+HC.var["Chimp.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp.Time2")],1, var))
+HC.var.melt <- melt(HC.var,id.vars="gene",measure.vars=c("Human.Time0","Human.Time1","Human.Time2","Chimp.Time0","Chimp.Time1","Chimp.Time2"))
+HC.var.melt$species <- sapply(HC.var.melt$variable,function(x)str_split(x,"[.]")[[1]][1])
+HC.var.melt$stage <- sapply(HC.var.melt$variable,function(x)str_split(x,"[.]")[[1]][2])
+
+ggplot(HC.var.melt, aes(x=species, y=log2(value), fill=stage)) +
+  geom_boxplot(width=0.8, outlier.shape=NA) +
+  xlab("Species") +
+  ylab('Log2 Variance in Gene Expression') +
+  ylim(c(-10,5)) +
+  scale_fill_manual(name="Stage", labels=c("Time 0","Time 1","Time 2"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=12), legend.text=element_text(size=12))
+t.test(HC.var$Human.Time0,HC.var$Human.Time1) #p<2.2e-16
+t.test(HC.var$Human.Time1,HC.var$Human.Time2) #p=1.4e-13
+t.test(HC.var$Chimp.Time0,HC.var$Chimp.Time1) #p<2.2e-16
+t.test(HC.var$Chimp.Time1,HC.var$Chimp.Time2) #p<2.2e-16
+
+```
+
+#### Pseudobulk: General Cluster vs. Species (res=0.05)
+
+```{r}
+
+# Compile log2 normalized gene expression data
+#make count matrix and metadata for edgeR object - pseudobulk
+cell.subset <- c("iPSC.c1","iPSC.c2","iPSC.c3","MSC.c1","Osteogenic.c1","Osteogenic.c2")
+counts <- c()
+metadata <- c()
+labels <- c()
+for(j in cell.subset) {
+  dataSub <- subset(data,subset=Cluster0.05==j)
+  for (i in unique(dataSub@meta.data$Individual.Replicate)) {
+    x.lab <- paste0(i,"_",j)
+    w <- which(dataSub@meta.data$Individual.Replicate==i)
+    if (length(w)>0) {
+      x.spp <- dataSub@meta.data$Species[w][1]
+      x.col <- dataSub@meta.data$Collection[w][1]
+      x.ind <- dataSub@meta.data$Individual[w][1]
+      x.rep <- dataSub@meta.data$Replicate[w][1]
+      x.idr <- dataSub@meta.data$Individual.Replicate[w][1]
+      x.clt <- dataSub@meta.data$Cluster0.05[w][1]
+      if (length(w)==1) {
+        x.cnt <- dataSub@assays$RNA@counts[,w]
+      } else {
+        x.cnt <- Matrix::rowSums(dataSub@assays$RNA@counts[,w])
+      }
+      counts <- cbind(counts, x.cnt)
+      metadata <- rbind(metadata, c(x.lab, x.spp, x.col, x.ind, x.rep, x.idr, x.clt))
+      labels <- c(labels, x.lab)
+    }
+  }
+}
+colnames(counts) <- labels
+rownames(metadata) <- labels
+colnames(metadata) <- c("Sample","Species","Collection","Individual","Replicate","Individual.Replicate","Cluster")
+metadata <- as.data.frame(metadata)
+
+#remove mitochodrial and ribosomal genes
+counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
+#make edgeR object
+dge <- DGEList(counts)
+meta_dge <- dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, metadata)
+dge$samples <- meta_dge
+rm(counts,metadata,meta_dge)
+#filter genes
+keep <- rowMeans(edgeR::cpm(dge,log=TRUE,prior.count=0.25))>0
+dge$counts <- dge$counts[keep,]
+#normalize data
+dge <- calcNormFactors(dge, method="TMM")
+#log2 transformed cpm
+tmm <- edgeR::cpm(dge,normalized.lib.sizes=TRUE,log=TRUE,prior.count=0.25)
+
+# Compile group labels of each species
+groupFactor <- factor(paste(dge$samples$Species,dge$samples$Cluster,sep="_"),
+                      levels=c("Human_iPSC.c1","Human_iPSC.c2","Human_iPSC.c3","Human_MSC.c1","Human_Osteogenic.c1","Human_Osteogenic.c2",
+                               "Chimp_iPSC.c1","Chimp_iPSC.c2","Chimp_iPSC.c3","Chimp_MSC.c1","Chimp_Osteogenic.c1","Chimp_Osteogenic.c2"))
+
+# Calculate log2cpm means within species
+HC.mean <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.mean["gene"] <- rownames(tmm)
+HC.mean["Human_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_iPSC.c1")],1, mean))
+HC.mean["Human_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_iPSC.c2")],1, mean))
+HC.mean["Human_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_iPSC.c3")],1, mean))
+HC.mean["Human_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_MSC.c1")],1, mean))
+HC.mean["Human_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c1")],1, mean))
+HC.mean["Human_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c2")],1, mean))
+HC.mean["Chimp_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_iPSC.c1")],1, mean))
+HC.mean["Chimp_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_iPSC.c2")],1, mean))
+HC.mean["Chimp_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_iPSC.c3")],1, mean))
+HC.mean["Chimp_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_MSC.c1")],1, mean))
+HC.mean["Chimp_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c1")],1, mean))
+HC.mean["Chimp_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c2")],1, mean))
+HC.mean.melt <- melt(HC.mean,
+                     id.vars="gene",
+                     measure.vars=c("Human_iPSC.c1","Human_iPSC.c2","Human_iPSC.c3","Human_MSC.c1","Human_Osteogenic.c1","Human_Osteogenic.c2",
+                                    "Chimp_iPSC.c1","Chimp_iPSC.c2","Chimp_iPSC.c3","Chimp_MSC.c1","Chimp_Osteogenic.c1","Chimp_Osteogenic.c2"))
+HC.mean.melt$species <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.mean.melt$cluster <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.mean.melt, aes(x=species, y=value, fill=cluster)) +
+  geom_boxplot(width=0.8) +
+  xlab("Species") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("iPSC.c1","iPSC.c2","iPSC.c3","MSC.c1","Osteogenic.c1","Osteogenic.c2"),
+                    values=c("pink","pink3","pink4","mediumorchid","dodgerblue","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+ggplot(HC.mean.melt %>% filter(cluster %in% c("iPSC.c1","MSC.c1","Osteogenic.c1")), aes(x=species, y=value, fill=cluster)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("iPSC.c1","MSC.c1","Osteogenic.c1"),
+                    values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.mean$Human_iPSC.c1,HC.mean$Human_MSC.c1)       #p=0.8279
+t.test(HC.mean$Human_MSC.c1,HC.mean$Human_Osteogenic.c1) #p=0.537
+t.test(HC.mean$Chimp_iPSC.c1,HC.mean$Chimp_MSC.c1)       #p=0.1539
+t.test(HC.mean$Chimp_MSC.c1,HC.mean$Chimp_Osteogenic.c1) #p=0.5797
+
+# Calculate log2cpm variances within species
+HC.var <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.var["gene"] <- rownames(tmm)
+HC.var["Human_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_iPSC.c1")],1, var))
+HC.var["Human_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_iPSC.c2")],1, var))
+HC.var["Human_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_iPSC.c3")],1, var))
+HC.var["Human_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_MSC.c1")],1, var))
+HC.var["Human_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c1")],1, var))
+HC.var["Human_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c2")],1, var))
+HC.var["Chimp_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_iPSC.c1")],1, var))
+HC.var["Chimp_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_iPSC.c2")],1, var))
+HC.var["Chimp_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_iPSC.c3")],1, var))
+HC.var["Chimp_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_MSC.c1")],1, var))
+HC.var["Chimp_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c1")],1, var))
+HC.var["Chimp_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c2")],1, var))
+HC.var.melt <- melt(HC.var,
+                    id.vars="gene",
+                    measure.vars=c("Human_iPSC.c1","Human_iPSC.c2","Human_iPSC.c3","Human_MSC.c1","Human_Osteogenic.c1","Human_Osteogenic.c2",
+                                   "Chimp_iPSC.c1","Chimp_iPSC.c2","Chimp_iPSC.c3","Chimp_MSC.c1","Chimp_Osteogenic.c1","Chimp_Osteogenic.c2"))
+HC.var.melt$species <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.var.melt$cluster <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.var.melt, aes(x=species, y=log2(value), fill=cluster)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 variance in gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("iPSC.c1","iPSC.c2","iPSC.c3","MSC.c1","Osteogenic.c1","Osteogenic.c2"),
+                    values=c("pink","pink3","pink4","mediumorchid","dodgerblue","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+ggplot(HC.var.melt %>% filter(cluster %in% c("iPSC.c1","MSC.c1","Osteogenic.c1")), aes(x=species, y=log2(value), fill=cluster)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 variance in gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("iPSC.c1","MSC.c1","Osteogenic.c1"),
+                    values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.var$Human_iPSC.c1,HC.var$Human_MSC.c1)       #p<2.2e-16
+t.test(HC.var$Human_MSC.c1,HC.var$Human_Osteogenic.c1) #p=0.3952
+t.test(HC.var$Chimp_iPSC.c1,HC.var$Chimp_MSC.c1)       #p<2.2e-16
+t.test(HC.var$Chimp_MSC.c1,HC.var$Chimp_Osteogenic.c1) #p<2.2e-16
+
+```
+
+#### Pseudobulk: General Ad Hoc Classifications vs. Species (thresh0)
+
+```{r}
+
+# Compile log2 normalized gene expression data
+#make count matrix and metadata for edgeR object - pseudobulk
+cell.subset <- c("iPSC","MSC","Osteogenic","other")
+counts <- c()
+metadata <- c()
+labels <- c()
+for(j in cell.subset) {
+  dataSub <- subset(data,subset=AdHoc.Assign.thresh0==j)
+  for (i in unique(dataSub@meta.data$Individual.Replicate)) {
+    x.lab <- paste0(i,"_",j)
+    w <- which(dataSub@meta.data$Individual.Replicate==i)
+    if (length(w)>0) {
+      x.spp <- dataSub@meta.data$Species[w][1]
+      x.col <- dataSub@meta.data$Collection[w][1]
+      x.ind <- dataSub@meta.data$Individual[w][1]
+      x.rep <- dataSub@meta.data$Replicate[w][1]
+      x.idr <- dataSub@meta.data$Individual.Replicate[w][1]
+      x.adh <- as.character(dataSub@meta.data$AdHoc.Assign.thresh0[w][1])
+      if (length(w)==1) {
+        x.cnt <- dataSub@assays$RNA@counts[,w]
+      } else {
+        x.cnt <- Matrix::rowSums(dataSub@assays$RNA@counts[,w])
+      }
+      counts <- cbind(counts, x.cnt)
+      metadata <- rbind(metadata, c(x.lab, x.spp, x.col, x.ind, x.rep, x.idr, x.adh))
+      labels <- c(labels, x.lab)
+    }
+  }
+}
+colnames(counts) <- labels
+rownames(metadata) <- labels
+colnames(metadata) <- c("Sample","Species","Collection","Individual","Replicate","Individual.Replicate","AdHoc")
+metadata <- as.data.frame(metadata)
+
+#remove mitochodrial and ribosomal genes
+counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
+#make edgeR object
+dge <- DGEList(counts)
+meta_dge <- dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, metadata)
+dge$samples <- meta_dge
+rm(counts,metadata,meta_dge)
+#filter genes
+keep <- rowMeans(edgeR::cpm(dge,log=TRUE,prior.count=0.25))>0
+dge$counts <- dge$counts[keep,]
+#normalize data
+dge <- calcNormFactors(dge, method="TMM")
+#log2 transformed cpm
+tmm <- edgeR::cpm(dge,normalized.lib.sizes=TRUE,log=TRUE,prior.count=0.25)
+
+# Compile group labels of each species
+groupFactor <- factor(paste(dge$samples$Species,dge$samples$AdHoc,sep = "_"),
+                      levels=c("Human_iPSC","Human_MSC","Human_Osteogenic","Human_other","Chimp_iPSC","Chimp_MSC","Chimp_Osteogenic","Chimp_other"))
+
+# Calculate log2cpm means within species
+HC.mean <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.mean["gene"] <- rownames(tmm)
+HC.mean["Human_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_iPSC")],1, mean))
+HC.mean["Human_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_MSC")],1, mean))
+HC.mean["Human_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic")],1, mean))
+HC.mean["Chimp_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_iPSC")],1, mean))
+HC.mean["Chimp_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_MSC")],1, mean))
+HC.mean["Chimp_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic")],1, mean))
+HC.mean.melt <- melt(HC.mean,id.vars="gene",measure.vars=c("Human_iPSC","Human_MSC","Human_Osteogenic","Chimp_iPSC","Chimp_MSC","Chimp_Osteogenic"))
+HC.mean.melt$species <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.mean.melt$adhoc <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.mean.melt, aes(x=species, y=value, fill=adhoc)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Ad Hoc", labels=c("iPSC","MSC","Osteogenic"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.mean$Human_iPSC,HC.mean$Human_MSC)       #p=0.5387
+t.test(HC.mean$Human_MSC,HC.mean$Human_Osteogenic) #p=0.003242
+t.test(HC.mean$Chimp_iPSC,HC.mean$Chimp_MSC)       #p=0.07194
+t.test(HC.mean$Chimp_MSC,HC.mean$Chimp_Osteogenic) #p=0.001382
+
+# Calculate log2cpm variances within species
+HC.var <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.var["gene"] <- rownames(tmm)
+HC.var["Human_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_iPSC")],1, var))
+HC.var["Human_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_MSC")],1, var))
+HC.var["Human_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic")],1, var))
+HC.var["Chimp_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_iPSC")],1, var))
+HC.var["Chimp_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_MSC")],1, var))
+HC.var["Chimp_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic")],1, var))
+HC.var.melt <- melt(HC.var,id.vars="gene",measure.vars=c("Human_iPSC","Human_MSC","Human_Osteogenic","Chimp_iPSC","Chimp_MSC","Chimp_Osteogenic"))
+HC.var.melt$species <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.var.melt$adhoc <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.var.melt, aes(x=species, y=log2(value), fill=adhoc)) +
+  geom_boxplot(width=0.8, outlier.shape=NA) +
+  xlab("Species") +
+  ylab('log2 variance in gene expression') +
+  scale_fill_manual(name="Ad Hoc", labels=c("iPSC","MSC","Osteogenic"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10)) +
+  ylim(-10,5)
+t.test(HC.var$Human_iPSC,HC.var$Human_MSC)       #p<2.2e-16
+t.test(HC.var$Human_MSC,HC.var$Human_Osteogenic) #p<2.2e-16
+t.test(HC.var$Chimp_iPSC,HC.var$Chimp_MSC)       #p<2.2e-16
+t.test(HC.var$Chimp_MSC,HC.var$Chimp_Osteogenic) #p<2.2e-16
+
+```
+
+#### Pseudobulk: Osteogenic Cluster vs. Species (res=0.5)
+
+```{r}
+
+# Compile log2 normalized gene expression data
+#make count matrix and metadata for edgeR object - pseudobulk
+cell.subset <- c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c4")
+counts <- c()
+metadata <- c()
+labels <- c()
+for(j in cell.subset) {
+  dataSub <- subset(data,subset=Cluster0.5==j)
+  for (i in unique(dataSub@meta.data$Individual.Replicate)) {
+    x.lab <- paste0(i,"_",j)
+    w <- which(dataSub@meta.data$Individual.Replicate==i)
+    if (length(w)>0) {
+      x.spp <- dataSub@meta.data$Species[w][1]
+      x.col <- dataSub@meta.data$Collection[w][1]
+      x.ind <- dataSub@meta.data$Individual[w][1]
+      x.rep <- dataSub@meta.data$Replicate[w][1]
+      x.idr <- dataSub@meta.data$Individual.Replicate[w][1]
+      x.clt <- dataSub@meta.data$Cluster0.5[w][1]
+      if (length(w)==1) {
+        x.cnt <- dataSub@assays$RNA@counts[,w]
+      } else {
+        x.cnt <- Matrix::rowSums(dataSub@assays$RNA@counts[,w])
+      }
+      counts <- cbind(counts, x.cnt)
+      metadata <- rbind(metadata, c(x.lab, x.spp, x.col, x.ind, x.rep, x.idr, x.clt))
+      labels <- c(labels, x.lab)
+    }
+  }
+}
+colnames(counts) <- labels
+rownames(metadata) <- labels
+colnames(metadata) <- c("Sample","Species","Collection","Individual","Replicate","Individual.Replicate","Cluster")
+metadata <- as.data.frame(metadata)
+
+#remove mitochodrial and ribosomal genes
+counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
+#make edgeR object
+dge <- DGEList(counts)
+meta_dge <- dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, metadata)
+dge$samples <- meta_dge
+rm(counts,metadata,meta_dge)
+#filter genes
+keep <- rowMeans(edgeR::cpm(dge,log=TRUE,prior.count=0.25))>0
+dge$counts <- dge$counts[keep,]
+#normalize data
+dge <- calcNormFactors(dge, method="TMM")
+#log2 transformed cpm
+tmm <- edgeR::cpm(dge,normalized.lib.sizes=TRUE,log=TRUE,prior.count=0.25)
+
+# Compile group labels of each species
+groupFactor <- factor(paste(dge$samples$Species,dge$samples$Cluster,sep="_"),
+                      levels=c("Human_Osteogenic.c1","Human_Osteogenic.c2","Human_Osteogenic.c3","Human_Osteogenic.c4",
+                               "Chimp_Osteogenic.c1","Chimp_Osteogenic.c2","Chimp_Osteogenic.c3","Chimp_Osteogenic.c4"))
+
+# Calculate log2cpm means within species
+HC.mean <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.mean["gene"] <- rownames(tmm)
+HC.mean["Human_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c1")],1, mean))
+HC.mean["Human_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c2")],1, mean))
+HC.mean["Human_Osteogenic.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c3")],1, mean))
+HC.mean["Human_Osteogenic.c4"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c4")],1, mean))
+HC.mean["Chimp_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c1")],1, mean))
+HC.mean["Chimp_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c2")],1, mean))
+HC.mean["Chimp_Osteogenic.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c3")],1, mean))
+HC.mean["Chimp_Osteogenic.c4"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c4")],1, mean))
+HC.mean.melt <- melt(HC.mean,
+                     id.vars="gene",
+                     measure.vars=c("Human_Osteogenic.c1","Human_Osteogenic.c2","Human_Osteogenic.c3","Human_Osteogenic.c4",
+                                    "Chimp_Osteogenic.c1","Chimp_Osteogenic.c2","Chimp_Osteogenic.c3","Chimp_Osteogenic.c4"))
+HC.mean.melt$species <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.mean.melt$cluster <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.mean.melt, aes(x=species, y=value, fill=cluster)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c4"),
+                    values=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+ggplot(HC.mean.melt %>% filter(cluster %in% c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c4")), aes(x=species, y=value, fill=cluster)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c4"),
+                    values=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.mean$Human_Osteogenic.c1,HC.mean$Human_Osteogenic.c2) 
+t.test(HC.mean$Human_Osteogenic.c2,HC.mean$Human_Osteogenic.c3) 
+t.test(HC.mean$Human_Osteogenic.c3,HC.mean$Human_Osteogenic.c4) 
+t.test(HC.mean$Chimp_Osteogenic.c1,HC.mean$Chimp_Osteogenic.c2) 
+t.test(HC.mean$Chimp_Osteogenic.c2,HC.mean$Chimp_Osteogenic.c3) 
+t.test(HC.mean$Chimp_Osteogenic.c3,HC.mean$Chimp_Osteogenic.c4) 
+
+# Calculate log2cpm variances within species
+HC.var <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.var["gene"] <- rownames(tmm)
+HC.var["Human_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c1")],1, var))
+HC.var["Human_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c2")],1, var))
+HC.var["Human_Osteogenic.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c3")],1, var))
+HC.var["Human_Osteogenic.c4"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c4")],1, var))
+HC.var["Chimp_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c1")],1, var))
+HC.var["Chimp_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c2")],1, var))
+HC.var["Chimp_Osteogenic.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c3")],1, var))
+HC.var["Chimp_Osteogenic.c4"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c4")],1, var))
+HC.var.melt <- melt(HC.var,
+                     id.vars="gene",
+                     measure.vars=c("Human_Osteogenic.c1","Human_Osteogenic.c2","Human_Osteogenic.c3","Human_Osteogenic.c4",
+                                    "Chimp_Osteogenic.c1","Chimp_Osteogenic.c2","Chimp_Osteogenic.c3","Chimp_Osteogenic.c4"))
+HC.var.melt$species <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.var.melt$cluster <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.var.melt, aes(x=species, y=log2(value), fill=cluster)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 variance gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c4"),
+                    values=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+ggplot(HC.var.melt %>% filter(cluster %in% c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c4")), aes(x=species, y=log2(value), fill=cluster)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 variance gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c4"),
+                    values=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.var$Human_Osteogenic.c1,HC.var$Human_Osteogenic.c2) 
+t.test(HC.var$Human_Osteogenic.c2,HC.var$Human_Osteogenic.c3) 
+t.test(HC.var$Human_Osteogenic.c3,HC.var$Human_Osteogenic.c4) 
+t.test(HC.var$Chimp_Osteogenic.c1,HC.var$Chimp_Osteogenic.c2) 
+t.test(HC.var$Chimp_Osteogenic.c2,HC.var$Chimp_Osteogenic.c3) 
+t.test(HC.var$Chimp_Osteogenic.c3,HC.var$Chimp_Osteogenic.c4) 
+
+```
+
+#TO CHECK
+#### Pseudobulk: Osteogenic Ad Hoc Classifications vs. Species (thresh0)
+
+```{r}
+
+# Compile log2 normalized gene expression data
+#make count matrix and metadata for edgeR object - pseudobulk
+cell.subset <- c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte","unknown osteogenic","not osteogenic")
+counts <- c()
+metadata <- c()
+labels <- c()
+for(j in cell.subset) {
+  dataSub <- subset(data,subset=OstAdHoc.Assign.4gene.thresh0==j)
+  #dataSub <- subset(data,subset=(OstAdHoc.Assign.4gene.median==j & Stage=="Time 2"))
+  for (i in unique(dataSub@meta.data$Individual.Replicate)) {
+    x.lab <- paste0(i,"_",sub(" ",".",j))
+    w <- which(dataSub@meta.data$Individual.Replicate==i)
+    if (length(w)>0) {
+      x.spp <- dataSub@meta.data$Species[w][1]
+      x.col <- dataSub@meta.data$Collection[w][1]
+      x.ind <- dataSub@meta.data$Individual[w][1]
+      x.rep <- dataSub@meta.data$Replicate[w][1]
+      x.idr <- dataSub@meta.data$Individual.Replicate[w][1]
+      x.adh <- sub(" ",".",as.character(dataSub@meta.data$OstAdHoc.Assign.4gene.thresh0[w][1]))
+      if (length(w)==1) {
+        x.cnt <- dataSub@assays$RNA@counts[,w]
+      } else {
+        x.cnt <- Matrix::rowSums(dataSub@assays$RNA@counts[,w])
+      }
+      counts <- cbind(counts, x.cnt)
+      metadata <- rbind(metadata, c(x.lab, x.spp, x.col, x.ind, x.rep, x.idr, x.adh))
+      labels <- c(labels, x.lab)
+    }
+  }
+}
+colnames(counts) <- labels
+rownames(metadata) <- labels
+colnames(metadata) <- c("Sample","Species","Collection","Individual","Replicate","Individual.Replicate","AdHoc")
+metadata <- as.data.frame(metadata)
+
+#remove mitochodrial and ribosomal genes
+counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
+#make edgeR object
+dge <- DGEList(counts)
+meta_dge <- dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, metadata)
+dge$samples <- meta_dge
+rm(counts,metadata,meta_dge)
+#filter genes
+keep <- rowMeans(edgeR::cpm(dge,log=TRUE,prior.count=0.25))>0
+dge$counts <- dge$counts[keep,]
+#normalize data
+dge <- calcNormFactors(dge, method="TMM")
+#log2 transformed cpm
+tmm <- edgeR::cpm(dge,normalized.lib.sizes=TRUE,log=TRUE,prior.count=0.25)
+
+# Compile group labels of each species
+groupFactor <- factor(paste(dge$samples$Species,dge$samples$AdHoc,sep="_"),
+                      levels=c("Human_preosteoblast","Human_osteoblast","Human_embedding.osteoblast","Human_mineralizing.osteoblast","Human_maturing.osteocyte",
+                               "Human_unknown.osteogenic","Human_not.osteogenic",
+                               "Chimp_preosteoblast","Chimp_osteoblast","Chimp_embedding.osteoblast","Chimp_mineralizing.osteoblast","Chimp_maturing.osteocyte","Chimp_other",
+                               "Chimp_unknown.osteogenic","Chimp_not.osteogenic"))
+
+# Calculate log2cpm means within species
+HC.mean <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.mean["gene"] <- rownames(tmm)
+HC.mean["Human_preosteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_preosteoblast")],1, mean))
+HC.mean["Human_osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_osteoblast")],1, mean))
+HC.mean["Human_embedding.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_embedding.osteoblast")],1, mean))
+HC.mean["Human_mineralizing.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_mineralizing.osteoblast")],1, mean))
+HC.mean["Human_maturing.osteocyte"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_maturing.osteocyte")],1, mean))
+HC.mean["Chimp_preosteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_preosteoblast")],1, mean))
+HC.mean["Chimp_osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_osteoblast")],1, mean))
+HC.mean["Chimp_embedding.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_embedding.osteoblast")],1, mean))
+HC.mean["Chimp_mineralizing.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_mineralizing.osteoblast")],1, mean))
+HC.mean["Chimp_maturing.osteocyte"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_maturing.osteocyte")],1, mean))
+HC.mean.melt <- melt(HC.mean,
+                     id.vars="gene",
+                     measure.vars=c("Human_preosteoblast","Human_osteoblast","Human_embedding.osteoblast","Human_mineralizing.osteoblast","Human_maturing.osteocyte",
+                                    "Chimp_preosteoblast","Chimp_osteoblast","Chimp_embedding.osteoblast","Chimp_mineralizing.osteoblast","Chimp_maturing.osteocyte"))
+HC.mean.melt$species <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.mean.melt$ostadhoc <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.mean.melt, aes(x=species, y=value, fill=ostadhoc)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Ost Ad Hoc",
+                    labels=c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                    values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.mean$Human_preosteoblast,HC.mean$Human_osteoblast)                     
+t.test(HC.mean$Human_osteoblast,HC.mean$Human_embedding.osteoblast)              
+t.test(HC.mean$Human_embedding.osteoblast,HC.mean$Human_mineralizing.osteoblast) 
+t.test(HC.mean$Human_mineralizing.osteoblast,HC.mean$Human_maturing.osteocyte)   
+t.test(HC.mean$Chimp_preosteoblast,HC.mean$Chimp_osteoblast)                     
+t.test(HC.mean$Chimp_osteoblast,HC.mean$Chimp_embedding.osteoblast)              
+t.test(HC.mean$Chimp_embedding.osteoblast,HC.mean$Chimp_mineralizing.osteoblast) 
+t.test(HC.mean$Chimp_mineralizing.osteoblast,HC.mean$Chimp_maturing.osteocyte)   
+
+# Calculate log2cpm variances within species
+HC.var <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.var["gene"] <- rownames(tmm)
+HC.var["Human_preosteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_preosteoblast")],1, var))
+HC.var["Human_osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_osteoblast")],1, var))
+HC.var["Human_embedding.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_embedding.osteoblast")],1, var))
+HC.var["Human_mineralizing.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_mineralizing.osteoblast")],1, var))
+HC.var["Human_maturing.osteocyte"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_maturing.osteocyte")],1, var))
+HC.var["Chimp_preosteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_preosteoblast")],1, var))
+HC.var["Chimp_osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_osteoblast")],1, var))
+HC.var["Chimp_embedding.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_embedding.osteoblast")],1, var))
+HC.var["Chimp_mineralizing.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_mineralizing.osteoblast")],1, var))
+HC.var["Chimp_maturing.osteocyte"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_maturing.osteocyte")],1, var))
+HC.var.melt <- melt(HC.var,
+                    id.vars="gene",
+                    measure.vars=c("Human_preosteoblast","Human_osteoblast","Human_embedding.osteoblast","Human_mineralizing.osteoblast","Human_maturing.osteocyte",
+                                   "Chimp_preosteoblast","Chimp_osteoblast","Chimp_embedding.osteoblast","Chimp_mineralizing.osteoblast","Chimp_maturing.osteocyte"))
+HC.var.melt$species <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.var.melt$ostadhoc <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.var.melt, aes(x=species, y=log2(value), fill=ostadhoc)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 variance in gene expression') +
+  scale_fill_manual(name="Ost Ad Hoc",
+                    labels=c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                    values=c("lightblue1","skyblue","deepskyblue","dodgerblue2","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.var$Human_preosteoblast,HC.var$Human_osteoblast)                     
+t.test(HC.var$Human_osteoblast,HC.var$Human_embedding.osteoblast)              
+t.test(HC.var$Human_embedding.osteoblast,HC.var$Human_mineralizing.osteoblast) 
+t.test(HC.var$Human_mineralizing.osteoblast,HC.var$Human_maturing.osteocyte)   
+t.test(HC.var$Chimp_preosteoblast,HC.var$Chimp_osteoblast)                     
+t.test(HC.var$Chimp_osteoblast,HC.var$Chimp_embedding.osteoblast)              
+t.test(HC.var$Chimp_embedding.osteoblast,HC.var$Chimp_mineralizing.osteoblast) 
+t.test(HC.var$Chimp_mineralizing.osteoblast,HC.var$Chimp_maturing.osteocyte)   
+
+```
+
+#### Pseudobulk: Osteogenic Ad Hoc Classifications vs. Species (thresh0 in t2)
+
+### Examine variance in log2cpm (single-cell resolution)
+
+```{r}
+
+# Compile log2 normalized gene expression data
+#make count matrix and metadata for edgeR object
+counts <- as.matrix(GetAssayData(data, assay="RNA", slot="counts"))
+metadata <- data@meta.data[,c("Species",
+                              "Individual",
+                              "Stage",
+                              "Cluster0.05",
+                              "AdHoc.Assign.thresh0",
+                              "OstAdHoc.Assign.4gene.thresh0",
+                              "OstAdHoc.Assign.x.4gene.thresh0")]
+metadata <- metadata[colnames(counts),]
+#remove mitochodrial and ribosomal genes
+counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
+#make edgeR object
+dge <- DGEList(counts)
+meta_dge <- dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, metadata)
+dge$samples <- meta_dge
+rm(counts,metadata,meta_dge)
+#filter genes (filter genes across full dataset, pch=0.2)
+dge$counts <- dge$counts[rowSums(dge$counts!=0)>=(0.2*dim(dge$counts)[2]),]
+#normalize data
+dge <- calcNormFactors(dge, method="TMM")
+#log2 transformed cpm
+tmm <- edgeR::cpm(dge,normalized.lib.sizes=TRUE,log=TRUE,prior.count=0.25)
+
+```
+
+#### SC: Stages vs. Species
+
+```{r}
+
+# Compile group labels of each species
+groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$Stage,function(x)sub(" ","",x)),sep = "_"),
+                      levels=c("Human_Time0","Human_Time1","Human_Time2","Chimp_Time0","Chimp_Time1","Chimp_Time2"))
+
+# Calculate log2cpm means within species
+HC.mean <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.mean["gene"] <- rownames(tmm)
+HC.mean["Human_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Time0")],1, mean))
+HC.mean["Human_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Time1")],1, mean))
+HC.mean["Human_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Time2")],1, mean))
+HC.mean["Chimp_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Time0")],1, mean))
+HC.mean["Chimp_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Time1")],1, mean))
+HC.mean["Chimp_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Time2")],1, mean))
+HC.mean.melt <- melt(HC.mean,id.vars="gene",measure.vars=c("Human_Time0","Human_Time1","Human_Time2","Chimp_Time0","Chimp_Time1","Chimp_Time2"))
+HC.mean.melt$species <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.mean.melt$stage <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.mean.melt, aes(x=species, y=value, fill=stage)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Stage", labels=c("Time 0","Time 1","Time 2"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.mean$Human_Time0,HC.mean$Human_Time1) 
+t.test(HC.mean$Human_Time1,HC.mean$Human_Time2) 
+t.test(HC.mean$Chimp_Time0,HC.mean$Chimp_Time1) 
+t.test(HC.mean$Chimp_Time1,HC.mean$Chimp_Time2) 
+
+# Calculate log2cpm variances within species
+HC.var <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.var["gene"] <- rownames(tmm)
+HC.var["Human_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Time0")],1, var))
+HC.var["Human_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Time1")],1, var))
+HC.var["Human_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Time2")],1, var))
+HC.var["Chimp_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Time0")],1, var))
+HC.var["Chimp_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Time1")],1, var))
+HC.var["Chimp_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Time2")],1, var))
+HC.var.melt <- melt(HC.var,id.vars="gene",measure.vars=c("Human_Time0","Human_Time1","Human_Time2","Chimp_Time0","Chimp_Time1","Chimp_Time2"))
+HC.var.melt$species <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.var.melt$stage <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.var.melt, aes(x=species, y=value, fill=stage)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('variance in gene expression') +
+  scale_fill_manual(name="Stage", labels=c("Time 0","Time 1","Time 2"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.var$Human_Time0,HC.var$Human_Time1) 
+t.test(HC.var$Human_Time1,HC.var$Human_Time2) 
+t.test(HC.var$Chimp_Time0,HC.var$Chimp_Time1) 
+t.test(HC.var$Chimp_Time1,HC.var$Chimp_Time2) 
+
+```
+
+#### SC: Stages vs. Individuals
+
+```{r}
+
+# Compile group labels of each individual
+groupFactor <- factor(paste(dge$samples$Individual,sapply(dge$samples$Stage,function(x)sub(" ","",x)),sep = "_"),
+                      levels=c("H1_Time0","H1_Time1","H1_Time2",
+                               "H2_Time0","H2_Time1","H2_Time2",
+                               "H3_Time0","H3_Time1","H3_Time2",
+                               "H4_Time0","H4_Time1","H4_Time2",
+                               "H5_Time0","H5_Time1","H5_Time2",
+                               "H6_Time0","H6_Time1","H6_Time2",
+                               "C1_Time0","C1_Time1","C1_Time2",
+                               "C2_Time0","C2_Time1","C2_Time2",
+                               "C3_Time0","C3_Time1","C3_Time2",
+                               "C4_Time0","C4_Time1","C4_Time2",
+                               "C5_Time0","C5_Time1","C5_Time2",
+                               "C6_Time0","C6_Time1","C6_Time2"))
+
+# Calculate log2cpm means within individuals - generally mean increases in time 1 (except C4, C5, H5) and decreases in time 2
+HC.mean <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.mean["gene"] <- rownames(tmm)
+HC.mean["H1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_Time0")],1, mean))
+HC.mean["H1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_Time1")],1, mean))
+HC.mean["H1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_Time2")],1, mean))
+HC.mean["H2_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_Time0")],1, mean))
+HC.mean["H2_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_Time1")],1, mean))
+HC.mean["H2_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_Time2")],1, mean))
+HC.mean["H3_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_Time0")],1, mean))
+HC.mean["H3_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_Time1")],1, mean))
+HC.mean["H3_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_Time2")],1, mean))
+HC.mean["H4_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_Time0")],1, mean))
+HC.mean["H4_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_Time1")],1, mean))
+HC.mean["H4_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_Time2")],1, mean))
+HC.mean["H5_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_Time0")],1, mean))
+HC.mean["H5_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_Time1")],1, mean))
+HC.mean["H5_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_Time2")],1, mean))
+HC.mean["H6_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_Time0")],1, mean))
+HC.mean["H6_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_Time1")],1, mean))
+HC.mean["H6_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_Time2")],1, mean))
+HC.mean["C1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_Time0")],1, mean))
+HC.mean["C1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_Time1")],1, mean))
+HC.mean["C1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_Time2")],1, mean))
+HC.mean["C2_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_Time0")],1, mean))
+HC.mean["C2_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_Time1")],1, mean))
+HC.mean["C2_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_Time2")],1, mean))
+HC.mean["C3_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_Time0")],1, mean))
+HC.mean["C3_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_Time1")],1, mean))
+HC.mean["C3_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_Time2")],1, mean))
+HC.mean["C4_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_Time0")],1, mean))
+HC.mean["C4_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_Time1")],1, mean))
+HC.mean["C4_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_Time2")],1, mean))
+HC.mean["C5_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_Time0")],1, mean))
+HC.mean["C5_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_Time1")],1, mean))
+HC.mean["C5_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_Time2")],1, mean))
+HC.mean["C6_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_Time0")],1, mean))
+HC.mean["C6_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_Time1")],1, mean))
+HC.mean["C6_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_Time2")],1, mean))
+HC.mean.melt <- melt(HC.mean,
+                     id.vars="gene",
+                     measure.vars=c("H1_Time0","H1_Time1","H1_Time2",
+                                    "H2_Time0","H2_Time1","H2_Time2",
+                                    "H3_Time0","H3_Time1","H3_Time2",
+                                    "H4_Time0","H4_Time1","H4_Time2",
+                                    "H5_Time0","H5_Time1","H5_Time2",
+                                    "H6_Time0","H6_Time1","H6_Time2",
+                                    "C1_Time0","C1_Time1","C1_Time2",
+                                    "C2_Time0","C2_Time1","C2_Time2",
+                                    "C3_Time0","C3_Time1","C3_Time2",
+                                    "C4_Time0","C4_Time1","C4_Time2",
+                                    "C5_Time0","C5_Time1","C5_Time2",
+                                    "C6_Time0","C6_Time1","C6_Time2"))
+HC.mean.melt$individual <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.mean.melt$stage <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.mean.melt, aes(x=individual, y=value, fill=stage)) +
+  geom_boxplot(width=0.4) +
+  xlab("Individual") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Stage", labels=c("Time 0","Time 1","Time 2"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.mean$H1_Time0,HC.mean$H1_Time1)
+t.test(HC.mean$H1_Time1,HC.mean$H1_Time2)
+t.test(HC.mean$H2_Time0,HC.mean$H2_Time1)
+t.test(HC.mean$H2_Time1,HC.mean$H2_Time2)
+t.test(HC.mean$H3_Time0,HC.mean$H3_Time1)
+t.test(HC.mean$H3_Time1,HC.mean$H3_Time2)
+t.test(HC.mean$H4_Time0,HC.mean$H4_Time1)
+t.test(HC.mean$H4_Time1,HC.mean$H4_Time2)
+t.test(HC.mean$H5_Time0,HC.mean$H5_Time1)
+t.test(HC.mean$H5_Time1,HC.mean$H5_Time2)
+t.test(HC.mean$H6_Time0,HC.mean$H6_Time1)
+t.test(HC.mean$H6_Time1,HC.mean$H6_Time2)
+t.test(HC.mean$C1_Time0,HC.mean$C1_Time1)
+t.test(HC.mean$C1_Time1,HC.mean$C1_Time2)
+t.test(HC.mean$C2_Time0,HC.mean$C2_Time1)
+t.test(HC.mean$C2_Time1,HC.mean$C2_Time2)
+t.test(HC.mean$C3_Time0,HC.mean$C3_Time1)
+t.test(HC.mean$C3_Time1,HC.mean$C3_Time2)
+t.test(HC.mean$C4_Time0,HC.mean$C4_Time1)
+t.test(HC.mean$C4_Time1,HC.mean$C4_Time2)
+t.test(HC.mean$C5_Time0,HC.mean$C5_Time1)
+t.test(HC.mean$C5_Time1,HC.mean$C5_Time2)
+t.test(HC.mean$C6_Time0,HC.mean$C6_Time1)
+t.test(HC.mean$C6_Time1,HC.mean$C6_Time2)
+
+# Calculate log2cpm variances within species
+HC.var <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.var["gene"] <- rownames(tmm)
+HC.var["H1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_Time0")],1, var))
+HC.var["H1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_Time1")],1, var))
+HC.var["H1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_Time2")],1, var))
+HC.var["H2_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_Time0")],1, var))
+HC.var["H2_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_Time1")],1, var))
+HC.var["H2_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_Time2")],1, var))
+HC.var["H3_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_Time0")],1, var))
+HC.var["H3_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_Time1")],1, var))
+HC.var["H3_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_Time2")],1, var))
+HC.var["H4_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_Time0")],1, var))
+HC.var["H4_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_Time1")],1, var))
+HC.var["H4_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_Time2")],1, var))
+HC.var["H5_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_Time0")],1, var))
+HC.var["H5_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_Time1")],1, var))
+HC.var["H5_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_Time2")],1, var))
+HC.var["H6_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_Time0")],1, var))
+HC.var["H6_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_Time1")],1, var))
+HC.var["H6_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_Time2")],1, var))
+HC.var["C1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_Time0")],1, var))
+HC.var["C1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_Time1")],1, var))
+HC.var["C1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_Time2")],1, var))
+HC.var["C2_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_Time0")],1, var))
+HC.var["C2_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_Time1")],1, var))
+HC.var["C2_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_Time2")],1, var))
+HC.var["C3_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_Time0")],1, var))
+HC.var["C3_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_Time1")],1, var))
+HC.var["C3_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_Time2")],1, var))
+HC.var["C4_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_Time0")],1, var))
+HC.var["C4_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_Time1")],1, var))
+HC.var["C4_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_Time2")],1, var))
+HC.var["C5_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_Time0")],1, var))
+HC.var["C5_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_Time1")],1, var))
+HC.var["C5_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_Time2")],1, var))
+HC.var["C6_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_Time0")],1, var))
+HC.var["C6_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_Time1")],1, var))
+HC.var["C6_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_Time2")],1, var))
+HC.var.melt <- melt(HC.var,
+                     id.vars="gene",
+                     measure.vars=c("H1_Time0","H1_Time1","H1_Time2",
+                                    "H2_Time0","H2_Time1","H2_Time2",
+                                    "H3_Time0","H3_Time1","H3_Time2",
+                                    "H4_Time0","H4_Time1","H4_Time2",
+                                    "H5_Time0","H5_Time1","H5_Time2",
+                                    "H6_Time0","H6_Time1","H6_Time2",
+                                    "C1_Time0","C1_Time1","C1_Time2",
+                                    "C2_Time0","C2_Time1","C2_Time2",
+                                    "C3_Time0","C3_Time1","C3_Time2",
+                                    "C4_Time0","C4_Time1","C4_Time2",
+                                    "C5_Time0","C5_Time1","C5_Time2",
+                                    "C6_Time0","C6_Time1","C6_Time2"))
+HC.var.melt$individual <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.var.melt$stage <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.var.melt, aes(x=individual, y=log2(value), fill=stage)) +
+  geom_boxplot(width=0.4) +
+  xlab("Individual") +
+  ylab('log2 variance in gene expression') +
+  scale_fill_manual(name="Stage", labels=c("Time 0","Time 1","Time 2"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.var$H1_Time0,HC.var$H1_Time1)
+t.test(HC.var$H1_Time1,HC.var$H1_Time2)
+t.test(HC.var$H2_Time0,HC.var$H2_Time1)
+t.test(HC.var$H2_Time1,HC.var$H2_Time2)
+t.test(HC.var$H3_Time0,HC.var$H3_Time1)
+t.test(HC.var$H3_Time1,HC.var$H3_Time2)
+t.test(HC.var$H4_Time0,HC.var$H4_Time1)
+t.test(HC.var$H4_Time1,HC.var$H4_Time2)
+t.test(HC.var$H5_Time0,HC.var$H5_Time1)
+t.test(HC.var$H5_Time1,HC.var$H5_Time2)
+t.test(HC.var$H6_Time0,HC.var$H6_Time1)
+t.test(HC.var$H6_Time1,HC.var$H6_Time2)
+t.test(HC.var$C1_Time0,HC.var$C1_Time1)
+t.test(HC.var$C1_Time1,HC.var$C1_Time2)
+t.test(HC.var$C2_Time0,HC.var$C2_Time1)
+t.test(HC.var$C2_Time1,HC.var$C2_Time2)
+t.test(HC.var$C3_Time0,HC.var$C3_Time1)
+t.test(HC.var$C3_Time1,HC.var$C3_Time2)
+t.test(HC.var$C4_Time0,HC.var$C4_Time1)
+t.test(HC.var$C4_Time1,HC.var$C4_Time2)
+t.test(HC.var$C5_Time0,HC.var$C5_Time1)
+t.test(HC.var$C5_Time1,HC.var$C5_Time2)
+t.test(HC.var$C6_Time0,HC.var$C6_Time1)
+t.test(HC.var$C6_Time1,HC.var$C6_Time2)
+
+```
+
+#### SC: Stages vs. Individual.Replicates
+
+```{r}
+
+# Compile group labels of each individual
+groupFactor <- factor(paste(dge$samples$Individual.Replicate,sapply(dge$samples$Stage,function(x)sub(" ","",x)),sep = "_"),
+                      levels=c("H1.1_Time0","H1.1_Time1","H1.1_Time2",
+                               "H1.2_Time0","H1.2_Time1","H1.2_Time2",
+                               "H2.1_Time0","H2.1_Time1","H2.1_Time2",
+                               "H3.1_Time0","H3.1_Time1","H3.1_Time2",
+                               "H4.1_Time0","H4.1_Time1","H4.1_Time2",
+                               "H5.1_Time0","H5.1_Time1","H5.1_Time2",
+                               "H6.1_Time0","H6.1_Time1","H6.1_Time2",
+                               "C1.1_Time0","C1.1_Time1","C1.1_Time2",
+                               "C1.2_Time0","C1.2_Time1","C1.2_Time2",
+                               "C2.1_Time0","C2.1_Time1","C2.1_Time2",
+                               "C3.1_Time0","C3.1_Time1","C3.1_Time2",
+                               "C4.1_Time0","C4.1_Time1","C4.1_Time2",
+                               "C5.1_Time0","C5.1_Time1","C5.1_Time2",
+                               "C6.1_Time0","C6.1_Time1","C6.1_Time2"))
+
+# Calculate log2cpm means within individuals - generally mean increases in time 1 (except C4.1, C5.1, H5.1) and decreases in time 2
+HC.mean <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.mean["gene"] <- rownames(tmm)
+HC.mean["H1.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_Time0")],1, mean))
+HC.mean["H1.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_Time1")],1, mean))
+HC.mean["H1.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_Time2")],1, mean))
+HC.mean["H1.2_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_Time0")],1, mean))
+HC.mean["H1.2_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_Time1")],1, mean))
+HC.mean["H1.2_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_Time2")],1, mean))
+HC.mean["H2.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_Time0")],1, mean))
+HC.mean["H2.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_Time1")],1, mean))
+HC.mean["H2.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_Time2")],1, mean))
+HC.mean["H3.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_Time0")],1, mean))
+HC.mean["H3.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_Time1")],1, mean))
+HC.mean["H3.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_Time2")],1, mean))
+HC.mean["H4.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_Time0")],1, mean))
+HC.mean["H4.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_Time1")],1, mean))
+HC.mean["H4.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_Time2")],1, mean))
+HC.mean["H5.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_Time0")],1, mean))
+HC.mean["H5.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_Time1")],1, mean))
+HC.mean["H5.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_Time2")],1, mean))
+HC.mean["H6.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_Time0")],1, mean))
+HC.mean["H6.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_Time1")],1, mean))
+HC.mean["H6.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_Time2")],1, mean))
+HC.mean["C1.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_Time0")],1, mean))
+HC.mean["C1.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_Time1")],1, mean))
+HC.mean["C1.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_Time2")],1, mean))
+HC.mean["C1.2_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_Time0")],1, mean))
+HC.mean["C1.2_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_Time1")],1, mean))
+HC.mean["C1.2_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_Time2")],1, mean))
+HC.mean["C2.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_Time0")],1, mean))
+HC.mean["C2.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_Time1")],1, mean))
+HC.mean["C2.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_Time2")],1, mean))
+HC.mean["C3.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_Time0")],1, mean))
+HC.mean["C3.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_Time1")],1, mean))
+HC.mean["C3.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_Time2")],1, mean))
+HC.mean["C4.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_Time0")],1, mean))
+HC.mean["C4.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_Time1")],1, mean))
+HC.mean["C4.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_Time2")],1, mean))
+HC.mean["C5.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_Time0")],1, mean))
+HC.mean["C5.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_Time1")],1, mean))
+HC.mean["C5.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_Time2")],1, mean))
+HC.mean["C6.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_Time0")],1, mean))
+HC.mean["C6.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_Time1")],1, mean))
+HC.mean["C6.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_Time2")],1, mean))
+HC.mean.melt <- melt(HC.mean,
+                     id.vars="gene",
+                     measure.vars=c("H1.1_Time0","H1.1_Time1","H1.1_Time2",
+                                    "H1.2_Time0","H1.2_Time1","H1.2_Time2",
+                                    "H2.1_Time0","H2.1_Time1","H2.1_Time2",
+                                    "H3.1_Time0","H3.1_Time1","H3.1_Time2",
+                                    "H4.1_Time0","H4.1_Time1","H4.1_Time2",
+                                    "H5.1_Time0","H5.1_Time1","H5.1_Time2",
+                                    "H6.1_Time0","H6.1_Time1","H6.1_Time2",
+                                    "C1.1_Time0","C1.1_Time1","C1.1_Time2",
+                                    "C1.2_Time0","C1.2_Time1","C1.2_Time2",
+                                    "C2.1_Time0","C2.1_Time1","C2.1_Time2",
+                                    "C3.1_Time0","C3.1_Time1","C3.1_Time2",
+                                    "C4.1_Time0","C4.1_Time1","C4.1_Time2",
+                                    "C5.1_Time0","C5.1_Time1","C5.1_Time2",
+                                    "C6.1_Time0","C6.1_Time1","C6.1_Time2"))
+HC.mean.melt$individual <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.mean.melt$stage <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.mean.melt, aes(x=individual, y=value, fill=stage)) +
+  geom_boxplot(width=0.4) +
+  xlab("Individual") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Stage", labels=c("Time 0","Time 1","Time 2"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.mean$H1.1_Time0,HC.mean$H1.1_Time1)
+t.test(HC.mean$H1.1_Time1,HC.mean$H1.1_Time2)
+t.test(HC.mean$H1.2_Time0,HC.mean$H1.2_Time1)
+t.test(HC.mean$H1.2_Time1,HC.mean$H1.2_Time2)
+t.test(HC.mean$H2.1_Time0,HC.mean$H2.1_Time1)
+t.test(HC.mean$H2.1_Time1,HC.mean$H2.1_Time2)
+t.test(HC.mean$H3.1_Time0,HC.mean$H3.1_Time1)
+t.test(HC.mean$H3.1_Time1,HC.mean$H3.1_Time2)
+t.test(HC.mean$H4.1_Time0,HC.mean$H4.1_Time1)
+t.test(HC.mean$H4.1_Time1,HC.mean$H4.1_Time2)
+t.test(HC.mean$H5.1_Time0,HC.mean$H5.1_Time1)
+t.test(HC.mean$H5.1_Time1,HC.mean$H5.1_Time2)
+t.test(HC.mean$H6.1_Time0,HC.mean$H6.1_Time1)
+t.test(HC.mean$H6.1_Time1,HC.mean$H6.1_Time2)
+t.test(HC.mean$C1.1_Time0,HC.mean$C1.1_Time1)
+t.test(HC.mean$C1.1_Time1,HC.mean$C1.1_Time2)
+t.test(HC.mean$C1.2_Time0,HC.mean$C1.2_Time1)
+t.test(HC.mean$C1.2_Time1,HC.mean$C1.2_Time2)
+t.test(HC.mean$C2.1_Time0,HC.mean$C2.1_Time1)
+t.test(HC.mean$C2.1_Time1,HC.mean$C2.1_Time2)
+t.test(HC.mean$C3.1_Time0,HC.mean$C3.1_Time1)
+t.test(HC.mean$C3.1_Time1,HC.mean$C3.1_Time2)
+t.test(HC.mean$C4.1_Time0,HC.mean$C4.1_Time1)
+t.test(HC.mean$C4.1_Time1,HC.mean$C4.1_Time2)
+t.test(HC.mean$C5.1_Time0,HC.mean$C5.1_Time1)
+t.test(HC.mean$C5.1_Time1,HC.mean$C5.1_Time2)
+t.test(HC.mean$C6.1_Time0,HC.mean$C6.1_Time1)
+t.test(HC.mean$C6.1_Time1,HC.mean$C6.1_Time2)
+
+# Calculate log2cpm variances within species
+HC.var <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.var["gene"] <- rownames(tmm)
+HC.var["H1.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_Time0")],1, var))
+HC.var["H1.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_Time1")],1, var))
+HC.var["H1.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_Time2")],1, var))
+HC.var["H1.2_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_Time0")],1, var))
+HC.var["H1.2_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_Time1")],1, var))
+HC.var["H1.2_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_Time2")],1, var))
+HC.var["H2.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_Time0")],1, var))
+HC.var["H2.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_Time1")],1, var))
+HC.var["H2.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_Time2")],1, var))
+HC.var["H3.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_Time0")],1, var))
+HC.var["H3.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_Time1")],1, var))
+HC.var["H3.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_Time2")],1, var))
+HC.var["H4.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_Time0")],1, var))
+HC.var["H4.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_Time1")],1, var))
+HC.var["H4.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_Time2")],1, var))
+HC.var["H5.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_Time0")],1, var))
+HC.var["H5.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_Time1")],1, var))
+HC.var["H5.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_Time2")],1, var))
+HC.var["H6.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_Time0")],1, var))
+HC.var["H6.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_Time1")],1, var))
+HC.var["H6.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_Time2")],1, var))
+HC.var["C1.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_Time0")],1, var))
+HC.var["C1.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_Time1")],1, var))
+HC.var["C1.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_Time2")],1, var))
+HC.var["C1.2_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_Time0")],1, var))
+HC.var["C1.2_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_Time1")],1, var))
+HC.var["C1.2_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_Time2")],1, var))
+HC.var["C2.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_Time0")],1, var))
+HC.var["C2.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_Time1")],1, var))
+HC.var["C2.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_Time2")],1, var))
+HC.var["C3.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_Time0")],1, var))
+HC.var["C3.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_Time1")],1, var))
+HC.var["C3.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_Time2")],1, var))
+HC.var["C4.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_Time0")],1, var))
+HC.var["C4.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_Time1")],1, var))
+HC.var["C4.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_Time2")],1, var))
+HC.var["C5.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_Time0")],1, var))
+HC.var["C5.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_Time1")],1, var))
+HC.var["C5.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_Time2")],1, var))
+HC.var["C6.1_Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_Time0")],1, var))
+HC.var["C6.1_Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_Time1")],1, var))
+HC.var["C6.1_Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_Time2")],1, var))
+HC.var.melt <- melt(HC.var,
+                     id.vars="gene",
+                     measure.vars=c("H1.1_Time0","H1.1_Time1","H1.1_Time2",
+                                    "H1.2_Time0","H1.2_Time1","H1.2_Time2",
+                                    "H2.1_Time0","H2.1_Time1","H2.1_Time2",
+                                    "H3.1_Time0","H3.1_Time1","H3.1_Time2",
+                                    "H4.1_Time0","H4.1_Time1","H4.1_Time2",
+                                    "H5.1_Time0","H5.1_Time1","H5.1_Time2",
+                                    "H6.1_Time0","H6.1_Time1","H6.1_Time2",
+                                    "C1.1_Time0","C1.1_Time1","C1.1_Time2",
+                                    "C1.2_Time0","C1.2_Time1","C1.2_Time2",
+                                    "C2.1_Time0","C2.1_Time1","C2.1_Time2",
+                                    "C3.1_Time0","C3.1_Time1","C3.1_Time2",
+                                    "C4.1_Time0","C4.1_Time1","C4.1_Time2",
+                                    "C5.1_Time0","C5.1_Time1","C5.1_Time2",
+                                    "C6.1_Time0","C6.1_Time1","C6.1_Time2"))
+HC.var.melt$individual <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.var.melt$stage <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.var.melt, aes(x=individual, y=log2(value), fill=stage)) +
+  geom_boxplot(width=0.4) +
+  xlab("Individual") +
+  ylab('log2 variance in gene expression') +
+  scale_fill_manual(name="Stage", labels=c("Time 0","Time 1","Time 2"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.var$H1.1_Time0,HC.var$H1.1_Time1)
+t.test(HC.var$H1.1_Time1,HC.var$H1.1_Time2)
+t.test(HC.var$H1.2_Time0,HC.var$H1.2_Time1)
+t.test(HC.var$H1.2_Time1,HC.var$H1.2_Time2)
+t.test(HC.var$H2.1_Time0,HC.var$H2.1_Time1)
+t.test(HC.var$H2.1_Time1,HC.var$H2.1_Time2)
+t.test(HC.var$H3.1_Time0,HC.var$H3.1_Time1)
+t.test(HC.var$H3.1_Time1,HC.var$H3.1_Time2)
+t.test(HC.var$H4.1_Time0,HC.var$H4.1_Time1)
+t.test(HC.var$H4.1_Time1,HC.var$H4.1_Time2)
+t.test(HC.var$H5.1_Time0,HC.var$H5.1_Time1)
+t.test(HC.var$H5.1_Time1,HC.var$H5.1_Time2)
+t.test(HC.var$H6.1_Time0,HC.var$H6.1_Time1)
+t.test(HC.var$H6.1_Time1,HC.var$H6.1_Time2)
+t.test(HC.var$C1.1_Time0,HC.var$C1.1_Time1)
+t.test(HC.var$C1.1_Time1,HC.var$C1.1_Time2)
+t.test(HC.var$C1.2_Time0,HC.var$C1.2_Time1)
+t.test(HC.var$C1.2_Time1,HC.var$C1.2_Time2)
+t.test(HC.var$C2.1_Time0,HC.var$C2.1_Time1)
+t.test(HC.var$C2.1_Time1,HC.var$C2.1_Time2)
+t.test(HC.var$C3.1_Time0,HC.var$C3.1_Time1)
+t.test(HC.var$C3.1_Time1,HC.var$C3.1_Time2)
+t.test(HC.var$C4.1_Time0,HC.var$C4.1_Time1)
+t.test(HC.var$C4.1_Time1,HC.var$C4.1_Time2)
+t.test(HC.var$C5.1_Time0,HC.var$C5.1_Time1)
+t.test(HC.var$C5.1_Time1,HC.var$C5.1_Time2)
+t.test(HC.var$C6.1_Time0,HC.var$C6.1_Time1)
+t.test(HC.var$C6.1_Time1,HC.var$C6.1_Time2)
+
+```
+
+#### SC: General Clusters vs. Species (res=0.05)
+
+```{r}
+
+# Compile group labels of each species
+groupFactor <- factor(paste(dge$samples$Species,dge$samples$Cluster,sep="_"),
+                      levels=c("Human_iPSC.c1","Human_iPSC.c2","Human_iPSC.c3","Human_MSC.c1","Human_Osteogenic.c1","Human_Osteogenic.c2",
+                               "Chimp_iPSC.c1","Chimp_iPSC.c2","Chimp_iPSC.c3","Chimp_MSC.c1","Chimp_Osteogenic.c1","Chimp_Osteogenic.c2"))
+
+# Calculate log2cpm means within species
+HC.mean <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.mean["gene"] <- rownames(tmm)
+HC.mean["Human_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_iPSC.c1")],1, mean))
+HC.mean["Human_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_iPSC.c2")],1, mean))
+HC.mean["Human_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_iPSC.c3")],1, mean))
+HC.mean["Human_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_MSC.c1")],1, mean))
+HC.mean["Human_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c1")],1, mean))
+HC.mean["Human_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c2")],1, mean))
+HC.mean["Chimp_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_iPSC.c1")],1, mean))
+HC.mean["Chimp_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_iPSC.c2")],1, mean))
+HC.mean["Chimp_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_iPSC.c3")],1, mean))
+HC.mean["Chimp_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_MSC.c1")],1, mean))
+HC.mean["Chimp_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c1")],1, mean))
+HC.mean["Chimp_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c2")],1, mean))
+HC.mean.melt <- melt(HC.mean,
+                     id.vars="gene",
+                     measure.vars=c("Human_iPSC.c1","Human_iPSC.c2","Human_iPSC.c3","Human_MSC.c1","Human_Osteogenic.c1","Human_Osteogenic.c2",
+                                    "Chimp_iPSC.c1","Chimp_iPSC.c2","Chimp_iPSC.c3","Chimp_MSC.c1","Chimp_Osteogenic.c1","Chimp_Osteogenic.c2"))
+HC.mean.melt$species <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.mean.melt$cluster <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.mean.melt, aes(x=species, y=value, fill=cluster)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("iPSC.c1","iPSC.c2","iPSC.c3","MSC.c1","Osteogenic.c1","Osteogenic.c2"),
+                    values=c("pink","pink3","pink4","mediumorchid","dodgerblue","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+ggplot(HC.mean.melt %>% filter(cluster %in% c("iPSC.c1","MSC.c1","Osteogenic.c1")), aes(x=species, y=value, fill=cluster)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("iPSC.c1","MSC.c1","Osteogenic.c1"),
+                    values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.mean$Human_iPSC.c1,HC.mean$Human_MSC.c1)       
+t.test(HC.mean$Human_MSC.c1,HC.mean$Human_Osteogenic.c1) 
+t.test(HC.mean$Chimp_iPSC.c1,HC.mean$Chimp_MSC.c1)       
+t.test(HC.mean$Chimp_MSC.c1,HC.mean$Chimp_Osteogenic.c1) 
+
+# Calculate log2cpm variances within species
+HC.var <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.var["gene"] <- rownames(tmm)
+HC.var["Human_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_iPSC.c1")],1, var))
+HC.var["Human_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_iPSC.c2")],1, var))
+HC.var["Human_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_iPSC.c3")],1, var))
+HC.var["Human_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_MSC.c1")],1, var))
+HC.var["Human_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c1")],1, var))
+HC.var["Human_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c2")],1, var))
+HC.var["Chimp_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_iPSC.c1")],1, var))
+HC.var["Chimp_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_iPSC.c2")],1, var))
+HC.var["Chimp_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_iPSC.c3")],1, var))
+HC.var["Chimp_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_MSC.c1")],1, var))
+HC.var["Chimp_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c1")],1, var))
+HC.var["Chimp_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c2")],1, var))
+HC.var.melt <- melt(HC.var,
+                    id.vars="gene",
+                    measure.vars=c("Human_iPSC.c1","Human_iPSC.c2","Human_iPSC.c3","Human_MSC.c1","Human_Osteogenic.c1","Human_Osteogenic.c2",
+                                   "Chimp_iPSC.c1","Chimp_iPSC.c2","Chimp_iPSC.c3","Chimp_MSC.c1","Chimp_Osteogenic.c1","Chimp_Osteogenic.c2"))
+HC.var.melt$species <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.var.melt$cluster <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.var.melt, aes(x=species, y=log2(value), fill=cluster)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 variance in gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("iPSC.c1","iPSC.c2","iPSC.c3","MSC.c1","Osteogenic.c1","Osteogenic.c2"),
+                    values=c("pink","pink3","pink4","mediumorchid","dodgerblue","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+ggplot(HC.var.melt %>% filter(cluster %in% c("iPSC.c1","MSC.c1","Osteogenic.c1")), aes(x=species, y=log2(value), fill=cluster)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 variance in gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("iPSC.c1","MSC.c1","Osteogenic.c1"),
+                    values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.var$Human_iPSC.c1,HC.var$Human_MSC.c1)       
+t.test(HC.var$Human_MSC.c1,HC.var$Human_Osteogenic.c1) 
+t.test(HC.var$Chimp_iPSC.c1,HC.var$Chimp_MSC.c1)       
+t.test(HC.var$Chimp_MSC.c1,HC.var$Chimp_Osteogenic.c1) 
+
+```
+
+### SC: General Clusters vs. Individuals (res=0.05)
+
+```{r}
+
+# Compile group labels of each individual
+groupFactor <- factor(paste(dge$samples$Individual,dge$samples$Cluster,sep="_"),
+                      levels=c("H1_iPSC.c1","H1_iPSC.c2","H1_iPSC.c3","H1_MSC.c1","H1_Osteogenic.c1","H1_Osteogenic.c2",
+                               "H2_iPSC.c1","H2_iPSC.c2","H2_iPSC.c3","H2_MSC.c1","H2_Osteogenic.c1","H2_Osteogenic.c2",
+                               "H3_iPSC.c1","H3_iPSC.c2","H3_iPSC.c3","H3_MSC.c1","H3_Osteogenic.c1","H3_Osteogenic.c2",
+                               "H4_iPSC.c1","H4_iPSC.c2","H4_iPSC.c3","H4_MSC.c1","H4_Osteogenic.c1","H4_Osteogenic.c2",
+                               "H5_iPSC.c1","H5_iPSC.c2","H5_iPSC.c3","H5_MSC.c1","H5_Osteogenic.c1","H5_Osteogenic.c2",
+                               "H6_iPSC.c1","H6_iPSC.c2","H6_iPSC.c3","H6_MSC.c1","H6_Osteogenic.c1","H6_Osteogenic.c2",
+                               "C1_iPSC.c1","C1_iPSC.c2","C1_iPSC.c3","C1_MSC.c1","C1_Osteogenic.c1","C1_Osteogenic.c2",
+                               "C2_iPSC.c1","C2_iPSC.c2","C2_iPSC.c3","C2_MSC.c1","C2_Osteogenic.c1","C2_Osteogenic.c2",
+                               "C3_iPSC.c1","C3_iPSC.c2","C3_iPSC.c3","C3_MSC.c1","C3_Osteogenic.c1","C3_Osteogenic.c2",
+                               "C4_iPSC.c1","C4_iPSC.c2","C4_iPSC.c3","C4_MSC.c1","C4_Osteogenic.c1","C4_Osteogenic.c2",
+                               "C5_iPSC.c1","C5_iPSC.c2","C5_iPSC.c3","C5_MSC.c1","C5_Osteogenic.c1","C5_Osteogenic.c2",
+                               "C6_iPSC.c1","C6_iPSC.c2","C6_iPSC.c3","C6_MSC.c1","C6_Osteogenic.c1","C6_Osteogenic.c2"))
+
+# Calculate log2cpm means within individuals - generally mean decreases in MSC.c1 (except C1, C3, C6, H1, H3, H4, H6) and decreases in Osteogenic.c1 (except H1)
+HC.mean <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.mean["gene"] <- rownames(tmm)
+HC.mean["H1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_iPSC.c1")],1, mean))
+HC.mean["H1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_iPSC.c2")],1, mean))
+HC.mean["H1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_iPSC.c3")],1, mean))
+HC.mean["H1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_MSC.c1")],1, mean))
+HC.mean["H1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_Osteogenic.c1")],1, mean))
+HC.mean["H1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_Osteogenic.c2")],1, mean))
+HC.mean["H2_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_iPSC.c1")],1, mean))
+HC.mean["H2_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_iPSC.c2")],1, mean))
+HC.mean["H2_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_iPSC.c3")],1, mean))
+HC.mean["H2_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_MSC.c1")],1, mean))
+HC.mean["H2_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_Osteogenic.c1")],1, mean))
+HC.mean["H2_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_Osteogenic.c2")],1, mean))
+HC.mean["H3_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_iPSC.c1")],1, mean))
+HC.mean["H3_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_iPSC.c2")],1, mean))
+HC.mean["H3_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_iPSC.c3")],1, mean))
+HC.mean["H3_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_MSC.c1")],1, mean))
+HC.mean["H3_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_Osteogenic.c1")],1, mean))
+HC.mean["H3_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_Osteogenic.c2")],1, mean))
+HC.mean["H4_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_iPSC.c1")],1, mean))
+HC.mean["H4_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_iPSC.c2")],1, mean))
+HC.mean["H4_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_iPSC.c3")],1, mean))
+HC.mean["H4_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_MSC.c1")],1, mean))
+HC.mean["H4_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_Osteogenic.c1")],1, mean))
+HC.mean["H4_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_Osteogenic.c2")],1, mean))
+HC.mean["H5_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_iPSC.c1")],1, mean))
+HC.mean["H5_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_iPSC.c2")],1, mean))
+HC.mean["H5_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_iPSC.c3")],1, mean))
+HC.mean["H5_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_MSC.c1")],1, mean))
+HC.mean["H5_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_Osteogenic.c1")],1, mean))
+HC.mean["H5_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_Osteogenic.c2")],1, mean))
+HC.mean["H6_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_iPSC.c1")],1, mean))
+HC.mean["H6_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_iPSC.c2")],1, mean))
+HC.mean["H6_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_iPSC.c3")],1, mean))
+HC.mean["H6_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_MSC.c1")],1, mean))
+HC.mean["H6_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_Osteogenic.c1")],1, mean))
+HC.mean["H6_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_Osteogenic.c2")],1, mean))
+HC.mean["C1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_iPSC.c1")],1, mean))
+HC.mean["C1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_iPSC.c2")],1, mean))
+HC.mean["C1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_iPSC.c3")],1, mean))
+HC.mean["C1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_MSC.c1")],1, mean))
+HC.mean["C1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_Osteogenic.c1")],1, mean))
+HC.mean["C1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_Osteogenic.c2")],1, mean))
+HC.mean["C2_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_iPSC.c1")],1, mean))
+HC.mean["C2_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_iPSC.c2")],1, mean))
+HC.mean["C2_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_iPSC.c3")],1, mean))
+HC.mean["C2_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_MSC.c1")],1, mean))
+HC.mean["C2_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_Osteogenic.c1")],1, mean))
+HC.mean["C2_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_Osteogenic.c2")],1, mean))
+HC.mean["C3_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_iPSC.c1")],1, mean))
+HC.mean["C3_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_iPSC.c2")],1, mean))
+HC.mean["C3_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_iPSC.c3")],1, mean))
+HC.mean["C3_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_MSC.c1")],1, mean))
+HC.mean["C3_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_Osteogenic.c1")],1, mean))
+HC.mean["C3_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_Osteogenic.c2")],1, mean))
+HC.mean["C4_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_iPSC.c1")],1, mean))
+HC.mean["C4_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_iPSC.c2")],1, mean))
+HC.mean["C4_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_iPSC.c3")],1, mean))
+HC.mean["C4_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_MSC.c1")],1, mean))
+HC.mean["C4_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_Osteogenic.c1")],1, mean))
+HC.mean["C4_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_Osteogenic.c2")],1, mean))
+HC.mean["C5_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_iPSC.c1")],1, mean))
+HC.mean["C5_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_iPSC.c2")],1, mean))
+HC.mean["C5_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_iPSC.c3")],1, mean))
+HC.mean["C5_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_MSC.c1")],1, mean))
+HC.mean["C5_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_Osteogenic.c1")],1, mean))
+HC.mean["C5_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_Osteogenic.c2")],1, mean))
+HC.mean["C6_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_iPSC.c1")],1, mean))
+HC.mean["C6_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_iPSC.c2")],1, mean))
+HC.mean["C6_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_iPSC.c3")],1, mean))
+HC.mean["C6_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_MSC.c1")],1, mean))
+HC.mean["C6_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_Osteogenic.c1")],1, mean))
+HC.mean["C6_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_Osteogenic.c2")],1, mean))
+HC.mean.melt <- melt(HC.mean,
+                     id.vars="gene",
+                     measure.vars=c("H1_iPSC.c1","H1_iPSC.c2","H1_iPSC.c3","H1_MSC.c1","H1_Osteogenic.c1","H1_Osteogenic.c2",
+                                    "H2_iPSC.c1","H2_iPSC.c2","H2_iPSC.c3","H2_MSC.c1","H2_Osteogenic.c1","H2_Osteogenic.c2",
+                                    "H3_iPSC.c1","H3_iPSC.c2","H3_iPSC.c3","H3_MSC.c1","H3_Osteogenic.c1","H3_Osteogenic.c2",
+                                    "H4_iPSC.c1","H4_iPSC.c2","H4_iPSC.c3","H4_MSC.c1","H4_Osteogenic.c1","H4_Osteogenic.c2",
+                                    "H5_iPSC.c1","H5_iPSC.c2","H5_iPSC.c3","H5_MSC.c1","H5_Osteogenic.c1","H5_Osteogenic.c2",
+                                    "H6_iPSC.c1","H6_iPSC.c2","H6_iPSC.c3","H6_MSC.c1","H6_Osteogenic.c1","H6_Osteogenic.c2",
+                                    "C1_iPSC.c1","C1_iPSC.c2","C1_iPSC.c3","C1_MSC.c1","C1_Osteogenic.c1","C1_Osteogenic.c2",
+                                    "C2_iPSC.c1","C2_iPSC.c2","C2_iPSC.c3","C2_MSC.c1","C2_Osteogenic.c1","C2_Osteogenic.c2",
+                                    "C3_iPSC.c1","C3_iPSC.c2","C3_iPSC.c3","C3_MSC.c1","C3_Osteogenic.c1","C3_Osteogenic.c2",
+                                    "C4_iPSC.c1","C4_iPSC.c2","C4_iPSC.c3","C4_MSC.c1","C4_Osteogenic.c1","C4_Osteogenic.c2",
+                                    "C5_iPSC.c1","C5_iPSC.c2","C5_iPSC.c3","C5_MSC.c1","C5_Osteogenic.c1","C5_Osteogenic.c2",
+                                    "C6_iPSC.c1","C6_iPSC.c2","C6_iPSC.c3","C6_MSC.c1","C6_Osteogenic.c1","C6_Osteogenic.c2"))
+HC.mean.melt$individual <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.mean.melt$cluster <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.mean.melt, aes(x=individual, y=value, fill=cluster)) +
+  geom_boxplot(width=0.4) +
+  xlab("Individual") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("iPSC.c1","iPSC.c2","iPSC.c3","MSC.c1","Osteogenic.c1","Osteogenic.c2"),
+                    values=c("pink","pink3","pink4","mediumorchid","dodgerblue","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+ggplot(HC.mean.melt %>% filter(cluster %in% c("iPSC.c1","MSC.c1","Osteogenic.c1")), aes(x=individual, y=value, fill=cluster)) +
+  geom_boxplot(width=0.4) +
+  xlab("Individual") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("iPSC.c1","MSC.c1","Osteogenic.c1"),
+                    values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.mean$H1_iPSC.c1,HC.mean$H1_MSC.c1)       
+t.test(HC.mean$H1_MSC.c1,HC.mean$H1_Osteogenic.c1) 
+t.test(HC.mean$H2_iPSC.c1,HC.mean$H2_MSC.c1)       
+t.test(HC.mean$H2_MSC.c1,HC.mean$H2_Osteogenic.c1) 
+t.test(HC.mean$H3_iPSC.c1,HC.mean$H3_MSC.c1)       
+t.test(HC.mean$H3_MSC.c1,HC.mean$H3_Osteogenic.c1) 
+t.test(HC.mean$H4_iPSC.c1,HC.mean$H4_MSC.c1)       
+t.test(HC.mean$H4_MSC.c1,HC.mean$H4_Osteogenic.c1) 
+t.test(HC.mean$H5_iPSC.c1,HC.mean$H5_MSC.c1)       
+t.test(HC.mean$H5_MSC.c1,HC.mean$H5_Osteogenic.c1) 
+t.test(HC.mean$H6_iPSC.c1,HC.mean$H6_MSC.c1)       
+t.test(HC.mean$H6_MSC.c1,HC.mean$H6_Osteogenic.c1) 
+t.test(HC.mean$C1_iPSC.c1,HC.mean$C1_MSC.c1)       
+t.test(HC.mean$C1_MSC.c1,HC.mean$C1_Osteogenic.c1) 
+t.test(HC.mean$C2_iPSC.c1,HC.mean$C2_MSC.c1)       
+t.test(HC.mean$C2_MSC.c1,HC.mean$C2_Osteogenic.c1) 
+t.test(HC.mean$C3_iPSC.c1,HC.mean$C3_MSC.c1)       
+t.test(HC.mean$C3_MSC.c1,HC.mean$C3_Osteogenic.c1) 
+t.test(HC.mean$C4_iPSC.c1,HC.mean$C4_MSC.c1)       
+t.test(HC.mean$C4_MSC.c1,HC.mean$C4_Osteogenic.c1) 
+t.test(HC.mean$C5_iPSC.c1,HC.mean$C5_MSC.c1)       
+t.test(HC.mean$C5_MSC.c1,HC.mean$C5_Osteogenic.c1) 
+t.test(HC.mean$C6_iPSC.c1,HC.mean$C6_MSC.c1)       
+t.test(HC.mean$C6_MSC.c1,HC.mean$C6_Osteogenic.c1) 
+
+# Calculate log2cpm variances within species
+HC.var <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.var["gene"] <- rownames(tmm)
+HC.var["H1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_iPSC.c1")],1, var))
+HC.var["H1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_iPSC.c2")],1, var))
+HC.var["H1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_iPSC.c3")],1, var))
+HC.var["H1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_MSC.c1")],1, var))
+HC.var["H1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_Osteogenic.c1")],1, var))
+HC.var["H1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_Osteogenic.c2")],1, var))
+HC.var["H2_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_iPSC.c1")],1, var))
+HC.var["H2_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_iPSC.c2")],1, var))
+HC.var["H2_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_iPSC.c3")],1, var))
+HC.var["H2_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_MSC.c1")],1, var))
+HC.var["H2_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_Osteogenic.c1")],1, var))
+HC.var["H2_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_Osteogenic.c2")],1, var))
+HC.var["H3_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_iPSC.c1")],1, var))
+HC.var["H3_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_iPSC.c2")],1, var))
+HC.var["H3_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_iPSC.c3")],1, var))
+HC.var["H3_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_MSC.c1")],1, var))
+HC.var["H3_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_Osteogenic.c1")],1, var))
+HC.var["H3_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_Osteogenic.c2")],1, var))
+HC.var["H4_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_iPSC.c1")],1, var))
+HC.var["H4_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_iPSC.c2")],1, var))
+HC.var["H4_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_iPSC.c3")],1, var))
+HC.var["H4_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_MSC.c1")],1, var))
+HC.var["H4_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_Osteogenic.c1")],1, var))
+HC.var["H4_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_Osteogenic.c2")],1, var))
+HC.var["H5_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_iPSC.c1")],1, var))
+HC.var["H5_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_iPSC.c2")],1, var))
+HC.var["H5_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_iPSC.c3")],1, var))
+HC.var["H5_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_MSC.c1")],1, var))
+HC.var["H5_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_Osteogenic.c1")],1, var))
+HC.var["H5_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_Osteogenic.c2")],1, var))
+HC.var["H6_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_iPSC.c1")],1, var))
+HC.var["H6_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_iPSC.c2")],1, var))
+HC.var["H6_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_iPSC.c3")],1, var))
+HC.var["H6_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_MSC.c1")],1, var))
+HC.var["H6_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_Osteogenic.c1")],1, var))
+HC.var["H6_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_Osteogenic.c2")],1, var))
+HC.var["C1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_iPSC.c1")],1, var))
+HC.var["C1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_iPSC.c2")],1, var))
+HC.var["C1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_iPSC.c3")],1, var))
+HC.var["C1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_MSC.c1")],1, var))
+HC.var["C1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_Osteogenic.c1")],1, var))
+HC.var["C1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_Osteogenic.c2")],1, var))
+HC.var["C2_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_iPSC.c1")],1, var))
+HC.var["C2_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_iPSC.c2")],1, var))
+HC.var["C2_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_iPSC.c3")],1, var))
+HC.var["C2_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_MSC.c1")],1, var))
+HC.var["C2_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_Osteogenic.c1")],1, var))
+HC.var["C2_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_Osteogenic.c2")],1, var))
+HC.var["C3_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_iPSC.c1")],1, var))
+HC.var["C3_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_iPSC.c2")],1, var))
+HC.var["C3_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_iPSC.c3")],1, var))
+HC.var["C3_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_MSC.c1")],1, var))
+HC.var["C3_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_Osteogenic.c1")],1, var))
+HC.var["C3_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_Osteogenic.c2")],1, var))
+HC.var["C4_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_iPSC.c1")],1, var))
+HC.var["C4_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_iPSC.c2")],1, var))
+HC.var["C4_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_iPSC.c3")],1, var))
+HC.var["C4_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_MSC.c1")],1, var))
+HC.var["C4_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_Osteogenic.c1")],1, var))
+HC.var["C4_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_Osteogenic.c2")],1, var))
+HC.var["C5_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_iPSC.c1")],1, var))
+HC.var["C5_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_iPSC.c2")],1, var))
+HC.var["C5_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_iPSC.c3")],1, var))
+HC.var["C5_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_MSC.c1")],1, var))
+HC.var["C5_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_Osteogenic.c1")],1, var))
+HC.var["C5_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_Osteogenic.c2")],1, var))
+HC.var["C6_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_iPSC.c1")],1, var))
+HC.var["C6_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_iPSC.c2")],1, var))
+HC.var["C6_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_iPSC.c3")],1, var))
+HC.var["C6_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_MSC.c1")],1, var))
+HC.var["C6_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_Osteogenic.c1")],1, var))
+HC.var["C6_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_Osteogenic.c2")],1, var))
+HC.var.melt <- melt(HC.var,
+                     id.vars="gene",
+                     measure.vars=c("H1_iPSC.c1","H1_iPSC.c2","H1_iPSC.c3","H1_MSC.c1","H1_Osteogenic.c1","H1_Osteogenic.c2",
+                                    "H2_iPSC.c1","H2_iPSC.c2","H2_iPSC.c3","H2_MSC.c1","H2_Osteogenic.c1","H2_Osteogenic.c2",
+                                    "H3_iPSC.c1","H3_iPSC.c2","H3_iPSC.c3","H3_MSC.c1","H3_Osteogenic.c1","H3_Osteogenic.c2",
+                                    "H4_iPSC.c1","H4_iPSC.c2","H4_iPSC.c3","H4_MSC.c1","H4_Osteogenic.c1","H4_Osteogenic.c2",
+                                    "H5_iPSC.c1","H5_iPSC.c2","H5_iPSC.c3","H5_MSC.c1","H5_Osteogenic.c1","H5_Osteogenic.c2",
+                                    "H6_iPSC.c1","H6_iPSC.c2","H6_iPSC.c3","H6_MSC.c1","H6_Osteogenic.c1","H6_Osteogenic.c2",
+                                    "C1_iPSC.c1","C1_iPSC.c2","C1_iPSC.c3","C1_MSC.c1","C1_Osteogenic.c1","C1_Osteogenic.c2",
+                                    "C2_iPSC.c1","C2_iPSC.c2","C2_iPSC.c3","C2_MSC.c1","C2_Osteogenic.c1","C2_Osteogenic.c2",
+                                    "C3_iPSC.c1","C3_iPSC.c2","C3_iPSC.c3","C3_MSC.c1","C3_Osteogenic.c1","C3_Osteogenic.c2",
+                                    "C4_iPSC.c1","C4_iPSC.c2","C4_iPSC.c3","C4_MSC.c1","C4_Osteogenic.c1","C4_Osteogenic.c2",
+                                    "C5_iPSC.c1","C5_iPSC.c2","C5_iPSC.c3","C5_MSC.c1","C5_Osteogenic.c1","C5_Osteogenic.c2",
+                                    "C6_iPSC.c1","C6_iPSC.c2","C6_iPSC.c3","C6_MSC.c1","C6_Osteogenic.c1","C6_Osteogenic.c2"))
+HC.var.melt$individual <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.var.melt$cluster <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.var.melt, aes(x=individual, y=log2(value), fill=cluster)) +
+  geom_boxplot(width=0.4) +
+  xlab("Individual") +
+  ylab('log2 variance in gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("iPSC.c1","iPSC.c2","iPSC.c3","MSC.c1","Osteogenic.c1","Osteogenic.c2"),
+                    values=c("pink","pink3","pink4","mediumorchid","dodgerblue","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+ggplot(HC.var.melt %>% filter(cluster %in% c("iPSC.c1","MSC.c1","Osteogenic.c1")), aes(x=individual, y=log2(value), fill=cluster)) +
+  geom_boxplot(width=0.4) +
+  xlab("Individual") +
+  ylab('log2 variance in gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("iPSC.c1","MSC.c1","Osteogenic.c1"),
+                    values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.var$H1_iPSC.c1,HC.var$H1_MSC.c1)       
+t.test(HC.var$H1_MSC.c1,HC.var$H1_Osteogenic.c1) 
+t.test(HC.var$H2_iPSC.c1,HC.var$H2_MSC.c1)       
+t.test(HC.var$H2_MSC.c1,HC.var$H2_Osteogenic.c1) 
+t.test(HC.var$H3_iPSC.c1,HC.var$H3_MSC.c1)       
+t.test(HC.var$H3_MSC.c1,HC.var$H3_Osteogenic.c1) 
+t.test(HC.var$H4_iPSC.c1,HC.var$H4_MSC.c1)       
+t.test(HC.var$H4_MSC.c1,HC.var$H4_Osteogenic.c1) 
+t.test(HC.var$H5_iPSC.c1,HC.var$H5_MSC.c1)       
+t.test(HC.var$H5_MSC.c1,HC.var$H5_Osteogenic.c1) 
+t.test(HC.var$H6_iPSC.c1,HC.var$H6_MSC.c1)       
+t.test(HC.var$H6_MSC.c1,HC.var$H6_Osteogenic.c1) 
+t.test(HC.var$C1_iPSC.c1,HC.var$C1_MSC.c1)       
+t.test(HC.var$C1_MSC.c1,HC.var$C1_Osteogenic.c1) 
+t.test(HC.var$C2_iPSC.c1,HC.var$C2_MSC.c1)       
+t.test(HC.var$C2_MSC.c1,HC.var$C2_Osteogenic.c1) 
+t.test(HC.var$C3_iPSC.c1,HC.var$C3_MSC.c1)       
+t.test(HC.var$C3_MSC.c1,HC.var$C3_Osteogenic.c1) 
+t.test(HC.var$C4_iPSC.c1,HC.var$C4_MSC.c1)       
+t.test(HC.var$C4_MSC.c1,HC.var$C4_Osteogenic.c1) 
+t.test(HC.var$C5_iPSC.c1,HC.var$C5_MSC.c1)       
+t.test(HC.var$C5_MSC.c1,HC.var$C5_Osteogenic.c1) 
+t.test(HC.var$C6_iPSC.c1,HC.var$C6_MSC.c1)       
+t.test(HC.var$C6_MSC.c1,HC.var$C6_Osteogenic.c1) 
+
+```
+
+#### SC: General Clusters vs. Individual.Replicates (res=0.05)
+
+```{r}
+
+# Compile group labels of each individual
+groupFactor <- factor(paste(dge$samples$Individual.Replicate,dge$samples$Cluster,sep="_"),
+                      levels=c("H1.1_iPSC.c1","H1.1_iPSC.c2","H1.1_iPSC.c3","H1.1_MSC.c1","H1.1_Osteogenic.c1","H1.1_Osteogenic.c2",
+                               "H1.2_iPSC.c1","H1.2_iPSC.c2","H1.2_iPSC.c3","H1.2_MSC.c1","H1.2_Osteogenic.c1","H1.2_Osteogenic.c2",
+                               "H2.1_iPSC.c1","H2.1_iPSC.c2","H2.1_iPSC.c3","H2.1_MSC.c1","H2.1_Osteogenic.c1","H2.1_Osteogenic.c2",
+                               "H3.1_iPSC.c1","H3.1_iPSC.c2","H3.1_iPSC.c3","H3.1_MSC.c1","H3.1_Osteogenic.c1","H3.1_Osteogenic.c2",
+                               "H4.1_iPSC.c1","H4.1_iPSC.c2","H4.1_iPSC.c3","H4.1_MSC.c1","H4.1_Osteogenic.c1","H4.1_Osteogenic.c2",
+                               "H5.1_iPSC.c1","H5.1_iPSC.c2","H5.1_iPSC.c3","H5.1_MSC.c1","H5.1_Osteogenic.c1","H5.1_Osteogenic.c2",
+                               "H6.1_iPSC.c1","H6.1_iPSC.c2","H6.1_iPSC.c3","H6.1_MSC.c1","H6.1_Osteogenic.c1","H6.1_Osteogenic.c2",
+                               "C1.1_iPSC.c1","C1.1_iPSC.c2","C1.1_iPSC.c3","C1.1_MSC.c1","C1.1_Osteogenic.c1","C1.1_Osteogenic.c2",
+                               "C1.2_iPSC.c1","C1.2_iPSC.c2","C1.2_iPSC.c3","C1.2_MSC.c1","C1.2_Osteogenic.c1","C1.2_Osteogenic.c2",
+                               "C2.1_iPSC.c1","C2.1_iPSC.c2","C2.1_iPSC.c3","C2.1_MSC.c1","C2.1_Osteogenic.c1","C2.1_Osteogenic.c2",
+                               "C3.1_iPSC.c1","C3.1_iPSC.c2","C3.1_iPSC.c3","C3.1_MSC.c1","C3.1_Osteogenic.c1","C3.1_Osteogenic.c2",
+                               "C4.1_iPSC.c1","C4.1_iPSC.c2","C4.1_iPSC.c3","C4.1_MSC.c1","C4.1_Osteogenic.c1","C4.1_Osteogenic.c2",
+                               "C5.1_iPSC.c1","C5.1_iPSC.c2","C5.1_iPSC.c3","C5.1_MSC.c1","C5.1_Osteogenic.c1","C5.1_Osteogenic.c2",
+                               "C6.1_iPSC.c1","C6.1_iPSC.c2","C6.1_iPSC.c3","C6.1_MSC.c1","C6.1_Osteogenic.c1","C6.1_Osteogenic.c2"))
+
+# Calculate log2cpm means within individuals - generally mean decreases in MSC.c1 (except C1.1, C3.1, C6.1, H1.1, H1.2, H3.1, H4.1, H6.1) and decreases in Osteogenic.c1 (except C1.1, H1.1, H1.2)
+HC.mean <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.mean["gene"] <- rownames(tmm)
+HC.mean["H1.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_iPSC.c1")],1, mean))
+HC.mean["H1.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_iPSC.c2")],1, mean))
+HC.mean["H1.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_iPSC.c3")],1, mean))
+HC.mean["H1.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_MSC.c1")],1, mean))
+HC.mean["H1.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_Osteogenic.c1")],1, mean))
+HC.mean["H1.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_Osteogenic.c2")],1, mean))
+HC.mean["H1.2_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_iPSC.c1")],1, mean))
+HC.mean["H1.2_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_iPSC.c2")],1, mean))
+HC.mean["H1.2_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_iPSC.c3")],1, mean))
+HC.mean["H1.2_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_MSC.c1")],1, mean))
+HC.mean["H1.2_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_Osteogenic.c1")],1, mean))
+HC.mean["H1.2_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_Osteogenic.c2")],1, mean))
+HC.mean["H2.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_iPSC.c1")],1, mean))
+HC.mean["H2.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_iPSC.c2")],1, mean))
+HC.mean["H2.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_iPSC.c3")],1, mean))
+HC.mean["H2.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_MSC.c1")],1, mean))
+HC.mean["H2.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_Osteogenic.c1")],1, mean))
+HC.mean["H2.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_Osteogenic.c2")],1, mean))
+HC.mean["H3.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_iPSC.c1")],1, mean))
+HC.mean["H3.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_iPSC.c2")],1, mean))
+HC.mean["H3.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_iPSC.c3")],1, mean))
+HC.mean["H3.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_MSC.c1")],1, mean))
+HC.mean["H3.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_Osteogenic.c1")],1, mean))
+HC.mean["H3.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_Osteogenic.c2")],1, mean))
+HC.mean["H4.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_iPSC.c1")],1, mean))
+HC.mean["H4.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_iPSC.c2")],1, mean))
+HC.mean["H4.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_iPSC.c3")],1, mean))
+HC.mean["H4.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_MSC.c1")],1, mean))
+HC.mean["H4.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_Osteogenic.c1")],1, mean))
+HC.mean["H4.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_Osteogenic.c2")],1, mean))
+HC.mean["H5.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_iPSC.c1")],1, mean))
+HC.mean["H5.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_iPSC.c2")],1, mean))
+HC.mean["H5.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_iPSC.c3")],1, mean))
+HC.mean["H5.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_MSC.c1")],1, mean))
+HC.mean["H5.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_Osteogenic.c1")],1, mean))
+HC.mean["H5.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_Osteogenic.c2")],1, mean))
+HC.mean["H6.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_iPSC.c1")],1, mean))
+HC.mean["H6.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_iPSC.c2")],1, mean))
+HC.mean["H6.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_iPSC.c3")],1, mean))
+HC.mean["H6.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_MSC.c1")],1, mean))
+HC.mean["H6.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_Osteogenic.c1")],1, mean))
+HC.mean["H6.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_Osteogenic.c2")],1, mean))
+HC.mean["C1.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_iPSC.c1")],1, mean))
+HC.mean["C1.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_iPSC.c2")],1, mean))
+HC.mean["C1.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_iPSC.c3")],1, mean))
+HC.mean["C1.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_MSC.c1")],1, mean))
+HC.mean["C1.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_Osteogenic.c1")],1, mean))
+HC.mean["C1.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_Osteogenic.c2")],1, mean))
+HC.mean["C1.2_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_iPSC.c1")],1, mean))
+HC.mean["C1.2_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_iPSC.c2")],1, mean))
+HC.mean["C1.2_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_iPSC.c3")],1, mean))
+HC.mean["C1.2_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_MSC.c1")],1, mean))
+HC.mean["C1.2_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_Osteogenic.c1")],1, mean))
+HC.mean["C1.2_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_Osteogenic.c2")],1, mean))
+HC.mean["C2.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_iPSC.c1")],1, mean))
+HC.mean["C2.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_iPSC.c2")],1, mean))
+HC.mean["C2.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_iPSC.c3")],1, mean))
+HC.mean["C2.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_MSC.c1")],1, mean))
+HC.mean["C2.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_Osteogenic.c1")],1, mean))
+HC.mean["C2.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_Osteogenic.c2")],1, mean))
+HC.mean["C3.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_iPSC.c1")],1, mean))
+HC.mean["C3.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_iPSC.c2")],1, mean))
+HC.mean["C3.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_iPSC.c3")],1, mean))
+HC.mean["C3.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_MSC.c1")],1, mean))
+HC.mean["C3.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_Osteogenic.c1")],1, mean))
+HC.mean["C3.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_Osteogenic.c2")],1, mean))
+HC.mean["C4.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_iPSC.c1")],1, mean))
+HC.mean["C4.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_iPSC.c2")],1, mean))
+HC.mean["C4.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_iPSC.c3")],1, mean))
+HC.mean["C4.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_MSC.c1")],1, mean))
+HC.mean["C4.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_Osteogenic.c1")],1, mean))
+HC.mean["C4.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_Osteogenic.c2")],1, mean))
+HC.mean["C5.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_iPSC.c1")],1, mean))
+HC.mean["C5.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_iPSC.c2")],1, mean))
+HC.mean["C5.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_iPSC.c3")],1, mean))
+HC.mean["C5.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_MSC.c1")],1, mean))
+HC.mean["C5.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_Osteogenic.c1")],1, mean))
+HC.mean["C5.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_Osteogenic.c2")],1, mean))
+HC.mean["C6.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_iPSC.c1")],1, mean))
+HC.mean["C6.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_iPSC.c2")],1, mean))
+HC.mean["C6.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_iPSC.c3")],1, mean))
+HC.mean["C6.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_MSC.c1")],1, mean))
+HC.mean["C6.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_Osteogenic.c1")],1, mean))
+HC.mean["C6.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_Osteogenic.c2")],1, mean))
+HC.mean.melt <- melt(HC.mean,
+                     id.vars="gene",
+                     measure.vars=c("H1.1_iPSC.c1","H1.1_iPSC.c2","H1.1_iPSC.c3","H1.1_MSC.c1","H1.1_Osteogenic.c1","H1.1_Osteogenic.c2",
+                                    "H1.2_iPSC.c1","H1.2_iPSC.c2","H1.2_iPSC.c3","H1.2_MSC.c1","H1.2_Osteogenic.c1","H1.2_Osteogenic.c2",
+                                    "H2.1_iPSC.c1","H2.1_iPSC.c2","H2.1_iPSC.c3","H2.1_MSC.c1","H2.1_Osteogenic.c1","H2.1_Osteogenic.c2",
+                                    "H3.1_iPSC.c1","H3.1_iPSC.c2","H3.1_iPSC.c3","H3.1_MSC.c1","H3.1_Osteogenic.c1","H3.1_Osteogenic.c2",
+                                    "H4.1_iPSC.c1","H4.1_iPSC.c2","H4.1_iPSC.c3","H4.1_MSC.c1","H4.1_Osteogenic.c1","H4.1_Osteogenic.c2",
+                                    "H5.1_iPSC.c1","H5.1_iPSC.c2","H5.1_iPSC.c3","H5.1_MSC.c1","H5.1_Osteogenic.c1","H5.1_Osteogenic.c2",
+                                    "H6.1_iPSC.c1","H6.1_iPSC.c2","H6.1_iPSC.c3","H6.1_MSC.c1","H6.1_Osteogenic.c1","H6.1_Osteogenic.c2",
+                                    "C1.1_iPSC.c1","C1.1_iPSC.c2","C1.1_iPSC.c3","C1.1_MSC.c1","C1.1_Osteogenic.c1","C1.1_Osteogenic.c2",
+                                    "C1.2_iPSC.c1","C1.2_iPSC.c2","C1.2_iPSC.c3","C1.2_MSC.c1","C1.2_Osteogenic.c1","C1.2_Osteogenic.c2",
+                                    "C2.1_iPSC.c1","C2.1_iPSC.c2","C2.1_iPSC.c3","C2.1_MSC.c1","C2.1_Osteogenic.c1","C2.1_Osteogenic.c2",
+                                    "C3.1_iPSC.c1","C3.1_iPSC.c2","C3.1_iPSC.c3","C3.1_MSC.c1","C3.1_Osteogenic.c1","C3.1_Osteogenic.c2",
+                                    "C4.1_iPSC.c1","C4.1_iPSC.c2","C4.1_iPSC.c3","C4.1_MSC.c1","C4.1_Osteogenic.c1","C4.1_Osteogenic.c2",
+                                    "C5.1_iPSC.c1","C5.1_iPSC.c2","C5.1_iPSC.c3","C5.1_MSC.c1","C5.1_Osteogenic.c1","C5.1_Osteogenic.c2",
+                                    "C6.1_iPSC.c1","C6.1_iPSC.c2","C6.1_iPSC.c3","C6.1_MSC.c1","C6.1_Osteogenic.c1","C6.1_Osteogenic.c2"))
+HC.mean.melt$individual <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.mean.melt$cluster <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.mean.melt, aes(x=individual, y=value, fill=cluster)) +
+  geom_boxplot(width=0.4) +
+  xlab("Individual") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("iPSC.c1","iPSC.c2","iPSC.c3","MSC.c1","Osteogenic.c1","Osteogenic.c2"),
+                    values=c("pink","pink3","pink4","mediumorchid","dodgerblue","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+ggplot(HC.mean.melt %>% filter(cluster %in% c("iPSC.c1","MSC.c1","Osteogenic.c1")), aes(x=individual, y=value, fill=cluster)) +
+  geom_boxplot(width=0.4) +
+  xlab("Individual") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("iPSC.c1","MSC.c1","Osteogenic.c1"),
+                    values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.mean$H1.1_iPSC.c1,HC.mean$H1.1_MSC.c1)       
+t.test(HC.mean$H1.1_MSC.c1,HC.mean$H1.1_Osteogenic.c1) 
+t.test(HC.mean$H1.2_iPSC.c1,HC.mean$H1.2_MSC.c1)       
+t.test(HC.mean$H1.2_MSC.c1,HC.mean$H1.2_Osteogenic.c1) 
+t.test(HC.mean$H2.1_iPSC.c1,HC.mean$H2.1_MSC.c1)       
+t.test(HC.mean$H2.1_MSC.c1,HC.mean$H2.1_Osteogenic.c1) 
+t.test(HC.mean$H3.1_iPSC.c1,HC.mean$H3.1_MSC.c1)       
+t.test(HC.mean$H3.1_MSC.c1,HC.mean$H3.1_Osteogenic.c1) 
+t.test(HC.mean$H4.1_iPSC.c1,HC.mean$H4.1_MSC.c1)       
+t.test(HC.mean$H4.1_MSC.c1,HC.mean$H4.1_Osteogenic.c1) 
+t.test(HC.mean$H5.1_iPSC.c1,HC.mean$H5.1_MSC.c1)       
+t.test(HC.mean$H5.1_MSC.c1,HC.mean$H5.1_Osteogenic.c1) 
+t.test(HC.mean$H6.1_iPSC.c1,HC.mean$H6.1_MSC.c1)       
+t.test(HC.mean$H6.1_MSC.c1,HC.mean$H6.1_Osteogenic.c1) 
+t.test(HC.mean$C1.1_iPSC.c1,HC.mean$C1.1_MSC.c1)       
+t.test(HC.mean$C1.1_MSC.c1,HC.mean$C1.1_Osteogenic.c1) 
+t.test(HC.mean$C1.2_iPSC.c1,HC.mean$C1.2_MSC.c1)       
+t.test(HC.mean$C1.2_MSC.c1,HC.mean$C1.2_Osteogenic.c1) 
+t.test(HC.mean$C2.1_iPSC.c1,HC.mean$C2.1_MSC.c1)       
+t.test(HC.mean$C2.1_MSC.c1,HC.mean$C2.1_Osteogenic.c1) 
+t.test(HC.mean$C3.1_iPSC.c1,HC.mean$C3.1_MSC.c1)       
+t.test(HC.mean$C3.1_MSC.c1,HC.mean$C3.1_Osteogenic.c1) 
+t.test(HC.mean$C4.1_iPSC.c1,HC.mean$C4.1_MSC.c1)       
+t.test(HC.mean$C4.1_MSC.c1,HC.mean$C4.1_Osteogenic.c1) 
+t.test(HC.mean$C5.1_iPSC.c1,HC.mean$C5.1_MSC.c1)       
+t.test(HC.mean$C5.1_MSC.c1,HC.mean$C5.1_Osteogenic.c1) 
+t.test(HC.mean$C6.1_iPSC.c1,HC.mean$C6.1_MSC.c1)       
+t.test(HC.mean$C6.1_MSC.c1,HC.mean$C6.1_Osteogenic.c1) 
+
+# Calculate log2cpm variances within species
+HC.var <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.var["gene"] <- rownames(tmm)
+HC.var["H1.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_iPSC.c1")],1, var))
+HC.var["H1.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_iPSC.c2")],1, var))
+HC.var["H1.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_iPSC.c3")],1, var))
+HC.var["H1.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_MSC.c1")],1, var))
+HC.var["H1.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_Osteogenic.c1")],1, var))
+HC.var["H1.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_Osteogenic.c2")],1, var))
+HC.var["H1.2_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_iPSC.c1")],1, var))
+HC.var["H1.2_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_iPSC.c2")],1, var))
+HC.var["H1.2_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_iPSC.c3")],1, var))
+HC.var["H1.2_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_MSC.c1")],1, var))
+HC.var["H1.2_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_Osteogenic.c1")],1, var))
+HC.var["H1.2_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_Osteogenic.c2")],1, var))
+HC.var["H2.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_iPSC.c1")],1, var))
+HC.var["H2.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_iPSC.c2")],1, var))
+HC.var["H2.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_iPSC.c3")],1, var))
+HC.var["H2.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_MSC.c1")],1, var))
+HC.var["H2.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_Osteogenic.c1")],1, var))
+HC.var["H2.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_Osteogenic.c2")],1, var))
+HC.var["H3.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_iPSC.c1")],1, var))
+HC.var["H3.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_iPSC.c2")],1, var))
+HC.var["H3.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_iPSC.c3")],1, var))
+HC.var["H3.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_MSC.c1")],1, var))
+HC.var["H3.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_Osteogenic.c1")],1, var))
+HC.var["H3.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_Osteogenic.c2")],1, var))
+HC.var["H4.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_iPSC.c1")],1, var))
+HC.var["H4.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_iPSC.c2")],1, var))
+HC.var["H4.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_iPSC.c3")],1, var))
+HC.var["H4.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_MSC.c1")],1, var))
+HC.var["H4.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_Osteogenic.c1")],1, var))
+HC.var["H4.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_Osteogenic.c2")],1, var))
+HC.var["H5.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_iPSC.c1")],1, var))
+HC.var["H5.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_iPSC.c2")],1, var))
+HC.var["H5.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_iPSC.c3")],1, var))
+HC.var["H5.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_MSC.c1")],1, var))
+HC.var["H5.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_Osteogenic.c1")],1, var))
+HC.var["H5.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_Osteogenic.c2")],1, var))
+HC.var["H6.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_iPSC.c1")],1, var))
+HC.var["H6.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_iPSC.c2")],1, var))
+HC.var["H6.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_iPSC.c3")],1, var))
+HC.var["H6.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_MSC.c1")],1, var))
+HC.var["H6.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_Osteogenic.c1")],1, var))
+HC.var["H6.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_Osteogenic.c2")],1, var))
+HC.var["C1.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_iPSC.c1")],1, var))
+HC.var["C1.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_iPSC.c2")],1, var))
+HC.var["C1.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_iPSC.c3")],1, var))
+HC.var["C1.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_MSC.c1")],1, var))
+HC.var["C1.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_Osteogenic.c1")],1, var))
+HC.var["C1.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_Osteogenic.c2")],1, var))
+HC.var["C1.2_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_iPSC.c1")],1, var))
+HC.var["C1.2_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_iPSC.c2")],1, var))
+HC.var["C1.2_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_iPSC.c3")],1, var))
+HC.var["C1.2_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_MSC.c1")],1, var))
+HC.var["C1.2_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_Osteogenic.c1")],1, var))
+HC.var["C1.2_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_Osteogenic.c2")],1, var))
+HC.var["C2.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_iPSC.c1")],1, var))
+HC.var["C2.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_iPSC.c2")],1, var))
+HC.var["C2.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_iPSC.c3")],1, var))
+HC.var["C2.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_MSC.c1")],1, var))
+HC.var["C2.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_Osteogenic.c1")],1, var))
+HC.var["C2.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_Osteogenic.c2")],1, var))
+HC.var["C3.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_iPSC.c1")],1, var))
+HC.var["C3.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_iPSC.c2")],1, var))
+HC.var["C3.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_iPSC.c3")],1, var))
+HC.var["C3.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_MSC.c1")],1, var))
+HC.var["C3.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_Osteogenic.c1")],1, var))
+HC.var["C3.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_Osteogenic.c2")],1, var))
+HC.var["C4.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_iPSC.c1")],1, var))
+HC.var["C4.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_iPSC.c2")],1, var))
+HC.var["C4.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_iPSC.c3")],1, var))
+HC.var["C4.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_MSC.c1")],1, var))
+HC.var["C4.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_Osteogenic.c1")],1, var))
+HC.var["C4.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_Osteogenic.c2")],1, var))
+HC.var["C5.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_iPSC.c1")],1, var))
+HC.var["C5.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_iPSC.c2")],1, var))
+HC.var["C5.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_iPSC.c3")],1, var))
+HC.var["C5.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_MSC.c1")],1, var))
+HC.var["C5.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_Osteogenic.c1")],1, var))
+HC.var["C5.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_Osteogenic.c2")],1, var))
+HC.var["C6.1_iPSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_iPSC.c1")],1, var))
+HC.var["C6.1_iPSC.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_iPSC.c2")],1, var))
+HC.var["C6.1_iPSC.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_iPSC.c3")],1, var))
+HC.var["C6.1_MSC.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_MSC.c1")],1, var))
+HC.var["C6.1_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_Osteogenic.c1")],1, var))
+HC.var["C6.1_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_Osteogenic.c2")],1, var))
+HC.var.melt <- melt(HC.var,
+                     id.vars="gene",
+                     measure.vars=c("H1.1_iPSC.c1","H1.1_iPSC.c2","H1.1_iPSC.c3","H1.1_MSC.c1","H1.1_Osteogenic.c1","H1.1_Osteogenic.c2",
+                                    "H1.2_iPSC.c1","H1.2_iPSC.c2","H1.2_iPSC.c3","H1.2_MSC.c1","H1.2_Osteogenic.c1","H1.2_Osteogenic.c2",
+                                    "H2.1_iPSC.c1","H2.1_iPSC.c2","H2.1_iPSC.c3","H2.1_MSC.c1","H2.1_Osteogenic.c1","H2.1_Osteogenic.c2",
+                                    "H3.1_iPSC.c1","H3.1_iPSC.c2","H3.1_iPSC.c3","H3.1_MSC.c1","H3.1_Osteogenic.c1","H3.1_Osteogenic.c2",
+                                    "H4.1_iPSC.c1","H4.1_iPSC.c2","H4.1_iPSC.c3","H4.1_MSC.c1","H4.1_Osteogenic.c1","H4.1_Osteogenic.c2",
+                                    "H5.1_iPSC.c1","H5.1_iPSC.c2","H5.1_iPSC.c3","H5.1_MSC.c1","H5.1_Osteogenic.c1","H5.1_Osteogenic.c2",
+                                    "H6.1_iPSC.c1","H6.1_iPSC.c2","H6.1_iPSC.c3","H6.1_MSC.c1","H6.1_Osteogenic.c1","H6.1_Osteogenic.c2",
+                                    "C1.1_iPSC.c1","C1.1_iPSC.c2","C1.1_iPSC.c3","C1.1_MSC.c1","C1.1_Osteogenic.c1","C1.1_Osteogenic.c2",
+                                    "C1.2_iPSC.c1","C1.2_iPSC.c2","C1.2_iPSC.c3","C1.2_MSC.c1","C1.2_Osteogenic.c1","C1.2_Osteogenic.c2",
+                                    "C2.1_iPSC.c1","C2.1_iPSC.c2","C2.1_iPSC.c3","C2.1_MSC.c1","C2.1_Osteogenic.c1","C2.1_Osteogenic.c2",
+                                    "C3.1_iPSC.c1","C3.1_iPSC.c2","C3.1_iPSC.c3","C3.1_MSC.c1","C3.1_Osteogenic.c1","C3.1_Osteogenic.c2",
+                                    "C4.1_iPSC.c1","C4.1_iPSC.c2","C4.1_iPSC.c3","C4.1_MSC.c1","C4.1_Osteogenic.c1","C4.1_Osteogenic.c2",
+                                    "C5.1_iPSC.c1","C5.1_iPSC.c2","C5.1_iPSC.c3","C5.1_MSC.c1","C5.1_Osteogenic.c1","C5.1_Osteogenic.c2",
+                                    "C6.1_iPSC.c1","C6.1_iPSC.c2","C6.1_iPSC.c3","C6.1_MSC.c1","C6.1_Osteogenic.c1","C6.1_Osteogenic.c2"))
+HC.var.melt$individual <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.var.melt$cluster <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.var.melt, aes(x=individual, y=log2(value), fill=cluster)) +
+  geom_boxplot(width=0.4) +
+  xlab("Individual") +
+  ylab('log2 variance in gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("iPSC.c1","iPSC.c2","iPSC.c3","MSC.c1","Osteogenic.c1","Osteogenic.c2"),
+                    values=c("pink","pink3","pink4","mediumorchid","dodgerblue","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+ggplot(HC.var.melt %>% filter(cluster %in% c("iPSC.c1","MSC.c1","Osteogenic.c1")), aes(x=individual, y=log2(value), fill=cluster)) +
+  geom_boxplot(width=0.4) +
+  xlab("Individual") +
+  ylab('log2 variance in gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("iPSC.c1","MSC.c1","Osteogenic.c1"),
+                    values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.var$H1.1_iPSC.c1,HC.var$H1.1_MSC.c1)       
+t.test(HC.var$H1.1_MSC.c1,HC.var$H1.1_Osteogenic.c1) 
+t.test(HC.var$H1.2_iPSC.c1,HC.var$H1.2_MSC.c1)       
+t.test(HC.var$H1.2_MSC.c1,HC.var$H1.2_Osteogenic.c1) 
+t.test(HC.var$H2.1_iPSC.c1,HC.var$H2.1_MSC.c1)       
+t.test(HC.var$H2.1_MSC.c1,HC.var$H2.1_Osteogenic.c1) 
+t.test(HC.var$H3.1_iPSC.c1,HC.var$H3.1_MSC.c1)       
+t.test(HC.var$H3.1_MSC.c1,HC.var$H3.1_Osteogenic.c1) 
+t.test(HC.var$H4.1_iPSC.c1,HC.var$H4.1_MSC.c1)       
+t.test(HC.var$H4.1_MSC.c1,HC.var$H4.1_Osteogenic.c1) 
+t.test(HC.var$H5.1_iPSC.c1,HC.var$H5.1_MSC.c1)       
+t.test(HC.var$H5.1_MSC.c1,HC.var$H5.1_Osteogenic.c1) 
+t.test(HC.var$H6.1_iPSC.c1,HC.var$H6.1_MSC.c1)       
+t.test(HC.var$H6.1_MSC.c1,HC.var$H6.1_Osteogenic.c1) 
+t.test(HC.var$C1.1_iPSC.c1,HC.var$C1.1_MSC.c1)       
+t.test(HC.var$C1.1_MSC.c1,HC.var$C1.1_Osteogenic.c1) 
+t.test(HC.var$C1.2_iPSC.c1,HC.var$C1.2_MSC.c1)       
+t.test(HC.var$C1.2_MSC.c1,HC.var$C1.2_Osteogenic.c1) 
+t.test(HC.var$C2.1_iPSC.c1,HC.var$C2.1_MSC.c1)       
+t.test(HC.var$C2.1_MSC.c1,HC.var$C2.1_Osteogenic.c1) 
+t.test(HC.var$C3.1_iPSC.c1,HC.var$C3.1_MSC.c1)       
+t.test(HC.var$C3.1_MSC.c1,HC.var$C3.1_Osteogenic.c1) 
+t.test(HC.var$C4.1_iPSC.c1,HC.var$C4.1_MSC.c1)       
+t.test(HC.var$C4.1_MSC.c1,HC.var$C4.1_Osteogenic.c1) 
+t.test(HC.var$C5.1_iPSC.c1,HC.var$C5.1_MSC.c1)       
+t.test(HC.var$C5.1_MSC.c1,HC.var$C5.1_Osteogenic.c1) 
+t.test(HC.var$C6.1_iPSC.c1,HC.var$C6.1_MSC.c1)       
+t.test(HC.var$C6.1_MSC.c1,HC.var$C6.1_Osteogenic.c1) 
+
+```
+
+#### SC: General Ad Hoc Classifications vs. Species (thresh0)
+
+```{r}
+
+# Compile group labels of each species
+groupFactor <- factor(paste(dge$samples$Species,dge$samples$AdHoc.Assign.thresh0,sep = "_"),
+                      levels=c("Human_iPSC","Human_MSC","Human_Osteogenic","Human_other","Chimp_iPSC","Chimp_MSC","Chimp_Osteogenic","Chimp_other"))
+
+# Calculate log2cpm means within species
+HC.mean <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.mean["gene"] <- rownames(tmm)
+HC.mean["Human_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_iPSC")],1, mean))
+HC.mean["Human_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_MSC")],1, mean))
+HC.mean["Human_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic")],1, mean))
+HC.mean["Chimp_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_iPSC")],1, mean))
+HC.mean["Chimp_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_MSC")],1, mean))
+HC.mean["Chimp_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic")],1, mean))
+HC.mean.melt <- melt(HC.mean,id.vars="gene",measure.vars=c("Human_iPSC","Human_MSC","Human_Osteogenic","Chimp_iPSC","Chimp_MSC","Chimp_Osteogenic"))
+HC.mean.melt$species <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.mean.melt$adhoc <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.mean.melt, aes(x=species, y=value, fill=adhoc)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Ad Hoc", labels=c("iPSC","MSC","Osteogenic"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.mean$Human_iPSC,HC.mean$Human_MSC)       
+t.test(HC.mean$Human_MSC,HC.mean$Human_Osteogenic) 
+t.test(HC.mean$Chimp_iPSC,HC.mean$Chimp_MSC)       
+t.test(HC.mean$Chimp_MSC,HC.mean$Chimp_Osteogenic) 
+
+# Calculate log2cpm variances within species
+HC.var <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.var["gene"] <- rownames(tmm)
+HC.var["Human_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_iPSC")],1, var))
+HC.var["Human_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_MSC")],1, var))
+HC.var["Human_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic")],1, var))
+HC.var["Chimp_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_iPSC")],1, var))
+HC.var["Chimp_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_MSC")],1, var))
+HC.var["Chimp_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic")],1, var))
+HC.var.melt <- melt(HC.var,id.vars="gene",measure.vars=c("Human_iPSC","Human_MSC","Human_Osteogenic","Chimp_iPSC","Chimp_MSC","Chimp_Osteogenic"))
+HC.var.melt$species <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.var.melt$adhoc <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.var.melt, aes(x=species, y=value, fill=adhoc)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 variance in gene expression') +
+  scale_fill_manual(name="Ad Hoc", labels=c("iPSC","MSC","Osteogenic"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.var$Human_iPSC,HC.var$Human_MSC)       
+t.test(HC.var$Human_MSC,HC.var$Human_Osteogenic) 
+t.test(HC.var$Chimp_iPSC,HC.var$Chimp_MSC)       
+t.test(HC.var$Chimp_MSC,HC.var$Chimp_Osteogenic) 
+
+```
+
+### SC: General Ad Hoc Classifications vs. Individuals (thresh0)
+
+```{r}
+
+# Compile group labels of each individual
+groupFactor <- factor(paste(dge$samples$Individual,dge$samples$AdHoc.Assign.thresh0,sep = "_"),
+                      levels=c("H1_iPSC","H1_MSC","H1_Osteogenic",
+                               "H2_iPSC","H2_MSC","H2_Osteogenic",
+                               "H3_iPSC","H3_MSC","H3_Osteogenic",
+                               "H4_iPSC","H4_MSC","H4_Osteogenic",
+                               "H5_iPSC","H5_MSC","H5_Osteogenic",
+                               "H6_iPSC","H6_MSC","H6_Osteogenic",
+                               "C1_iPSC","C1_MSC","C1_Osteogenic",
+                               "C2_iPSC","C2_MSC","C2_Osteogenic",
+                               "C3_iPSC","C3_MSC","C3_Osteogenic",
+                               "C4_iPSC","C4_MSC","C4_Osteogenic",
+                               "C5_iPSC","C5_MSC","C5_Osteogenic",
+                               "C6_iPSC","C6_MSC","C6_Osteogenic"))
+
+# Calculate log2cpm means within individuals - generally mean increases in MSCs (except C4, C5, H5, H6) and decreases in Osteogenic cells (except H1)
+HC.mean <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.mean["gene"] <- rownames(tmm)
+HC.mean["H1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_iPSC")],1, mean))
+HC.mean["H1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_MSC")],1, mean))
+HC.mean["H1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_Osteogenic")],1, mean))
+HC.mean["H2_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_iPSC")],1, mean))
+HC.mean["H2_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_MSC")],1, mean))
+HC.mean["H2_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_Osteogenic")],1, mean))
+HC.mean["H3_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_iPSC")],1, mean))
+HC.mean["H3_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_MSC")],1, mean))
+HC.mean["H3_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_Osteogenic")],1, mean))
+HC.mean["H4_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_iPSC")],1, mean))
+HC.mean["H4_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_MSC")],1, mean))
+HC.mean["H4_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_Osteogenic")],1, mean))
+HC.mean["H5_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_iPSC")],1, mean))
+HC.mean["H5_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_MSC")],1, mean))
+HC.mean["H5_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_Osteogenic")],1, mean))
+HC.mean["H6_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_iPSC")],1, mean))
+HC.mean["H6_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_MSC")],1, mean))
+HC.mean["H6_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_Osteogenic")],1, mean))
+HC.mean["C1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_iPSC")],1, mean))
+HC.mean["C1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_MSC")],1, mean))
+HC.mean["C1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_Osteogenic")],1, mean))
+HC.mean["C2_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_iPSC")],1, mean))
+HC.mean["C2_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_MSC")],1, mean))
+HC.mean["C2_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_Osteogenic")],1, mean))
+HC.mean["C3_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_iPSC")],1, mean))
+HC.mean["C3_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_MSC")],1, mean))
+HC.mean["C3_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_Osteogenic")],1, mean))
+HC.mean["C4_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_iPSC")],1, mean))
+HC.mean["C4_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_MSC")],1, mean))
+HC.mean["C4_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_Osteogenic")],1, mean))
+HC.mean["C5_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_iPSC")],1, mean))
+HC.mean["C5_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_MSC")],1, mean))
+HC.mean["C5_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_Osteogenic")],1, mean))
+HC.mean["C6_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_iPSC")],1, mean))
+HC.mean["C6_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_MSC")],1, mean))
+HC.mean["C6_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_Osteogenic")],1, mean))
+HC.mean.melt <- melt(HC.mean,
+                     id.vars="gene",
+                     measure.vars=c("H1_iPSC","H1_MSC","H1_Osteogenic",
+                                    "H2_iPSC","H2_MSC","H2_Osteogenic",
+                                    "H3_iPSC","H3_MSC","H3_Osteogenic",
+                                    "H4_iPSC","H4_MSC","H4_Osteogenic",
+                                    "H5_iPSC","H5_MSC","H5_Osteogenic",
+                                    "H6_iPSC","H6_MSC","H6_Osteogenic",
+                                    "C1_iPSC","C1_MSC","C1_Osteogenic",
+                                    "C2_iPSC","C2_MSC","C2_Osteogenic",
+                                    "C3_iPSC","C3_MSC","C3_Osteogenic",
+                                    "C4_iPSC","C4_MSC","C4_Osteogenic",
+                                    "C5_iPSC","C5_MSC","C5_Osteogenic",
+                                    "C6_iPSC","C6_MSC","C6_Osteogenic"))
+HC.mean.melt$individual <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.mean.melt$adhoc <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.mean.melt, aes(x=individual, y=value, fill=adhoc)) +
+  geom_boxplot(width=0.4) +
+  xlab("Individual") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Ad Hoc", labels=c("iPSC","MSC","Osteogenic"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.mean$H1_iPSC,HC.mean$H1_MSC)       
+t.test(HC.mean$H1_MSC,HC.mean$H1_Osteogenic) 
+t.test(HC.mean$H2_iPSC,HC.mean$H2_MSC)       
+t.test(HC.mean$H2_MSC,HC.mean$H2_Osteogenic) 
+t.test(HC.mean$H3_iPSC,HC.mean$H3_MSC)       
+t.test(HC.mean$H3_MSC,HC.mean$H3_Osteogenic) 
+t.test(HC.mean$H4_iPSC,HC.mean$H4_MSC)       
+t.test(HC.mean$H4_MSC,HC.mean$H4_Osteogenic) 
+t.test(HC.mean$H5_iPSC,HC.mean$H5_MSC)       
+t.test(HC.mean$H5_MSC,HC.mean$H5_Osteogenic) 
+t.test(HC.mean$H6_iPSC,HC.mean$H6_MSC)       
+t.test(HC.mean$H6_MSC,HC.mean$H6_Osteogenic) 
+t.test(HC.mean$C1_iPSC,HC.mean$C1_MSC)       
+t.test(HC.mean$C1_MSC,HC.mean$C1_Osteogenic) 
+t.test(HC.mean$C2_iPSC,HC.mean$C2_MSC)       
+t.test(HC.mean$C2_MSC,HC.mean$C2_Osteogenic) 
+t.test(HC.mean$C3_iPSC,HC.mean$C3_MSC)       
+t.test(HC.mean$C3_MSC,HC.mean$C3_Osteogenic) 
+t.test(HC.mean$C4_iPSC,HC.mean$C4_MSC)       
+t.test(HC.mean$C4_MSC,HC.mean$C4_Osteogenic) 
+t.test(HC.mean$C5_iPSC,HC.mean$C5_MSC)       
+t.test(HC.mean$C5_MSC,HC.mean$C5_Osteogenic) 
+t.test(HC.mean$C6_iPSC,HC.mean$C6_MSC)       
+t.test(HC.mean$C6_MSC,HC.mean$C6_Osteogenic) 
+
+# Calculate log2cpm variances within species
+HC.var <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.var["gene"] <- rownames(tmm)
+HC.var["H1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_iPSC")],1, var))
+HC.var["H1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_MSC")],1, var))
+HC.var["H1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1_Osteogenic")],1, var))
+HC.var["H2_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_iPSC")],1, var))
+HC.var["H2_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_MSC")],1, var))
+HC.var["H2_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2_Osteogenic")],1, var))
+HC.var["H3_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_iPSC")],1, var))
+HC.var["H3_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_MSC")],1, var))
+HC.var["H3_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3_Osteogenic")],1, var))
+HC.var["H4_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_iPSC")],1, var))
+HC.var["H4_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_MSC")],1, var))
+HC.var["H4_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4_Osteogenic")],1, var))
+HC.var["H5_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_iPSC")],1, var))
+HC.var["H5_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_MSC")],1, var))
+HC.var["H5_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5_Osteogenic")],1, var))
+HC.var["H6_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_iPSC")],1, var))
+HC.var["H6_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_MSC")],1, var))
+HC.var["H6_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6_Osteogenic")],1, var))
+HC.var["C1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_iPSC")],1, var))
+HC.var["C1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_MSC")],1, var))
+HC.var["C1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1_Osteogenic")],1, var))
+HC.var["C2_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_iPSC")],1, var))
+HC.var["C2_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_MSC")],1, var))
+HC.var["C2_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2_Osteogenic")],1, var))
+HC.var["C3_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_iPSC")],1, var))
+HC.var["C3_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_MSC")],1, var))
+HC.var["C3_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3_Osteogenic")],1, var))
+HC.var["C4_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_iPSC")],1, var))
+HC.var["C4_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_MSC")],1, var))
+HC.var["C4_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4_Osteogenic")],1, var))
+HC.var["C5_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_iPSC")],1, var))
+HC.var["C5_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_MSC")],1, var))
+HC.var["C5_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5_Osteogenic")],1, var))
+HC.var["C6_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_iPSC")],1, var))
+HC.var["C6_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_MSC")],1, var))
+HC.var["C6_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6_Osteogenic")],1, var))
+HC.var.melt <- melt(HC.var,
+                     id.vars="gene",
+                     measure.vars=c("H1_iPSC","H1_MSC","H1_Osteogenic",
+                                    "H2_iPSC","H2_MSC","H2_Osteogenic",
+                                    "H3_iPSC","H3_MSC","H3_Osteogenic",
+                                    "H4_iPSC","H4_MSC","H4_Osteogenic",
+                                    "H5_iPSC","H5_MSC","H5_Osteogenic",
+                                    "H6_iPSC","H6_MSC","H6_Osteogenic",
+                                    "C1_iPSC","C1_MSC","C1_Osteogenic",
+                                    "C2_iPSC","C2_MSC","C2_Osteogenic",
+                                    "C3_iPSC","C3_MSC","C3_Osteogenic",
+                                    "C4_iPSC","C4_MSC","C4_Osteogenic",
+                                    "C5_iPSC","C5_MSC","C5_Osteogenic",
+                                    "C6_iPSC","C6_MSC","C6_Osteogenic"))
+HC.var.melt$individual <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.var.melt$adhoc <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.var.melt, aes(x=individual, y=value, fill=adhoc)) +
+  geom_boxplot(width=0.4) +
+  xlab("Individual") +
+  ylab('log2 variance in gene expression') +
+  scale_fill_manual(name="Ad Hoc", labels=c("iPSC","MSC","Osteogenic"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.var$H1_iPSC,HC.var$H1_MSC)       
+t.test(HC.var$H1_MSC,HC.var$H1_Osteogenic) 
+t.test(HC.var$H2_iPSC,HC.var$H2_MSC)       
+t.test(HC.var$H2_MSC,HC.var$H2_Osteogenic) 
+t.test(HC.var$H3_iPSC,HC.var$H3_MSC)       
+t.test(HC.var$H3_MSC,HC.var$H3_Osteogenic) 
+t.test(HC.var$H4_iPSC,HC.var$H4_MSC)       
+t.test(HC.var$H4_MSC,HC.var$H4_Osteogenic) 
+t.test(HC.var$H5_iPSC,HC.var$H5_MSC)       
+t.test(HC.var$H5_MSC,HC.var$H5_Osteogenic) 
+t.test(HC.var$H6_iPSC,HC.var$H6_MSC)       
+t.test(HC.var$H6_MSC,HC.var$H6_Osteogenic) 
+t.test(HC.var$C1_iPSC,HC.var$C1_MSC)       
+t.test(HC.var$C1_MSC,HC.var$C1_Osteogenic) 
+t.test(HC.var$C2_iPSC,HC.var$C2_MSC)       
+t.test(HC.var$C2_MSC,HC.var$C2_Osteogenic) 
+t.test(HC.var$C3_iPSC,HC.var$C3_MSC)       
+t.test(HC.var$C3_MSC,HC.var$C3_Osteogenic) 
+t.test(HC.var$C4_iPSC,HC.var$C4_MSC)       
+t.test(HC.var$C4_MSC,HC.var$C4_Osteogenic) 
+t.test(HC.var$C5_iPSC,HC.var$C5_MSC)       
+t.test(HC.var$C5_MSC,HC.var$C5_Osteogenic) 
+t.test(HC.var$C6_iPSC,HC.var$C6_MSC)       
+t.test(HC.var$C6_MSC,HC.var$C6_Osteogenic) 
+
+```
+
+### SC: General Ad Hoc Classifications vs. Individual.Replicates (thresh0)
+
+```{r}
+
+# Compile group labels of each individual
+groupFactor <- factor(paste(dge$samples$Individual.Replicate,dge$samples$AdHoc.Assign.thresh0,sep = "_"),
+                      levels=c("H1.1_iPSC","H1.1_MSC","H1.1_Osteogenic",
+                               "H1.2_iPSC","H1.2_MSC","H1.2_Osteogenic",
+                               "H2.1_iPSC","H2.1_MSC","H2.1_Osteogenic",
+                               "H3.1_iPSC","H3.1_MSC","H3.1_Osteogenic",
+                               "H4.1_iPSC","H4.1_MSC","H4.1_Osteogenic",
+                               "H5.1_iPSC","H5.1_MSC","H5.1_Osteogenic",
+                               "H6.1_iPSC","H6.1_MSC","H6.1_Osteogenic",
+                               "C1.1_iPSC","C1.1_MSC","C1.1_Osteogenic",
+                               "C1.2_iPSC","C1.2_MSC","C1.2_Osteogenic",
+                               "C2.1_iPSC","C2.1_MSC","C2.1_Osteogenic",
+                               "C3.1_iPSC","C3.1_MSC","C3.1_Osteogenic",
+                               "C4.1_iPSC","C4.1_MSC","C4.1_Osteogenic",
+                               "C5.1_iPSC","C5.1_MSC","C5.1_Osteogenic",
+                               "C6.1_iPSC","C6.1_MSC","C6.1_Osteogenic"))
+
+# Calculate log2cpm means within individuals - generally mean increases in MSCs (except C4.1, C5.1, H5.1, H6.1) and decreases in Osteogenic cells (except H1.2)
+HC.mean <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.mean["gene"] <- rownames(tmm)
+HC.mean["H1.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_iPSC")],1, mean))
+HC.mean["H1.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_MSC")],1, mean))
+HC.mean["H1.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_Osteogenic")],1, mean))
+HC.mean["H1.2_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_iPSC")],1, mean))
+HC.mean["H1.2_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_MSC")],1, mean))
+HC.mean["H1.2_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_Osteogenic")],1, mean))
+HC.mean["H2.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_iPSC")],1, mean))
+HC.mean["H2.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_MSC")],1, mean))
+HC.mean["H2.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_Osteogenic")],1, mean))
+HC.mean["H3.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_iPSC")],1, mean))
+HC.mean["H3.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_MSC")],1, mean))
+HC.mean["H3.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_Osteogenic")],1, mean))
+HC.mean["H4.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_iPSC")],1, mean))
+HC.mean["H4.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_MSC")],1, mean))
+HC.mean["H4.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_Osteogenic")],1, mean))
+HC.mean["H5.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_iPSC")],1, mean))
+HC.mean["H5.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_MSC")],1, mean))
+HC.mean["H5.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_Osteogenic")],1, mean))
+HC.mean["H6.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_iPSC")],1, mean))
+HC.mean["H6.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_MSC")],1, mean))
+HC.mean["H6.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_Osteogenic")],1, mean))
+HC.mean["C1.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_iPSC")],1, mean))
+HC.mean["C1.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_MSC")],1, mean))
+HC.mean["C1.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_Osteogenic")],1, mean))
+HC.mean["C1.2_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_iPSC")],1, mean))
+HC.mean["C1.2_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_MSC")],1, mean))
+HC.mean["C1.2_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_Osteogenic")],1, mean))
+HC.mean["C2.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_iPSC")],1, mean))
+HC.mean["C2.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_MSC")],1, mean))
+HC.mean["C2.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_Osteogenic")],1, mean))
+HC.mean["C3.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_iPSC")],1, mean))
+HC.mean["C3.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_MSC")],1, mean))
+HC.mean["C3.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_Osteogenic")],1, mean))
+HC.mean["C4.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_iPSC")],1, mean))
+HC.mean["C4.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_MSC")],1, mean))
+HC.mean["C4.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_Osteogenic")],1, mean))
+HC.mean["C5.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_iPSC")],1, mean))
+HC.mean["C5.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_MSC")],1, mean))
+HC.mean["C5.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_Osteogenic")],1, mean))
+HC.mean["C6.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_iPSC")],1, mean))
+HC.mean["C6.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_MSC")],1, mean))
+HC.mean["C6.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_Osteogenic")],1, mean))
+HC.mean.melt <- melt(HC.mean,
+                     id.vars="gene",
+                     measure.vars=c("H1.1_iPSC","H1.1_MSC","H1.1_Osteogenic",
+                                    "H1.2_iPSC","H1.2_MSC","H1.2_Osteogenic",
+                                    "H2.1_iPSC","H2.1_MSC","H2.1_Osteogenic",
+                                    "H3.1_iPSC","H3.1_MSC","H3.1_Osteogenic",
+                                    "H4.1_iPSC","H4.1_MSC","H4.1_Osteogenic",
+                                    "H5.1_iPSC","H5.1_MSC","H5.1_Osteogenic",
+                                    "H6.1_iPSC","H6.1_MSC","H6.1_Osteogenic",
+                                    "C1.1_iPSC","C1.1_MSC","C1.1_Osteogenic",
+                                    "C1.2_iPSC","C1.2_MSC","C1.2_Osteogenic",
+                                    "C2.1_iPSC","C2.1_MSC","C2.1_Osteogenic",
+                                    "C3.1_iPSC","C3.1_MSC","C3.1_Osteogenic",
+                                    "C4.1_iPSC","C4.1_MSC","C4.1_Osteogenic",
+                                    "C5.1_iPSC","C5.1_MSC","C5.1_Osteogenic",
+                                    "C6.1_iPSC","C6.1_MSC","C6.1_Osteogenic"))
+HC.mean.melt$individual <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.mean.melt$adhoc <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.mean.melt, aes(x=individual, y=value, fill=adhoc)) +
+  geom_boxplot(width=0.4) +
+  xlab("Individual") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Ad Hoc", labels=c("iPSC","MSC","Osteogenic"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.mean$H1.1_iPSC,HC.mean$H1.1_MSC)       
+t.test(HC.mean$H1.1_MSC,HC.mean$H1.1_Osteogenic) 
+t.test(HC.mean$H1.2_iPSC,HC.mean$H1.2_MSC)       
+t.test(HC.mean$H1.2_MSC,HC.mean$H1.2_Osteogenic) 
+t.test(HC.mean$H2.1_iPSC,HC.mean$H2.1_MSC)       
+t.test(HC.mean$H2.1_MSC,HC.mean$H2.1_Osteogenic) 
+t.test(HC.mean$H3.1_iPSC,HC.mean$H3.1_MSC)       
+t.test(HC.mean$H3.1_MSC,HC.mean$H3.1_Osteogenic) 
+t.test(HC.mean$H4.1_iPSC,HC.mean$H4.1_MSC)       
+t.test(HC.mean$H4.1_MSC,HC.mean$H4.1_Osteogenic) 
+t.test(HC.mean$H5.1_iPSC,HC.mean$H5.1_MSC)       
+t.test(HC.mean$H5.1_MSC,HC.mean$H5.1_Osteogenic) 
+t.test(HC.mean$H6.1_iPSC,HC.mean$H6.1_MSC)       
+t.test(HC.mean$H6.1_MSC,HC.mean$H6.1_Osteogenic) 
+t.test(HC.mean$C1.1_iPSC,HC.mean$C1.1_MSC)       
+t.test(HC.mean$C1.1_MSC,HC.mean$C1.1_Osteogenic) 
+t.test(HC.mean$C1.2_iPSC,HC.mean$C1.2_MSC)       
+t.test(HC.mean$C1.2_MSC,HC.mean$C1.2_Osteogenic) 
+t.test(HC.mean$C2.1_iPSC,HC.mean$C2.1_MSC)       
+t.test(HC.mean$C2.1_MSC,HC.mean$C2.1_Osteogenic) 
+t.test(HC.mean$C3.1_iPSC,HC.mean$C3.1_MSC)       
+t.test(HC.mean$C3.1_MSC,HC.mean$C3.1_Osteogenic) 
+t.test(HC.mean$C4.1_iPSC,HC.mean$C4.1_MSC)       
+t.test(HC.mean$C4.1_MSC,HC.mean$C4.1_Osteogenic) 
+t.test(HC.mean$C5.1_iPSC,HC.mean$C5.1_MSC)       
+t.test(HC.mean$C5.1_MSC,HC.mean$C5.1_Osteogenic) 
+t.test(HC.mean$C6.1_iPSC,HC.mean$C6.1_MSC)       
+t.test(HC.mean$C6.1_MSC,HC.mean$C6.1_Osteogenic) 
+
+# Calculate log2cpm variances within species
+HC.var <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.var["gene"] <- rownames(tmm)
+HC.var["H1.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_iPSC")],1, var))
+HC.var["H1.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_MSC")],1, var))
+HC.var["H1.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.1_Osteogenic")],1, var))
+HC.var["H1.2_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_iPSC")],1, var))
+HC.var["H1.2_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_MSC")],1, var))
+HC.var["H1.2_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H1.2_Osteogenic")],1, var))
+HC.var["H2.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_iPSC")],1, var))
+HC.var["H2.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_MSC")],1, var))
+HC.var["H2.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H2.1_Osteogenic")],1, var))
+HC.var["H3.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_iPSC")],1, var))
+HC.var["H3.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_MSC")],1, var))
+HC.var["H3.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H3.1_Osteogenic")],1, var))
+HC.var["H4.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_iPSC")],1, var))
+HC.var["H4.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_MSC")],1, var))
+HC.var["H4.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H4.1_Osteogenic")],1, var))
+HC.var["H5.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_iPSC")],1, var))
+HC.var["H5.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_MSC")],1, var))
+HC.var["H5.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H5.1_Osteogenic")],1, var))
+HC.var["H6.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_iPSC")],1, var))
+HC.var["H6.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_MSC")],1, var))
+HC.var["H6.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="H6.1_Osteogenic")],1, var))
+HC.var["C1.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_iPSC")],1, var))
+HC.var["C1.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_MSC")],1, var))
+HC.var["C1.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.1_Osteogenic")],1, var))
+HC.var["C1.2_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_iPSC")],1, var))
+HC.var["C1.2_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_MSC")],1, var))
+HC.var["C1.2_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C1.2_Osteogenic")],1, var))
+HC.var["C2.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_iPSC")],1, var))
+HC.var["C2.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_MSC")],1, var))
+HC.var["C2.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C2.1_Osteogenic")],1, var))
+HC.var["C3.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_iPSC")],1, var))
+HC.var["C3.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_MSC")],1, var))
+HC.var["C3.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C3.1_Osteogenic")],1, var))
+HC.var["C4.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_iPSC")],1, var))
+HC.var["C4.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_MSC")],1, var))
+HC.var["C4.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C4.1_Osteogenic")],1, var))
+HC.var["C5.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_iPSC")],1, var))
+HC.var["C5.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_MSC")],1, var))
+HC.var["C5.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C5.1_Osteogenic")],1, var))
+HC.var["C6.1_iPSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_iPSC")],1, var))
+HC.var["C6.1_MSC"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_MSC")],1, var))
+HC.var["C6.1_Osteogenic"] <- as.data.frame(apply(tmm[,which(groupFactor=="C6.1_Osteogenic")],1, var))
+HC.var.melt <- melt(HC.var,
+                     id.vars="gene",
+                     measure.vars=c("H1.1_iPSC","H1.1_MSC","H1.1_Osteogenic",
+                                    "H1.2_iPSC","H1.2_MSC","H1.2_Osteogenic",
+                                    "H2.1_iPSC","H2.1_MSC","H2.1_Osteogenic",
+                                    "H3.1_iPSC","H3.1_MSC","H3.1_Osteogenic",
+                                    "H4.1_iPSC","H4.1_MSC","H4.1_Osteogenic",
+                                    "H5.1_iPSC","H5.1_MSC","H5.1_Osteogenic",
+                                    "H6.1_iPSC","H6.1_MSC","H6.1_Osteogenic",
+                                    "C1.1_iPSC","C1.1_MSC","C1.1_Osteogenic",
+                                    "C1.2_iPSC","C1.2_MSC","C1.2_Osteogenic",
+                                    "C2.1_iPSC","C2.1_MSC","C2.1_Osteogenic",
+                                    "C3.1_iPSC","C3.1_MSC","C3.1_Osteogenic",
+                                    "C4.1_iPSC","C4.1_MSC","C4.1_Osteogenic",
+                                    "C5.1_iPSC","C5.1_MSC","C5.1_Osteogenic",
+                                    "C6.1_iPSC","C6.1_MSC","C6.1_Osteogenic"))
+HC.var.melt$individual <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.var.melt$adhoc <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.var.melt, aes(x=individual, y=value, fill=adhoc)) +
+  geom_boxplot(width=0.4) +
+  xlab("Individual") +
+  ylab('log2 variance in gene expression') +
+  scale_fill_manual(name="Ad Hoc", labels=c("iPSC","MSC","Osteogenic"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.var$H1.1_iPSC,HC.var$H1.1_MSC)       
+t.test(HC.var$H1.1_MSC,HC.var$H1.1_Osteogenic) 
+t.test(HC.var$H1.2_iPSC,HC.var$H1.2_MSC)       
+t.test(HC.var$H1.2_MSC,HC.var$H1.2_Osteogenic) 
+t.test(HC.var$H2.1_iPSC,HC.var$H2.1_MSC)       
+t.test(HC.var$H2.1_MSC,HC.var$H2.1_Osteogenic) 
+t.test(HC.var$H3.1_iPSC,HC.var$H3.1_MSC)       
+t.test(HC.var$H3.1_MSC,HC.var$H3.1_Osteogenic) 
+t.test(HC.var$H4.1_iPSC,HC.var$H4.1_MSC)       
+t.test(HC.var$H4.1_MSC,HC.var$H4.1_Osteogenic) 
+t.test(HC.var$H5.1_iPSC,HC.var$H5.1_MSC)       
+t.test(HC.var$H5.1_MSC,HC.var$H5.1_Osteogenic) 
+t.test(HC.var$H6.1_iPSC,HC.var$H6.1_MSC)       
+t.test(HC.var$H6.1_MSC,HC.var$H6.1_Osteogenic) 
+t.test(HC.var$C1.1_iPSC,HC.var$C1.1_MSC)       
+t.test(HC.var$C1.1_MSC,HC.var$C1.1_Osteogenic) 
+t.test(HC.var$C1.2_iPSC,HC.var$C1.2_MSC)       
+t.test(HC.var$C1.2_MSC,HC.var$C1.2_Osteogenic) 
+t.test(HC.var$C2.1_iPSC,HC.var$C2.1_MSC)       
+t.test(HC.var$C2.1_MSC,HC.var$C2.1_Osteogenic) 
+t.test(HC.var$C3.1_iPSC,HC.var$C3.1_MSC)       
+t.test(HC.var$C3.1_MSC,HC.var$C3.1_Osteogenic) 
+t.test(HC.var$C4.1_iPSC,HC.var$C4.1_MSC)       
+t.test(HC.var$C4.1_MSC,HC.var$C4.1_Osteogenic) 
+t.test(HC.var$C5.1_iPSC,HC.var$C5.1_MSC)       
+t.test(HC.var$C5.1_MSC,HC.var$C5.1_Osteogenic) 
+t.test(HC.var$C6.1_iPSC,HC.var$C6.1_MSC)       
+t.test(HC.var$C6.1_MSC,HC.var$C6.1_Osteogenic) 
+
+```
+
+#### SC: Osteogenic Clusters vs. Species (res=0.5)
+
+```{r}
+
+# Compile group labels of each species
+groupFactor <- factor(paste(dge$samples$Species,dge$samples$Cluster0.5,sep="_"),
+                      levels=c("Human_Osteogenic.c1","Human_Osteogenic.c2","Human_Osteogenic.c3","Human_Osteogenic.c4",
+                               "Chimp_Osteogenic.c1","Chimp_Osteogenic.c2","Chimp_Osteogenic.c3","Chimp_Osteogenic.c4"))
+
+# Calculate log2cpm means within species
+HC.mean <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.mean["gene"] <- rownames(tmm)
+HC.mean["Human_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c1")],1, mean))
+HC.mean["Human_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c2")],1, mean))
+HC.mean["Human_Osteogenic.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c3")],1, mean))
+HC.mean["Human_Osteogenic.c4"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c4")],1, mean))
+HC.mean["Chimp_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c1")],1, mean))
+HC.mean["Chimp_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c2")],1, mean))
+HC.mean["Chimp_Osteogenic.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c3")],1, mean))
+HC.mean["Chimp_Osteogenic.c4"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c4")],1, mean))
+HC.mean.melt <- melt(HC.mean,
+                     id.vars="gene",
+                     measure.vars=c("Human_Osteogenic.c1","Human_Osteogenic.c2","Human_Osteogenic.c3","Human_Osteogenic.c4",
+                                    "Chimp_Osteogenic.c1","Chimp_Osteogenic.c2","Chimp_Osteogenic.c3","Chimp_Osteogenic.c4"))
+HC.mean.melt$species <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.mean.melt$cluster <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.mean.melt, aes(x=species, y=value, fill=cluster)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c4"),
+                    values=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.mean$Human_Osteogenic.c1,HC.mean$Human_Osteogenic.c2) 
+t.test(HC.mean$Human_Osteogenic.c2,HC.mean$Human_Osteogenic.c3) 
+t.test(HC.mean$Human_Osteogenic.c3,HC.mean$Human_Osteogenic.c4) 
+t.test(HC.mean$Chimp_Osteogenic.c1,HC.mean$Chimp_Osteogenic.c2) 
+t.test(HC.mean$Chimp_Osteogenic.c2,HC.mean$Chimp_Osteogenic.c3) 
+t.test(HC.mean$Chimp_Osteogenic.c3,HC.mean$Chimp_Osteogenic.c4) 
+
+# Calculate log2cpm variances within species
+HC.var <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.var["gene"] <- rownames(tmm)
+HC.var["Human_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c1")],1, var))
+HC.var["Human_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c2")],1, var))
+HC.var["Human_Osteogenic.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c3")],1, var))
+HC.var["Human_Osteogenic.c4"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_Osteogenic.c4")],1, var))
+HC.var["Chimp_Osteogenic.c1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c1")],1, var))
+HC.var["Chimp_Osteogenic.c2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c2")],1, var))
+HC.var["Chimp_Osteogenic.c3"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c3")],1, var))
+HC.var["Chimp_Osteogenic.c4"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_Osteogenic.c4")],1, var))
+HC.var.melt <- melt(HC.var,
+                     id.vars="gene",
+                     measure.vars=c("Human_Osteogenic.c1","Human_Osteogenic.c2","Human_Osteogenic.c3","Human_Osteogenic.c4",
+                                    "Chimp_Osteogenic.c1","Chimp_Osteogenic.c2","Chimp_Osteogenic.c3","Chimp_Osteogenic.c4"))
+HC.var.melt$species <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.var.melt$cluster <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.var.melt, aes(x=species, y=value, fill=cluster)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 variance gene expression') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c4"),
+                    values=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.var$Human_Osteogenic.c1,HC.var$Human_Osteogenic.c2) 
+t.test(HC.var$Human_Osteogenic.c2,HC.var$Human_Osteogenic.c3) 
+t.test(HC.var$Human_Osteogenic.c3,HC.var$Human_Osteogenic.c4) 
+t.test(HC.var$Chimp_Osteogenic.c1,HC.var$Chimp_Osteogenic.c2) 
+t.test(HC.var$Chimp_Osteogenic.c2,HC.var$Chimp_Osteogenic.c3) 
+t.test(HC.var$Chimp_Osteogenic.c3,HC.var$Chimp_Osteogenic.c4) 
+
+```
+
+#### SC: Osteogenic Clusters vs. Individuals (res=0.5)
+
+#### SC: Osteogenic Ad Hoc Classifications vs. Species (thresh0)
+
+```{r}
+
+# Compile group labels of each species
+groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$OstAdHoc.Assign.4gene.thresh0,function(x)sub(" ",".",x)),sep="_"),
+                      levels=c("Human_preosteoblast","Human_osteoblast","Human_embedding.osteoblast","Human_mineralizing.osteoblast","Human_maturing.osteocyte",
+                               "Human_unknown.osteogenic","Human_not.osteogenic",
+                               "Chimp_preosteoblast","Chimp_osteoblast","Chimp_embedding.osteoblast","Chimp_mineralizing.osteoblast","Chimp_maturing.osteocyte",
+                               "Chimp_unknown.osteogenic","Chimp_not.osteogenic"))
+
+# Calculate log2cpm means within species
+HC.mean <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.mean["gene"] <- rownames(tmm)
+HC.mean["Human_preosteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_preosteoblast")],1, mean))
+HC.mean["Human_osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_osteoblast")],1, mean))
+HC.mean["Human_embedding.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_embedding.osteoblast")],1, mean))
+HC.mean["Human_mineralizing.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_mineralizing.osteoblast")],1, mean))
+HC.mean["Human_maturing.osteocyte"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_maturing.osteocyte")],1, mean))
+HC.mean["Chimp_preosteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_preosteoblast")],1, mean))
+HC.mean["Chimp_osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_osteoblast")],1, mean))
+HC.mean["Chimp_embedding.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_embedding.osteoblast")],1, mean))
+HC.mean["Chimp_mineralizing.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_mineralizing.osteoblast")],1, mean))
+HC.mean["Chimp_maturing.osteocyte"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_maturing.osteocyte")],1, mean))
+HC.mean.melt <- melt(HC.mean,
+                     id.vars="gene",
+                     measure.vars=c("Human_preosteoblast","Human_osteoblast","Human_embedding.osteoblast","Human_mineralizing.osteoblast","Human_maturing.osteocyte",
+                                    "Chimp_preosteoblast","Chimp_osteoblast","Chimp_embedding.osteoblast","Chimp_mineralizing.osteoblast","Chimp_maturing.osteocyte"))
+HC.mean.melt$species <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.mean.melt$ostadhoc <- sapply(HC.mean.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.mean.melt, aes(x=species, y=value, fill=ostadhoc)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 mean gene expression') +
+  scale_fill_manual(name="Ost Ad Hoc",
+                    labels=c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                    values=c("lightblue1","skyblue","deepskyblue","dodgerblue2","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.mean$Human_preosteoblast,HC.mean$Human_osteoblast)                     
+t.test(HC.mean$Human_osteoblast,HC.mean$Human_embedding.osteoblast)              
+t.test(HC.mean$Human_embedding.osteoblast,HC.mean$Human_mineralizing.osteoblast) 
+t.test(HC.mean$Human_mineralizing.osteoblast,HC.mean$Human_maturing.osteocyte)   
+t.test(HC.mean$Chimp_preosteoblast,HC.mean$Chimp_osteoblast)                     
+t.test(HC.mean$Chimp_osteoblast,HC.mean$Chimp_embedding.osteoblast)              
+t.test(HC.mean$Chimp_embedding.osteoblast,HC.mean$Chimp_mineralizing.osteoblast) 
+t.test(HC.mean$Chimp_mineralizing.osteoblast,HC.mean$Chimp_maturing.osteocyte)   
+
+# Calculate log2cpm variances within species
+HC.var <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.var["gene"] <- rownames(tmm)
+HC.var["Human_preosteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_preosteoblast")],1, var))
+HC.var["Human_osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_osteoblast")],1, var))
+HC.var["Human_embedding.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_embedding.osteoblast")],1, var))
+HC.var["Human_mineralizing.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_mineralizing.osteoblast")],1, var))
+HC.var["Human_maturing.osteocyte"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human_maturing.osteocyte")],1, var))
+HC.var["Chimp_preosteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_preosteoblast")],1, var))
+HC.var["Chimp_osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_osteoblast")],1, var))
+HC.var["Chimp_embedding.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_embedding.osteoblast")],1, var))
+HC.var["Chimp_mineralizing.osteoblast"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_mineralizing.osteoblast")],1, var))
+HC.var["Chimp_maturing.osteocyte"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp_maturing.osteocyte")],1, var))
+HC.var.melt <- melt(HC.var,
+                    id.vars="gene",
+                    measure.vars=c("Human_preosteoblast","Human_osteoblast","Human_embedding.osteoblast","Human_mineralizing.osteoblast","Human_maturing.osteocyte",
+                                   "Chimp_preosteoblast","Chimp_osteoblast","Chimp_embedding.osteoblast","Chimp_mineralizing.osteoblast","Chimp_maturing.osteocyte"))
+HC.var.melt$species <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][1])
+HC.var.melt$ostadhoc <- sapply(HC.var.melt$variable,function(x)str_split(x,"_")[[1]][2])
+
+ggplot(HC.var.melt, aes(x=species, y=value, fill=ostadhoc)) +
+  geom_boxplot(width=0.4) +
+  xlab("Species") +
+  ylab('log2 variance in gene expression') +
+  scale_fill_manual(name="Ost Ad Hoc",
+                    labels=c("preosteoblast","osteoblast","embedding.osteoblast","MSC.c1","mineralizing.osteoblast","maturing.osteocyte"),
+                    values=c("lightblue1","skyblue","deepskyblue","dodgerblue2","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+t.test(HC.var$Human_preosteoblast,HC.var$Human_osteoblast)                     
+t.test(HC.var$Human_osteoblast,HC.var$Human_embedding.osteoblast)              
+t.test(HC.var$Human_embedding.osteoblast,HC.var$Human_mineralizing.osteoblast) 
+t.test(HC.var$Human_mineralizing.osteoblast,HC.var$Human_maturing.osteocyte)   
+t.test(HC.var$Chimp_preosteoblast,HC.var$Chimp_osteoblast)                     
+t.test(HC.var$Chimp_osteoblast,HC.var$Chimp_embedding.osteoblast)              
+t.test(HC.var$Chimp_embedding.osteoblast,HC.var$Chimp_mineralizing.osteoblast) 
+t.test(HC.var$Chimp_mineralizing.osteoblast,HC.var$Chimp_maturing.osteocyte)   
+
+```
+
+#### SC: Osteogenic Ad Hoc Classifications vs. Individuals (thresh0)
+
+#### SC: Osteogenic Ad Hoc Classifications vs. Individual.Replicates (thresh0)
+
+#### SC: Osteogenic Ad Hoc Classifications vs. Individuals (thresh0 in t2)
+
+#### SC: Osteogenic Ad Hoc Classifications vs. Individual.Replicates (thresh0 in t2)

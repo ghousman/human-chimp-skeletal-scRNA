@@ -1,0 +1,1482 @@
+---
+title: "10x-data-enrichment"
+author: "Genevieve Housman"
+date: "June 2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 10X Data Cellranger Analysis - Differential Expression
+
+Test for differential expression between humans and chimpanzees within different cell classifications.
+
+```{r, message=FALSE}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(grid)
+library(gbm)
+library(colorspace)
+library(RColorBrewer)
+library(edgeR)
+library(scran)
+library(SingleCellExperiment)
+library(purrr)
+library(UpSetR)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(Rgraphviz)
+library(enrichplot)
+library(viridis)
+
+```
+
+## Examine output of DE analyses
+
+```{r}
+
+#Load DE results
+
+compare1 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.stage.rds")
+compare2 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.cluster.rds")
+compare3 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.adhoc.rds")
+compare4 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.50.rds")
+compare5 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.75.rds")
+compare6 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.rds")
+compare7 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhocX.rds")
+compare8 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.T2.rds")
+compare9 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhocX.T2.rds")
+
+DEdata <- rbind(compare1,compare2,compare3,compare4,compare5,compare6,compare7,compare8,compare9)
+colnames(DEdata)[5] <- "FDR"
+DEdata <- as_tibble(DEdata)
+
+rm(compare1,compare2,compare3,compare4,compare5,compare6,compare7,compare8,compare9)
+
+```
+
+```{r}
+
+#Isolate significant DE genes
+
+DEdataSig <- DEdata %>% filter(FDR<=0.01)
+#DEdataSig <- DEdata %>% filter(FDR<=0.05)
+#DEdataSig <- DEdata %>% filter(abs(logFC)>=1.2 & FDR<=0.01)
+
+```
+
+### Assess GO Functional Enrichment of DE Genes
+
+```{r}
+
+#Define functions to assess GO functional enrichment
+goEnrich <- function(totGenes, deGenes, ontology) {
+  ref.df <- bitr(totGenes, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+  gene.df <- bitr(deGenes, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+  ego <- enrichGO(gene          = gene.df$ENSEMBL,
+                  OrgDb         = org.Hs.eg.db,
+                  universe      = ref.df$ENSEMBL,
+                  keyType       = 'ENSEMBL',
+                  ont           = ontology,
+                  pAdjustMethod = "BH",
+                  pvalueCutoff  = 0.01,
+                  qvalueCutoff  = 0.05,
+                  readable      = TRUE)
+  return(ego)
+}
+
+```
+
+Stages of Differentiation at Collection
+
+```{r}
+
+# GO enrichment of significant DE genes per cell.subset
+
+#time 0
+totGenes   <- pull(DEdata %>%
+                     filter(cell.assign=="stage" & cell.subset=="Time 0") %>%
+                     dplyr::select(gene))
+deGenesTot <- pull(DEdataSig %>%
+                     filter(cell.assign=="stage" & cell.subset=="Time 0") %>% 
+                     dplyr::select(gene))
+deGenesHum <- pull(DEdataSig %>%
+                     filter(cell.assign=="stage" & cell.subset=="Time 0" & logFC>0) %>% 
+                     dplyr::select(gene))
+deGenesChi <- pull(DEdataSig %>%
+                     filter(cell.assign=="stage" & cell.subset=="Time 0" & logFC<0) %>% 
+                     dplyr::select(gene))
+goTot <- goEnrich(totGenes=totGenes, deGenes=deGenesTot, ontology="ALL")
+goHum <- goEnrich(totGenes=totGenes, deGenes=deGenesHum, ontology="ALL")
+goChi <- goEnrich(totGenes=totGenes, deGenes=deGenesChi, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goHum@result$Description <- str_wrap(goHum@result$Description, width=30)
+goChi@result$Description <- str_wrap(goChi@result$Description, width=30)
+p1 <- ggplot(goTot, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Time 0: All DE Genes")
+p2 <- ggplot(goHum, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Time 0: Upregulated in Humans")
+p3 <- ggplot(goChi, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Time 0: Upregulated in Chimps")
+CombinePlots(list(p1,p2,p3),ncol=3,legend="right")
+
+#time 1
+totGenes   <- pull(DEdata %>%
+                     filter(cell.assign=="stage" & cell.subset=="Time 1") %>%
+                     dplyr::select(gene))
+deGenesTot <- pull(DEdataSig %>%
+                     filter(cell.assign=="stage" & cell.subset=="Time 1") %>% 
+                     dplyr::select(gene))
+deGenesHum <- pull(DEdataSig %>%
+                     filter(cell.assign=="stage" & cell.subset=="Time 1" & logFC>0) %>% 
+                     dplyr::select(gene))
+deGenesChi <- pull(DEdataSig %>%
+                     filter(cell.assign=="stage" & cell.subset=="Time 1" & logFC<0) %>% 
+                     dplyr::select(gene))
+goTot <- goEnrich(totGenes=totGenes, deGenes=deGenesTot, ontology="ALL")
+goHum <- goEnrich(totGenes=totGenes, deGenes=deGenesHum, ontology="ALL")
+goChi <- goEnrich(totGenes=totGenes, deGenes=deGenesChi, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goHum@result$Description <- str_wrap(goHum@result$Description, width=30)
+goChi@result$Description <- str_wrap(goChi@result$Description, width=30)
+p1 <- ggplot(goTot, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Time 1: All DE Genes")
+p2 <- ggplot(goHum, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Time 1: Upregulated in Humans")
+p3 <- ggplot(goChi, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Time 1: Upregulated in Chimps")
+CombinePlots(list(p1,p2,p3),ncol=3,legend="right")
+
+#time 2
+totGenes   <- pull(DEdata %>%
+                     filter(cell.assign=="stage" & cell.subset=="Time 2") %>%
+                     dplyr::select(gene))
+deGenesTot <- pull(DEdataSig %>%
+                     filter(cell.assign=="stage" & cell.subset=="Time 2") %>% 
+                     dplyr::select(gene))
+deGenesHum <- pull(DEdataSig %>%
+                     filter(cell.assign=="stage" & cell.subset=="Time 2" & logFC>0) %>% 
+                     dplyr::select(gene))
+deGenesChi <- pull(DEdataSig %>%
+                     filter(cell.assign=="stage" & cell.subset=="Time 2" & logFC<0) %>% 
+                     dplyr::select(gene))
+goTot <- goEnrich(totGenes=totGenes, deGenes=deGenesTot, ontology="ALL")
+goHum <- goEnrich(totGenes=totGenes, deGenes=deGenesHum, ontology="ALL")
+goChi <- goEnrich(totGenes=totGenes, deGenes=deGenesChi, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goHum@result$Description <- str_wrap(goHum@result$Description, width=30)
+goChi@result$Description <- str_wrap(goChi@result$Description, width=30)
+p1 <- ggplot(goTot, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Time 2: All DE Genes")
+p2 <- ggplot(goHum, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Time 2: Upregulated in Humans")
+p3 <- ggplot(goChi, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Time 2: Upregulated in Chimps")
+CombinePlots(list(p1,p2,p3),ncol=3,legend="right")
+
+
+# GO enrichment of cell type specific significant DE genes unique to each cell.subset
+
+DEgenes <- DEdataSig %>%
+             dplyr::filter(cell.assign=="stage") %>%
+             dplyr::select(cell.subset,gene,logFC)
+
+combined <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="Time 0") %>% dplyr::select(gene), "Time.0"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="Time 1") %>% dplyr::select(gene), "Time.1"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="Time 2") %>% dplyr::select(gene), "Time.2"=1)
+                        ), full_join)
+combined[is.na(combined)] <- 0
+
+goUniq1 <- goEnrich(totGenes = pull(DEdata %>% filter(cell.assign=="stage" & cell.subset=="Time 0") %>% dplyr::select(gene)),
+                    deGenes  = combined$gene[which(combined[,2]==1 & rowSums(combined[,c(3,4)])==0)],
+                    ontology = "ALL")
+goUniq1@result$Description = str_wrap(goUniq1@result$Description, width=30)
+
+goUniq2 <- goEnrich(totGenes = pull(DEdata %>% filter(cell.assign=="stage" & cell.subset=="Time 1") %>% dplyr::select(gene)),
+                    deGenes  = combined$gene[which(combined[,3]==1 & rowSums(combined[,c(2,4)])==0)],
+                    ontology = "ALL")
+goUniq2@result$Description = str_wrap(goUniq2@result$Description, width=30)
+
+goUniq3 <- goEnrich(totGenes = pull(DEdata %>% filter(cell.assign=="stage" & cell.subset=="Time 2") %>% dplyr::select(gene)),
+                    deGenes  = combined$gene[which(combined[,4]==1 & rowSums(combined[,c(2,3)])==0)],
+                    ontology = "ALL")
+goUniq3@result$Description = str_wrap(goUniq3@result$Description, width=30)
+
+p1 <- ggplot(goUniq1, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="DE Genes Unique to Time 0") +
+        ylab(label="")
+p2 <- ggplot(goUniq2, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="DE Genes Unique to Time 1") +
+        ylab(label="")
+p3 <- ggplot(goUniq3, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="DE Genes Unique to Time 2") +
+        ylab(label="")
+CombinePlots(list(p1,p2,p3),ncol=3,legend="right")
+
+
+# GO enrichment of cell type specific significant DE genes shared across cell.subsets
+
+goShare <- goEnrich(totGenes = intersect(pull(DEdata %>% filter(cell.assign=="stage" & cell.subset=="Time 0") %>% dplyr::select(gene)),
+                                         intersect(pull(DEdata %>% filter(cell.assign=="stage" & cell.subset=="Time 1") %>% dplyr::select(gene)),
+                                                   pull(DEdata %>% filter(cell.assign=="stage" & cell.subset=="Time 2") %>% dplyr::select(gene)))),
+                    deGenes = combined$gene[which(rowSums(combined[,2:4])==3)],
+                    ontology = "ALL")
+
+goShare@result$Description = str_wrap(goShare@result$Description, width=30)
+
+ggplot(goShare, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+  geom_point() +
+  facet_grid(ONTOLOGY~., scale="free") +
+  scale_size_area(max_size=6) +
+  scale_color_viridis(option="C") +
+  theme_bw() +
+  labs(title="DE Genes Shared\nacross Stages") +
+  ylab(label="")
+
+```
+
+General Clusters (res=0.05)
+
+```{r}
+
+# GO enrichment of significant DE genes per cell.subset
+
+#iPSC.c1
+totGenes   <- pull(DEdata %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster" & cell.subset=="iPSC.c1") %>% 
+                     dplyr::select(gene))
+deGenesTot <- pull(DEdataSig %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster" & cell.subset=="iPSC.c1") %>% 
+                     dplyr::select(gene))
+deGenesHum <- pull(DEdataSig %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster" & cell.subset=="iPSC.c1" & logFC>0) %>% 
+                     dplyr::select(gene))
+deGenesChi <- pull(DEdataSig %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster" & cell.subset=="iPSC.c1" & logFC<0) %>% 
+                     dplyr::select(gene))
+goTot <- goEnrich(totGenes=totGenes, deGenes=deGenesTot, ontology="ALL")
+goHum <- goEnrich(totGenes=totGenes, deGenes=deGenesHum, ontology="ALL")
+goChi <- goEnrich(totGenes=totGenes, deGenes=deGenesChi, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goHum@result$Description <- str_wrap(goHum@result$Description, width=30)
+goChi@result$Description <- str_wrap(goChi@result$Description, width=30)
+p1 <- ggplot(goTot, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="All DE Genes")
+p2 <- ggplot(goHum, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Upregulated in Humans")
+p3 <- ggplot(goChi, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Upregulated in Chimps")
+CombinePlots(list(p1,p2,p3),ncol=3,legend="right")
+
+#MSC.c1
+totGenes   <- pull(DEdata %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster" & cell.subset=="MSC.c1") %>% 
+                     dplyr::select(gene))
+deGenesTot <- pull(DEdataSig %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster" & cell.subset=="MSC.c1") %>% 
+                     dplyr::select(gene))
+deGenesHum <- pull(DEdataSig %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster" & cell.subset=="MSC.c1" & logFC>0) %>% 
+                     dplyr::select(gene))
+deGenesChi <- pull(DEdataSig %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster" & cell.subset=="MSC.c1" & logFC<0) %>% 
+                     dplyr::select(gene))
+goTot <- goEnrich(totGenes=totGenes, deGenes=deGenesTot, ontology="ALL")
+goHum <- goEnrich(totGenes=totGenes, deGenes=deGenesHum, ontology="ALL")
+goChi <- goEnrich(totGenes=totGenes, deGenes=deGenesChi, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goHum@result$Description <- str_wrap(goHum@result$Description, width=30)
+goChi@result$Description <- str_wrap(goChi@result$Description, width=30)
+p1 <- ggplot(goTot, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="All DE Genes")
+p2 <- ggplot(goHum, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Upregulated in Humans")
+p3 <- ggplot(goChi, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Upregulated in Chimps")
+CombinePlots(list(p1,p2,p3),ncol=3,legend="right")
+
+#Osteogenic.c1
+totGenes   <- pull(DEdata %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster" & cell.subset=="Osteogenic.c1") %>% 
+                     dplyr::select(gene))
+deGenesTot <- pull(DEdataSig %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster" & cell.subset=="Osteogenic.c1") %>% 
+                     dplyr::select(gene))
+deGenesHum <- pull(DEdataSig %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster" & cell.subset=="Osteogenic.c1" & logFC>0) %>% 
+                     dplyr::select(gene))
+deGenesChi <- pull(DEdataSig %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster" & cell.subset=="Osteogenic.c1" & logFC<0) %>% 
+                     dplyr::select(gene))
+goTot <- goEnrich(totGenes=totGenes, deGenes=deGenesTot, ontology="ALL")
+goHum <- goEnrich(totGenes=totGenes, deGenes=deGenesHum, ontology="ALL")
+goChi <- goEnrich(totGenes=totGenes, deGenes=deGenesChi, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goHum@result$Description <- str_wrap(goHum@result$Description, width=30)
+goChi@result$Description <- str_wrap(goChi@result$Description, width=30)
+p1 <- ggplot(goTot, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="All DE Genes")
+p2 <- ggplot(goHum, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Upregulated in Humans")
+p3 <- ggplot(goChi, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Upregulated in Chimps")
+CombinePlots(list(p1,p2,p3),ncol=3,legend="right")
+
+
+# GO enrichment of cell type specific significant DE genes unique to each cell.subset
+
+DEgenes <- DEdataSig %>%
+             dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+             dplyr::filter(cell.assign=="cluster") %>%
+             dplyr::filter(cell.subset %in% c("iPSC.c1","MSC.c1","Osteogenic.c1")) %>% 
+             dplyr::select(cell.subset,gene,logFC)
+
+combined <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="iPSC.c1")       %>% dplyr::select(gene), "iPSC.c1"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="MSC.c1")        %>% dplyr::select(gene), "MSC.c1"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="Osteogenic.c1") %>% dplyr::select(gene), "Osteogenic.c1"=1)
+                        ), full_join)
+combined[is.na(combined)] <- 0
+
+goUniq1 <- goEnrich(totGenes = pull(DEdataSig %>%
+                                 dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                                 dplyr::filter(cell.assign=="cluster" & cell.subset=="iPSC.c1") %>% 
+                                 dplyr::select(gene)),
+                    deGenes  = combined$gene[which(combined[,2]==1 & rowSums(combined[,c(3,4)])==0)],
+                    ontology = "ALL")
+goUniq1@result$Description = str_wrap(goUniq1@result$Description, width=30)
+
+goUniq2 <- goEnrich(totGenes = pull(DEdataSig %>%
+                                 dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                                 dplyr::filter(cell.assign=="cluster" & cell.subset=="MSC.c1") %>% 
+                                 dplyr::select(gene)),
+                    deGenes  = combined$gene[which(combined[,3]==1 & rowSums(combined[,c(2,4)])==0)],
+                    ontology = "ALL")
+goUniq2@result$Description = str_wrap(goUniq2@result$Description, width=30)
+
+goUniq3 <- goEnrich(totGenes = pull(DEdataSig %>%
+                                 dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                                 dplyr::filter(cell.assign=="cluster" & cell.subset=="Osteogenic.c1") %>% 
+                                 dplyr::select(gene)),
+                    deGenes  = combined$gene[which(combined[,4]==1 & rowSums(combined[,c(2,3)])==0)],
+                    ontology = "ALL")
+goUniq3@result$Description = str_wrap(goUniq3@result$Description, width=30)
+
+p1 <- ggplot(goUniq1, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="DE Genes Unique\nto iPSC.c1") +
+        ylab(label="")
+p2 <- ggplot(goUniq2, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="DE Genes Unique\nto MSC.c1") +
+        ylab(label="")
+p3 <- ggplot(goUniq3, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="DE Genes Unique\nto Osteogenic.c1") +
+        ylab(label="")
+CombinePlots(list(p1,p2,p3),ncol=3,legend="right")
+
+
+# GO enrichment of cell type specific significant DE genes shared across cell.subsets
+
+goShare <- goEnrich(totGenes = intersect(pull(DEdataSig %>%
+                                           dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                                           dplyr::filter(cell.assign=="cluster" & cell.subset=="iPSC.c1") %>% 
+                                           dplyr::select(gene)),
+                                         intersect(pull(DEdataSig %>%
+                                                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                                                     dplyr::filter(cell.assign=="cluster" & cell.subset=="MSC.c1") %>% 
+                                                     dplyr::select(gene)),
+                                                   pull(DEdataSig %>%
+                                                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                                                     dplyr::filter(cell.assign=="cluster" & cell.subset=="Osteogenic.c1") %>% 
+                                                     dplyr::select(gene)))),
+                    deGenes = combined$gene[which(rowSums(combined[,2:4])==3)],
+                    ontology = "ALL")
+
+goShare@result$Description = str_wrap(goShare@result$Description, width=30)
+
+ggplot(goShare, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+  geom_point() +
+  facet_grid(ONTOLOGY~., scale="free") +
+  scale_size_area(max_size=6) +
+  scale_color_viridis(option="C") +
+  theme_bw() +
+  labs(title="DE Genes Shared\nacross Clusters") +
+  ylab(label="")
+
+```
+
+General Ad Hoc Classification of Cells (scaled integrated data, threshold=0)
+
+```{r}
+
+# GO enrichment of significant DE genes per cell.subset
+
+#iPSC
+totGenes   <- pull(DEdata %>%
+                     filter(cell.assign=="adhocscale0" & cell.subset=="iPSC") %>%
+                     dplyr::select(gene))
+deGenesTot <- pull(DEdataSig %>%
+                     filter(cell.assign=="adhocscale0" & cell.subset=="iPSC") %>% 
+                     dplyr::select(gene))
+deGenesHum <- pull(DEdataSig %>%
+                     filter(cell.assign=="adhocscale0" & cell.subset=="iPSC" & logFC>0) %>% 
+                     dplyr::select(gene))
+deGenesChi <- pull(DEdataSig %>%
+                     filter(cell.assign=="adhocscale0" & cell.subset=="iPSC" & logFC<0) %>% 
+                     dplyr::select(gene))
+goTot <- goEnrich(totGenes=totGenes, deGenes=deGenesTot, ontology="ALL")
+goHum <- goEnrich(totGenes=totGenes, deGenes=deGenesHum, ontology="ALL")
+goChi <- goEnrich(totGenes=totGenes, deGenes=deGenesChi, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goHum@result$Description <- str_wrap(goHum@result$Description, width=30)
+goChi@result$Description <- str_wrap(goChi@result$Description, width=30)
+p1 <- ggplot(goTot, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="All DE Genes")
+p2 <- ggplot(goHum, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Upregulated in Humans")
+p3 <- ggplot(goChi, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Upregulated in Chimps")
+CombinePlots(list(p1,p2,p3),ncol=3,legend="right")
+
+#MSC
+totGenes   <- pull(DEdata %>%
+                     filter(cell.assign=="adhocscale0" & cell.subset=="MSC") %>%
+                     dplyr::select(gene))
+deGenesTot <- pull(DEdataSig %>%
+                     filter(cell.assign=="adhocscale0" & cell.subset=="MSC") %>% 
+                     dplyr::select(gene))
+deGenesHum <- pull(DEdataSig %>%
+                     filter(cell.assign=="adhocscale0" & cell.subset=="MSC" & logFC>0) %>% 
+                     dplyr::select(gene))
+deGenesChi <- pull(DEdataSig %>%
+                     filter(cell.assign=="adhocscale0" & cell.subset=="MSC" & logFC<0) %>% 
+                     dplyr::select(gene))
+goTot <- goEnrich(totGenes=totGenes, deGenes=deGenesTot, ontology="ALL")
+goHum <- goEnrich(totGenes=totGenes, deGenes=deGenesHum, ontology="ALL")
+goChi <- goEnrich(totGenes=totGenes, deGenes=deGenesChi, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goHum@result$Description <- str_wrap(goHum@result$Description, width=30)
+goChi@result$Description <- str_wrap(goChi@result$Description, width=30)
+p1 <- ggplot(goTot, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="All DE Genes")
+p2 <- ggplot(goHum, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Upregulated in Humans")
+p3 <- ggplot(goChi, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Upregulated in Chimps")
+CombinePlots(list(p1,p2,p3),ncol=3,legend="right")
+
+#Osteogenic
+totGenes   <- pull(DEdata %>%
+                     filter(cell.assign=="adhocscale0" & cell.subset=="Osteogenic") %>%
+                     dplyr::select(gene))
+deGenesTot <- pull(DEdataSig %>%
+                     filter(cell.assign=="adhocscale0" & cell.subset=="Osteogenic") %>% 
+                     dplyr::select(gene))
+deGenesHum <- pull(DEdataSig %>%
+                     filter(cell.assign=="adhocscale0" & cell.subset=="Osteogenic" & logFC>0) %>% 
+                     dplyr::select(gene))
+deGenesChi <- pull(DEdataSig %>%
+                     filter(cell.assign=="adhocscale0" & cell.subset=="Osteogenic" & logFC<0) %>% 
+                     dplyr::select(gene))
+goTot <- goEnrich(totGenes=totGenes, deGenes=deGenesTot, ontology="ALL")
+goHum <- goEnrich(totGenes=totGenes, deGenes=deGenesHum, ontology="ALL")
+goChi <- goEnrich(totGenes=totGenes, deGenes=deGenesChi, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goHum@result$Description <- str_wrap(goHum@result$Description, width=30)
+goChi@result$Description <- str_wrap(goChi@result$Description, width=30)
+p1 <- ggplot(goTot, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="All DE Genes")
+p2 <- ggplot(goHum, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Upregulated in Humans")
+p3 <- ggplot(goChi, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Upregulated in Chimps")
+CombinePlots(list(p1,p2,p3),ncol=3,legend="right")
+
+
+# GO enrichment of cell type specific significant DE genes unique to each cell.subset
+
+DEgenes <- DEdataSig %>%
+             dplyr::filter(cell.assign=="adhocscale0") %>%
+             dplyr::select(cell.subset,gene,logFC)
+
+combined <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="iPSC") %>% dplyr::select(gene), "iPSC"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="MSC") %>% dplyr::select(gene), "MSC"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="Osteogenic") %>% dplyr::select(gene), "Osteogenic"=1)
+                        ), full_join)
+combined[is.na(combined)] <- 0
+
+goUniq1 <- goEnrich(totGenes = pull(DEdata %>% filter(cell.assign=="adhocscale0" & cell.subset=="iPSC") %>% dplyr::select(gene)),
+                    deGenes  = combined$gene[which(combined[,2]==1 & rowSums(combined[,c(3,4)])==0)],
+                    ontology = "ALL")
+goUniq1@result$Description = str_wrap(goUniq1@result$Description, width=30)
+
+goUniq2 <- goEnrich(totGenes = pull(DEdata %>% filter(cell.assign=="adhocscale0" & cell.subset=="MSC") %>% dplyr::select(gene)),
+                    deGenes  = combined$gene[which(combined[,3]==1 & rowSums(combined[,c(2,4)])==0)],
+                    ontology = "ALL")
+goUniq2@result$Description = str_wrap(goUniq2@result$Description, width=30)
+
+goUniq3 <- goEnrich(totGenes = pull(DEdata %>% filter(cell.assign=="adhocscale0" & cell.subset=="Osteogenic") %>% dplyr::select(gene)),
+                    deGenes  = combined$gene[which(combined[,4]==1 & rowSums(combined[,c(2,3)])==0)],
+                    ontology = "ALL")
+goUniq3@result$Description = str_wrap(goUniq3@result$Description, width=30)
+
+p1 <- ggplot(goUniq1, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="DE Genes Unique\nto iPSC") +
+        ylab(label="")
+p2 <- ggplot(goUniq2, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="DE Genes Unique\nto MSC") +
+        ylab(label="")
+p3 <- ggplot(goUniq3, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="DE Genes Unique\nto Osteogenic") +
+        ylab(label="")
+CombinePlots(list(p1,p2,p3),ncol=3,legend="right")
+
+
+# GO enrichment of cell type specific significant DE genes shared across cell.subsets
+
+goShare <- goEnrich(totGenes = intersect(pull(DEdata %>% filter(cell.assign=="stage" & cell.subset=="Time 0") %>% dplyr::select(gene)),
+                                         intersect(pull(DEdata %>% filter(cell.assign=="stage" & cell.subset=="Time 1") %>% dplyr::select(gene)),
+                                                   pull(DEdata %>% filter(cell.assign=="stage" & cell.subset=="Time 2") %>% dplyr::select(gene)))),
+                    deGenes = combined$gene[which(rowSums(combined[,2:4])==3)],
+                    ontology = "ALL")
+
+goShare@result$Description = str_wrap(goShare@result$Description, width=30)
+
+ggplot(goShare, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+  geom_point() +
+  facet_grid(ONTOLOGY~., scale="free") +
+  scale_size_area(max_size=6) +
+  scale_color_viridis(option="C") +
+  theme_bw() +
+  labs(title="DE Genes Shared\nacross Ad Hoc Classifications") +
+  ylab(label="")
+
+```
+
+Osteogenic Clusters (tot-cluster50, res=0.5 in tot data)
+
+```{r}
+
+# GO enrichment of significant DE genes per cell.subset
+
+#Osteogenic.c1
+totGenes   <- pull(DEdata %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c1") %>%
+                     dplyr::select(gene))
+deGenesTot <- pull(DEdataSig %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c1") %>%
+                     dplyr::select(gene))
+deGenesHum <- pull(DEdataSig %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c1" & logFC>0) %>%
+                     dplyr::select(gene))
+deGenesChi <- pull(DEdataSig %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c1" & logFC<0) %>%
+                     dplyr::select(gene))
+goTot <- goEnrich(totGenes=totGenes, deGenes=deGenesTot, ontology="ALL")
+goHum <- goEnrich(totGenes=totGenes, deGenes=deGenesHum, ontology="ALL")
+goChi <- goEnrich(totGenes=totGenes, deGenes=deGenesChi, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goHum@result$Description <- str_wrap(goHum@result$Description, width=30)
+goChi@result$Description <- str_wrap(goChi@result$Description, width=30)
+p1 <- ggplot(goTot, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="All DE Genes")
+p2 <- ggplot(goHum, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Upregulated in Humans")
+p3 <- ggplot(goChi, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Upregulated in Chimps")
+CombinePlots(list(p1,p2,p3),ncol=3,legend="right")
+
+#Osteogenic.c2
+totGenes   <- pull(DEdata %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c2") %>%
+                     dplyr::select(gene))
+deGenesTot <- pull(DEdataSig %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c2") %>%
+                     dplyr::select(gene))
+deGenesHum <- pull(DEdataSig %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c2" & logFC>0) %>%
+                     dplyr::select(gene))
+deGenesChi <- pull(DEdataSig %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c2" & logFC<0) %>%
+                     dplyr::select(gene))
+goTot <- goEnrich(totGenes=totGenes, deGenes=deGenesTot, ontology="ALL")
+goHum <- goEnrich(totGenes=totGenes, deGenes=deGenesHum, ontology="ALL")
+goChi <- goEnrich(totGenes=totGenes, deGenes=deGenesChi, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goHum@result$Description <- str_wrap(goHum@result$Description, width=30)
+goChi@result$Description <- str_wrap(goChi@result$Description, width=30)
+p1 <- ggplot(goTot, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="All DE Genes")
+p2 <- ggplot(goHum, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Upregulated in Humans")
+p3 <- ggplot(goChi, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Upregulated in Chimps")
+CombinePlots(list(p1,p2,p3),ncol=3,legend="right")
+
+#Osteogenic.c3
+totGenes   <- pull(DEdata %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c3") %>%
+                     dplyr::select(gene))
+deGenesTot <- pull(DEdataSig %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c3") %>%
+                     dplyr::select(gene))
+deGenesHum <- pull(DEdataSig %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c3" & logFC>0) %>%
+                     dplyr::select(gene))
+deGenesChi <- pull(DEdataSig %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c3" & logFC<0) %>%
+                     dplyr::select(gene))
+goTot <- goEnrich(totGenes=totGenes, deGenes=deGenesTot, ontology="ALL")
+goHum <- goEnrich(totGenes=totGenes, deGenes=deGenesHum, ontology="ALL")
+goChi <- goEnrich(totGenes=totGenes, deGenes=deGenesChi, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goHum@result$Description <- str_wrap(goHum@result$Description, width=30)
+goChi@result$Description <- str_wrap(goChi@result$Description, width=30)
+p1 <- ggplot(goTot, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="All DE Genes")
+p2 <- ggplot(goHum, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Upregulated in Humans")
+p3 <- ggplot(goChi, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Upregulated in Chimps")
+CombinePlots(list(p1,p2,p3),ncol=3,legend="right")
+
+#Osteogenic.c5
+totGenes   <- pull(DEdata %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c5") %>%
+                     dplyr::select(gene))
+deGenesTot <- pull(DEdataSig %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c5") %>%
+                     dplyr::select(gene))
+deGenesHum <- pull(DEdataSig %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c5" & logFC>0) %>%
+                     dplyr::select(gene))
+deGenesChi <- pull(DEdataSig %>%
+                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                     dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c5" & logFC<0) %>%
+                     dplyr::select(gene))
+goTot <- goEnrich(totGenes=totGenes, deGenes=deGenesTot, ontology="ALL")
+goHum <- goEnrich(totGenes=totGenes, deGenes=deGenesHum, ontology="ALL")
+goChi <- goEnrich(totGenes=totGenes, deGenes=deGenesChi, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goHum@result$Description <- str_wrap(goHum@result$Description, width=30)
+goChi@result$Description <- str_wrap(goChi@result$Description, width=30)
+p1 <- ggplot(goTot, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="All DE Genes")
+p2 <- ggplot(goHum, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Upregulated in Humans")
+p3 <- ggplot(goChi, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Upregulated in Chimps")
+CombinePlots(list(p1,p2,p3),ncol=3,legend="right")
+
+
+# GO enrichment of cell type specific significant DE genes unique to each cell.subset
+
+DEgenes <- DEdataSig %>%
+             dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+             dplyr::filter(cell.assign=="cluster50") %>%
+             dplyr::filter(cell.subset %in% c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c5")) %>% 
+             dplyr::select(cell.subset,gene,logFC)
+
+combined <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="Osteogenic.c1") %>% dplyr::select(gene), "Osteogenic.c1"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="Osteogenic.c2") %>% dplyr::select(gene), "Osteogenic.c2"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="Osteogenic.c3") %>% dplyr::select(gene), "Osteogenic.c3"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="Osteogenic.c5") %>% dplyr::select(gene), "Osteogenic.c5"=1)
+                        ), full_join)
+combined[is.na(combined)] <- 0
+
+goUniq1 <- goEnrich(totGenes = pull(DEdata %>%
+                                 dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                                 dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c1") %>%
+                                 dplyr::select(gene)),
+                    deGenes  = combined$gene[which(combined[,2]==1 & rowSums(combined[,c(3,4,5)])==0)],
+                    ontology = "ALL")
+goUniq1@result$Description = str_wrap(goUniq1@result$Description, width=30)
+
+goUniq2 <- goEnrich(totGenes = pull(DEdata %>%
+                                 dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                                 dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c2") %>%
+                                 dplyr::select(gene)),
+                    deGenes  = combined$gene[which(combined[,3]==1 & rowSums(combined[,c(2,4,5)])==0)],
+                    ontology = "ALL")
+goUniq2@result$Description = str_wrap(goUniq2@result$Description, width=30)
+
+goUniq3 <- goEnrich(totGenes = pull(DEdata %>%
+                                 dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                                 dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c3") %>%
+                                 dplyr::select(gene)),
+                    deGenes  = combined$gene[which(combined[,4]==1 & rowSums(combined[,c(2,3,5)])==0)],
+                    ontology = "ALL")
+goUniq3@result$Description = str_wrap(goUniq3@result$Description, width=30)
+
+goUniq4 <- goEnrich(totGenes = pull(DEdata %>%
+                                 dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                                 dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c5") %>%
+                                 dplyr::select(gene)),
+                    deGenes  = combined$gene[which(combined[,5]==1 & rowSums(combined[,c(2,3,4)])==0)],
+                    ontology = "ALL")
+goUniq4@result$Description = str_wrap(goUniq4@result$Description, width=30)
+
+p1 <- ggplot(goUniq1, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="DE Genes Unique\nto Time 0") +
+        ylab(label="")
+p2 <- ggplot(goUniq2, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="DE Genes Unique\nto Time 1") +
+        ylab(label="")
+p3 <- ggplot(goUniq3, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="DE Genes Unique\nto Time 2") +
+        ylab(label="")
+p4 <- ggplot(goUniq4, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="DE Genes Unique\nto Time 2") +
+        ylab(label="")
+CombinePlots(list(p1,p2,p3,p4),ncol=4,legend="right")
+
+
+# GO enrichment of cell type specific significant DE genes shared across cell.subsets
+
+goShare <- goEnrich(totGenes = intersect(pull(DEdata %>%
+                                           dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                                           dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c1") %>%
+                                           dplyr::select(gene)),
+                                         intersect(pull(DEdata %>%
+                                                     dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                                                     dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c2") %>%
+                                                     dplyr::select(gene)),
+                                                   intersect(pull(DEdata %>%
+                                                               dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                                                               dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c3") %>%
+                                                               dplyr::select(gene)),
+                                                             pull(DEdata %>%
+                                                               dplyr::filter(data=="./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds") %>%
+                                                               dplyr::filter(cell.assign=="cluster50" & cell.subset=="Osteogenic.c5") %>%
+                                                               dplyr::select(gene))))),
+                    deGenes = combined$gene[which(rowSums(combined[,2:5])==4)],
+                    ontology = "ALL")
+
+goShare@result$Description = str_wrap(goShare@result$Description, width=30)
+
+ggplot(goShare, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+  geom_point() +
+  facet_grid(ONTOLOGY~., scale="free") +
+  scale_size_area(max_size=6) +
+  scale_color_viridis(option="C") +
+  theme_bw() +
+  labs(title="DE Genes Shared\nacross Osteogenic Clusters") +
+  ylab(label="")
+
+```
+
+Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4genes flexible)
+
+```{r}
+
+# GO enrichment of significant DE genes per cell.subset
+
+#preosteoblast
+totGenes   <- pull(DEdata %>%
+                     dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="preosteoblast") %>%
+                     dplyr::select(gene))
+deGenesTot <- pull(DEdataSig %>%
+                     dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="preosteoblast") %>%
+                     dplyr::select(gene))
+deGenesHum <- pull(DEdataSig %>%
+                     dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="preosteoblast" & logFC>0) %>%
+                     dplyr::select(gene))
+deGenesChi <- pull(DEdataSig %>%
+                     dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="preosteoblast" & logFC<0) %>%
+                     dplyr::select(gene))
+goTot <- goEnrich(totGenes=totGenes, deGenes=deGenesTot, ontology="ALL")
+goHum <- goEnrich(totGenes=totGenes, deGenes=deGenesHum, ontology="ALL")
+goChi <- goEnrich(totGenes=totGenes, deGenes=deGenesChi, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goHum@result$Description <- str_wrap(goHum@result$Description, width=30)
+goChi@result$Description <- str_wrap(goChi@result$Description, width=30)
+p1 <- ggplot(goTot, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Preosteoblasts:\nAll DE Genes")
+p2 <- ggplot(goHum, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Preosteoblasts:\nUpregulated in Humans")
+p3 <- ggplot(goChi, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Preosteoblasts:\nUpregulated in Chimps")
+CombinePlots(list(p1,p2,p3),ncol=3,legend="right")
+
+#osteoblast
+totGenes   <- pull(DEdata %>%
+                     dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="osteoblast") %>%
+                     dplyr::select(gene))
+deGenesTot <- pull(DEdataSig %>%
+                     dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="osteoblast") %>%
+                     dplyr::select(gene))
+deGenesHum <- pull(DEdataSig %>%
+                     dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="osteoblast" & logFC>0) %>%
+                     dplyr::select(gene))
+deGenesChi <- pull(DEdataSig %>%
+                     dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="osteoblast" & logFC<0) %>%
+                     dplyr::select(gene))
+goTot <- goEnrich(totGenes=totGenes, deGenes=deGenesTot, ontology="ALL")
+goHum <- goEnrich(totGenes=totGenes, deGenes=deGenesHum, ontology="ALL")
+goChi <- goEnrich(totGenes=totGenes, deGenes=deGenesChi, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goHum@result$Description <- str_wrap(goHum@result$Description, width=30)
+goChi@result$Description <- str_wrap(goChi@result$Description, width=30)
+p1 <- ggplot(goTot, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Osteoblasts:\nAll DE Genes")
+p2 <- ggplot(goHum, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Osteoblasts:\nUpregulated in Humans")
+p3 <- ggplot(goChi, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Osteoblasts:\nUpregulated in Chimps")
+CombinePlots(list(p1,p2,p3),ncol=3,legend="right")
+
+#embedding osteoblast
+totGenes   <- pull(DEdata %>%
+                     dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="embedding osteoblast") %>%
+                     dplyr::select(gene))
+deGenesTot <- pull(DEdataSig %>%
+                     dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="embedding osteoblast") %>%
+                     dplyr::select(gene))
+deGenesHum <- pull(DEdataSig %>%
+                     dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="embedding osteoblast" & logFC>0) %>%
+                     dplyr::select(gene))
+deGenesChi <- pull(DEdataSig %>%
+                     dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="embedding osteoblast" & logFC<0) %>%
+                     dplyr::select(gene))
+goTot <- goEnrich(totGenes=totGenes, deGenes=deGenesTot, ontology="ALL")
+goHum <- goEnrich(totGenes=totGenes, deGenes=deGenesHum, ontology="ALL")
+goChi <- goEnrich(totGenes=totGenes, deGenes=deGenesChi, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goHum@result$Description <- str_wrap(goHum@result$Description, width=30)
+goChi@result$Description <- str_wrap(goChi@result$Description, width=30)
+p1 <- ggplot(goTot, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Embedding Osteoblasts:\nAll DE Genes")
+p2 <- ggplot(goHum, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Embedding Osteoblasts:\nUpregulated in Humans")
+p3 <- ggplot(goChi, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Embedding Osteoblasts:\nUpregulated in Chimps")
+CombinePlots(list(p1,p2,p3),ncol=3,legend="right")
+
+#mineralizing osteoblast
+totGenes   <- pull(DEdata %>%
+                     dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="mineralizing osteoblast") %>%
+                     dplyr::select(gene))
+deGenesTot <- pull(DEdataSig %>%
+                     dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="mineralizing osteoblast") %>%
+                     dplyr::select(gene))
+deGenesHum <- pull(DEdataSig %>%
+                     dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="mineralizing osteoblast" & logFC>0) %>%
+                     dplyr::select(gene))
+deGenesChi <- pull(DEdataSig %>%
+                     dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="mineralizing osteoblast" & logFC<0) %>%
+                     dplyr::select(gene))
+goTot <- goEnrich(totGenes=totGenes, deGenes=deGenesTot, ontology="ALL")
+goHum <- goEnrich(totGenes=totGenes, deGenes=deGenesHum, ontology="ALL")
+goChi <- goEnrich(totGenes=totGenes, deGenes=deGenesChi, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goHum@result$Description <- str_wrap(goHum@result$Description, width=30)
+goChi@result$Description <- str_wrap(goChi@result$Description, width=30)
+p1 <- ggplot(goTot, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Mineralizing Osteoblasts:\nAll DE Genes")
+p2 <- ggplot(goHum, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Mineralizing Osteoblasts:\nUpregulated in Humans")
+p3 <- ggplot(goChi, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Mineralizing Osteoblasts:\nUpregulated in Chimps")
+CombinePlots(list(p1,p2,p3),ncol=3,legend="right")
+
+#maturing osteocyte
+totGenes   <- pull(DEdata %>%
+                     dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="maturing osteocyte") %>%
+                     dplyr::select(gene))
+deGenesTot <- pull(DEdataSig %>%
+                     dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="maturing osteocyte") %>%
+                     dplyr::select(gene))
+deGenesHum <- pull(DEdataSig %>%
+                     dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="maturing osteocyte" & logFC>0) %>%
+                     dplyr::select(gene))
+deGenesChi <- pull(DEdataSig %>%
+                     dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="maturing osteocyte" & logFC<0) %>%
+                     dplyr::select(gene))
+goTot <- goEnrich(totGenes=totGenes, deGenes=deGenesTot, ontology="ALL")
+goHum <- goEnrich(totGenes=totGenes, deGenes=deGenesHum, ontology="ALL")
+goChi <- goEnrich(totGenes=totGenes, deGenes=deGenesChi, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goHum@result$Description <- str_wrap(goHum@result$Description, width=30)
+goChi@result$Description <- str_wrap(goChi@result$Description, width=30)
+p1 <- ggplot(goTot, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Maturing Osteocytes:\nAll DE Genes")
+p2 <- ggplot(goHum, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Maturing Osteocytes:\nUpregulated in Humans")
+p3 <- ggplot(goChi, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        theme(axis.text.x=element_text(angle=-40, hjust=0)) +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="Maturing Osteocytes:\nUpregulated in Chimps")
+CombinePlots(list(p1,p2,p3),ncol=3,legend="right")
+
+
+# GO enrichment of cell type specific significant DE genes unique to each cell.subset
+
+DEgenes <- DEdataSig %>%
+             dplyr::filter(cell.assign=="ostadhoc") %>%
+             dplyr::select(cell.subset,gene,logFC)
+
+combined <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="preosteoblast")           %>% dplyr::select(gene), "preosteoblast"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="osteoblast")              %>% dplyr::select(gene), "osteoblast"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="embedding osteoblast")    %>% dplyr::select(gene), "embedding.osteoblast"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="mineralizing osteoblast") %>% dplyr::select(gene), "mineralizing.osteoblast"=1),
+                        data.frame(gene=DEgenes %>% filter(cell.subset=="maturing osteocyte")      %>% dplyr::select(gene), "maturing.osteocyte"=1)
+                        ), full_join)
+combined[is.na(combined)] <- 0
+
+goUniq1 <- goEnrich(totGenes = pull(DEdata %>%
+                                 dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="preosteoblast") %>%
+                                 dplyr::select(gene)),
+                    deGenes  = combined$gene[which(combined[,2]==1 & rowSums(combined[,c(3,4,5,6)])==0)],
+                    ontology = "ALL")
+goUniq1@result$Description = str_wrap(goUniq1@result$Description, width=30)
+
+goUniq2 <- goEnrich(totGenes = pull(DEdata %>%
+                                 dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="osteoblast") %>%
+                                 dplyr::select(gene)),
+                    deGenes  = combined$gene[which(combined[,3]==1 & rowSums(combined[,c(2,4,5,6)])==0)],
+                    ontology = "ALL")
+goUniq2@result$Description = str_wrap(goUniq2@result$Description, width=30)
+
+goUniq3 <- goEnrich(totGenes = pull(DEdata %>%
+                                 dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="embedding osteoblast") %>%
+                                 dplyr::select(gene)),
+                    deGenes  = combined$gene[which(combined[,4]==1 & rowSums(combined[,c(2,3,5,6)])==0)],
+                    ontology = "ALL")
+goUniq3@result$Description = str_wrap(goUniq3@result$Description, width=30)
+
+goUniq4 <- goEnrich(totGenes = pull(DEdata %>%
+                                 dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="mineralizing osteoblast") %>%
+                                 dplyr::select(gene)),
+                    deGenes  = combined$gene[which(combined[,5]==1 & rowSums(combined[,c(2,3,4,6)])==0)],
+                    ontology = "ALL")
+goUniq4@result$Description = str_wrap(goUniq4@result$Description, width=30)
+
+goUniq5 <- goEnrich(totGenes = pull(DEdata %>%
+                                 dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="maturing osteocyte") %>%
+                                 dplyr::select(gene)),
+                    deGenes  = combined$gene[which(combined[,6]==1 & rowSums(combined[,c(2,3,4,5)])==0)],
+                    ontology = "ALL")
+goUniq5@result$Description = str_wrap(goUniq5@result$Description, width=30)
+
+p1 <- ggplot(goUniq1, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="DE Genes Unique\nto Preosteoblasts") +
+        ylab(label="")
+p2 <- ggplot(goUniq2, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="DE Genes Unique\nto Osteoblasts") +
+        ylab(label="")
+p3 <- ggplot(goUniq3, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="DE Genes Unique\nto Embedding Osteoblasts") +
+        ylab(label="")
+p4 <- ggplot(goUniq4, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="DE Genes Unique\nto Mineralizing Osteoblasts") +
+        ylab(label="")
+p5 <- ggplot(goUniq5, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+        geom_point() +
+        facet_grid(ONTOLOGY~., scale="free") +
+        scale_size_area(max_size=6) +
+        scale_color_viridis(option="C") +
+        theme_bw() +
+        labs(title="DE Genes Unique\nto Maturing Osteocytes") +
+        ylab(label="")
+CombinePlots(list(p1,p2,p3,p4,p5),ncol=5,legend="right")
+
+
+# GO enrichment of cell type specific significant DE genes shared across cell.subsets
+
+goShare <- goEnrich(totGenes = intersect(pull(DEdata %>%
+                                           dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="preosteoblast") %>%
+                                           dplyr::select(gene)),
+                                         intersect(pull(DEdata %>%
+                                                     dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="osteoblast") %>%
+                                                     dplyr::select(gene)),
+                                                   intersect(pull(DEdata %>%
+                                                               dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="embedding osteoblast") %>%
+                                                               dplyr::select(gene)),
+                                                             intersect(pull(DEdata %>%
+                                                                         dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="mineralizing osteoblast") %>%
+                                                                         dplyr::select(gene)),
+                                                                       pull(DEdata %>%
+                                                                         dplyr::filter(cell.assign=="ostadhoc" & cell.subset=="maturing osteocyte") %>%
+                                                                         dplyr::select(gene)))))),
+                    deGenes = combined$gene[which(rowSums(combined[,2:5])==4)],
+                    ontology = "ALL")
+
+goShare@result$Description = str_wrap(goShare@result$Description, width=30)
+
+ggplot(goShare, aes(x=Count, y=Description, color=p.adjust, size=Count), split='ONTOLOGY') +
+  geom_point() +
+  facet_grid(ONTOLOGY~., scale="free") +
+  scale_size_area(max_size=6) +
+  scale_color_viridis(option="C") +
+  theme_bw() +
+  labs(title="DE Genes Shared\nacross Osteogenic Ad Hoc Classifications") +
+  ylab(label="")
+
+```
+
+
+
+
+
+```{r NEED TO FIX FOR MY DATA}
+
+ContigencyTable <- matrix( c( length(intersect(ChimpSigGenes,HumanSigGenes)),
+                              length(intersect(HumanSigGenes,ChimpNonSigGenes)),
+                              length(intersect(ChimpSigGenes,HumanNonSigGenes)),
+                              length(intersect(ChimpNonSigGenes,HumanNonSigGenes))), 
+                           nrow = 2)
+rownames(ContigencyTable) <- c("Chimp eGene", "Not Chimp eGene")
+colnames(ContigencyTable) <- c("Human eGene", "Not human eGene")
+#what is qval threshold for human eGene classification in this contigency table
+print(GtexHeartEgenes %>% top_n(-HumanTopN, qval) %>% top_n(1, qval) %>% pull(qval))
+#Contigency table of one to one orthologs tested in both chimps and humans of whether significant in humans, or chimps, or both, or neither
+ContigencyTable
+#One-sided Fisher test for greater overlap than expected by chance
+fisher.test(ContigencyTable, alternative="greater")
+
+#The above contingency table and one-sided fisher test indicated a greater-than-chance overlap between the sets of eGenes in chimp and human.
+
+```
+
+
