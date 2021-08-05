@@ -7,15 +7,16 @@ if(length(args)==0){
   #supply default values
   name="noarg"
   data.source="tot"
+  data.type="pseudo"
   subset.rep="NULL"
   subset.num=FALSE
-  assign="all"
   filter.arg=TRUE
-  filter.type="pch"
-  filter.param=0.2
+  filter.type="logcpm"
+  filter.param=0
   fml=formula1
   lfc=FALSE
   fdr="BH"
+  assign="all"
 }else{
   for(i in 1:length(args)){
     eval(parse(text=args[[i]]))
@@ -45,34 +46,33 @@ library(scran)
 library(SingleCellExperiment)
 library(limma)
 library(variancePartition)
+library(BiocParallel)
 
 #detectCores()
-param = SnowParam(4, "SOCK", progressbar=TRUE)
-register(param)
+register(SnowParam(4, "SOCK", progressbar=TRUE))
 
-#Load data (integrate across individuals - total (15k genes))
+#Load data (conservative cell filter + integrated across individuals + non-zero genes + regress out UMI/mito)
 if (data.source=="tot") {
-  #data.dir <- "./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds"
-  data.dir <- "./../data/cellranger-data-full/data.filter.log.indv-cell.int19k-tot.assign.rds"
+  data.dir <- "./../data/cellranger-data-full/data.filterC.log.indv-cell.intNo0.reg-tot.assign.rds"
   data <- readRDS(data.dir)
 }
 if (data.source=="t0") {
-  #data.dir <- "./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t0.assign.rds"
-  data.dir <- "./../data/cellranger-data-full/data.filter.log.indv-cell.int19k-t0.assign.rds"
+  data.dir <- "./../data/cellranger-data-full/data.filterC.log.indv-cell.intNo0.reg-t0.assign.rds"
   data <- readRDS(data.dir)
 }
 if (data.source=="t1") {
-  #data.dir <- "./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t1.assign.rds"
-  data.dir <- "./../data/cellranger-data-full/data.filter.log.indv-cell.int19k-t1.assign.rds"
+  data.dir <- "./../data/cellranger-data-full/data.filterC.log.indv-cell.intNo0.reg-t1.assign.rds"
   data <- readRDS(data.dir)
 }
 if (data.source=="t2") {
-  #data.dir <- "./../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-t2.assign.rds"
-  data.dir <- "./../data/cellranger-data-full/data.filter.log.indv-cell.int19k-t2.assign.rds"
+  data.dir <- "./../data/cellranger-data-full/data.filterC.log.indv-cell.intNo0.reg-t2.assign.rds"
   data <- readRDS(data.dir)
 }
 print(data.dir)
 data
+
+#Define individual-replicate sets
+data@meta.data$Individual.Replicate <- paste0(data@meta.data$Individual,".",data@meta.data$Replicate)
 
 #Isolate mitochondrial and ribosomal genes
 genes <- rownames(data@assays$RNA@counts)
@@ -84,15 +84,43 @@ rm(genes,genes.mito,genes.ribo)
 #Define Limma Voom (Dream) Function
 runDREAM <- function(dataSub, data.dir, subset.rep, cell.assign, cell.subset, genes.no.mito.ribo, filter.arg, filter.type, filter.param, fml) {
 
-  #count matrix
-  counts <- as.matrix(GetAssayData(dataSub, assay="RNA", slot="counts"))
+  #make count matrix and metadata for edgeR object
+  if (data.type=="pseudo") {
+    counts <- c()
+    metadata <- c()
+    labels <- c()
+    for (i in unique(dataSub@meta.data$Individual.Replicate)) {
+      x.lab <- i
+      w <- which(dataSub@meta.data$Individual.Replicate==i)
+      if (length(w)>0) {
+        x.spp <- dataSub@meta.data$Species[w][1]
+        x.col <- dataSub@meta.data$Collection[w][1]
+        x.ind <- dataSub@meta.data$Individual[w][1]
+        x.rep <- dataSub@meta.data$Replicate[w][1]
+        if (length(w)==1) {
+          x.cnt <- dataSub@assays$RNA@counts[,w]
+        } else {
+          x.cnt <- Matrix::rowSums(dataSub@assays$RNA@counts[,w])
+        }
+        counts <- cbind(counts, x.cnt)
+        metadata <- rbind(metadata, c(x.lab, x.spp, x.col, x.ind, x.rep))
+        labels <- c(labels, x.lab)
+      }
+    }
+    colnames(counts) <- labels
+    rownames(metadata) <- labels
+    colnames(metadata) <- c("Individual.Replicate","Species","Collection","Individual","Replicate")
+    metadata <- as.data.frame(metadata)
+    rm(labels)
+  }
+  if (data.type=="sc") {
+    counts <- as.matrix(GetAssayData(dataSub, assay="RNA", slot="counts"))
+    metadata <- dataSub@meta.data[,c("Species","Individual.Replicate","Individual","Replicate","Collection","percent.mt","Phase","Sample")]
+    metadata <- metadata[colnames(counts),]
+  }
 
   #remove mitochodrial and ribosomal genes
   counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
-
-  #metadata
-  metadata <- dataSub@meta.data[,c("Species","Individual","Replicate","Collection","percent.mt","Phase","Sample")]
-  metadata <- metadata[colnames(counts),]
 
   #make edgeR object
   dge <- DGEList(counts)
@@ -103,6 +131,10 @@ runDREAM <- function(dataSub, data.dir, subset.rep, cell.assign, cell.subset, ge
 
   #filter genes
   if (filter.arg==TRUE){
+    if (filter.type=="logcpm"){
+      keep <- rowMeans(edgeR::cpm(dge,log=TRUE,prior.count=0.25))>filter.param
+      dge$counts <- dge$counts[keep,]
+    }
     if (filter.type=="min.count"){
       keep <- filterByExpr(dge, group=dge$samples$Species, min.count=filter.param, min.total.count=15)
       table(keep)
@@ -118,23 +150,22 @@ runDREAM <- function(dataSub, data.dir, subset.rep, cell.assign, cell.subset, ge
   dge <- calcNormFactors(dge, method="TMM")
   summary(dge$samples$norm.factors)
 
-  #calculate cellular detection rate
-  #cdr <- scale(colMeans(dge$count > 0))
-
   #prep design matrix variables
   dge$samples$Individual <- as.factor(dge$samples$Individual)
   dge$samples$Replicate <- as.factor(as.character(dge$samples$Replicate))
   dge$samples$Species <- as.factor(dge$samples$Species)
   dge$samples$Collection <- as.factor(as.numeric(dge$samples$Collection))
-  dge$samples$Phase <- as.factor(dge$samples$Phase)
-  dge$samples$Sample <- as.factor(dge$samples$Sample)
+  if (data.type=="sc") {
+    dge$samples$Phase <- as.factor(dge$samples$Phase)
+    dge$samples$Sample <- as.factor(dge$samples$Sample)
+  }
 
   #design matrix
   if (fml=="formula1") {
     model <- "~Species+(1|Individual)+(1|Replicate)"
     formula <- ~Species+(1|Individual)+(1|Replicate)
   }
-  if (fml=="formula1" && subset.rep %in% c("keepRep1","keepRep2")) {
+  if (fml=="formula1" & subset.rep %in% c("keepRep1","keepRep2")) {
     model <- "~Species+(1|Individual)"
     formula <- ~Species+(1|Individual)
   }
@@ -146,13 +177,53 @@ runDREAM <- function(dataSub, data.dir, subset.rep, cell.assign, cell.subset, ge
     model <- "~Species+percent.mt+Phase+(1|Sample)"
     formula <- ~Species+percent.mt+Phase+(1|Sample)
   }
-  if (fml=="formula4") {
+  if (fml=="formula4" & data.type=="pseudo") {
+    model <- "~Species+(1|Individual)+(1|Replicate)"
+    formula <- ~Species+(1|Individual)+(1|Replicate)
+  }
+  if (fml=="formula4" & data.type=="pseudo" & (subset.rep=="keepRep1" | subset.rep=="keepRep2")) {
+    model <- "~Species+(1|Individual)"
+    formula <- ~Species+(1|Individual)
+  }
+  if (fml=="formula4" & data.type=="sc") {
     model <- "~Species+percent.mt+Phase+(1|Individual)+(1|Replicate)"
     formula <- ~Species+percent.mt+Phase+(1|Individual)+(1|Replicate)
   }
-  if (fml=="formula5") {
+  if (fml=="formula4" & data.type=="sc" & (subset.rep=="keepRep1" | subset.rep=="keepRep2")) {
     model <- "~Species+percent.mt+Phase+(1|Individual)"
     formula <- ~Species+percent.mt+Phase+(1|Individual)
+  }
+  if (fml=="formula5" & data.type=="pseudo") {
+    model <- "~Species+(1|Individual)"
+    formula <- ~Species+(1|Individual)
+  }
+  if (fml=="formula5" & data.type=="sc") {
+    model <- "~Species+percent.mt+Phase+(1|Individual)"
+    formula <- ~Species+percent.mt+Phase+(1|Individual)
+  }
+  if (fml=="formula6" & data.type=="pseudo") {
+    model <- "~Species+(1|Individual)"
+    formula <- ~Species+(1|Individual)
+  }
+  if (fml=="formula6" & data.type=="pseudo" & (subset.rep=="keepRep1" | subset.rep=="keepRep2")) {
+    model <- "~Species"
+    formula <- ~Species
+  }
+  if (fml=="formula6" & data.type=="pseudo" & (cell.assign=="ostcluster0.50" | cell.assign=="ostcluster0.50.T2") & cell.subset=="Osteogenic.c2") {
+    model <- "~Species"
+    formula <- ~Species
+  }
+  if (fml=="formula6" & data.type=="pseudo" & (cell.assign=="ostcluster0.75" | cell.assign=="ostcluster0.75.T2") & cell.subset=="Osteogenic.c6") {
+    model <- "~Species"
+    formula <- ~Species
+  }
+  if (fml=="formula6" & data.type=="pseudo" & (cell.assign=="ostadhocX" | cell.assign=="ostadhocX.T2") & cell.subset=="mineralizing osteoblast") {
+    model <- "~Species"
+    formula <- ~Species
+  }
+  if (fml=="formula6" & data.type=="sc") {
+    model <- "~Species+percent.mt+Phase+(1|Individual.Replicate)"
+    formula <- ~Species+percent.mt+Phase+(1|Individual.Replicate)
   }
 
   #estimate weights using linear mixed model of dream (voom)
@@ -169,16 +240,21 @@ runDREAM <- function(dataSub, data.dir, subset.rep, cell.assign, cell.subset, ge
   tt <- topTable(fitmm, n=Inf, coef='SpeciesHuman', adjust.method="BH", p.value=1)
   print("All DE Genes")
   print(dim(tt))
-  print(table(tt$adj.P.Val<0.05))
-  print(summary(decideTests(fitmm, adjust.method=fdr, p.value=0.05)))
+  print(table(tt$adj.P.Val<0.01))
+  print(summary(decideTests(fitmm, adjust.method=fdr, p.value=0.01)))
+
+  #rename final column of toptable to enable rbind()
+  #column name is "B" for mineralizing osteoblasts in ostadhocX and ostadhocX.T2
+  colnames(tt)[6] <- "z.std"
 
   #add details to output
   tt$data <- rep(data.dir, dim(tt)[1])
+  tt$data.type <- rep(data.type, dim(tt)[1])
+  tt$subset.rep <- rep(subset.rep, dim(tt)[1])
   tt$cell.assign <- rep(cell.assign, dim(tt)[1])
   tt$cell.subset <- rep(cell.subset, dim(tt)[1])
   tt$gene.filter <- rep(filter.arg, dim(tt)[1])
   tt$gene.filter.args <- rep(paste0("filter.param=",filter.param), dim(tt)[1])
-  tt$subset.rep <- rep(subset.rep, dim(tt)[1])
   tt$model <- rep(model, dim(tt)[1])
   tt$comparison <- rep(tt$comparison, dim(tt)[1])
   tt$test <- rep(tt$test, dim(tt)[1])
@@ -190,27 +266,85 @@ runDREAM <- function(dataSub, data.dir, subset.rep, cell.assign, cell.subset, ge
 }
 
 #Find differentially expressed genes for different cell assignment subtypes
-if (assign=="all") {
-  subset.list <- list(stage=list("stage-Time 0","stage-Time 1","stage-Time 2"),
-                      clust=list("cluster-iPSC.c1","cluster-iPSC.c2","cluster-iPSC.c3","cluster-MSC.c1","cluster-Osteoblast.c1","cluster-Osteoblast.c2"),
-                      combI=c("cluster-iPSC.c1_iPSC.c2_iPSC.c3"),
-                      combO=c("cluster-Osteoblast.c1_Osteoblast.c2"),
-                      adhoc=list("adhoc-iPSC","adhoc-MSC","adhoc-Osteoblast"),
-                      ostadhoc=list("ostadhoc-preosteoblast","ostadhoc-embedding osteoblast"))
-}
 if (assign=="stage") {
-  subset.list <- list(stage=list("stage-Time 0","stage-Time 1","stage-Time 2"))
+  subset.list <- list(stage=list("stage-Time 0",
+                                 "stage-Time 1",
+                                 "stage-Time 2"))
 }
-if (assign=="cluster") {
-  subset.list <- list(clust=list("cluster-iPSC.c1","cluster-iPSC.c2","cluster-iPSC.c3","cluster-MSC.c1","cluster-Osteoblast.c1","cluster-Osteoblast.c2"),
+if (assign=="cluster"  & data.source=="tot") {
+  subset.list <- list(clust=list("cluster-iPSC.c1",
+                                 "cluster-iPSC.c2",
+                                 "cluster-iPSC.c3",
+                                 "cluster-MSC.c1",
+                                 "cluster-Osteogenic.c1",
+                                 "cluster-Osteogenic.c2"),
                       combI=c("cluster-iPSC.c1_iPSC.c2_iPSC.c3"),
-                      combO=c("cluster-Osteoblast.c1_Osteoblast.c2"))
+                      combO=c("cluster-Osteogenic.c1_Osteogenic.c2"))
 }
 if (assign=="adhoc") {
-  subset.list <- list(adhoc=list("adhoc-iPSC","adhoc-MSC","adhoc-Osteoblast"))
+  subset.list <- list(adhoc=list("adhoc-iPSC",
+                                 "adhoc-MSC",
+                                 "adhoc-Osteogenic"))
+}
+if (assign=="ostcluster0.50"  & data.source=="tot") {
+  subset.list <- list(clust=list("ostcluster0.50-Osteogenic.c1",
+                                 "ostcluster0.50-Osteogenic.c2",
+                                 "ostcluster0.50-Osteogenic.c3",
+                                 "ostcluster0.50-Osteogenic.c4"))
+}
+if (assign=="ostcluster0.75"  & data.source=="tot") {
+  subset.list <- list(clust=list("ostcluster0.75-Osteogenic.c1",
+                                 "ostcluster0.75-Osteogenic.c2",
+                                 "ostcluster0.75-Osteogenic.c3",
+                                 "ostcluster0.75-Osteogenic.c4",
+                                 "ostcluster0.75-Osteogenic.c5",
+                                 "ostcluster0.75-Osteogenic.c6",
+                                 "ostcluster0.75-Osteogenic.c7",
+                                 "ostcluster0.75-Osteogenic.c8"))
+}
+if (assign=="ostcluster0.50.T2"  & data.source=="tot") {
+  subset.list <- list(clust=list("ostcluster0.50.T2-Osteogenic.c1",
+                                 "ostcluster0.50.T2-Osteogenic.c2",
+                                 "ostcluster0.50.T2-Osteogenic.c3",
+                                 "ostcluster0.50.T2-Osteogenic.c4"))
+}
+if (assign=="ostcluster0.75.T2"  & data.source=="tot") {
+  subset.list <- list(clust=list("ostcluster0.75.T2-Osteogenic.c1",
+                                 "ostcluster0.75.T2-Osteogenic.c2",
+                                 "ostcluster0.75.T2-Osteogenic.c3",
+                                 "ostcluster0.75.T2-Osteogenic.c4",
+                                 "ostcluster0.75.T2-Osteogenic.c5",
+                                 "ostcluster0.75.T2-Osteogenic.c6",
+                                 "ostcluster0.75.T2-Osteogenic.c7",
+                                 "ostcluster0.75.T2-Osteogenic.c8"))
 }
 if (assign=="ostadhoc") {
-  subset.list <- list(ostadhoc=list("ostadhoc-preosteoblast","ostadhoc-embedding osteoblast"))
+  subset.list <- list(ostadhoc=list("ostadhoc-preosteoblast",
+                                    "ostadhoc-osteoblast",
+                                    "ostadhoc-embedding osteoblast",
+                                    "ostadhoc-mineralizing osteoblast",
+                                    "ostadhoc-maturing osteocyte"))
+}
+if (assign=="ostadhocX") {
+  subset.list <- list(ostadhoc=list("ostadhocX-preosteoblast",
+                                    "ostadhocX-osteoblast",
+                                    "ostadhocX-embedding osteoblast",
+                                    "ostadhocX-mineralizing osteoblast",
+                                    "ostadhocX-maturing osteocyte"))
+}
+if (assign=="ostadhoc.T2") {
+  subset.list <- list(ostadhoc=list("ostadhoc.T2-preosteoblast",
+                                    "ostadhoc.T2-osteoblast",
+                                    "ostadhoc.T2-embedding osteoblast",
+                                    "ostadhoc.T2-mineralizing osteoblast",
+                                    "ostadhoc.T2-maturing osteocyte"))
+}
+if (assign=="ostadhocX.T2") {
+  subset.list <- list(ostadhoc=list("ostadhocX.T2-preosteoblast",
+                                    "ostadhocX.T2-osteoblast",
+                                    "ostadhocX.T2-embedding osteoblast",
+                                    "ostadhocX.T2-mineralizing osteoblast",
+                                    "ostadhocX.T2-maturing osteocyte"))
 }
 
 DEgene.total <- data.frame()
@@ -230,37 +364,44 @@ for (i in subset.list) {
 
       if (length(str_split(cell.subset,"_")[[1]])==2) {
         dataSub <- subset(data,
-                          subset=Cluster==str_split(cell.subset,"_")[[1]][1]|
-                            Cluster==str_split(cell.subset,"_")[[1]][2])
+                          subset=Cluster0.05==str_split(cell.subset,"_")[[1]][1]|
+                            Cluster0.05==str_split(cell.subset,"_")[[1]][2])
       }
       else {
         dataSub <- subset(data,
-                          subset=Cluster==str_split(cell.subset,"_")[[1]][1]|
-                            Cluster==str_split(cell.subset,"_")[[1]][2]|
-                            Cluster==str_split(cell.subset,"_")[[1]][3])
+                          subset=Cluster0.05==str_split(cell.subset,"_")[[1]][1]|
+                            Cluster0.05==str_split(cell.subset,"_")[[1]][2]|
+                            Cluster0.05==str_split(cell.subset,"_")[[1]][3])
       }
     }
 
     else {
-      if(cell.assign=="stage") { dataSub <- subset(data,subset=Stage==cell.subset) }
-      if(cell.assign=="cluster") { dataSub <- subset(data,subset=Cluster==cell.subset) }
-      if(cell.assign=="adhoc") { dataSub <- subset(data,subset=AdHoc.Assign==cell.subset) }
-      if(cell.assign=="ostadhoc") { dataSub <- subset(data,subset=OstAdHoc.Assign==cell.subset) }
+      if(cell.assign=="stage")             { dataSub <- subset(data,subset=Stage==cell.subset) }
+      if(cell.assign=="cluster")           { dataSub <- subset(data,subset=Cluster0.05==cell.subset) }
+      if(cell.assign=="adhoc")             { dataSub <- subset(data,subset=AdHoc.Assign.thresh0==cell.subset) }
+      if(cell.assign=="ostcluster0.50")    { dataSub <- subset(data,subset=Cluster0.50==cell.subset) }
+      if(cell.assign=="ostcluster0.75")    { dataSub <- subset(data,subset=Cluster0.75==cell.subset) }
+      if(cell.assign=="ostcluster0.50.T2") { dataSub <- subset(data,subset=Cluster0.50==cell.subset & Stage=="Time 2") }
+      if(cell.assign=="ostcluster0.75.T2") { dataSub <- subset(data,subset=Cluster0.75==cell.subset & Stage=="Time 2") }
+      if(cell.assign=="ostadhoc")          { dataSub <- subset(data,subset=OstAdHoc.Assign.4gene.thresh0==cell.subset) }
+      if(cell.assign=="ostadhocX")         { dataSub <- subset(data,subset=OstAdHoc.Assign.x.4gene.thresh0==cell.subset) }
+      if(cell.assign=="ostadhoc.T2")       { dataSub <- subset(data,subset=OstAdHoc.Assign.4gene.thresh0==cell.subset & Stage=="Time 2") }
+      if(cell.assign=="ostadhocX.T2")      { dataSub <- subset(data,subset=OstAdHoc.Assign.x.4gene.thresh0==cell.subset & Stage=="Time 2") }
     }
 
     #further define data subsampling based on sample replicates
     if(subset.rep=="keepRep1") {
       print(subset.rep)
-      dataSub <- subset(dataSub,subset=Sample!="H1-I")
-      dataSub <- subset(dataSub,subset=Sample!="C1-I")
+      dataSub <- subset(dataSub,subset=Individual.Replicate!="H1.1")
+      dataSub <- subset(dataSub,subset=Individual.Replicate!="C1.1")
     }
     if(subset.rep=="keepRep2") {
       print(subset.rep)
-      dataSub <- subset(dataSub,subset=Sample!="H1-I-r2")
-      dataSub <- subset(dataSub,subset=Sample!="C1-I-r2")
+      dataSub <- subset(dataSub,subset=Individual.Replicate!="H1.2")
+      dataSub <- subset(dataSub,subset=Individual.Replicate!="C1.2")
     }
 
-    #further define data subsampling based on number of cells to sample for DE analysis
+    #further define data subsampling based on number of cells to randomly sample for DE analysis
     if(subset.num==TRUE) {
       human.cells <- rownames(dataSub@meta.data)[which(dataSub@meta.data$Species=="Human")]
       chimp.cells <- rownames(dataSub@meta.data)[which(dataSub@meta.data$Species=="Chimp")]

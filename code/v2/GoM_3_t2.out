@@ -1,0 +1,70 @@
+
+R version 3.6.1 (2019-07-05) -- "Action of the Toes"
+Copyright (C) 2019 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> #Read in command line arguments as list of character vectors
+> args=(commandArgs(TRUE))
+> 
+> #Check if arguments are passed and cycle through to evaluate each element
+> if(length(args)==0){
++   print("No arguments supplied.")
++   #supply default values
++   clustnum=3
++   data.source="tot"
++ }else{
++   for(i in 1:length(args)){
++     eval(parse(text=args[[i]]))
++   }
++ }
+> print(paste0("k: ",clustnum))
+[1] "k: 3"
+> print(paste0("data source: ",data.source))
+[1] "data source: t2"
+> 
+> #Load libraries
+> library(Seurat)
+> library(CountClust)
+Loading required package: ggplot2
+> library(classtpx)
+Loading required package: slam
+> library(fastTopics)
+> 
+> #Load data
+> scrna <- paste0("../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-",data.source,".rds")
+> data <- readRDS(scrna)
+> 
+> #Prepare data (unintegrated count data)
+> counts <- as.matrix(data@assays$RNA@counts) #do not use integrated data
+> counts <- counts[rowSums(counts>0)>0,]      #remove genes with 0 counts across cells
+> counts <- t(as.matrix(counts))              #fix matrix orientation (barcodes x features)
+> rm(data)
+> 
+> #Fit GoM model and save data
+> fit <- CountClust::FitGoM(counts, K=clustnum, tol=1, control=list(tmax=100))
+options not specified: switching to default BIC, other choice is BF for Bayes factor
+Fitting a Grade of Membership model
+            (Taddy M., AISTATS 2012, JMLR 22,
+            http://proceedings.mlr.press/v22/taddy12/taddy12.pdf)
+
+Estimating on a 27151 document collection.
+Fit and Bayes Factor Estimation for K = 3
+log posterior increase: 1647990.6, 691319.6, 328305.4, 190537.1, 126790, 59243.7, 41855.2, 30592.9, 23460.9, 18428.5, done.
+log BF( 3 ) = 26569820.33
+> saveRDS(fit, file=paste0("../data/cellranger-data-full/gom",clustnum,".log.indv-cell.int19k.reg-",data.source,".rds"))
+> 
+> proc.time()
+    user   system  elapsed 
+2411.716  702.551 3463.830 

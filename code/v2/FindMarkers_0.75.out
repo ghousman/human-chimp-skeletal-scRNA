@@ -1,0 +1,97 @@
+
+R version 3.6.1 (2019-07-05) -- "Action of the Toes"
+Copyright (C) 2019 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> #Read in command line arguments as list of character vectors
+> args=(commandArgs(TRUE))
+> 
+> #Check if arguments are passed and cycle through to evaluate each element
+> if(length(args)==0){
++   print("No arguments supplied.")
++   #supply default values
++   res="0.1"
++ }else{
++   for(i in 1:length(args)){
++     eval(parse(text=args[[i]]))
++   }
++ }
+> print(paste0("res: ",res))
+[1] "res: 0.75"
+> 
+> #Load libraries
+> library(Seurat)
+> library(cvms)
+> library(broom)
+> library(tibble)
+> library(dplyr)
+
+Attaching package: 'dplyr'
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+> library(stringi)
+> library(stringr)
+> 
+> #Load data
+> scrna.tot <- "../data/cellranger-data-full/data.filter.log.indv-cell.int19k.reg-tot.assign.rds" #integrate across individuals - total (19k genes)
+> data.tot <- readRDS(scrna.tot)
+> data.tot@meta.data$Cell <- rownames(data.tot@meta.data)
+> 
+> #Get total genes included in topics modeling
+> counts <- as.matrix(data.tot@assays$RNA@counts) #do not use integrated data
+> counts <- counts[rowSums(counts>0)>0,]          #remove genes with 0 counts across cells
+> geneTot <- rownames(counts)
+> 
+> #Find top 100 markers for every cluster compared to all remaining clusters, report only the positive ones
+> if(res=="0.1") {Idents(data.tot) <- data.tot@meta.data$integrated_snn_res.0.1}
+> if(res=="0.5") {Idents(data.tot) <- data.tot@meta.data$integrated_snn_res.0.5}
+> if(res=="1")   {Idents(data.tot) <- data.tot@meta.data$integrated_snn_res.1}
+> 
+> markers <- FindAllMarkers(data.tot, only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25, features=geneTot)
+Calculating cluster 0
+Calculating cluster 1
+Calculating cluster 2
+Calculating cluster 3
+Calculating cluster 4
+Calculating cluster 5
+> markers %>% group_by(cluster) %>% top_n(n=100, wt=avg_logFC)
+# A tibble: 600 x 7
+# Groups:   cluster [6]
+   p_val avg_logFC pct.1 pct.2 p_val_adj cluster gene   
+   <dbl>     <dbl> <dbl> <dbl>     <dbl> <fct>   <chr>  
+ 1     0      1.62 0.98  0.802         0 0       MMP1   
+ 2     0      1.29 1     0.845         0 0       LGALS1 
+ 3     0      1.28 1     0.911         0 0       TAGLN2 
+ 4     0      1.18 0.985 0.707         0 0       RGS4   
+ 5     0      1.17 1     0.985         0 0       VIM    
+ 6     0      1.17 1     0.994         0 0       TPM1   
+ 7     0      1.17 0.991 0.754         0 0       IER3   
+ 8     0      1.11 1     0.849         0 0       S100A16
+ 9     0      1.11 0.997 0.922         0 0       KRT18  
+10     0      1.10 0.969 0.537         0 0       TGFBI  
+# ... with 590 more rows
+> top5 <- markers %>% group_by(cluster) %>% top_n(n=5, wt=avg_logFC)
+> saveRDS(markers, file=paste0("../output/markers.res",res,".data.filter.log.indv-cell.int19k.reg-tot.rds"))
+> 
+> proc.time()
+    user   system  elapsed 
+6247.375 1030.177 7298.671 

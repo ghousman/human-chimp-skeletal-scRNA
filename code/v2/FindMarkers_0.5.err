@@ -1,0 +1,2 @@
+Note that the current default version of R is 3.6.1.
+slurmstepd-midway-l16b-31: error: Detected 1 oom-kill event(s) in step 8146708.batch cgroup. Some of your processes may have been killed by the cgroup out-of-memory handler.
