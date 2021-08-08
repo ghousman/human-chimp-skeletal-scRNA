@@ -904,10 +904,11 @@ write.table(tbl.met,
 
 ```{bash, eval=FALSE}
 #easiest to do this on the computing cluster
+cd /project2/gilad/ghousman
 
 #Make folder containing files to be uploaded to GEO
-mkdir geo_GHO_20210415
-cd geo_GHO_20210415
+mkdir geo_GHO_20210807
+cd geo_GHO_20210807
 mkdir data_raw
 mkdir data_proc
 cd data_proc
@@ -920,31 +921,57 @@ cd data_raw
 cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191112_K00242_0637_AHCLNGBBXY-YG-GH-10X-12S-HOU-lns1-2/HCLNGBBXY_78/*/*.fastq.gz .
 cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191217_K00242_0648_BHFHY7BBXY-YG-GH-10X-12S-HOU-lns345/FastQ/HFHY7BBXY_123/*/*.fastq.gz .
 #these files have the same names as some in the next folder [see notes below] so rename the files
-mv *_L001_*.fastq.gz *_L005_*.fastq.gz
-mv *_L002_*.fastq.gz *_L006_*.fastq.gz
-mv *_L003_*.fastq.gz *_L009_*.fastq.gz
+for file in *.fastq.gz; do mv "$file" "${file//_L001_/_L005_}"; done
+for file in *.fastq.gz; do mv "$file" "${file//_L002_/_L006_}"; done
+for file in *.fastq.gz; do mv "$file" "${file//_L003_/_L009_}"; done
 cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191220_K00242_0650_BHFTJ2BBXY-YG-GH-10X-12S-HOU-lns6789/FastQ/HFTJ2BBXY_1234/*/*.fastq.gz .
 cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191227_K00242_0655_BHG3MCBBXY-YG-GH-10X-HOU2-6s-lns12/Unaligned_YG-GH-10X-HOU2-6S/HG3MCBBXY_78/*/*.fastq.gz .
 #these files have the same names as some in the next two folders [see notes below] so rename the files
-mv *_L007_*.fastq.gz *_L005_*.fastq.gz
+for file in *.fastq.gz; do mv "$file" "${file//HOU-17_S1_L007_/HOU-17_S1_L005_}"; done
+for file in *.fastq.gz; do mv "$file" "${file//HOU-18_S2_L007_/HOU-18_S2_L005_}"; done
+for file in *.fastq.gz; do mv "$file" "${file//HOU-19_S3_L007_/HOU-19_S3_L005_}"; done
+for file in *.fastq.gz; do mv "$file" "${file//HOU-20_S4_L007_/HOU-20_S4_L005_}"; done
+for file in *.fastq.gz; do mv "$file" "${file//HOU-21_S5_L007_/HOU-21_S5_L005_}"; done
+for file in *.fastq.gz; do mv "$file" "${file//HOU-22_S6_L007_/HOU-22_S6_L005_}"; done
 cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/200103_K00242_0656_BHFYVWBBXY_YG-GH-10X-HOU2-6S-ln3/Unaligned_YG-GH-10X-HOU2-6S-ln3/HFYVWBBXY_7/*/*.fastq.gz .
 #these files have the same names as some in the next folder [see notes below] so rename the files
-mv *_L007_*.fastq.gz *_L006_*.fastq.gz
+for file in *.fastq.gz; do mv "$file" "${file//HOU-17_S1_L007_/HOU-17_S1_L006_}"; done
+for file in *.fastq.gz; do mv "$file" "${file//HOU-18_S2_L007_/HOU-18_S2_L006_}"; done
+for file in *.fastq.gz; do mv "$file" "${file//HOU-19_S3_L007_/HOU-19_S3_L006_}"; done
+for file in *.fastq.gz; do mv "$file" "${file//HOU-20_S4_L007_/HOU-20_S4_L006_}"; done
+for file in *.fastq.gz; do mv "$file" "${file//HOU-21_S5_L007_/HOU-21_S5_L006_}"; done
+for file in *.fastq.gz; do mv "$file" "${file//HOU-22_S6_L007_/HOU-22_S6_L006_}"; done
 cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/200124_K00242_0661_BHGGF3BBXY-YG-GH-HOU2-10X-6S-ln4/Unaligned_YG-GH-10X-HOU2-6S-ln4/HGGF3BBXY_7/*/*.fastq.gz .
 rm *_I1_*.fastq.gz
 md5sum *
 #manually added file checksum to metadata file
-#manually transferred metadata file to geo_GHO_20210415 via FileZilla
+#manually transferred metadata file to geo_GHO_20210807 via FileZilla
 
 #Upload files to GEO
 cd /project2/gilad/ghousman
 sftp geoftp@sftp-private.ncbi.nlm.nih.gov
 cd uploads/ghousman_SbedAyUe
-mkdir geo_GHO_20210415
-put -R /project2/gilad/ghousman/geo_GHO_20210415
+mkdir geo_GHO_20210807
+put -R /project2/gilad/ghousman/geo_GHO_20210807
 
 #Remove files for GEO
 cd /project2/gilad/ghousman
-rm -r geo_GHO_20210415
+rm -r geo_GHO_20210807
+
+### FILE RENAMING NOTES
+### NEED TO RENAME FILES TO L005/L006/L009 ###
+### /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191217_K00242_0648_BHFHY7BBXY-YG-GH-10X-12S-HOU-lns345/FastQ/HFHY7BBXY_123/*/*_L001_*.fastq.gz
+### /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191217_K00242_0648_BHFHY7BBXY-YG-GH-10X-12S-HOU-lns345/FastQ/HFHY7BBXY_123/*/*_L002_*.fastq.gz
+### /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191217_K00242_0648_BHFHY7BBXY-YG-GH-10X-12S-HOU-lns345/FastQ/HFHY7BBXY_123/*/*_L003_*.fastq.gz
+### vs.
+### /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191220_K00242_0650_BHFTJ2BBXY-YG-GH-10X-12S-HOU-lns6789/FastQ/HFTJ2BBXY_1234/*/*_L001_*.fastq.gz
+### /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191220_K00242_0650_BHFTJ2BBXY-YG-GH-10X-12S-HOU-lns6789/FastQ/HFTJ2BBXY_1234/*/*_L002_*.fastq.gz
+### /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191220_K00242_0650_BHFTJ2BBXY-YG-GH-10X-12S-HOU-lns6789/FastQ/HFTJ2BBXY_1234/*/*_L003_*.fastq.gz
+### NEED TO RENAME FILES TO L005/L006 ###
+### /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191227_K00242_0655_BHG3MCBBXY-YG-GH-10X-HOU2-6s-lns12/Unaligned_YG-GH-10X-HOU2-6S/HG3MCBBXY_78/*/*_L007_*.fastq.gz
+### vs.
+### /project2/gilad/ghousman/skeletal-human-chimp/scRNA/200103_K00242_0656_BHFYVWBBXY_YG-GH-10X-HOU2-6S-ln3/Unaligned_YG-GH-10X-HOU2-6S-ln3/HFYVWBBXY_7/*/*_L007_*.fastq.gz
+### vs.
+### /project2/gilad/ghousman/skeletal-human-chimp/scRNA/200124_K00242_0661_BHGGF3BBXY-YG-GH-HOU2-10X-6S-ln4/Unaligned_YG-GH-10X-HOU2-6S-ln4/HGGF3BBXY_7/*/*_L007_*.fastq.gz
 ```
 
