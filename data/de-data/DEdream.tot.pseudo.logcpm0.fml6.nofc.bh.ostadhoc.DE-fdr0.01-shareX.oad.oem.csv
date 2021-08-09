@@ -1,0 +1,52 @@
+"","cell.subset","gene","logFC"
+"1","osteoblast","COQ7",1.59393911925545
+"2","embedding osteoblast","COQ7",1.61212335496308
+"3","mineralizing osteoblast","COQ7",1.59687885925114
+"4","osteoblast","EMD",0.702418244856366
+"5","embedding osteoblast","EMD",0.805186374229165
+"6","mineralizing osteoblast","EMD",0.747019611469569
+"7","osteoblast","EOLA1",2.61809515920966
+"8","embedding osteoblast","EOLA1",2.97218938503021
+"9","mineralizing osteoblast","EOLA1",2.72644459015175
+"10","osteoblast","GNB5",1.97564049680559
+"11","embedding osteoblast","GNB5",1.57307421782904
+"12","mineralizing osteoblast","GNB5",1.96320444007043
+"13","osteoblast","HAUS2",-0.808489453030839
+"14","embedding osteoblast","HAUS2",-1.020513668888
+"15","mineralizing osteoblast","HAUS2",-0.79278312086496
+"16","osteoblast","IQCB1",1.80383463390356
+"17","embedding osteoblast","IQCB1",1.79974322859352
+"18","mineralizing osteoblast","IQCB1",1.85580002835614
+"19","osteoblast","KLHL35",2.83624264371361
+"20","embedding osteoblast","KLHL35",3.32963277899611
+"21","mineralizing osteoblast","KLHL35",2.25960795132303
+"22","osteoblast","LRIG2",1.91763683223305
+"23","embedding osteoblast","LRIG2",1.73016925488462
+"24","mineralizing osteoblast","LRIG2",1.55086875960619
+"25","osteoblast","MOK",3.37535369986901
+"26","embedding osteoblast","MOK",4.10112806234307
+"27","mineralizing osteoblast","MOK",2.98516879838453
+"28","osteoblast","NSMCE1",-1.55350663101902
+"29","embedding osteoblast","NSMCE1",-1.45794455951714
+"30","mineralizing osteoblast","NSMCE1",-1.37812813010185
+"31","osteoblast","PHOSPHO2",-1.52980330024543
+"32","embedding osteoblast","PHOSPHO2",-1.09448376706572
+"33","mineralizing osteoblast","PHOSPHO2",-1.53047524309102
+"34","osteoblast","RNF187",1.3941141767805
+"35","embedding osteoblast","RNF187",1.59697201660567
+"36","mineralizing osteoblast","RNF187",1.27578765622946
+"37","osteoblast","SLC27A5",2.9910285548793
+"38","embedding osteoblast","SLC27A5",2.9796025437733
+"39","mineralizing osteoblast","SLC27A5",2.69873219198553
+"40","osteoblast","SMPD2",-1.88378274974408
+"41","embedding osteoblast","SMPD2",-1.97696048827421
+"42","mineralizing osteoblast","SMPD2",-1.94431407885595
+"43","osteoblast","SPOUT1",-1.36812096693961
+"44","embedding osteoblast","SPOUT1",-1.35862803954962
+"45","mineralizing osteoblast","SPOUT1",-1.26702469720208
+"46","osteoblast","TRAPPC6A",2.84810275489183
+"47","embedding osteoblast","TRAPPC6A",2.76198643159104
+"48","mineralizing osteoblast","TRAPPC6A",3.1257074012204
+"49","osteoblast","UBA52",-1.89819841977031
+"50","embedding osteoblast","UBA52",-1.60242182655538
+"51","mineralizing osteoblast","UBA52",-1.65155062946171
