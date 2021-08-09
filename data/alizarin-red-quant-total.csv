@@ -1,0 +1,141 @@
+Species,Species_Details,Abbr,Abbr_Details,Name,Name_Details,Cell_Type,Well_Size,MSC_Media,Sample,Passage,Position,Absorbance_Rep,Absorbance_Value
+Chimpanzee,Chimpanzee MSC,C1,C1 MSC,C8861,C8861 MSC,MSC,12W,3B,C1-M,p15+18+18,NA,1,0.189
+Chimpanzee,Chimpanzee MSC,C1,C1 MSC,C8861,C8861 MSC,MSC,12W,3B,C1-M,p15+18+18,NA,2,0.215
+Chimpanzee,Chimpanzee MSC,C1,C1 MSC,C8861,C8861 MSC,MSC,12W,3B,C1-M,p15+18+18,NA,3,0.197
+Chimpanzee,Chimpanzee MSC,C1,C1 MSC,C8861,C8861 MSC,MSC,12W,3B,C1-M,p15+18+18,NA,4,0.170
+Chimpanzee,Chimpanzee Osteoblast,C1,C1 Osteoblast,C8861,C8861 Osteoblast,Osteoblast,12W,3B,C1-O 12w,p15+18+18,NA,1,0.324
+Chimpanzee,Chimpanzee Osteoblast,C1,C1 Osteoblast,C8861,C8861 Osteoblast,Osteoblast,12W,3B,C1-O 12w,p15+18+18,NA,2,0.259
+Chimpanzee,Chimpanzee Osteoblast,C1,C1 Osteoblast,C8861,C8861 Osteoblast,Osteoblast,12W,3B,C1-O 12w,p15+18+18,NA,3,0.295
+Chimpanzee,Chimpanzee Osteoblast,C1,C1 Osteoblast,C8861,C8861 Osteoblast,Osteoblast,12W,3B,C1-O 12w,p15+18+18,NA,4,0.363
+Chimpanzee,Chimpanzee Osteoblast,C1,C1 Osteoblast,C8861,C8861 Osteoblast,Osteoblast,6W,3B,C1-O 6w,p15+18+18,NA,1,0.691
+Chimpanzee,Chimpanzee Osteoblast,C1,C1 Osteoblast,C8861,C8861 Osteoblast,Osteoblast,6W,3B,C1-O 6w,p15+18+18,NA,2,0.778
+Chimpanzee,Chimpanzee Osteoblast,C1,C1 Osteoblast,C8861,C8861 Osteoblast,Osteoblast,6W,3B,C1-O 6w,p15+18+18,NA,3,0.528
+Chimpanzee,Chimpanzee Osteoblast,C1,C1 Osteoblast,C8861,C8861 Osteoblast,Osteoblast,6W,3B,C1-O 6w,p15+18+18,NA,4,0.508
+Human,Human MSC,H1,H1 MSC,H23555,H23555 MSC,MSC,12W,3B,H1-M,p16+29+11,NA,1,1.440
+Human,Human MSC,H1,H1 MSC,H23555,H23555 MSC,MSC,12W,3B,H1-M,p16+29+11,NA,2,0.142
+Human,Human MSC,H1,H1 MSC,H23555,H23555 MSC,MSC,12W,3B,H1-M,p16+29+11,NA,3,0.142
+Human,Human MSC,H1,H1 MSC,H23555,H23555 MSC,MSC,12W,3B,H1-M,p16+29+11,NA,4,1.603
+Human,Human Osteoblast,H1,H1 Osteoblast,H23555,H23555 Osteoblast,Osteoblast,12W,3B,H1-O 12w,p16+29+12,NA,1,0.524
+Human,Human Osteoblast,H1,H1 Osteoblast,H23555,H23555 Osteoblast,Osteoblast,12W,3B,H1-O 12w,p16+29+12,NA,2,0.139
+Human,Human Osteoblast,H1,H1 Osteoblast,H23555,H23555 Osteoblast,Osteoblast,12W,3B,H1-O 12w,p16+29+12,NA,3,0.142
+Human,Human Osteoblast,H1,H1 Osteoblast,H23555,H23555 Osteoblast,Osteoblast,12W,3B,H1-O 12w,p16+29+12,NA,4,0.137
+Human,Human Osteoblast,H1,H1 Osteoblast,H23555,H23555 Osteoblast,Osteoblast,6W,3B,H1-O 6w,p16+29+12,NA,1,0.234
+Human,Human Osteoblast,H1,H1 Osteoblast,H23555,H23555 Osteoblast,Osteoblast,6W,3B,H1-O 6w,p16+29+12,NA,2,0.234
+Human,Human Osteoblast,H1,H1 Osteoblast,H23555,H23555 Osteoblast,Osteoblast,6W,3B,H1-O 6w,p16+29+12,NA,3,0.239
+Human,Human Osteoblast,H1,H1 Osteoblast,H23555,H23555 Osteoblast,Osteoblast,6W,3B,H1-O 6w,p16+29+12,NA,4,0.233
+Human,Human MSC,H1-r2,H1-r2 MSC,H23555,H23555 MSC,MSC,12W,2B,HR-M,p16+29+13,A1,1,0.128
+Human,Human MSC,H1-r2,H1-r2 MSC,H23555,H23555 MSC,MSC,12W,2B,HR-M,p16+29+13,A2,2,0.132
+Human,Human MSC,H1-r2,H1-r2 MSC,H23555,H23555 MSC,MSC,12W,2B,HR-M,p16+29+13,A3,3,0.953
+Human,Human MSC,H1-r2,H1-r2 MSC,H23555,H23555 MSC,MSC,12W,2B,HR-M,p16+29+13,A4,4,0.144
+Chimpanzee,Chimpanzee MSC,C1-r2,C1-r2 MSC,C8861,C8861 MSC,MSC,12W,2B,CR-M,p15+20+11,A5,1,0.136
+Chimpanzee,Chimpanzee MSC,C1-r2,C1-r2 MSC,C8861,C8861 MSC,MSC,12W,2B,CR-M,p15+20+11,A6,2,0.141
+Chimpanzee,Chimpanzee MSC,C1-r2,C1-r2 MSC,C8861,C8861 MSC,MSC,12W,2B,CR-M,p15+20+11,A7,3,0.133
+Chimpanzee,Chimpanzee MSC,C1-r2,C1-r2 MSC,C8861,C8861 MSC,MSC,12W,2B,CR-M,p15+20+11,A8,4,0.591
+Human,Human Osteoblast,H1-r2,H1-r2 Osteoblast,H23555,H23555 Osteoblast,Osteoblast,12W,2B,HR-O,p16+29+14,A9,1,0.941
+Human,Human Osteoblast,H1-r2,H1-r2 Osteoblast,H23555,H23555 Osteoblast,Osteoblast,12W,2B,HR-O,p16+29+14,A10,2,0.951
+Human,Human Osteoblast,H1-r2,H1-r2 Osteoblast,H23555,H23555 Osteoblast,Osteoblast,12W,2B,HR-O,p16+29+14,A11,3,0.957
+Human,Human Osteoblast,H1-r2,H1-r2 Osteoblast,H23555,H23555 Osteoblast,Osteoblast,12W,2B,HR-O,p16+29+14,A12,4,1.064
+Chimpanzee,Chimpanzee Osteoblast,C1-r2,C1-r2 Osteoblast,C8861,C8861 Osteoblast,Osteoblast,12W,2B,CR-O,p15+20+12,B1,1,0.907
+Chimpanzee,Chimpanzee Osteoblast,C1-r2,C1-r2 Osteoblast,C8861,C8861 Osteoblast,Osteoblast,12W,2B,CR-O,p15+20+12,B2,2,0.915
+Chimpanzee,Chimpanzee Osteoblast,C1-r2,C1-r2 Osteoblast,C8861,C8861 Osteoblast,Osteoblast,12W,2B,CR-O,p15+20+12,B3,3,1.407
+Chimpanzee,Chimpanzee Osteoblast,C1-r2,C1-r2 Osteoblast,C8861,C8861 Osteoblast,Osteoblast,12W,2B,CR-O,p15+20+12,B4,4,1.405
+Human,Human MSC,H2,H2 MSC,H20157,H20157 MSC,MSC,12W,3B,H2-M,p16+22+12,B5,1,0.12
+Human,Human MSC,H2,H2 MSC,H20157,H20157 MSC,MSC,12W,3B,H2-M,p16+22+12,B6,2,0.121
+Human,Human MSC,H2,H2 MSC,H20157,H20157 MSC,MSC,12W,3B,H2-M,p16+22+12,B7,3,0.122
+Human,Human MSC,H2,H2 MSC,H20157,H20157 MSC,MSC,12W,3B,H2-M,p16+22+12,B8,4,0.118
+Chimpanzee,Chimpanzee MSC,C2,C2 MSC,C3647,C3647 MSC,MSC,12W,3B,C2-M,p15+22+12,B9,1,0.125
+Chimpanzee,Chimpanzee MSC,C2,C2 MSC,C3647,C3647 MSC,MSC,12W,3B,C2-M,p15+22+12,B10,2,0.136
+Chimpanzee,Chimpanzee MSC,C2,C2 MSC,C3647,C3647 MSC,MSC,12W,3B,C2-M,p15+22+12,B11,3,0.129
+Chimpanzee,Chimpanzee MSC,C2,C2 MSC,C3647,C3647 MSC,MSC,12W,3B,C2-M,p15+22+12,B12,4,0.124
+Human,Human Osteoblast,H2,H2 Osteoblast,H20157,H20157 Osteoblast,Osteoblast,12W,3B,H2-O,p16+22+13,C1,1,2.54
+Human,Human Osteoblast,H2,H2 Osteoblast,H20157,H20157 Osteoblast,Osteoblast,12W,3B,H2-O,p16+22+13,C2,2,2.516
+Human,Human Osteoblast,H2,H2 Osteoblast,H20157,H20157 Osteoblast,Osteoblast,12W,3B,H2-O,p16+22+13,C3,3,2.529
+Human,Human Osteoblast,H2,H2 Osteoblast,H20157,H20157 Osteoblast,Osteoblast,12W,3B,H2-O,p16+22+13,C4,4,2.532
+Chimpanzee,Chimpanzee Osteoblast,C2,C2 Osteoblast,C3647,C3647 Osteoblast,Osteoblast,12W,3B,C2-O,p15+22+13,C5,1,0.275
+Chimpanzee,Chimpanzee Osteoblast,C2,C2 Osteoblast,C3647,C3647 Osteoblast,Osteoblast,12W,3B,C2-O,p15+22+13,C6,2,0.27
+Chimpanzee,Chimpanzee Osteoblast,C2,C2 Osteoblast,C3647,C3647 Osteoblast,Osteoblast,12W,3B,C2-O,p15+22+13,C7,3,0.263
+Chimpanzee,Chimpanzee Osteoblast,C2,C2 Osteoblast,C3647,C3647 Osteoblast,Osteoblast,12W,3B,C2-O,p15+22+13,C8,4,0.263
+Human,Human MSC,H3,H3 MSC,H28126,H28126 MSC,MSC,12W,3B,H3-M(1),p15+28+10,D1,1,0.116
+Human,Human MSC,H3,H3 MSC,H28126,H28126 MSC,MSC,12W,3B,H3-M(1),p15+28+10,D2,2,0.116
+Human,Human MSC,H3,H3 MSC,H28126,H28126 MSC,MSC,12W,3B,H3-M(1),p15+28+10,D3,3,0.114
+Human,Human MSC,H3,H3 MSC,H28126,H28126 MSC,MSC,12W,3B,H3-M(1),p15+28+10,D4,4,0.117
+Human,Human MSC,H3,H3 MSC,H28126,H28126 MSC,MSC,12W,1A,H3-M(2),p15+28+13,D5,1,0.126
+Human,Human MSC,H3,H3 MSC,H28126,H28126 MSC,MSC,12W,1A,H3-M(2),p15+28+13,D6,2,0.117
+Human,Human MSC,H3,H3 MSC,H28126,H28126 MSC,MSC,12W,1A,H3-M(2),p15+28+13,D7,3,0.115
+Human,Human MSC,H3,H3 MSC,H28126,H28126 MSC,MSC,12W,1A,H3-M(2),p15+28+13,D8,4,0.117
+Chimpanzee,Chimpanzee MSC,C3,C3 MSC,C3649,C3649 MSC,MSC,12W,3B,C3-M,p15+18+18,D9,1,0.138
+Chimpanzee,Chimpanzee MSC,C3,C3 MSC,C3649,C3649 MSC,MSC,12W,3B,C3-M,p15+18+18,D10,2,0.14
+Chimpanzee,Chimpanzee MSC,C3,C3 MSC,C3649,C3649 MSC,MSC,12W,3B,C3-M,p15+18+18,D11,3,0.133
+Chimpanzee,Chimpanzee MSC,C3,C3 MSC,C3649,C3649 MSC,MSC,12W,3B,C3-M,p15+18+18,D12,4,0.141
+Human,Human Osteoblast,H3,H3 Osteoblast,H28126,H28126 Osteoblast,Osteoblast,12W,3B,H3-O(1),p15+28+11,E1,1,1.167
+Human,Human Osteoblast,H3,H3 Osteoblast,H28126,H28126 Osteoblast,Osteoblast,12W,3B,H3-O(1),p15+28+11,E2,2,1.136
+Human,Human Osteoblast,H3,H3 Osteoblast,H28126,H28126 Osteoblast,Osteoblast,12W,3B,H3-O(1),p15+28+11,E3,3,1.149
+Human,Human Osteoblast,H3,H3 Osteoblast,H28126,H28126 Osteoblast,Osteoblast,12W,3B,H3-O(1),p15+28+11,E4,4,1.15
+Human,Human Osteoblast,H3,H3 Osteoblast,H28126,H28126 Osteoblast,Osteoblast,12W,1A,H3-O(2),P15+28+11,E5,1,2.889
+Human,Human Osteoblast,H3,H3 Osteoblast,H28126,H28126 Osteoblast,Osteoblast,12W,1A,H3-O(2),P15+28+11,E6,2,2.887
+Human,Human Osteoblast,H3,H3 Osteoblast,H28126,H28126 Osteoblast,Osteoblast,12W,1A,H3-O(2),P15+28+11,E7,3,2.892
+Human,Human Osteoblast,H3,H3 Osteoblast,H28126,H28126 Osteoblast,Osteoblast,12W,1A,H3-O(2),P15+28+11,E8,4,2.898
+Chimpanzee,Chimpanzee Osteoblast,C3,C3 Osteoblast,C3649,C3649 Osteoblast,Osteoblast,12W,3B,C3-O,P15+18+19,E9,1,0.559
+Chimpanzee,Chimpanzee Osteoblast,C3,C3 Osteoblast,C3649,C3649 Osteoblast,Osteoblast,12W,3B,C3-O,P15+18+19,E10,2,0.557
+Chimpanzee,Chimpanzee Osteoblast,C3,C3 Osteoblast,C3649,C3649 Osteoblast,Osteoblast,12W,3B,C3-O,P15+18+19,E11,3,0.573
+Chimpanzee,Chimpanzee Osteoblast,C3,C3 Osteoblast,C3649,C3649 Osteoblast,Osteoblast,12W,3B,C3-O,P15+18+19,E12,4,0.563
+Chimpanzee,Chimpanzee MSC,C4,C4 MSC,C40210,C40210 MSC,MSC,12W,2B,C4-M,P15+16+12,A1,1,0.121
+Chimpanzee,Chimpanzee MSC,C4,C4 MSC,C40210,C40210 MSC,MSC,12W,2B,C4-M,P15+16+12,A2,2,0.125
+Chimpanzee,Chimpanzee MSC,C4,C4 MSC,C40210,C40210 MSC,MSC,12W,2B,C4-M,P15+16+12,A3,3,0.124
+Chimpanzee,Chimpanzee MSC,C4,C4 MSC,C40210,C40210 MSC,MSC,12W,2B,C4-M,P15+16+12,A4,4,0.123
+Chimpanzee,Chimpanzee Osteoblast,C4,C4 Osteoblast,C40210,C40210 Osteoblast,Osteoblast,12W,2B,C4-O,p15+16+13,A5,1,2.181
+Chimpanzee,Chimpanzee Osteoblast,C4,C4 Osteoblast,C40210,C40210 Osteoblast,Osteoblast,12W,2B,C4-O,p15+16+13,A6,2,2.203
+Chimpanzee,Chimpanzee Osteoblast,C4,C4 Osteoblast,C40210,C40210 Osteoblast,Osteoblast,12W,2B,C4-O,p15+16+13,A7,3,2.194
+Chimpanzee,Chimpanzee Osteoblast,C4,C4 Osteoblast,C40210,C40210 Osteoblast,Osteoblast,12W,2B,C4-O,p15+16+13,A8,4,2.208
+Human,Human MSC,H4,H4 MSC,H28834,H28834 MSC,MSC,6W,2B,H4-M,p13+24+15,B1,1,0.119
+Human,Human MSC,H4,H4 MSC,H28834,H28834 MSC,MSC,6W,2B,H4-M,p13+24+15,B2,2,0.121
+Human,Human MSC,H4,H4 MSC,H28834,H28834 MSC,MSC,6W,2B,H4-M,p13+24+15,B3,3,0.121
+Human,Human MSC,H4,H4 MSC,H28834,H28834 MSC,MSC,6W,2B,H4-M,p13+24+15,B4,4,0.125
+Human,Human MSC,H4,H4 MSC,H28834,H28834 MSC,MSC,6W,2B,H4-M,p13+24+15,B5,5,0.123
+Human,Human MSC,H4,H4 MSC,H28834,H28834 MSC,MSC,6W,2B,H4-M,p13+24+15,B6,6,0.124
+Human,Human MSC,H4,H4 MSC,H28834,H28834 MSC,MSC,6W,2B,H4-M,p13+24+15,B7,7,0.121
+Human,Human MSC,H4,H4 MSC,H28834,H28834 MSC,MSC,6W,2B,H4-M,p13+24+15,B8,8,0.12
+Human,Human MSC,H4,H4 MSC,H28834,H28834 MSC,MSC,6W,2B,H4-M,p13+24+15,B9,9,0.122
+Human,Human MSC,H4,H4 MSC,H28834,H28834 MSC,MSC,6W,2B,H4-M,p13+24+15,B10,10,0.122
+Human,Human Osteoblast,H4,H4 Osteoblast,H28834,H28834 Osteoblast,Osteoblast,6W,2B,H4-O,p13+24+13,C1,1,0.873
+Human,Human Osteoblast,H4,H4 Osteoblast,H28834,H28834 Osteoblast,Osteoblast,6W,2B,H4-O,p13+24+13,C2,2,0.882
+Human,Human Osteoblast,H4,H4 Osteoblast,H28834,H28834 Osteoblast,Osteoblast,6W,2B,H4-O,p13+24+13,C3,3,0.901
+Human,Human Osteoblast,H4,H4 Osteoblast,H28834,H28834 Osteoblast,Osteoblast,6W,2B,H4-O,p13+24+13,C4,4,0.864
+Human,Human Osteoblast,H4,H4 Osteoblast,H28834,H28834 Osteoblast,Osteoblast,6W,2B,H4-O,p13+24+13,C5,5,0.886
+Human,Human Osteoblast,H4,H4 Osteoblast,H28834,H28834 Osteoblast,Osteoblast,6W,2B,H4-O,p13+24+13,C6,6,0.88
+Human,Human Osteoblast,H4,H4 Osteoblast,H28834,H28834 Osteoblast,Osteoblast,6W,2B,H4-O,p13+24+13,C7,7,0.879
+Human,Human Osteoblast,H4,H4 Osteoblast,H28834,H28834 Osteoblast,Osteoblast,6W,2B,H4-O,p13+24+13,C8,8,0.892
+Human,Human Osteoblast,H4,H4 Osteoblast,H28834,H28834 Osteoblast,Osteoblast,6W,2B,H4-O,p13+24+13,C9,9,0.888
+Human,Human Osteoblast,H4,H4 Osteoblast,H28834,H28834 Osteoblast,Osteoblast,6W,2B,H4-O,p13+24+13,C10,10,0.853
+Chimpanzee,Chimpanzee MSC,C5,C5 MSC,C40280,C40280 MSC,MSC,12W,2B,C5-M,p15+23+11,F1,1,0.119
+Chimpanzee,Chimpanzee MSC,C5,C5 MSC,C40280,C40280 MSC,MSC,12W,2B,C5-M,p15+23+11,F2,2,0.152
+Chimpanzee,Chimpanzee MSC,C5,C5 MSC,C40280,C40280 MSC,MSC,12W,2B,C5-M,p15+23+11,F3,3,0.117
+Chimpanzee,Chimpanzee MSC,C5,C5 MSC,C40280,C40280 MSC,MSC,12W,2B,C5-M,p15+23+11,F4,4,0.111
+Human,Human MSC,H5,H5 MSC,H21792,H21792 MSC,MSC,12W,2B,H5-M,p15+20+11,F5,1,0.131
+Human,Human MSC,H5,H5 MSC,H21792,H21792 MSC,MSC,12W,2B,H5-M,p15+20+11,F6,2,0.117
+Human,Human MSC,H5,H5 MSC,H21792,H21792 MSC,MSC,12W,2B,H5-M,p15+20+11,F7,3,0.125
+Human,Human MSC,H5,H5 MSC,H21792,H21792 MSC,MSC,12W,2B,H5-M,p15+20+11,F8,4,0.127
+Chimpanzee,Chimpanzee Osteoblast,C5,C5 Osteoblast,C40280,C40280 Osteoblast,Osteoblast,12W,2B,C5-O,p15+28+10,F9,1,0.134
+Chimpanzee,Chimpanzee Osteoblast,C5,C5 Osteoblast,C40280,C40280 Osteoblast,Osteoblast,12W,2B,C5-O,p15+28+10,F10,2,0.142
+Chimpanzee,Chimpanzee Osteoblast,C5,C5 Osteoblast,C40280,C40280 Osteoblast,Osteoblast,12W,2B,C5-O,p15+28+10,F11,3,0.157
+Chimpanzee,Chimpanzee Osteoblast,C5,C5 Osteoblast,C40280,C40280 Osteoblast,Osteoblast,12W,2B,C5-O,p15+28+10,F12,4,0.14
+Human,Human Osteoblast,H5,H5 Osteoblast,H21792,H21792 Osteoblast,Osteoblast,12W,2B,H5-O,p15+20+11,G1,1,1.409
+Human,Human Osteoblast,H5,H5 Osteoblast,H21792,H21792 Osteoblast,Osteoblast,12W,2B,H5-O,p15+20+11,G2,2,1.436
+Human,Human Osteoblast,H5,H5 Osteoblast,H21792,H21792 Osteoblast,Osteoblast,12W,2B,H5-O,p15+20+11,G3,3,1.421
+Human,Human Osteoblast,H5,H5 Osteoblast,H21792,H21792 Osteoblast,Osteoblast,12W,2B,H5-O,p15+20+11,G4,4,1.4217
+Chimpanzee,Chimpanzee MSC,C6,C6 MSC,C3624,C3624 MSC,MSC,12W,3B,C6-M,p18+31+10,D1,1,0.121
+Chimpanzee,Chimpanzee MSC,C6,C6 MSC,C3624,C3624 MSC,MSC,12W,3B,C6-M,p18+31+10,D2,2,0.128
+Chimpanzee,Chimpanzee MSC,C6,C6 MSC,C3624,C3624 MSC,MSC,12W,3B,C6-M,p18+31+10,D3,3,0.122
+Chimpanzee,Chimpanzee MSC,C6,C6 MSC,C3624,C3624 MSC,MSC,12W,3B,C6-M,p18+31+10,D4,4,0.123
+Human,Human MSC,H6,H6 MSC,H20961,H20961 MSC,MSC,12W,3B,H6-M,p13+28+8,D5,1,0.118
+Human,Human MSC,H6,H6 MSC,H20961,H20961 MSC,MSC,12W,3B,H6-M,p13+28+8,D6,2,0.119
+Human,Human MSC,H6,H6 MSC,H20961,H20961 MSC,MSC,12W,3B,H6-M,p13+28+8,D7,3,0.117
+Human,Human MSC,H6,H6 MSC,H20961,H20961 MSC,MSC,12W,3B,H6-M,p13+28+8,D8,4,0.118
+Chimpanzee,Chimpanzee Osteoblast,C6,C6 Osteoblast,C3624,C3624 Osteoblast,Osteoblast,12W,3B,C6-O,p18+31+7,D9,1,1.477
+Chimpanzee,Chimpanzee Osteoblast,C6,C6 Osteoblast,C3624,C3624 Osteoblast,Osteoblast,12W,3B,C6-O,p18+31+7,D10,2,1.447
+Chimpanzee,Chimpanzee Osteoblast,C6,C6 Osteoblast,C3624,C3624 Osteoblast,Osteoblast,12W,3B,C6-O,p18+31+7,D11,3,1.451
+Chimpanzee,Chimpanzee Osteoblast,C6,C6 Osteoblast,C3624,C3624 Osteoblast,Osteoblast,12W,3B,C6-O,p18+31+7,D12,4,1.438
+Human,Human Osteoblast,H6,H6 Osteoblast,H20961,H20961 Osteoblast,Osteoblast,12W,3B,H6-O,p13+28+8,E1 ,1,3.832
+Human,Human Osteoblast,H6,H6 Osteoblast,H20961,H20961 Osteoblast,Osteoblast,12W,3B,H6-O,p13+28+8,E2,2,3.824
+Human,Human Osteoblast,H6,H6 Osteoblast,H20961,H20961 Osteoblast,Osteoblast,12W,3B,H6-O,p13+28+8,E3,3,3.822
+Human,Human Osteoblast,H6,H6 Osteoblast,H20961,H20961 Osteoblast,Osteoblast,12W,3B,H6-O,p13+28+8,E4,4,3.851
