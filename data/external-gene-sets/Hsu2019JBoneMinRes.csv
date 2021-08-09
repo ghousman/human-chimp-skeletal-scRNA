@@ -1,0 +1,11 @@
+Top.SNP,Functional.annotation,Nearby.gene,GWAS.hip.geometry,GWAS.femoral.neck.length,GWAS.narrowest.width.of.femoral.neck,GWAS.femoral.neck.section.modulus
+rs261179,Intergenic,IRX1,1,1,0,0
+rs261179,Intergenic,ADAMTS16,1,1,0,0
+rs6556301,Intergenic,FGFR4,1,0,1,0
+rs6556301,Intergenic,NSD1,1,0,1,0
+rs6556301,Intergenic,RAB24,1,0,1,0
+rs7102273,Intergenic,LRP5,1,0,0,1
+rs7102273,Intergenic,PPP6R3,1,0,0,1
+rs7102273,Intergenic,GAL,1,0,0,1
+rsll 49605,Intronic,CCDC91,1,0,1,0
+rs8129030,Intergenic,RUNX1,1,1,0,0

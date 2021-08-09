@@ -1,0 +1,166 @@
+TISSUE ,VENDOR ,AGE ,SEX ,ETHNICITY ,CONCOMITANT MEDICATIONS
+(ASA=Aspirin) ,,,,,
+Adipocyte ,"from Zen-Bio, Lot L061201 ",39,F ,  ,  
+Adrenal Cortex ,Clinomics ,43,F ,Cau ,"ASA, Inderol "
+Adrenal Cortex ,  ,50,M ,Cau ,"ASA, Inderol "
+Adrenal Cortex ,  ,56,M ,Cau ,ASA 
+Appendix ,Clinomics ,60,M ,Cau ,NA 
+Appendix ,  ,45,M ,Cau ,NA 
+Appendix ,  ,58,F ,Cau ,NA 
+Appendix ,  ,57,F ,Cau ,Tylenol 
+atrioventricular node ,Clinomics ,22,M ,Cau ,None 
+atrioventricular node ,  ,61,F ,Cau ,"ASA, Tylenol "
+bronchial epithelial cells ,"from Gino Van Heeke, Novartis- cell line NHBE 6167 ",  ,  ,  ,  
+CardiacMyocytes ,Clonetics Cat # CC-2582 ,  ,  ,  ,  
+CerebellumPeduncles ,AMS biotechnology ,41,Male ,  ,  
+CerebellumPeduncles ,  ,24,Male ,  ,  
+ciliary ganglion ,Clinomics ,43,M ,Cau ,Unk 
+ciliary ganglion ,  ,50,M ,Cau ,"ASA, Tylenol "
+ciliary ganglion ,  ,39,F ,Cau ,None 
+Cingulate Cortex ,Clinomics ,28,Male ,Cau ,"ASA, Tylenol "
+Cingulate Cortex ,  ,22,Female ,Cau ,"ASA, Tylenol "
+Cingulate Cortex ,  ,52,Male ,Cau ,"ASA, Tylenol "
+Cingulate Cortex ,  ,54,Female ,Cau ,ASA 
+DorsalRootGanglion ,Clinomics ,52,Male ,Cau ,ASA 
+DorsalRootGanglion ,  ,61,Female ,Cau ,ASA 
+DorsalRootGanglion ,  ,58,Female ,Cau ,ASA 
+fetalThyroid ,"Novartis, Graeme Bilbe, Jose Crespo ",fetal ,fetal ,  ,  
+globus pallidus ,Clinomics ,66,M ,Cau ,Unk 
+globus pallidus ,  ,52,M ,Cau ,"ASA, Tylenol "
+globus pallidus ,  ,51,F ,Cau ,ASA 
+globus pallidus ,  ,39,F ,Cau ,None 
+medulla oblongata ,Clinomics ,58,M ,Cau ,None 
+medulla oblongata ,  ,28,M ,Cau ,None 
+medulla oblongata ,  ,43,F ,Cau ,None 
+OccipitalLobe ,AMS biotechnology ,28,male ,  ,  
+OccipitalLobe ,  ,23,male ,  ,  
+Olfactory Bulb ,Clinomics ,43,Male ,Cau ,Unk 
+Olfactory Bulb ,  ,58,Female ,Cau ,Unk 
+Olfactory Bulb ,  ,61,Male ,Cau ,"ASA, Tylenol "
+Olfactory Bulb ,  ,66,Female ,Cau ,ASA 
+ovary ,Clinomics ,57,Female ,Cau ,"ASA, Tylenol "
+ovary ,  ,53,Female ,Cau ,"ASA, Tylenol "
+"Pancreas, Beta cell islets ",Clinomics ,52,Female ,Cau ,ASA 
+"Pancreas, Beta cell islets ",  ,41,Female ,Cau ,"ASA, Tylenol "
+"Pancreas, Beta cell islets ",  ,61,Male ,Cau ,"ASA, Tylenol "
+"Pancreas, Beta cell islets ",  ,28,Male ,Cau ,"ASA, Tylenol "
+ParietalLobe ,AMS biotechnology Biotechnology ,22,male ,  ,  
+ParietalLobe ,  ,28,male ,  ,  
+Pituitary ,Clinomics ,25,M ,Cau ,NA 
+Pituitary ,  ,41,F ,Cau ,NA 
+pons ,Clinomics ,58,M ,Cau ,"ASA, Tylenol "
+pons ,  ,61,M ,Cau ,Unk 
+pons ,  ,66,F ,Cau ,"ASA, Tylenol "
+pons ,  ,52,F ,Cau ,"ASA, Tylenol "
+PrefrontalCortex ,Mt. Sinai ,96,F ,  ,  
+PrefrontalCortex ,  ,90,F ,  ,  
+PrefrontalCortex ,  ,74,F ,  ,  
+PrefrontalCortex ,  ,64,F ,  ,  
+salivary gland ,Clinomics ,21,M ,Cau ,"ASA, Inderol "
+salivary gland ,  ,55,M ,Cau ,"ASA, Inderol "
+salivary gland ,  ,29,F ,Cau ,ASA 
+salivary gland ,  ,51,F ,Cau ,ASA 
+Skeletal Muscule (psoas) ,Clinomics ,41,F ,Cau ,Tylenol 
+Skeletal Muscule (psoas) ,  ,58,F ,Cau ,Tylenol 
+Skeletal Muscule (psoas) ,  ,62,M ,Cau ,Tylenol 
+Skeletal Muscule (psoas) ,  ,60,M ,Cau ,NA 
+Skin ,Clinomics ,47,F ,Cau ,NA 
+Skin ,  ,50,F ,Cau ,NA 
+Skin ,  ,56,M ,Cau ,Ativan 
+SmoothMuscle ,Clonetics lot #17151 ,62,male ,cau ,none 
+subthalamic nucleus ,Clinomics ,44,M ,Cau ,Unk 
+subthalamic nucleus ,  ,43,M ,Cau ,Unk 
+subthalamic nucleus ,  ,58,F ,Cau ,ASA 
+subthalamic nucleus ,  ,61,F ,Cau ,ASA 
+superior cervical ganglion ,Clinomics ,58,M ,Cau ,"ASA, Tylenol "
+superior cervical ganglion ,  ,28,M ,Cau ,Unk 
+superior cervical ganglion ,  ,22,F ,Cau ,None 
+temporal lobe ,Clinomics ,51,M ,Cau ,None 
+temporal lobe ,  ,28,M ,Cau ,None 
+temporal lobe ,  ,44,F ,Cau ,None 
+temporal lobe ,  ,43,F ,Cau ,None 
+Testi - Germ Cell ,Clinomics ,51,M ,Cau ,ASA 
+Testi - Germ Cell ,  ,52,M ,Cau ,ASA 
+Testi - Germ Cell ,  ,50,M ,Cau ,ASA 
+Testi - Intersitial ,Clinomics ,54,M ,Cau ,ASA 
+Testi - Intersitial ,  ,69,M ,Cau ,Tylenol 
+Testi - Intersitial ,  ,42,M ,Cau ,Vioxx 
+Testi - Intersitial ,  ,44,M ,Cau ,NA 
+Testi - Leydig Cell ,Clinomics ,53,M ,Cau ,NA 
+Testi - Leydig Cell ,  ,78,M ,Cau ,Ativan 
+Testi - Leydig Cell ,  ,43,M ,Cau ,xanax 
+Testi - Leydig Cell ,  ,49,M ,Cau ,Tylenol 
+Testi - Seminiferous Tubule ,Clinomics ,43,M ,Cau ,Elavil 
+Testi - Seminiferous Tubule ,  ,70,M ,Cau ,ASA 
+Testi - Seminiferous Tubule ,  ,56,M ,Cau ,ASA 
+Testi - Seminiferous Tubule ,  ,43,M ,Cau ,NA 
+Tongue ,Clinomics ,44,F ,Cau ,ASA 
+Tongue ,  ,33,F ,Cau ,"ASA, Tylenol "
+Tongue ,  ,59,M ,Cau ,ASA 
+Tonsil ,Clinomics ,52,M ,Cau ,NA 
+Tonsil ,  ,54,M ,Cau ,NA 
+Tonsil ,  ,33,F ,Cau ,ASA 
+Tonsil ,  ,44,F ,Cau ,ASA 
+trigeminal ganglion ,Clinomics ,61,M ,Cau ,"ASA, Tylenol "
+trigeminal ganglion ,  ,35,F ,Cau ,None 
+Uterus Corpus ,Clinomics ,21,F ,Cau ,NA 
+Uterus Corpus ,  ,50,F ,Cau ,NA 
+Whole Blood ,UCSD ,56,      M ,  ,  
+Whole Blood ,  ,73,      M ,  ,  
+Whole Blood ,  ,48,      F ,  ,  
+CD105+ Endothelial ,AllCells ,21,M ,Asian ,  
+  ,  ,19,F ,Caucasian ,  
+CD33+ Myeloid ,AllCells ,19,F ,Caucasian ,  
+  ,  ,21,M ,Asian ,  
+CD34+ ,AllCells ,33,M ,Caucasian ,  
+  ,  ,19,M ,Asian ,  
+CD71+ Early Erythroid ,AllCells ,29,F ,Caucasian ,  
+  ,  ,25,M ,Caucasian ,  
+BDCA4+ Dentritic Cells ,AllCells ,23,F ,Caucasian ,  
+  ,  ,36,M ,Caucasian ,  
+CD14+ Monocytes ,AllCells ,32,M ,Caucasian ,  
+  ,  ,24,M ,Caucasian ,  
+CD19+ B Cells (neg. sel.) ,AllCells ,30,F ,Hispanic ,  
+  ,  ,23,M ,African American ,  
+CD4+ T cells ,AllCells ,24,M ,Caucasian ,  
+  ,  ,21,M ,Caucasian ,  
+CD56+ NK Cells ,AllCells ,29,M ,Caucasian ,  
+  ,  ,31,F ,Hispanic ,  
+CD8+ T cells ,AllCells ,29,F ,Caucasian ,  
+  ,  ,22,M ,Caucasian ,  
+,,,,,
+BOUGHT AS TOTAL RNA ,,,,,
+,,,,,
+  ,Source ,Vendor ,Lot # ,Additional Information,
+721 B lymphoblasts ,"Kavathas, P., F. H. Bach and R. DeMars. 1980. Proc Natl Acad Sci U S A 77:4251-4255.",,,,
+adrenalgland ,total RNA ,Clontech ,1010548,"Normal, pooled from 62 male/female caucasians; ages 15-61",
+amygdala ,poly A+ ,Clontech ,91122,no info,
+bonemarrow ,total RNA ,Clontech ,2011496,"normal bone marrow pooled from 8 male/femal Caucasians, ages 22-65; cause of death:  Sudden death",
+caudatenucleus ,poly A+ ,Clontech ,120289,no info,
+cerebellum ,total RNA ,Clontech ,1010033,normal from 25 y/o Asian male; cause of death:  sudden death,
+colorectaladenocarcinoma ,poly A+ ,Clontech ,1090559,SW480 cell line; ATCC# CCL 228,
+fetalbrain ,total RNA ,Clontech ,2020902,"normal whole brains pooled from 59 spontaneously aborted male/female Caucasian fetuses, ages 20-33 weeks",
+fetalliver ,total RNA ,Clontech ,110454,"normal whole livers pooled from spontaneously aborted fetuses, ages 15-24 weeks",
+fetallung ,poly A+ ,Clontech ,1040999,"normal, whole lungs pooled from 38 spontaneously aborted male/female Caucasian fetuses, ages 22-27 weeks",
+heart ,total RNA ,Clontech ,9020097,"normal, whole heart from a 25-yr-old male Asian; cause of death: Sudden Death",
+Hypothalamus ,poly A+ ,Clontech ,2040567,"normal hypothalamus pooled from 30 male/female Caucasians, ages 15-68; cause of death: sudden death",
+kidney ,total RNA ,Clontech ,110679,"normal, whole kidneys pooled from 6 female Caucasians, ages 28-52; cause of death:  sudden death",
+"leukemia,chronicMyelogenousK-562 ",poly A+ ,Clontech ,1060047,K-562 cell line;ATCC #CCL-243,
+"leukemia,promyelocytic-HL-60 ",poly A+ ,Clontech ,6080170,"normal, whole from a Caucasian",
+leukemialymphoblastic(MOLT-4) ,poly A+ ,Clontech ,1020175,"normal, whole  from a 19-yr-old male Caucasian",
+liver ,total RNA ,Clontech ,2020453,normal whole liver from a 27 y/o male Asian; cause of death: sudden death,
+lung ,total RNA ,Clontech ,1020471,normal from 2 male/female Caucasian ages 30-40 y/o; cause of death:  sudden death,
+lymphnode ,poly A+ ,Clontech ,1090563,"normal lymph nodes pooled from 30 male/female Caucasians, ages 20-61; cause of death: Sudden Death",
+"lymphoma,burkitt's(Daudi) ",poly A+ ,Clontech ,1060332,"Burkitt's Lymphoma, Daudi cell line; ATCC# CCL-213",
+"Lymphoma,burkitt's(Raji) ",poly A+ ,Clontech ,1070752,"H. Burkitt's Lymphoma, Raji cell line; ATCC# CCL 86",
+pancreas ,total RNA ,"Clinomics Biosciences, Inc ",custom , ,
+placenta ,total RNA ,Clontech ,2041227,"normal, 4 caucasians, ages 21-39",
+Prostate ,total RNA ,Clontech ,100649,"normal, whole prostates pooled from 16 Caucasians, ages 21-50,; cause of death: trauma",
+spinalcord ,poly A+ ,Clontech ,111062,no info,
+testis ,total RNA ,Clontech ,120293,no info,
+thalamus ,poly A+ ,Clontech ,1070147,"normal tissue pooled from 10 male/female Caucasians, ages 32-75; cause of death: trauma",
+thymus ,total RNA ,Clontech ,111351,no info,
+thyroid ,total RNA ,Clontech ,2010806,"normal, whole thyroid glands pooled from 65 male/female Caucasians, ages 15-61; cause of death: Sudden Death",
+trachea ,total RNA ,Clontech ,1010201,"normal, whole trachea from a 17-70-yr-old male/female Caucasian; cause of death: Trauma",
+Uterus ,total RNA ,Clontech ,no info ,no info,
+wholebrain ,total RNA ,Clontech ,9020101,"normal, whole brain  from a 28-yr-old male Asian; cause of death: sudden death",
