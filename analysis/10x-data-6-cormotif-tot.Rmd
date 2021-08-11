@@ -38,7 +38,7 @@ library(ComplexHeatmap)
 
 ## Prepare data
 
-```{r}
+```{r, eval=FALSE}
 
 #Load data
 #data integrated across individuals - total (conservative cell filter + non-zero genes + regress out UMI/mito)
@@ -52,7 +52,7 @@ data@meta.data$Individual.Replicate <- paste0(data@meta.data$Individual,".",data
 
 Define genes of interest: all except mitochondrial genes and ribosomal genes
 
-```{r}
+```{r, eval=FALSE}
 
 genes <- rownames(data@assays$RNA@counts)
 genes.mito <- c("MT-ATP6","MT-ATP8","MT-CO1","MT-CO2","MT-CO3","MT-CYB","MT-ND1","MT-ND2","MT-ND3","MT-ND4","MT-ND4L","MT-ND5")
@@ -248,7 +248,7 @@ Pseudobulk: Species vs. Osteogenic Ad Hoc Classifications (4 genes strict, thres
 
 ### Pseudobulk: Species vs. Stages
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile log2 normalized gene expression data
 #make count matrix and metadata for edgeR object - pseudobulk (pseudocounts, filter genes mean(log2cpm)>0)
@@ -307,7 +307,7 @@ rm(x.cnt,x.lab,x.spp,x.col,x.ind,x.rep,x.idr,x.stg)
 
 #### each time point separately
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$Stage,function(x)sub(" ","",x)),sep = "."),
@@ -448,7 +448,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-stage.data.filterC.lo
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -460,7 +460,7 @@ rm(prob.motifT012,prob.motifT01,prob.motifT02,prob.motifT12)
 
 #### 3 time points and 4 comparisons
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$Stage,function(x)sub(" ","",x)),sep = "."),
@@ -618,7 +618,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-stage4.data.filterC.l
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -630,7 +630,7 @@ rm(prob.motifC,prob.motifC1,prob.motifC2)
 
 #### 3 time points and 6 comparisons
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$Stage,function(x)sub(" ","",x)),sep = "."),
@@ -812,7 +812,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-stage6.data.filterC.l
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -822,7 +822,7 @@ rm(prob.motifC,prob.motifC0,prob.motifC1,prob.motifC2)
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(dge,tmm)
 
@@ -830,7 +830,7 @@ rm(dge,tmm)
 
 ### Pseudobulk: Species vs. General Clusters (res=0.05)
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile log2 normalized gene expression data
 #make count matrix and metadata for edgeR object - pseudobulk (pseudocounts, filter genes mean(log2cpm)>0)
@@ -891,7 +891,7 @@ rm(x.cnt,x.lab,x.spp,x.col,x.ind,x.rep,x.idr,x.clt)
 
 Include all clusters here, as reducing the number of clusters included in cormotif does not reveal more interesting patterns.
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,dge$samples$Cluster,sep="_"),
@@ -1065,7 +1065,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-cluster.data.filterC.
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -1235,7 +1235,7 @@ rm(prob.motifI1M1O12,prob.motifI1M1,prob.motifI1O12,prob.motifM1O12)
 
 iPSC.c2, iPSC.c3, and Osteogenic.c2 are excluded here.
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,dge$samples$Cluster,sep="_"),
@@ -1396,7 +1396,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-cluster4a.data.filter
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -1410,7 +1410,7 @@ rm(prob.motifC,prob.motifC1,prob.motifC2)
 
 iPSC.c2, iPSC.c3, and Osteogenic.c1 are excluded here.
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,dge$samples$Cluster,sep="_"),
@@ -1571,7 +1571,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-cluster4b.data.filter
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -1585,7 +1585,7 @@ rm(prob.motifC,prob.motifC1,prob.motifC2)
 
 Only iPSC.c2 and iPSC.c3 are excluded here.
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,dge$samples$Cluster,sep="_"),
@@ -1752,7 +1752,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-cluster8.data.filterC
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -1765,7 +1765,7 @@ rm(prob.motifC,prob.motifC1,prob.motifC2,prob.motifC3)
 
 iPSC.c2, iPSC.c3, and Osteogenic.c2 are excluded here.
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,dge$samples$Cluster,sep="_"),
@@ -1950,7 +1950,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-cluster6.data.filterC
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -1964,7 +1964,7 @@ rm(prob.motifC,prob.motifC0,prob.motifC1,prob.motifC2)
 
 iPSC.c2, iPSC.c3, and Osteogenic.c1 are excluded here.
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,dge$samples$Cluster,sep="_"),
@@ -2154,7 +2154,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.sc-cluster6b.data.filterC.lo
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -2164,7 +2164,7 @@ rm(prob.motifC,prob.motifC0,prob.motifC1,prob.motifC2)
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(dge,tmm)
 
@@ -2172,7 +2172,7 @@ rm(dge,tmm)
 
 ### Pseudobulk: Species vs. General Ad Hoc Classifications (thresh0)
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile log2 normalized gene expression data
 #make count matrix and metadata for edgeR object - pseudobulk (pseudocounts, filter genes mean(log2cpm)>0)
@@ -2231,7 +2231,7 @@ rm(x.cnt,x.lab,x.spp,x.col,x.ind,x.rep,x.idr,x.adh)
 
 #### each ad hoc classification separately
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,dge$samples$AdHoc,sep = "_"),
@@ -2368,7 +2368,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-adhoc.data.filterC.lo
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -2380,7 +2380,7 @@ rm(prob.motifIMO,prob.motifIM,prob.motifIO,prob.motifMO)
 
 #### 3 ad hoc classifications and 4 comparisons
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,dge$samples$AdHoc,sep = "_"),
@@ -2540,7 +2540,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-adhoc4.data.filterC.l
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -2552,7 +2552,7 @@ rm(prob.motifC,prob.motifC1,prob.motifC2)
 
 #### 3 ad hoc classifications and 6 comparisons
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,dge$samples$AdHoc,sep = "_"),
@@ -2746,7 +2746,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-adhoc6.data.filterC.l
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -2756,7 +2756,7 @@ rm(prob.motifC,prob.motifC0,prob.motifC1,prob.motifC2)
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(dge,tmm)
 
@@ -2764,7 +2764,7 @@ rm(dge,tmm)
 
 ### Pseudobulk: Species vs. Osteogenic Clusters (res=0.50)
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile log2 normalized gene expression data
 #make count matrix and metadata for edgeR object - pseudobulk (pseudocounts, filter genes mean(log2cpm)>0)
@@ -2825,7 +2825,7 @@ rm(x.cnt,x.lab,x.spp,x.col,x.ind,x.rep,x.idr,x.clt)
 
 Include all clusters here, as reducing the number of clusters included in cormotif does not reveal more interesting patterns.
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample (clusters are off by 1)
 groupFactor <- factor(paste(dge$samples$Species,dge$samples$Cluster,sep="_"),
@@ -2976,7 +2976,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-ostcluster0.50.data.f
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -2988,7 +2988,7 @@ rm(prob.motifO1234,prob.motifO134,prob.motifO13,prob.motifO34,prob.motifO14)
 
 #### 4 osteogenic clusters and 6 comparisons
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$Cluster,function(x)sub(" ",".",x)),sep="_"),
@@ -3208,7 +3208,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-ostcluster0.50.6.data
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -3218,7 +3218,7 @@ rm(prob.motifC,prob.motifC1,prob.motifC2,prob.motifC3)
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(dge,tmm)
 
@@ -3226,7 +3226,7 @@ rm(dge,tmm)
 
 ### Pseudobulk: Species vs. Osteogenic Clusters (res=0.75)
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile log2 normalized gene expression data
 #make count matrix and metadata for edgeR object - pseudobulk (pseudocounts, filter genes mean(log2cpm)>0)
@@ -3288,7 +3288,7 @@ rm(x.cnt,x.lab,x.spp,x.col,x.ind,x.rep,x.idr,x.clt)
 
 Include all clusters here, as reducing the number of clusters included in cormotif does not reveal more interesting patterns.
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample (clusters are off by 1)
 groupFactor <- factor(paste(dge$samples$Species,dge$samples$Cluster,sep="_"),
@@ -3470,7 +3470,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-ostcluster0.75.data.f
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -3482,7 +3482,7 @@ rm(prob.motifO12345678)
 
 #### 8 osteogenic clusters and 14 comparisons
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$Cluster,function(x)sub(" ",".",x)),sep="_"),
@@ -3774,7 +3774,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-ostcluster0.75.14.dat
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -3783,7 +3783,7 @@ rm(prob.motifC,prob.motifC1,prob.motifC2,prob.motifC3,prob.motifC4,prob.motifC5,
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(dge,tmm)
 
@@ -3791,7 +3791,7 @@ rm(dge,tmm)
 
 ### Pseudobulk: Species vs. Osteogenic Clusters (res=0.50) (Time 2 only)
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile log2 normalized gene expression data
 #make count matrix and metadata for edgeR object - pseudobulk (pseudocounts, filter genes mean(log2cpm)>0)
@@ -3852,7 +3852,7 @@ rm(x.cnt,x.lab,x.spp,x.col,x.ind,x.rep,x.idr,x.clt)
 
 Include all clusters here, as reducing the number of clusters included in cormotif does not reveal more interesting patterns.
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample (clusters are off by 1)
 groupFactor <- factor(paste(dge$samples$Species,dge$samples$Cluster,sep="_"),
@@ -3994,7 +3994,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-ostcluster0.50.T2.dat
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -4006,7 +4006,7 @@ rm(prob.motifO1234,prob.motifO134,prob.motifO13,prob.motifO34,prob.motifO14)
 
 #### 4 osteogenic clusters and 6 comparisons
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$Cluster,function(x)sub(" ",".",x)),sep="_"),
@@ -4182,7 +4182,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-ostcluster0.50.T2.6.d
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -4191,7 +4191,7 @@ rm(prob.motifC,prob.motifC1,prob.motifC2,prob.motifC3)
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(dge,tmm)
 
@@ -4199,7 +4199,7 @@ rm(dge,tmm)
 
 ### Pseudobulk: Species vs. Osteogenic Clusters (res=0.75) (Time 2 only)
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile log2 normalized gene expression data
 #make count matrix and metadata for edgeR object - pseudobulk (pseudocounts, filter genes mean(log2cpm)>0)
@@ -4261,7 +4261,7 @@ rm(x.cnt,x.lab,x.spp,x.col,x.ind,x.rep,x.idr,x.clt)
 
 Include all clusters here, as reducing the number of clusters included in cormotif does not reveal more interesting patterns.
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample (clusters are off by 1)
 groupFactor <- factor(paste(dge$samples$Species,dge$samples$Cluster,sep="_"),
@@ -4420,7 +4420,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-ostcluster0.75.T2.dat
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -4431,7 +4431,7 @@ rm(prob.motifO12345678)
 
 #### 8 osteogenic clusters and 14 comparisons
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$Cluster,function(x)sub(" ",".",x)),sep="_"),
@@ -4723,7 +4723,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-ostcluster0.75.T2.14.
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -4732,7 +4732,7 @@ rm(prob.motifC,prob.motifC1,prob.motifC2,prob.motifC3,prob.motifC4,prob.motifC5,
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(dge,tmm)
 
@@ -4740,7 +4740,7 @@ rm(dge,tmm)
 
 ### Pseudobulk: Species vs. Osteogenic Ad Hoc Classifications (4 genes flexible, thresh0)
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile log2 normalized gene expression data
 #make count matrix and metadata for edgeR object - pseudobulk (pseudocounts, filter genes mean(log2cpm)>0)
@@ -4799,7 +4799,7 @@ rm(x.cnt,x.lab,x.spp,x.col,x.ind,x.rep,x.idr,x.adh)
 
 #### each osteogenic ad hoc classification separately
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$AdHoc,function(x)sub(" ",".",x)),sep="_"),
@@ -4987,7 +4987,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-ostadhoc4gene.data.fi
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -4999,7 +4999,7 @@ rm(prob.motifPreOblEmbMinMat,prob.motifPreOblEmb,prob.motifOblEmbMin,prob.motifE
 
 #### 5 osteogenic ad hoc classifications and 8 comparisons
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$AdHoc,function(x)sub(" ",".",x)),sep="_"),
@@ -5201,7 +5201,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-ostadhoc4gene8.data.f
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -5211,7 +5211,7 @@ rm(prob.motifC,prob.motifC1,prob.motifC2,prob.motifC3,prob.motifC4)
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(dge,tmm)
 
@@ -5219,7 +5219,7 @@ rm(dge,tmm)
 
 ### Pseudobulk: Species vs. Osteogenic Ad Hoc Classifications (4 genes strict, thresh0)
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile log2 normalized gene expression data
 #make count matrix and metadata for edgeR object - pseudobulk (pseudocounts, filter genes mean(log2cpm)>0)
@@ -5278,7 +5278,7 @@ rm(x.cnt,x.lab,x.spp,x.col,x.ind,x.rep,x.idr,x.adh)
 
 #### each osteogenic ad hoc classification separately
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$AdHoc,function(x)sub(" ",".",x)),sep="_"),
@@ -5457,7 +5457,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-ostadhoc4geneX.data.f
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -5469,7 +5469,7 @@ rm(prob.motifPreOblEmbMinMat,prob.motifPreOblEmb,prob.motifOblEmbMin,prob.motifE
 
 #### 5 osteogenic ad hoc classifications and 8 comparisons
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$AdHoc,function(x)sub(" ",".",x)),sep="_"),
@@ -5677,7 +5677,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-ostadhoc4geneX8.data.
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -5687,7 +5687,7 @@ rm(prob.motifC,prob.motifC1,prob.motifC2,prob.motifC3,prob.motifC4)
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(dge,tmm)
 
@@ -5695,7 +5695,7 @@ rm(dge,tmm)
 
 ### Pseudobulk: Species vs. Osteogenic Ad Hoc Classifications (4 genes flexible, thresh0) (Time 2 only)
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile log2 normalized gene expression data
 #make count matrix and metadata for edgeR object - pseudobulk (pseudocounts, filter genes mean(log2cpm)>0)
@@ -5754,7 +5754,7 @@ rm(x.cnt,x.lab,x.spp,x.col,x.ind,x.rep,x.idr,x.adh)
 
 #### each osteogenic ad hoc classification separately
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$AdHoc,function(x)sub(" ",".",x)),sep="_"),
@@ -5919,7 +5919,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-ostadhoc4gene.T2.data
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -5930,7 +5930,7 @@ rm(prob.motifPreOblEmbMinMat,prob.motifPreOblEmb,prob.motifOblEmbMin,prob.motifE
 
 #### 5 osteogenic ad hoc classifications and 8 comparisons
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$AdHoc,function(x)sub(" ",".",x)),sep="_"),
@@ -6127,7 +6127,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-ostadhoc4gene8.T2.dat
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -6136,7 +6136,7 @@ rm(prob.motifC,prob.motifC1,prob.motifC2,prob.motifC3,prob.motifC4)
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(dge,tmm)
 
@@ -6144,7 +6144,7 @@ rm(dge,tmm)
 
 ### Pseudobulk: Species vs. Osteogenic Ad Hoc Classifications (4 genes strict, thresh0) (Time 2 only)
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile log2 normalized gene expression data
 #make count matrix and metadata for edgeR object - pseudobulk (pseudocounts, filter genes mean(log2cpm)>0)
@@ -6203,7 +6203,7 @@ rm(x.cnt,x.lab,x.spp,x.col,x.ind,x.rep,x.idr,x.adh)
 
 #### each osteogenic ad hoc classification separately
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$AdHoc,function(x)sub(" ",".",x)),sep="_"),
@@ -6368,7 +6368,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-ostadhoc4geneX.T2.dat
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -6379,7 +6379,7 @@ rm(prob.motifPreOblEmbMinMat,prob.motifPreOblEmb,prob.motifOblEmbMin,prob.motifE
 
 #### 5 osteogenic ad hoc classifications and 8 comparisons
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each sample
 groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$AdHoc,function(x)sub(" ",".",x)),sep="_"),
@@ -6576,7 +6576,7 @@ saveRDS(cormotifData,"./data/cormotif-data/cormotif.pseudo-ostadhoc4geneX8.T2.da
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(HAside,HAtop)
 rm(groupFactor,groupID,compareID,cormotifData,gene.prob)
@@ -6585,7 +6585,7 @@ rm(prob.motifC,prob.motifC1,prob.motifC2,prob.motifC3,prob.motifC4)
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 rm(dge,tmm)
 

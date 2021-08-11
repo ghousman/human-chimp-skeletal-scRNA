@@ -39,6 +39,7 @@ library(enrichplot)
 library(viridis)
 library(VennDiagram)
 library(ComplexHeatmap)
+library(Cormotif)
 
 ```
 
@@ -496,6 +497,10 @@ upset(dataUpset,
                          list("Time.0","Time.1","Time.2")),
       text.scale=2)
 
+```
+
+```{r, eval=FALSE}
+
 #Save DE gene lists
 write.csv(rownames(dataUpset),"./data/cormotif-data/cormotif.cnts.pseudo-stage.data.filterC.log.indv-cell.intNo0.reg-tot.DE-tests.csv")
 write.csv(rownames(dataUpset)[which(dataUpset$Time.0==1 &
@@ -575,13 +580,13 @@ goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="DE Genes Uniqe to Time 1")
 
 #Unique to Time 2
-subGenes <- rownames(dataUpset)[which(dataUpset$Time.0==0 &
-                                      dataUpset$Time.1==0 &
-                                      dataUpset$Time.2==1)]
-totGenes <- rownames(dataUpset)
-goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
-goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
-goEnPlot(goTot,title="DE Genes Uniqe to Time 2")
+#subGenes <- rownames(dataUpset)[which(dataUpset$Time.0==0 &
+#                                      dataUpset$Time.1==0 &
+#                                      dataUpset$Time.2==1)]
+#totGenes <- rownames(dataUpset)
+#goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+#goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+#goEnPlot(goTot,title="DE Genes Uniqe to Time 2")
 
 ```
 
@@ -2241,6 +2246,10 @@ upset(dataUpset,
                          list("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte")),
       text.scale=2)
 
+```
+
+```{r, eval=FALSE}
+
 #Save DE gene lists
 write.csv(rownames(dataUpset),"./data/cormotif-data/cormotif.cnts.pseudo-ostadhoc.data.filterC.log.indv-cell.intNo0.reg-tot.DE-tests.csv")
 write.csv(rownames(dataUpset)[which(dataUpset$preosteoblast==1 &
@@ -2286,26 +2295,26 @@ goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Shared in All")
 
 #Shared across obl+emb+min+mat
-subGenes <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
-                                      dataUpset$osteoblast==1 &
-                                      dataUpset$embedding.osteoblast==1 &
-                                      dataUpset$mineralizing.osteoblast==1 &
-                                      dataUpset$maturing.osteocyte==1)]
-totGenes <- rownames(dataUpset)
-goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
-goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
-goEnPlot(goTot,title="Shared in obl+emb+min+mat")
+#subGenes <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
+#                                      dataUpset$osteoblast==1 &
+#                                      dataUpset$embedding.osteoblast==1 &
+#                                      dataUpset$mineralizing.osteoblast==1 &
+#                                      dataUpset$maturing.osteocyte==1)]
+#totGenes <- rownames(dataUpset)
+#goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+#goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+#goEnPlot(goTot,title="Shared in obl+emb+min+mat")
 
 #Shared across obl+emb+min
-subGenes <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
-                                      dataUpset$osteoblast==1 &
-                                      dataUpset$embedding.osteoblast==1 &
-                                      dataUpset$mineralizing.osteoblast==1 &
-                                      dataUpset$maturing.osteocyte==0)]
-totGenes <- rownames(dataUpset)
-goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
-goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
-goEnPlot(goTot,title="Shared in obl+emb+min")
+#subGenes <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
+#                                      dataUpset$osteoblast==1 &
+#                                      dataUpset$embedding.osteoblast==1 &
+#                                      dataUpset$mineralizing.osteoblast==1 &
+#                                      dataUpset$maturing.osteocyte==0)]
+#totGenes <- rownames(dataUpset)
+#goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+#goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+#goEnPlot(goTot,title="Shared in obl+emb+min")
 
 #Unique to Embedding Osteoblasts
 subGenes <- rownames(dataUpset)[which(dataUpset$embedding.osteoblast==1)]

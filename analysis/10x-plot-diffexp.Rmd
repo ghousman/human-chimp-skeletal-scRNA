@@ -38,6 +38,7 @@ library(Rgraphviz)
 library(enrichplot)
 library(viridis)
 library(VennDiagram)
+library(ggsignif)
 
 ```
 
@@ -1234,7 +1235,7 @@ ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
 t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="preosteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="osteoblast")]))
 t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="osteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="embedding\nosteoblast")]))
 t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="embedding\nosteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="mineralizing\nosteoblast")]))
-t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="mineralizing\nosteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="maturing\nosteocyte")]))
+#t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="mineralizing\nosteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="maturing\nosteocyte")]))
 
 ```
 
@@ -2650,9 +2651,9 @@ goEnPlot(goTot,title="Shared in iPSC & MSC")
 #goEnPlot.spec(goTot,title="Shared in iPSC & MSC",ontology="MF")
 
 #Shared in MSC and Osteogenic (FDR<0.01, tested in all classifications)
-goTot <- goEnrich(totGenes=tests, deGenes=unique(shareX.stg.t12$gene), ontology="ALL")
-goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
-goEnPlot(goTot,title="Shared in MSC & Osteo")
+#goTot <- goEnrich(totGenes=tests, deGenes=unique(shareX.stg.t12$gene), ontology="ALL")
+#goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+#goEnPlot(goTot,title="Shared in MSC & Osteo")
 #goEnPlot.spec(goTot,title="Shared in MSC & Osteo",ontology="BP")
 #goEnPlot.spec(goTot,title="Shared in MSC & Osteo",ontology="CC")
 #goEnPlot.spec(goTot,title="Shared in MSC & Osteo",ontology="MF")
@@ -2666,9 +2667,9 @@ goEnPlot(goTot,title="Unique to iPSC")
 #goEnPlot.spec(goTot,title="Unique to iPSC",ontology="MF")
 
 #Unique to MSC (FDR<0.01, tested in all classifications) - no enrichments
-goTot <- goEnrich(totGenes=tests, deGenes=uniqX.stg.t1$gene, ontology="ALL")
-goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
-goEnPlot(goTot,title="Unique to MSC")
+#goTot <- goEnrich(totGenes=tests, deGenes=uniqX.stg.t1$gene, ontology="ALL")
+#goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+#goEnPlot(goTot,title="Unique to MSC")
 #goEnPlot.spec(goTot,title="Unique to MSC",ontology="BP")
 #goEnPlot.spec(goTot,title="Unique to MSC",ontology="CC")
 #goEnPlot.spec(goTot,title="Unique to MSC",ontology="MF")
