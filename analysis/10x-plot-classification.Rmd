@@ -7865,7 +7865,7 @@ conf_mat <- confusion_matrix(targets=cellassign$Stage,
                              predictions=cellassign$OstCluster0.50)
 
 conf_mat_edit <- conf_mat$`Confusion Matrix`[[1]][which(conf_mat$`Confusion Matrix`[[1]]$Target %in% unique(cellassign$Stage) &
-                                                        conf_mat$`Confusion Matrix`[[1]]$Prediction %in% unique(cellassign$OstCluster0.505)),]
+                                                        conf_mat$`Confusion Matrix`[[1]]$Prediction %in% unique(cellassign$OstCluster0.50)),]
 
 plot_confusion_matrix(conf_mat_edit,
                       add_counts=TRUE,

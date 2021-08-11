@@ -451,7 +451,7 @@ counts <- c()
 metadata <- c()
 labels <- c()
 for(j in cell.subset) {
-  dataSub <- subset(data,subset=Cluster0.5==j)
+  dataSub <- subset(data,subset=Cluster0.50==j)
   for (i in unique(dataSub@meta.data$Individual.Replicate)) {
     x.lab <- paste0(i,"_",j)
     w <- which(dataSub@meta.data$Individual.Replicate==i)
@@ -461,7 +461,7 @@ for(j in cell.subset) {
       x.ind <- dataSub@meta.data$Individual[w][1]
       x.rep <- dataSub@meta.data$Replicate[w][1]
       x.idr <- dataSub@meta.data$Individual.Replicate[w][1]
-      x.clt <- dataSub@meta.data$Cluster0.5[w][1]
+      x.clt <- dataSub@meta.data$Cluster0.50[w][1]
       if (length(w)==1) {
         x.cnt <- dataSub@assays$RNA@counts[,w]
       } else {
@@ -587,7 +587,6 @@ t.test(HC.var$Chimp_Osteogenic.c3,HC.var$Chimp_Osteogenic.c4)
 
 ```
 
-#TO CHECK
 #### Pseudobulk: Osteogenic Ad Hoc Classifications vs. Species (thresh0)
 
 ```{r}
@@ -732,7 +731,7 @@ t.test(HC.var$Chimp_mineralizing.osteoblast,HC.var$Chimp_maturing.osteocyte)
 
 ### Examine variance in log2cpm (single-cell resolution)
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile log2 normalized gene expression data
 #make count matrix and metadata for edgeR object
@@ -764,7 +763,7 @@ tmm <- edgeR::cpm(dge,normalized.lib.sizes=TRUE,log=TRUE,prior.count=0.25)
 
 #### SC: Stages vs. Species
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each species
 groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$Stage,function(x)sub(" ","",x)),sep = "_"),
@@ -824,7 +823,7 @@ t.test(HC.var$Chimp_Time1,HC.var$Chimp_Time2)
 
 #### SC: Stages vs. Individuals
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each individual
 groupFactor <- factor(paste(dge$samples$Individual,sapply(dge$samples$Stage,function(x)sub(" ","",x)),sep = "_"),
@@ -1021,7 +1020,7 @@ t.test(HC.var$C6_Time1,HC.var$C6_Time2)
 
 #### SC: Stages vs. Individual.Replicates
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each individual
 groupFactor <- factor(paste(dge$samples$Individual.Replicate,sapply(dge$samples$Stage,function(x)sub(" ","",x)),sep = "_"),
@@ -1244,7 +1243,7 @@ t.test(HC.var$C6.1_Time1,HC.var$C6.1_Time2)
 
 #### SC: General Clusters vs. Species (res=0.05)
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each species
 groupFactor <- factor(paste(dge$samples$Species,dge$samples$Cluster,sep="_"),
@@ -1345,7 +1344,7 @@ t.test(HC.var$Chimp_MSC.c1,HC.var$Chimp_Osteogenic.c1)
 
 ### SC: General Clusters vs. Individuals (res=0.05)
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each individual
 groupFactor <- factor(paste(dge$samples$Individual,dge$samples$Cluster,sep="_"),
@@ -1636,7 +1635,7 @@ t.test(HC.var$C6_MSC.c1,HC.var$C6_Osteogenic.c1)
 
 #### SC: General Clusters vs. Individual.Replicates (res=0.05)
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each individual
 groupFactor <- factor(paste(dge$samples$Individual.Replicate,dge$samples$Cluster,sep="_"),
@@ -1965,7 +1964,7 @@ t.test(HC.var$C6.1_MSC.c1,HC.var$C6.1_Osteogenic.c1)
 
 #### SC: General Ad Hoc Classifications vs. Species (thresh0)
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each species
 groupFactor <- factor(paste(dge$samples$Species,dge$samples$AdHoc.Assign.thresh0,sep = "_"),
@@ -2025,7 +2024,7 @@ t.test(HC.var$Chimp_MSC,HC.var$Chimp_Osteogenic)
 
 ### SC: General Ad Hoc Classifications vs. Individuals (thresh0)
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each individual
 groupFactor <- factor(paste(dge$samples$Individual,dge$samples$AdHoc.Assign.thresh0,sep = "_"),
@@ -2222,7 +2221,7 @@ t.test(HC.var$C6_MSC,HC.var$C6_Osteogenic)
 
 ### SC: General Ad Hoc Classifications vs. Individual.Replicates (thresh0)
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each individual
 groupFactor <- factor(paste(dge$samples$Individual.Replicate,dge$samples$AdHoc.Assign.thresh0,sep = "_"),
@@ -2445,7 +2444,7 @@ t.test(HC.var$C6.1_MSC,HC.var$C6.1_Osteogenic)
 
 #### SC: Osteogenic Clusters vs. Species (res=0.5)
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each species
 groupFactor <- factor(paste(dge$samples$Species,dge$samples$Cluster0.5,sep="_"),
@@ -2526,7 +2525,7 @@ t.test(HC.var$Chimp_Osteogenic.c3,HC.var$Chimp_Osteogenic.c4)
 
 #### SC: Osteogenic Ad Hoc Classifications vs. Species (thresh0)
 
-```{r}
+```{r, eval=FALSE}
 
 # Compile group labels of each species
 groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$OstAdHoc.Assign.4gene.thresh0,function(x)sub(" ",".",x)),sep="_"),

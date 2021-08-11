@@ -466,13 +466,13 @@ goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="DE Genes Shared across All Stages")
 
 #Shared across t0+t1
-subGenes <- rownames(dataUpset)[which(dataUpset$Time.0==1 &
-                                      dataUpset$Time.1==1 &
-                                      dataUpset$Time.2==0)]
-totGenes <- rownames(dataUpset)
-goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
-goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
-goEnPlot(goTot,title="DE Genes Shared across Time 0 & Time 1")
+#subGenes <- rownames(dataUpset)[which(dataUpset$Time.0==1 &
+#                                      dataUpset$Time.1==1 &
+#                                      dataUpset$Time.2==0)]
+#totGenes <- rownames(dataUpset)
+#goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+#goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+#goEnPlot(goTot,title="DE Genes Shared across Time 0 & Time 1")
 
 #Shared across t1+t2
 subGenes <- rownames(dataUpset)[which(dataUpset$Time.0==0 &
@@ -484,13 +484,13 @@ goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="DE Genes Shared across Time 1 & Time 2")
 
 #Unique to Time 0
-subGenes <- rownames(dataUpset)[which(dataUpset$Time.0==1 &
-                                      dataUpset$Time.1==0 &
-                                      dataUpset$Time.2==0)]
-totGenes <- rownames(dataUpset)
-goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
-goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
-goEnPlot(goTot,title="DE Genes Uniqe to Time 0")
+#subGenes <- rownames(dataUpset)[which(dataUpset$Time.0==1 &
+#                                      dataUpset$Time.1==0 &
+#                                      dataUpset$Time.2==0)]
+#totGenes <- rownames(dataUpset)
+#goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+#goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+#goEnPlot(goTot,title="DE Genes Uniqe to Time 0")
 
 #Unique to Time 1
 subGenes <- rownames(dataUpset)[which(dataUpset$Time.0==0 &
@@ -502,13 +502,13 @@ goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="DE Genes Uniqe to Time 1")
 
 #Unique to Time 2
-subGenes <- rownames(dataUpset)[which(dataUpset$Time.0==0 &
-                                      dataUpset$Time.1==0 &
-                                      dataUpset$Time.2==1)]
-totGenes <- rownames(dataUpset)
-goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
-goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
-goEnPlot(goTot,title="DE Genes Uniqe to Time 2")
+#subGenes <- rownames(dataUpset)[which(dataUpset$Time.0==0 &
+#                                      dataUpset$Time.1==0 &
+#                                      dataUpset$Time.2==1)]
+#totGenes <- rownames(dataUpset)
+#goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+#goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+#goEnPlot(goTot,title="DE Genes Uniqe to Time 2")
 
 ```
 
@@ -1127,304 +1127,6 @@ goEnPlot(goTot,title="DE Genes Shared across Osteogenic Ad Hoc Classifications")
 ```
 
 Test for significant enrichment of external gene sets in DE gene sets using Fisher's exact test.
-
-* Enrichment of GallegoRomero2015-DE.iPSCs:
-    + All preosteoblasts                         (post.p>0.5): p = 0.02101 ( 461 genes intersect) / (post.p>0.95): p = 0.09819 ( 144 genes intersect) *
-    + All osteoblasts                            (post.p>0.5): p = 0.00080 ( 537 genes intersect) / (post.p>0.95): p = 0.02235 ( 209 genes intersect) **
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.00105 ( 696 genes intersect) / (post.p>0.95): p = 0.00141 ( 461 genes intersect) **
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.00142 ( 693 genes intersect) / (post.p>0.95): p = 0.00172 ( 454 genes intersect) **
-    + All maturing osteocytes                    (post.p>0.5): p = 0.00163 ( 670 genes intersect) / (post.p>0.95): p = 0.01099 ( 379 genes intersect) **
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.02296 ( 416 genes intersect) / (post.p>0.95): p = 0.05478 ( 102 genes intersect) *
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.01166 ( 107 genes intersect) / (post.p>0.95): p = 0.17200 (  82 genes intersect) *
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.33410 ( 102 genes intersect) / (post.p>0.95): p = 0.04062 ( 156 genes intersect)  *
-
-* Enrichment of Blake2018-DE.iPSCs:
-    + All preosteoblasts                         (post.p>0.5): p = 0.31750 ( 367 genes intersect) / (post.p>0.95): p = 0.86690 ( 101 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 0.09657 ( 427 genes intersect) / (post.p>0.95): p = 0.49290 ( 157 genes intersect)
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.03639 ( 568 genes intersect) / (post.p>0.95): p = 0.02125 ( 378 genes intersect) **
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.03621 ( 567 genes intersect) / (post.p>0.95): p = 0.01534 ( 375 genes intersect) **
-    + All maturing osteocytes                    (post.p>0.5): p = 0.02033 ( 553 genes intersect) / (post.p>0.95): p = 0.07699 ( 310 genes intersect) *
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.28350 ( 332 genes intersect) / (post.p>0.95): p = 0.89700 (  66 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.04028 (  88 genes intersect) / (post.p>0.95): p = 0.28990 (  67 genes intersect) *
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.02666 (  98 genes intersect) / (post.p>0.95): p = 0.00253 ( 143 genes intersect) **
-* Enrichment of Blake2018-DE.iPSC-endoderm-day1:
-    + All preosteoblasts                         (post.p>0.5): p = 0.20420 ( 374 genes intersect) / (post.p>0.95): p = 0.68520 ( 107 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 0.22490 ( 420 genes intersect) / (post.p>0.95): p = 0.66660 ( 153 genes intersect)
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.05419 ( 567 genes intersect) / (post.p>0.95): p = 0.01023 ( 384 genes intersect)  *
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.05394 ( 566 genes intersect) / (post.p>0.95): p = 0.01012 ( 379 genes intersect)  *
-    + All maturing osteocytes                    (post.p>0.5): p = 0.03559 ( 551 genes intersect) / (post.p>0.95): p = 0.01736 ( 321 genes intersect) **
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.34240 ( 331 genes intersect) / (post.p>0.95): p = 0.81380 (  69 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.21960 (  81 genes intersect) / (post.p>0.95): p = 0.58830 (  62 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.05118 (  96 genes intersect) / (post.p>0.95): p = 4.9e-05 ( 154 genes intersect)  *
-* Enrichment of Blake2018-DE.iPSC-endoderm-day2:
-    + All preosteoblasts                         (post.p>0.5): p = 0.39880 ( 384 genes intersect) / (post.p>0.95): p = 0.74810 ( 111 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 0.11010 ( 449 genes intersect) / (post.p>0.95): p = 0.05360 ( 183 genes intersect)
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.09385 ( 590 genes intersect) / (post.p>0.95): p = 0.06606 ( 390 genes intersect)
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.09302 ( 589 genes intersect) / (post.p>0.95): p = 0.05631 ( 386 genes intersect)
-    + All maturing osteocytes                    (post.p>0.5): p = 0.10880 ( 568 genes intersect) / (post.p>0.95): p = 0.03619 ( 332 genes intersect)  *
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.36490 ( 347 genes intersect) / (post.p>0.95): p = 0.76610 (  74 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.04526 (  92 genes intersect) / (post.p>0.95): p = 0.01062 (  83 genes intersect) **
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.28290 (  92 genes intersect) / (post.p>0.95): p = 0.03924 ( 140 genes intersect)  *
-* Enrichment of Blake2018-DE.iPSC-endoderm-day3:
-    + All preosteoblasts                         (post.p>0.5): p = 0.31670 ( 423 genes intersect) / (post.p>0.95): p = 0.62200 ( 125 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 0.25320 ( 480 genes intersect) / (post.p>0.95): p = 0.02372 ( 203 genes intersect)  *
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.04234 ( 651 genes intersect) / (post.p>0.95): p = 0.00817 ( 439 genes intersect) **
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.04633 ( 649 genes intersect) / (post.p>0.95): p = 0.00413 ( 437 genes intersect) **
-    + All maturing osteocytes                    (post.p>0.5): p = 0.05617 ( 626 genes intersect) / (post.p>0.95): p = 0.00999 ( 369 genes intersect)  *
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.41390 ( 377 genes intersect) / (post.p>0.95): p = 0.59100 (  85 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.19970 (  93 genes intersect) / (post.p>0.95): p = 0.01843 (  88 genes intersect)  *
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.03897 ( 110 genes intersect) / (post.p>0.95): p = 0.00856 ( 158 genes intersect) **
-
-* Enrichment of Blake2018-DE.iPSCs-UNIQUE:
-    + All preosteoblasts                         (post.p>0.5): p = 0.80340 (  42 genes intersect) / (post.p>0.95): p = 0.78210 (  12 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 0.79290 (  48 genes intersect) / (post.p>0.95): p = 0.91990 (  15 genes intersect)
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.80470 (  64 genes intersect) / (post.p>0.95): p = 0.60530 (  44 genes intersect)
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.79970 (  64 genes intersect) / (post.p>0.95): p = 0.56560 (  44 genes intersect)
-    + All maturing osteocytes                    (post.p>0.5): p = 0.74580 (  63 genes intersect) / (post.p>0.95): p = 0.77090 (  34 genes intersect)
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.86840 (  36 genes intersect) / (post.p>0.95): p = 0.76510 (   8 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.26760 (  12 genes intersect) / (post.p>0.95): p = 0.96650 (   4 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.75350 (   9 genes intersect) / (post.p>0.95): p = 0.26180 (  18 genes intersect)
-* Enrichment of Blake2018-DE.iPSC-endoderm-day1-UNIQUE:
-    + All preosteoblasts                         (post.p>0.5): p = 0.28400 (  36 genes intersect) / (post.p>0.95): p = 0.41780 (  11 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 0.58380 (  36 genes intersect) / (post.p>0.95): p = 0.66770 (  13 genes intersect)
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.43190 (  50 genes intersect) / (post.p>0.95): p = 0.16420 (  37 genes intersect)
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.42600 (  50 genes intersect) / (post.p>0.95): p = 0.14360 (  37 genes intersect)
-    + All maturing osteocytes                    (post.p>0.5): p = 0.38470 (  49 genes intersect) / (post.p>0.95): p = 0.13780 (  32 genes intersect)
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.47500 (  30 genes intersect) / (post.p>0.95): p = 0.23850 (   9 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.67320 (   6 genes intersect) / (post.p>0.95): p = 0.92760 (   3 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.62330 (   7 genes intersect) / (post.p>0.95): p = 0.01916 (  18 genes intersect)  *
-* Enrichment of Blake2018-DE.iPSC-endoderm-day2-UNIQUE:
-    + All preosteoblasts                         (post.p>0.5): p = 0.94530 (  28 genes intersect) / (post.p>0.95): p = 0.78620 (   9 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 0.92680 (  33 genes intersect) / (post.p>0.95): p = 0.71350 (  14 genes intersect)
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.94760 (  44 genes intersect) / (post.p>0.95): p = 0.99150 (  23 genes intersect)
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.94600 (  44 genes intersect) / (post.p>0.95): p = 0.98940 (  23 genes intersect)
-    + All maturing osteocytes                    (post.p>0.5): p = 0.93260 (  43 genes intersect) / (post.p>0.95): p = 0.91000 (  23 genes intersect)
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.93980 (  25 genes intersect) / (post.p>0.95): p = 0.63050 (   7 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.62700 (   7 genes intersect) / (post.p>0.95): p = 0.44620 (   7 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.59170 (   8 genes intersect) / (post.p>0.95): p = 0.95220 (   7 genes intersect)
-* Enrichment of Blake2018-DE.iPSC-endoderm-day3-UNIQUE:
-    + All preosteoblasts                         (post.p>0.5): p = 0.49520 (  94 genes intersect) / (post.p>0.95): p = 0.50670 (  29 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 0.62660 ( 103 genes intersect) / (post.p>0.95): p = 0.31380 (  44 genes intersect)
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.41140 ( 142 genes intersect) / (post.p>0.95): p = 0.62190 (  88 genes intersect)
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.43940 ( 141 genes intersect) / (post.p>0.95): p = 0.56510 (  88 genes intersect)
-    + All maturing osteocytes                    (post.p>0.5): p = 0.37360 ( 138 genes intersect) / (post.p>0.95): p = 0.72750 (  71 genes intersect)
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.47580 (  85 genes intersect) / (post.p>0.95): p = 0.48270 (  20 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.74890 (  17 genes intersect) / (post.p>0.95): p = 0.37010 (  18 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.12690 (  27 genes intersect) / (post.p>0.95): p = 0.86940 (  25 genes intersect)
-
-* Enrichment of Blake2020-DE.heart:
-    + All preosteoblasts                         (post.p>0.5): p = 0.10480 ( 234 genes intersect) / (post.p>0.95): p = 0.56640 (  66 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 0.16630 ( 259 genes intersect) / (post.p>0.95): p = 0.13050 ( 105 genes intersect)
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.00082 ( 372 genes intersect) / (post.p>0.95): p = 0.07024 ( 229 genes intersect) *
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.00088 ( 371 genes intersect) / (post.p>0.95): p = 0.08113 ( 225 genes intersect) *
-    + All maturing osteocytes                    (post.p>0.5): p = 0.00039 ( 363 genes intersect) / (post.p>0.95): p = 0.05927 ( 194 genes intersect) *
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.20860 ( 206 genes intersect) / (post.p>0.95): p = 0.29420 (  49 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.34260 (  48 genes intersect) / (post.p>0.95): p = 0.16460 (  44 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 3.5e-06 (  81 genes intersect) / (post.p>0.95): p = 0.03453 (  85 genes intersect) **
-* Enrichment of Blake2020-DE.kidney:
-    + All preosteoblasts                         (post.p>0.5): p = 4.2e-07 ( 111 genes intersect) / (post.p>0.95): p = 0.00608 (  34 genes intersect) **
-    + All osteoblasts                            (post.p>0.5): p = 1.7e-05 ( 115 genes intersect) / (post.p>0.95): p = 0.00074 (  49 genes intersect) **
-    + All embedding osteoblasts                  (post.p>0.5): p = 3.2e-10 ( 164 genes intersect) / (post.p>0.95): p = 5.6e-10 ( 118 genes intersect) **
-    + All mineralizing osteoblasts               (post.p>0.5): p = 2.7e-10 ( 164 genes intersect) / (post.p>0.95): p = 4.9e-10 ( 117 genes intersect) **
-    + All maturing osteocytes                    (post.p>0.5): p = 2.4e-10 ( 160 genes intersect) / (post.p>0.95): p = 1.8e-09 ( 102 genes intersect) **
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 1.6e-05 (  96 genes intersect) / (post.p>0.95): p = 0.02203 (  24 genes intersect) **
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.39330 (  16 genes intersect) / (post.p>0.95): p = 0.04068 (  19 genes intersect)  *
-    + Shared across emb+min+mat                  (post.p>0.5): p = 7.6e-05 (  33 genes intersect) / (post.p>0.95): p = 1.3e-07 (  50 genes intersect) **
-* Enrichment of Blake2020-DE.liver:
-    + All preosteoblasts                         (post.p>0.5): p = 3.3e-06 ( 174 genes intersect) / (post.p>0.95): p = 0.01807 (  52 genes intersect) **
-    + All osteoblasts                            (post.p>0.5): p = 0.00035 ( 180 genes intersect) / (post.p>0.95): p = 0.00144 (  77 genes intersect) **
-    + All embedding osteoblasts                  (post.p>0.5): p = 4.4e-08 ( 254 genes intersect) / (post.p>0.95): p = 2.0e-07 ( 175 genes intersect) **
-    + All mineralizing osteoblasts               (post.p>0.5): p = 5.8e-08 ( 253 genes intersect) / (post.p>0.95): p = 1.2e-07 ( 174 genes intersect) **
-    + All maturing osteocytes                    (post.p>0.5): p = 1.4e-08 ( 249 genes intersect) / (post.p>0.95): p = 2.7e-06 ( 146 genes intersect) **
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.00016 ( 150 genes intersect) / (post.p>0.95): p = 0.07291 (  34 genes intersect) *
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.46900 (  27 genes intersect) / (post.p>0.95): p = 0.02132 (  32 genes intersect)  *
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.00033 (  48 genes intersect) / (post.p>0.95): p = 0.00020 (  64 genes intersect) **
-* Enrichment of Blake2020-DE.lung:
-    + All preosteoblasts                         (post.p>0.5): p = 0.00039 (  99 genes intersect) / (post.p>0.95): p = 0.03360 (  31 genes intersect) **
-    + All osteoblasts                            (post.p>0.5): p = 0.00073 ( 108 genes intersect) / (post.p>0.95): p = 0.00801 (  45 genes intersect) **
-    + All embedding osteoblasts                  (post.p>0.5): p = 2.6e-05 ( 145 genes intersect) / (post.p>0.95): p = 2.4e-05 ( 102 genes intersect) **
-    + All mineralizing osteoblasts               (post.p>0.5): p = 3.7e-05 ( 144 genes intersect) / (post.p>0.95): p = 3.8e-05 ( 100 genes intersect) **
-    + All maturing osteocytes                    (post.p>0.5): p = 1.5e-05 ( 142 genes intersect) / (post.p>0.95): p = 0.00023 (  84 genes intersect) **
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.00053 (  90 genes intersect) / (post.p>0.95): p = 0.07104 (  21 genes intersect) *
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.31770 (  17 genes intersect) / (post.p>0.95): p = 0.12390 (  17 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.01374 (  26 genes intersect) / (post.p>0.95): p = 0.00332 (  37 genes intersect) **
-    
-* Enrichment of Blake2020-DE.heart-UNIQUE:
-    + All preosteoblasts                         (post.p>0.5): p = 0.94720 ( 131 genes intersect) / (post.p>0.95): p = 0.89830 (  38 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 0.81670 ( 157 genes intersect) / (post.p>0.95): p = 0.85490 (  57 genes intersect)
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.54470 ( 219 genes intersect) / (post.p>0.95): p = 0.97860 ( 122 genes intersect)
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.56300 ( 218 genes intersect) / (post.p>0.95): p = 0.98380 ( 119 genes intersect)
-    + All maturing osteocytes                    (post.p>0.5): p = 0.48620 ( 213 genes intersect) / (post.p>0.95): p = 0.95690 ( 103 genes intersect)
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.93460 ( 118 genes intersect) / (post.p>0.95): p = 0.65920 (  29 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.17160 (  36 genes intersect) / (post.p>0.95): p = 0.81690 (  22 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.01895 (  46 genes intersect) / (post.p>0.95): p = 0.79730 (  43 genes intersect) *
-* Enrichment of Blake2020-DE.kidney-UNIQUE:
-    + All preosteoblasts                         (post.p>0.5): p = 0.09862 (  25 genes intersect) / (post.p>0.95): p = 0.84690 (   4 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 0.05881 (  29 genes intersect) / (post.p>0.95): p = 0.21460 (  11 genes intersect)
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.05186 (  37 genes intersect) / (post.p>0.95): p = 0.02743 (  27 genes intersect)  *
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.05062 (  37 genes intersect) / (post.p>0.95): p = 0.02336 (  27 genes intersect)  *
-    + All maturing osteocytes                    (post.p>0.5): p = 0.04932 (  36 genes intersect) / (post.p>0.95): p = 0.05667 (  22 genes intersect) *
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.09214 (  23 genes intersect) / (post.p>0.95): p = 0.56970 (   4 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.36750 (   5 genes intersect) / (post.p>0.95): p = 0.24560 (   5 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.27830 (   6 genes intersect) / (post.p>0.95): p = 0.00947 (  13 genes intersect)  *
-* Enrichment of Blake2020-DE.liver-UNIQUE:
-    + All preosteoblasts                         (post.p>0.5): p = 0.17530 (  64 genes intersect) / (post.p>0.95): p = 0.39210 (  19 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 0.20020 (  71 genes intersect) / (post.p>0.95): p = 0.28100 (  28 genes intersect)
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.14800 (  94 genes intersect) / (post.p>0.95): p = 0.17250 (  62 genes intersect)
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.17250 (  93 genes intersect) / (post.p>0.95): p = 0.14460 (  62 genes intersect)
-    + All maturing osteocytes                    (post.p>0.5): p = 0.11800 (  92 genes intersect) / (post.p>0.95): p = 0.18980 (  52 genes intersect)
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.21490 (  57 genes intersect) / (post.p>0.95): p = 0.40940 (  13 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.40460 (  13 genes intersect) / (post.p>0.95): p = 0.41410 (  11 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.33040 (  15 genes intersect) / (post.p>0.95): p = 0.16520 (  23 genes intersect)
-* Enrichment of Blake2020-DE.lung-UNIQUE:
-    + All preosteoblasts                         (post.p>0.5): p = 0.32610 (  26 genes intersect) / (post.p>0.95): p = 0.59070 (   7 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 0.20260 (  31 genes intersect) / (post.p>0.95): p = 0.32980 (  12 genes intersect)
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.61430 (  34 genes intersect) / (post.p>0.95): p = 0.51230 (  23 genes intersect)
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.68110 (  33 genes intersect) / (post.p>0.95): p = 0.57430 (  22 genes intersect)
-    + All maturing osteocytes                    (post.p>0.5): p = 0.59690 (  33 genes intersect) / (post.p>0.95): p = 0.63320 (  18 genes intersect)
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.28920 (  24 genes intersect) / (post.p>0.95): p = 0.36700 (   6 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.21810 (   7 genes intersect) / (post.p>0.95): p = 0.39520 (   5 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 1.00000 (   0 genes intersect) / (post.p>0.95): p = 0.78200 (   6 genes intersect)
-
-* Enrichment of Gokhman2021-DE.Parental.iPSCs:
-    + All preosteoblasts                         (post.p>0.5): p = 6.6e-05 ( 754 genes intersect) / (post.p>0.95): p = 0.09084 ( 225 genes intersect) *
-    + All osteoblasts                            (post.p>0.5): p = 9.9e-05 ( 844 genes intersect) / (post.p>0.95): p = 7.4e-05 ( 345 genes intersect) **
-    + All embedding osteoblasts                  (post.p>0.5): p = 1.9e-05 (1108 genes intersect) / (post.p>0.95): p = 0.00111 ( 716 genes intersect) **
-    + All mineralizing osteoblasts               (post.p>0.5): p = 2.9e-05 (1104 genes intersect) / (post.p>0.95): p = 0.00082 ( 708 genes intersect) **
-    + All maturing osteocytes                    (post.p>0.5): p = 1.7e-05 (1070 genes intersect) / (post.p>0.95): p = 0.00714 ( 593 genes intersect) **
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 6.6e-05 ( 682 genes intersect) / (post.p>0.95): p = 0.00520 ( 165 genes intersect) **
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.31200 ( 147 genes intersect) / (post.p>0.95): p = 0.02304 ( 136 genes intersect)  *
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.08654 ( 170 genes intersect) / (post.p>0.95): p = 0.14750 ( 234 genes intersect)
-* Enrichment of Gokhman2021-DE.Hybrid.iPSCs:
-    + All preosteoblasts                         (post.p>0.5): p = 7.6e-06 ( 616 genes intersect) / (post.p>0.95): p = 0.00435 ( 193 genes intersect) **
-    + All osteoblasts                            (post.p>0.5): p = 5.2e-06 ( 691 genes intersect) / (post.p>0.95): p = 0.00014 ( 279 genes intersect) **
-    + All embedding osteoblasts                  (post.p>0.5): p = 1.4e-06 ( 901 genes intersect) / (post.p>0.95): p = 1.0e-05 ( 595 genes intersect) **
-    + All mineralizing osteoblasts               (post.p>0.5): p = 1.6e-06 ( 899 genes intersect) / (post.p>0.95): p = 1.1e-05 ( 587 genes intersect) **
-    + All maturing osteocytes                    (post.p>0.5): p = 1.1e-06 ( 872 genes intersect) / (post.p>0.95): p = 0.00016 ( 493 genes intersect) **
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 1.4e-05 ( 556 genes intersect) / (post.p>0.95): p = 0.01139 ( 132 genes intersect) **
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.10660 ( 123 genes intersect) / (post.p>0.95): p = 0.00948 ( 113 genes intersect)  *
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.16610 ( 133 genes intersect) / (post.p>0.95): p = 0.10100 ( 189 genes intersect)
-* Enrichment of Gokhman2021-DE.Parental.CNCCs:
-    + All preosteoblasts                         (post.p>0.5): p = 4.9e-06 ( 251 genes intersect) / (post.p>0.95): p = 2.1e-05 (  91 genes intersect) **
-    + All osteoblasts                            (post.p>0.5): p = 1.5e-08 ( 294 genes intersect) / (post.p>0.95): p = 5.8e-05 ( 119 genes intersect) **
-    + All embedding osteoblasts                  (post.p>0.5): p = 7.7e-08 ( 368 genes intersect) / (post.p>0.95): p = 2.7e-06 ( 245 genes intersect) **
-    + All mineralizing osteoblasts               (post.p>0.5): p = 8.9e-08 ( 367 genes intersect) / (post.p>0.95): p = 1.3e-06 ( 244 genes intersect) **
-    + All maturing osteocytes                    (post.p>0.5): p = 1.4e-07 ( 355 genes intersect) / (post.p>0.95): p = 2.6e-05 ( 204 genes intersect) **
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 1.0e-05 ( 227 genes intersect) / (post.p>0.95): p = 0.00176 (  59 genes intersect) **
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.00097 (  60 genes intersect) / (post.p>0.95): p = 0.00316 (  50 genes intersect) **
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.57870 (  44 genes intersect) / (post.p>0.95): p = 0.48630 (  64 genes intersect)
-* Enrichment of Gokhman2021-DE.Hybrid.CNCCs:
-    + All preosteoblasts                         (post.p>0.5): p = 2.1e-05 ( 412 genes intersect) / (post.p>0.95): p = 0.00017 ( 140 genes intersect) **
-    + All osteoblasts                            (post.p>0.5): p = 5.1e-07 ( 473 genes intersect) / (post.p>0.95): p = 3.8e-06 ( 200 genes intersect) **
-    + All embedding osteoblasts                  (post.p>0.5): p = 4.7e-07 ( 608 genes intersect) / (post.p>0.95): p = 2.6e-06 ( 406 genes intersect) **
-    + All mineralizing osteoblasts               (post.p>0.5): p = 4.6e-07 ( 607 genes intersect) / (post.p>0.95): p = 1.4e-06 ( 403 genes intersect) **
-    + All maturing osteocytes                    (post.p>0.5): p = 9.0e-07 ( 586 genes intersect) / (post.p>0.95): p = 2.0e-05 ( 339 genes intersect) **
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 2.2e-05 ( 374 genes intersect) / (post.p>0.95): p = 0.00017 ( 100 genes intersect) **
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.01023 (  90 genes intersect) / (post.p>0.95): p = 0.01146 (  77 genes intersect) **
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.31870 (  84 genes intersect) / (post.p>0.95): p = 0.14720 ( 123 genes intersect)
-
-* Enrichment of Gokhman2021-DE.Parental.iPSCs-UNIQUE:
-    + All preosteoblasts                         (post.p>0.5): p = 0.09878 ( 566 genes intersect) / (post.p>0.95): p = 0.89540 ( 155 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 0.39050 ( 619 genes intersect) / (post.p>0.95): p = 0.22250 ( 246 genes intersect)
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.24520 ( 824 genes intersect) / (post.p>0.95): p = 0.43270 ( 528 genes intersect)
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.26860 ( 821 genes intersect) / (post.p>0.95): p = 0.44870 ( 520 genes intersect)
-    + All maturing osteocytes                    (post.p>0.5): p = 0.21400 ( 797 genes intersect) / (post.p>0.95): p = 0.56670 ( 436 genes intersect)
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.09260 ( 511 genes intersect) / (post.p>0.95): p = 0.38330 ( 116 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.95910 (  99 genes intersect) / (post.p>0.95): p = 0.52510 (  95 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.21240 ( 132 genes intersect) / (post.p>0.95): p = 0.15540 ( 187 genes intersect)
-* Enrichment of Gokhman2021-DE.Hybrid.iPSCs-UNIQUE:
-    + All preosteoblasts                         (post.p>0.5): p = 0.07992 ( 341 genes intersect) / (post.p>0.95): p = 0.39210 ( 101 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 0.29050 ( 370 genes intersect) / (post.p>0.95): p = 0.20450 ( 148 genes intersect)
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.29920 ( 480 genes intersect) / (post.p>0.95): p = 0.27120 ( 318 genes intersect)
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.30100 ( 485 genes intersect) / (post.p>0.95): p = 0.31030 ( 312 genes intersect)
-    + All maturing osteocytes                    (post.p>0.5): p = 0.25780 ( 471 genes intersect) / (post.p>0.95): p = 0.30700 ( 265 genes intersect)
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.11550 ( 305 genes intersect) / (post.p>0.95): p = 0.66310 (  64 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.86660 (  59 genes intersect) / (post.p>0.95): p = 0.07198 (  66 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.64540 (  71 genes intersect) / (post.p>0.95): p = 0.72040 (  99 genes intersect)
-* Enrichment of Gokhman2021-DE.Parental.CNCCs-UNIQUE:
-    + All preosteoblasts                         (post.p>0.5): p = 0.06695 (  63 genes intersect) / (post.p>0.95): p = 0.12910 (  21 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 0.09266 (  69 genes intersect) / (post.p>0.95): p = 0.76330 (  20 genes intersect)
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.24290 (  84 genes intersect) / (post.p>0.95): p = 0.18290 (  57 genes intersect)
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.23690 (  84 genes intersect) / (post.p>0.95): p = 0.19340 (  56 genes intersect)
-    + All maturing osteocytes                    (post.p>0.5): p = 0.24850 (  81 genes intersect) / (post.p>0.95): p = 0.23860 (  47 genes intersect)
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.09611 (  56 genes intersect) / (post.p>0.95): p = 0.65680 (  10 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.40530 (  12 genes intersect) / (post.p>0.95): p = 0.57090 (   9 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.98290 (   6 genes intersect) / (post.p>0.95): p = 0.53610 (  17 genes intersect)
-* Enrichment of Gokhman2021-DE.Hybrid.CNCCs-UNIQUE:
-    + All preosteoblasts                         (post.p>0.5): p = 0.17480 ( 137 genes intersect) / (post.p>0.95): p = 0.07688 (  48 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 0.22330 ( 152 genes intersect) / (post.p>0.95): p = 0.03080 (  69 genes intersect)  *
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.39380 ( 193 genes intersect) / (post.p>0.95): p = 0.27720 ( 129 genes intersect)
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.38210 ( 193 genes intersect) / (post.p>0.95): p = 0.25270 ( 128 genes intersect)
-    + All maturing osteocytes                    (post.p>0.5): p = 0.43420 ( 185 genes intersect) / (post.p>0.95): p = 0.18930 ( 111 genes intersect)
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.19690 ( 123 genes intersect) / (post.p>0.95): p = 0.14880 (  32 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.56070 (  26 genes intersect) / (post.p>0.95): p = 0.05533 (  30 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.93910 (  22 genes intersect) / (post.p>0.95): p = 0.93070 (  33 genes intersect)
-
-* Enrichment of Gokhman2020-DMR.bone:
-    + All preosteoblasts                         (post.p>0.5): p = 0.01739 (  43 genes intersect) / (post.p>0.95): p = 0.10120 (  14 genes intersect) *
-    + All osteoblasts                            (post.p>0.5): p = 0.00929 (  49 genes intersect) / (post.p>0.95): p = 0.08786 (  19 genes intersect) *
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.00818 (  62 genes intersect) / (post.p>0.95): p = 0.05397 (  39 genes intersect) *
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.00784 (  62 genes intersect) / (post.p>0.95): p = 0.06566 (  38 genes intersect) *
-    + All maturing osteocytes                    (post.p>0.5): p = 0.01321 (  59 genes intersect) / (post.p>0.95): p = 0.01737 (  36 genes intersect) **
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.00479 (  42 genes intersect) / (post.p>0.95): p = 0.20430 (   9 genes intersect) *
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.63360 (   6 genes intersect) / (post.p>0.95): p = 0.09773 (   9 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.18160 (  10 genes intersect) / (post.p>0.95): p = 0.21490 (  13 genes intersect)
-
-* Enrichment of Gokhman2020-skeletal.genes:
-    + All preosteoblasts                         (post.p>0.5): p = 0.41900 ( 158 genes intersect) / (post.p>0.95): p = 0.74210 (  44 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 0.32550 ( 181 genes intersect) / (post.p>0.95): p = 0.74890 (  63 genes intersect)
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.40350 ( 235 genes intersect) / (post.p>0.95): p = 0.75400 ( 143 genes intersect)
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.39030 ( 235 genes intersect) / (post.p>0.95): p = 0.78150 ( 140 genes intersect)
-    + All maturing osteocytes                    (post.p>0.5): p = 0.33580 ( 229 genes intersect) / (post.p>0.95): p = 0.95510 ( 109 genes intersect)
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.50540 ( 140 genes intersect) / (post.p>0.95): p = 0.55280 (  32 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.26220 (  36 genes intersect) / (post.p>0.95): p = 0.98970 (  17 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.57180 (  35 genes intersect) / (post.p>0.95): p = 0.60500 (  49 genes intersect)
-* Enrichment of Hsu2019-GWAS.hip.geometry:
-    + All preosteoblasts                         (post.p>0.5): p = 1.00000 (   0 genes intersect) / (post.p>0.95): p = 1.00000 (   0 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 1.00000 (   0 genes intersect) / (post.p>0.95): p = 1.00000 (   0 genes intersect)
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.73260 (   1 genes intersect) / (post.p>0.95): p = 1.00000 (   0 genes intersect)
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.73180 (   1 genes intersect) / (post.p>0.95): p = 1.00000 (   0 genes intersect)
-    + All maturing osteocytes                    (post.p>0.5): p = 0.71820 (   1 genes intersect) / (post.p>0.95): p = 1.00000 (   0 genes intersect)
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 1.00000 (   0 genes intersect) / (post.p>0.95): p = 1.00000 (   0 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 1.00000 (   0 genes intersect) / (post.p>0.95): p = 1.00000 (   0 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.16900 (   1 genes intersect) / (post.p>0.95): p = 1.00000 (   0 genes intersect)
-* Enrichment of Styrkarsdottir2019-GWAS.bone.area:
-    + All preosteoblasts                         (post.p>0.5): p = 1.00000 (   0 genes intersect) / (post.p>0.95): p = 1.00000 (   0 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 1.00000 (   0 genes intersect) / (post.p>0.95): p = 1.00000 (   0 genes intersect)
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.73260 (   1 genes intersect) / (post.p>0.95): p = 1.00000 (   0 genes intersect)
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.73180 (   1 genes intersect) / (post.p>0.95): p = 1.00000 (   0 genes intersect)
-    + All maturing osteocytes                    (post.p>0.5): p = 0.71820 (   1 genes intersect) / (post.p>0.95): p = 1.00000 (   0 genes intersect)
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 1.00000 (   0 genes intersect) / (post.p>0.95): p = 1.00000 (   0 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 1.00000 (   0 genes intersect) / (post.p>0.95): p = 1.00000 (   0 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.16900 (   1 genes intersect) / (post.p>0.95): p = 1.00000 (   0 genes intersect)
-* Enrichment of Yengo2018-GWAS.height:
-    + All preosteoblasts                         (post.p>0.5): p = 0.83660 ( 131 genes intersect) / (post.p>0.95): p = 0.89980 (  36 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 0.77620 ( 151 genes intersect) / (post.p>0.95): p = 0.59120 (  60 genes intersect)
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.89270 ( 195 genes intersect) / (post.p>0.95): p = 0.94560 ( 120 genes intersect)
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.90170 ( 194 genes intersect) / (post.p>0.95): p = 0.94780 ( 118 genes intersect)
-    + All maturing osteocytes                    (post.p>0.5): p = 0.92930 ( 185 genes intersect) / (post.p>0.95): p = 0.87570 ( 103 genes intersect)
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.72770 ( 121 genes intersect) / (post.p>0.95): p = 0.76970 (  26 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.76380 (  26 genes intersect) / (post.p>0.95): p = 0.04923 (  33 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.81500 (  28 genes intersect) / (post.p>0.95): p = 0.96590 (  35 genes intersect)
-
-* Enrichment of Steinberg2020-GWAS.OA:
-    + All preosteoblasts                         (post.p>0.5): p = 0.24980 (  51 genes intersect) / (post.p>0.95): p = 0.07878 (  20 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 0.08312 (  62 genes intersect) / (post.p>0.95): p = 0.15640 (  25 genes intersect)
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.18860 (  76 genes intersect) / (post.p>0.95): p = 0.44380 (  46 genes intersect)
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.22140 (  75 genes intersect) / (post.p>0.95): p = 0.46780 (  45 genes intersect)
-    + All maturing osteocytes                    (post.p>0.5): p = 0.13730 (  75 genes intersect) / (post.p>0.95): p = 0.18190 (  43 genes intersect)
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.20800 (  47 genes intersect) / (post.p>0.95): p = 0.03289 (  16 genes intersect)  *
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.05896 (  15 genes intersect) / (post.p>0.95): p = 0.56560 (   8 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.74160 (   9 genes intersect) / (post.p>0.95): p = 0.54090 (  15 genes intersect)
-* Enrichment of Morris2020-GWAS.OP:
-    + All preosteoblasts                         (post.p>0.5): p = 0.28410 (  68 genes intersect) / (post.p>0.95): p = 0.30780 (  22 genes intersect)
-    + All osteoblasts                            (post.p>0.5): p = 0.25810 (  77 genes intersect) / (post.p>0.95): p = 0.49810 (  28 genes intersect)
-    + All embedding osteoblasts                  (post.p>0.5): p = 0.27640 ( 100 genes intersect) / (post.p>0.95): p = 0.86140 (  54 genes intersect)
-    + All mineralizing osteoblasts               (post.p>0.5): p = 0.26930 ( 100 genes intersect) / (post.p>0.95): p = 0.83380 (  54 genes intersect)
-    + All maturing osteocytes                    (post.p>0.5): p = 0.22290 (  98 genes intersect) / (post.p>0.95): p = 0.64950 (  49 genes intersect)
-    + Shared across all ostadhoc classifications (post.p>0.5): p = 0.21440 (  63 genes intersect) / (post.p>0.95): p = 0.44960 (  14 genes intersect)
-    + Shared across obl+emb+min+mat              (post.p>0.5): p = 0.44450 (  14 genes intersect) / (post.p>0.95): p = 0.22070 (  14 genes intersect)
-    + Shared across emb+min+mat                  (post.p>0.5): p = 0.38370 (  16 genes intersect) / (post.p>0.95): p = 0.97490 (  14 genes intersect)
 
 ```{r, eval=FALSE}
 
