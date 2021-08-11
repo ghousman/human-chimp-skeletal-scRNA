@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Genevieve Housman" />
+
+
+<title>10x-data-diffexp</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">human-chimp-skeletal-scRNA</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">10x-data-diffexp</h1>
+<h4 class="author">Genevieve Housman</h4>
+<h4 class="date">May 2021</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2021-08-08
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>human-chimp-skeletal-scRNA/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20190719code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20190719)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20190719code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20190719)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreefd98145b0ad57351357e829de8f6f7ef4bd3261dtargetblankfd98145a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/fd98145b0ad57351357e829de8f6f7ef4bd3261d" target="_blank">fd98145</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreefd98145b0ad57351357e829de8f6f7ef4bd3261dtargetblankfd98145a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/fd98145b0ad57351357e829de8f6f7ef4bd3261d" target="_blank">fd98145</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+
+Untracked files:
+    Untracked:  data/HumanPrimaryCellAtlasData-SingleR
+    Untracked:  data/HumanPrimaryCellAtlasDetails-SingleR.csv
+    Untracked:  data/HumanPrimaryCellAtlasLabels-SingleR.csv
+    Untracked:  data/cell_atlas_ref_panel
+    Untracked:  data/cellranger-data-full/
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-cluster8.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/corrmatrix.ost
+    Untracked:  data/gom-data/v2/gom10.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom3.100genes.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom3.100genes.log.indv-cell.int19k.reg-tot.rds
+    Untracked:  data/gom-data/v2/gom3.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom3.log.indv-cell.int19k.reg-tot.rds
+    Untracked:  data/gom-data/v2/gom4.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom5.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom6.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom7.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom8.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom9.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  output/data-qc-post-subsets-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-int19k-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-int19k.reg-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-intNo0-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-intNo0.reg-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-merge-batchviz.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-batchviz.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-intNo0.reg-batchviz.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-merge-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-int-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-int19k-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-int19k.reg-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-merge-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets.reg-batchviz.pdf
+
+Unstaged changes:
+    Modified:   analysis/about.Rmd
+    Modified:   analysis/license.Rmd
+    Modified:   output/data-qc-prefilter.pdf
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/10x-data-5-diffexp.Rmd</code>) and HTML (<code>docs/10x-data-5-diffexp.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/e62c53703ed251e27c4d23397131fd218013a635/analysis/10x-data-5-diffexp.Rmd" target="_blank">e62c537</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-08-05
+</td>
+<td>
+updated analyses
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/ffc61016dd695c8d383c7b1718025e1313beb58e/analysis/10x-data-5-diffexp.Rmd" target="_blank">ffc6101</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-05-31
+</td>
+<td>
+checked osteogenic clusters
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/0ab50f87a91c384f5ba01aafe9ebf1ccbb156a19/analysis/10x-data-5-diffexp.Rmd" target="_blank">0ab50f8</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-05-26
+</td>
+<td>
+updated DE analyses
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/d4afda66409b590e4e2c147b459254c8ee44093f/analysis/10x-data-5-diffexp.Rmd" target="_blank">d4afda6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2020-10-06
+</td>
+<td>
+updated variance code and sc vs. pseudo
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/e6ab6ebde72ba993a4e3964d0bc4bb696872e3e4/analysis/10x-data-5-diffexp.Rmd" target="_blank">e6ab6eb</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2020-10-05
+</td>
+<td>
+updated cormotif
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/46b9c5ac4448371b8aa6cdf24a41d4516100d316/analysis/10x-data-5-diffexp.Rmd" target="_blank">46b9c5a</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2020-09-28
+</td>
+<td>
+Updated utf1-tac3 code
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/d0731f9fd132fcf8d193d7967db1081128618482/analysis/10x-data-5-diffexp.Rmd" target="_blank">d0731f9</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2020-09-26
+</td>
+<td>
+Finalized cell assignment scripts
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/0373ccf854f59faa7e436b79cc680b8a362b00d8/analysis/10x-data-5-diffexp.Rmd" target="_blank">0373ccf</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2020-09-22
+</td>
+<td>
+Updated variance and cormotif analyses
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/750156c90d27b7c7b9b88b5a993c5ae749b9e2d8/analysis/10x-data-5-diffexp.Rmd" target="_blank">750156c</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2020-09-20
+</td>
+<td>
+Updated DE analyses
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/411735bb59a76f62a63ffde8ea89d613ea272789/analysis/10x-data-5-diffexp.Rmd" target="_blank">411735b</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2020-09-07
+</td>
+<td>
+Updated integration scripts
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="x-data-cellranger-analysis---differential-expression" class="section level1">
+<h1>10X Data Cellranger Analysis - Differential Expression</h1>
+<p>Test for differential expression between humans and chimpanzees within different cell classifications. <a href="https://combine-australia.github.io/RNAseq-R/06-rnaseq-day1.html" class="uri">https://combine-australia.github.io/RNAseq-R/06-rnaseq-day1.html</a></p>
+<pre class="r"><code>#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(grid)
+library(gbm)
+library(colorspace)
+library(RColorBrewer)
+library(edgeR)
+library(scran)
+library(SingleCellExperiment)
+library(limma)
+library(variancePartition)
+#library(EnhancedVolcano)
+library(purrr)
+library(UpSetR)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(Rgraphviz)
+library(enrichplot)
+library(viridis)
+library(RUVSeq)
+library(BiocParallel)
+
+#detectCores()
+register(SnowParam(4, &quot;SOCK&quot;, progressbar=TRUE))</code></pre>
+<div id="prepare-data" class="section level2">
+<h2>Prepare data</h2>
+<pre class="r"><code>#Load data
+#data integrated across individuals - total (conservative cell filter + non-zero genes + regress out UMI/mito)
+scrna &lt;- &quot;./data/cellranger-data-full/data.filterC.log.indv-cell.intNo0.reg-tot.assign.rds&quot;
+data &lt;- readRDS(scrna)
+
+#Define individual-replicate sets
+data@meta.data$Individual.Replicate &lt;- paste0(data@meta.data$Individual,&quot;.&quot;,data@meta.data$Replicate)</code></pre>
+<p>Define genes of interest: all except mitochondrial genes and ribosomal genes</p>
+<pre class="r"><code>genes &lt;- rownames(data@assays$RNA@counts)
+genes.mito &lt;- c(&quot;MT-ATP6&quot;,&quot;MT-ATP8&quot;,&quot;MT-CO1&quot;,&quot;MT-CO2&quot;,&quot;MT-CO3&quot;,&quot;MT-CYB&quot;,&quot;MT-ND1&quot;,&quot;MT-ND2&quot;,&quot;MT-ND3&quot;,&quot;MT-ND4&quot;,&quot;MT-ND4L&quot;,&quot;MT-ND5&quot;)
+genes.ribo &lt;- grep(&#39;^RP&#39;,genes,value=T)
+genes.no.mito.ribo &lt;- genes[which(!(genes %in% c(genes.mito,genes.ribo)))]
+rm(genes,genes.mito,genes.ribo)</code></pre>
+<p>Define data subsets for testing DE methods.</p>
+<pre class="r"><code>#dataSub &lt;- subset(data,subset=Stage==&quot;Time 2&quot;)
+#dataSub &lt;- subset(data,subset=Cluster0.05==&quot;iPSC.c3&quot;)
+dataSub &lt;- subset(data,subset=OstAdHoc.Assign.x.4gene.thresh0==&quot;mineralizing osteoblast&quot;)
+dataSub &lt;- subset(data,subset=OstAdHoc.Assign.x.4gene.thresh0==&quot;mineralizing osteoblast&quot; &amp; Stage==&quot;Time 2&quot;)
+dataSub &lt;- subset(data,subset=OstAdHoc.Assign.x.4gene.thresh0==&quot;maturing osteocyte&quot;)
+dataSub &lt;- subset(data,subset=OstAdHoc.Assign.x.4gene.thresh0==&quot;maturing osteocyte&quot; &amp; Stage==&quot;Time 2&quot;)
+
+#dataSub &lt;- subset(dataSub,subset=Sample!=&quot;H1-I&quot;)
+#dataSub &lt;- subset(dataSub,subset=Sample!=&quot;C1-I&quot;)
+#dataSub &lt;- subset(dataSub,subset=Sample!=&quot;H1-I-r2&quot;)
+#dataSub &lt;- subset(dataSub,subset=Sample!=&quot;C1-I-r2&quot;)
+
+#human.cells &lt;- rownames(dataSub@meta.data)[which(dataSub@meta.data$Species==&quot;Human&quot;)]
+#chimp.cells &lt;- rownames(dataSub@meta.data)[which(dataSub@meta.data$Species==&quot;Chimp&quot;)]
+#h.cell.sub &lt;- human.cells[sample(1:length(human.cells), 200, replace=FALSE)]
+#c.cell.sub &lt;- chimp.cells[sample(1:length(chimp.cells), 200, replace=FALSE)]
+#dataSub &lt;- subset(dataSub,cells=c(h.cell.sub,c.cell.sub))</code></pre>
+<p>When performing DE analyses with pseudobulk data (across individuals and replicates), use raw counts only as this worked the best.</p>
+<pre class="r"><code>#make pseudobulk using individual+replicate information
+counts &lt;- c()
+metadata &lt;- c()
+labels &lt;- c()
+for (i in unique(dataSub@meta.data$Individual.Replicate)) {
+      x.lab &lt;- i
+      w &lt;- which(dataSub@meta.data$Individual.Replicate==i)
+      if (length(w)&gt;0) {
+        x.spp &lt;- dataSub@meta.data$Species[w][1]
+        x.col &lt;- dataSub@meta.data$Collection[w][1]
+        x.ind &lt;- dataSub@meta.data$Individual[w][1]
+        x.rep &lt;- dataSub@meta.data$Replicate[w][1]
+        if (length(w)==1) {
+          x.cnt &lt;- dataSub@assays$RNA@counts[,w]
+        } else {
+          x.cnt &lt;- Matrix::rowSums(dataSub@assays$RNA@counts[,w])
+        }
+        counts &lt;- cbind(counts, x.cnt)
+        metadata &lt;- rbind(metadata, c(x.lab, x.spp, x.col, x.ind, x.rep))
+        labels &lt;- c(labels, x.lab)
+      }
+}
+colnames(counts) &lt;- labels
+rownames(metadata) &lt;- labels
+colnames(metadata) &lt;- c(&quot;Individual.Replicate&quot;,&quot;Species&quot;,&quot;Collection&quot;,&quot;Individual&quot;,&quot;Replicate&quot;)
+metadata &lt;- as.data.frame(metadata)</code></pre>
+</div>
+<div id="identify-differentially-expressed-genes" class="section level2">
+<h2>Identify differentially expressed genes</h2>
+<p>There are several ways of doing this. Here, we chose to use: dream (a limma voom method)</p>
+<ul>
+<li><p>dream = differential expression for repeated measures</p></li>
+<li><p>method uses a linear model model to increase power and decrease false positives for RNA-seq datasets with multiple measurements per individual</p></li>
+<li><p>first, uses voomWithDreamWeights() to estimate precision weights (model measurement error in gene counts)</p>
+<ul>
+<li>estimates the mean-variance relationship of logcpm</li>
+<li>uses this to compute observation-level weights</li>
+</ul></li>
+<li><p>second, uses dream() for linear mixed modelling and regression coefficient estimation</p>
+<ul>
+<li>model fit on each gene (random effects estimated separately for each gene)</li>
+<li>uses the Satterthwaite approximation for the hypothesis test</li>
+</ul></li>
+<li><p>finally, uses an exact test with FDR control to determine DE genes</p>
+<ul>
+<li>dream uses an estimated degrees of freedom value for each hypothsis test, so the degrees of freedom is different for each gene and the t-statistics are not directly comparable</li>
+<li>comparing test statistics can instead be done using z.std (p-value transformed into a signed z-score)</li>
+</ul></li>
+<li><p>also tried edgeRQLF (Han et al. 2015) and FindMarkers (McDavid et al. 2013), but these resulted in inflatted p-values and generally did not work as well (see v2-20x-data-5-diffexp.Rmd for more details).</p></li>
+</ul>
+<p>References:</p>
+<ul>
+<li><a href="https://github.com/csoneson/conquer_comparison/blob/master/scripts/apply_voomlimma.R" class="uri">https://github.com/csoneson/conquer_comparison/blob/master/scripts/apply_voomlimma.R</a></li>
+<li><a href="https://www.bioconductor.org/packages/devel/bioc/vignettes/variancePartition/inst/doc/dream.html#" class="uri">https://www.bioconductor.org/packages/devel/bioc/vignettes/variancePartition/inst/doc/dream.html#</a>:~:text=1%3A1000%2C%5D-,Limma%20Analysis,the%20same%20across%20all%20genes</li>
+<li><a href="https://genomebiology.biomedcentral.com/articles/10.1186/gb-2014-15-2-r29" class="uri">https://genomebiology.biomedcentral.com/articles/10.1186/gb-2014-15-2-r29</a></li>
+</ul>
+<pre class="r"><code>runDREAM &lt;- function(dataSub, data.dir, cell.assign, cell.subset, genes.no.mito.ribo, data.type, filter.arg, filter.type, filter.param, fml) {
+
+  #make count matrix and metadata for edgeR object
+  if (data.type==&quot;pseudo&quot;) {
+    counts &lt;- c()
+    metadata &lt;- c()
+    labels &lt;- c()
+    for (i in unique(dataSub@meta.data$Individual.Replicate)) {
+      x.lab &lt;- i
+      w &lt;- which(dataSub@meta.data$Individual.Replicate==i)
+      if (length(w)&gt;0) {
+        x.spp &lt;- dataSub@meta.data$Species[w][1]
+        x.col &lt;- dataSub@meta.data$Collection[w][1]
+        x.ind &lt;- dataSub@meta.data$Individual[w][1]
+        x.rep &lt;- dataSub@meta.data$Replicate[w][1]
+        if (length(w)==1) {
+          x.cnt &lt;- dataSub@assays$RNA@counts[,w]
+        } else {
+          x.cnt &lt;- Matrix::rowSums(dataSub@assays$RNA@counts[,w])
+        }
+        counts &lt;- cbind(counts, x.cnt)
+        metadata &lt;- rbind(metadata, c(x.lab, x.spp, x.col, x.ind, x.rep))
+        labels &lt;- c(labels, x.lab)
+      }
+    }
+    colnames(counts) &lt;- labels
+    rownames(metadata) &lt;- labels
+    colnames(metadata) &lt;- c(&quot;Individual.Replicate&quot;,&quot;Species&quot;,&quot;Collection&quot;,&quot;Individual&quot;,&quot;Replicate&quot;)
+    metadata &lt;- as.data.frame(metadata)
+    rm(labels)
+  }
+  if (data.type==&quot;sc&quot;) {
+    counts &lt;- as.matrix(GetAssayData(dataSub, assay=&quot;RNA&quot;, slot=&quot;counts&quot;))
+    metadata &lt;- dataSub@meta.data[,c(&quot;Species&quot;,&quot;Individual.Replicate&quot;,&quot;Individual&quot;,&quot;Replicate&quot;,&quot;Collection&quot;,&quot;percent.mt&quot;,&quot;Phase&quot;,&quot;Sample&quot;)]
+    metadata &lt;- metadata[colnames(counts),]
+  }
+
+  #remove mitochodrial and ribosomal genes
+  counts &lt;- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
+
+  #make edgeR object
+  dge &lt;- DGEList(counts)
+  meta_dge &lt;- dge$samples[,c(&quot;lib.size&quot;,&quot;norm.factors&quot;)]
+  meta_dge &lt;- cbind(meta_dge, metadata)
+  dge$samples &lt;- meta_dge
+  rm(dataSub,counts,metadata,meta_dge)
+
+  #filter genes
+  if (filter.arg==TRUE){
+    if (filter.type==&quot;logcpm&quot;){
+      keep &lt;- rowMeans(edgeR::cpm(dge,log=TRUE,prior.count=0.25))&gt;0
+      dge$counts &lt;- dge$counts[keep,]
+    }
+    if (filter.type==&quot;min.count&quot;){
+      keep &lt;- filterByExpr(dge, group=dge$samples$Species, min.count=filter.param, min.total.count=15)
+      table(keep)
+      dge &lt;- dge[keep, , keep.lib.sizes=FALSE]
+      rm(keep)
+    }
+    if (filter.type==&quot;pch&quot;){
+      dge$counts &lt;- dge$counts[rowSums(dge$counts!=0)&gt;=(filter.param*dim(dge$counts)[2]),]
+    }
+  }
+  
+  #normalize data
+  dge &lt;- calcNormFactors(dge, method=&quot;TMM&quot;)
+  summary(dge$samples$norm.factors)
+  
+  #calculate cellular detection rate - THIS IS NOT NECESSARY
+  #cdr &lt;- scale(colMeans(dge$count &gt; 0))
+  
+  #prep variables for design matrix
+  dge$samples$Individual.Replicate &lt;- as.factor(dge$samples$Individual.Replicate)
+  dge$samples$Individual &lt;- as.factor(dge$samples$Individual)
+  dge$samples$Replicate &lt;- as.factor(as.character(dge$samples$Replicate))
+  #dge$samples$Sample &lt;- as.factor(dge$samples$Sample) #NOT USED
+  dge$samples$Species &lt;- as.factor(dge$samples$Species)
+  dge$samples$Collection &lt;- as.factor(as.numeric(dge$samples$Collection))
+  #dge$samples$SequencingBatch &lt;- as.factor(as.numeric(dge$samples$SequencingBatch)) #NOT USED
+  if (data.type==&quot;sc&quot;) {
+    dge$samples$Phase &lt;- as.factor(dge$samples$Phase)
+    dge$samples$Sample &lt;- as.factor(dge$samples$Sample)
+    dge$samples$S.G2M.Diff &lt;- dge$samples$S.Score - dge$samples$G2M.Score #NOT USED
+  }
+  
+  #calculate RUV factors from replicates - INCLUDING RUVS DOES NOT IMPROVE PSEUDOBULK DATA CLUSTERING BY SPECIES AND INDIVIDUAL
+  tmm &lt;- edgeR::cpm(dge,normalized.lib.sizes=TRUE,log=TRUE,prior.count=0.25)
+  #plotMDS(dge$counts,top=dim(dge)[1],gene.selection=&quot;pairwise&quot;,col=c(rep(&quot;darkgreen&quot;,7),rep(&quot;darkorange&quot;,7)))
+  #plotMDS(tmm,top=dim(dge)[1],gene.selection=&quot;pairwise&quot;,col=c(rep(&quot;darkgreen&quot;,7),rep(&quot;darkorange&quot;,7)))
+  differences &lt;- t(makeGroups(dge$samples$Replicate))
+  tmm.1 &lt;- RUVs(dge$counts, cIdx=rownames(dge$counts), k=1, scIdx=differences)
+  tmm.2 &lt;- RUVs(dge$counts, cIdx=rownames(dge$counts), k=2, scIdx=differences)
+  tmm.3 &lt;- RUVs(dge$counts, cIdx=rownames(dge$counts), k=3, scIdx=differences)
+  tmm.4 &lt;- RUVs(dge$counts, cIdx=rownames(dge$counts), k=4, scIdx=differences)
+  tmm.5 &lt;- RUVs(dge$counts, cIdx=rownames(dge$counts), k=5, scIdx=differences)
+  tmm.6 &lt;- RUVs(dge$counts, cIdx=rownames(dge$counts), k=6, scIdx=differences)
+  tmm.7 &lt;- RUVs(dge$counts, cIdx=rownames(dge$counts), k=7, scIdx=differences)
+  tmm.8 &lt;- RUVs(dge$counts, cIdx=rownames(dge$counts), k=8, scIdx=differences)
+  tmm.9 &lt;- RUVs(dge$counts, cIdx=rownames(dge$counts), k=9, scIdx=differences)
+  tmm.10 &lt;- RUVs(dge$counts, cIdx=rownames(dge$counts), k=10, scIdx=differences)
+  plotMDS(tmm,top=dim(dge)[1],gene.selection=&quot;pairwise&quot;,col=c(rep(&quot;darkgreen&quot;,7),rep(&quot;darkorange&quot;,7)))
+  plotMDS(tmm.1$normalizedCounts,top=dim(dge)[1],gene.selection=&quot;pairwise&quot;,col=c(rep(&quot;darkgreen&quot;,7),rep(&quot;darkorange&quot;,7)))
+  
+  #design matrix - THOUGHT ABOUT SO MANY FORMULAS, BUT DECIDED THAT SPP+IND MAKES THE MOST SENSE AND MINIMIZES P INFLATION
+  #model &lt;- &quot;~Collection+nCount_RNA+percent.mt+Phase+(1|Individual)+(1|Replicate)+Species&quot;
+  #formula &lt;- ~Collection+nCount_RNA+percent.mt+Phase+(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- ~Collection+Species
+  #formula &lt;- ~Phase+Species
+  formula &lt;- ~(1|Individual)+Species
+  #formula &lt;- ~cdr+(1|Individual)+Species
+  #formula &lt;- ~percent.mt+(1|Individual)+Species
+  #formula &lt;- ~Phase+(1|Individual)+Species
+  #formula &lt;- ~percent.mt+Phase+(1|Individual)+Species
+  #formula &lt;- ~percent.mt+S.G2M.Diff+(1|Individual)+Species
+  #formula &lt;- ~S.G2M.Diff+(1|Individual)+Species
+  #formula &lt;- ~(1|Replicate)+Species
+  #formula &lt;- ~cdr+(1|Replicate)+Species
+  #formula &lt;- ~Phase+(1|Replicate)+Species
+  #formula &lt;- ~S.G2M.Diff+(1|Replicate)+Species
+  #formula &lt;- ~percent.mt+Phase+(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- ~percent.mt+S.G2M.Diff+(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- ~(1|Sample)+Species
+  #formula &lt;- ~(1|Sample)+(1|Individual)+Species
+  #formula &lt;- ~(1|Sample)+(1|Replicate)+Species
+  #formula &lt;- ~(1|Sample)+percent.mt+Species
+  #formula &lt;- ~(1|Sample)+Phase+Species
+  #formula &lt;- ~(1|Sample)+Phase+percent.mt+Species
+  #formula &lt;- ~(1|Sample)+(1|Replicate)+percent.mt+Species
+  #formula &lt;- ~(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- Individual+Species
+  #formula &lt;- ~Phase+(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- ~S.G2M.Diff+(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- ~Collection+(1|Sample)+Species
+  #formula &lt;- ~Collection+Phase+percent.mt+(1|Sample)+Species
+  #formula &lt;- ~Collection+(1|Individual)+Species
+  #formula &lt;- ~Collection+Phase+(1|Individual)+Species
+  #formula &lt;- ~Collection+Phase+percent.mt+(1|Individual)+Species
+  #formula &lt;- ~Collection+S.G2M.Diff+(1|Individual)+Species
+  #formula &lt;- ~Collection+(1|Replicate)+Species
+  #formula &lt;- ~Collection+(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- ~Collection+percent.mt+(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- ~Collection+Phase+(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- ~Collection+S.G2M.Diff+(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- ~Collection+Phase+percent.mt+(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- ~Collection+cdr+Species
+  #formula &lt;- ~Collection+cdr+(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- ~Collection+SequencingBatch+(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- ~percent.mt+(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- ~cdr+(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- ~SequencingBatch+(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- ~SequencingBatch+percent.mt+(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- ~SequencingBatch+Phase+(1|Individual)+Species
+  #formula &lt;- ~SequencingBatch+Phase+percent.mt+(1|Individual)+Species
+  #formula &lt;- ~SequencingBatch+Phase+(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- ~SequencingBatch+S.G2M.Diff+(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- ~SequencingBatch+Phase+percent.mt+(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- ~Collection+SequencingBatch+(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- ~Collection+SequencingBatch+percent.mt+(1|Individual)+(1|Replicate)+Species
+  #formula &lt;- ~SequencingBatch+(1|Sample)+Species
+  
+  #estimate weights using linear mixed model of dream (voom)
+  vobjDream = voomWithDreamWeights(dge, formula, dge$samples)
+  
+  #define contrasts - NOT NECESSARY
+  #L = getContrast(vobjDream, formula, dge$samples, coefficient=&quot;SpeciesHuman&quot;)
+  #plotContrasts(L)
+
+  #fit dream model on each gene
+  #fitmm = dream(vobjDream, formula, dge$samples, L)
+  fitmm = dream(vobjDream, formula, dge$samples)
+
+  #assess differential expression output for particular contrast
+  tt &lt;- topTable(fitmm, n=Inf, coef=&#39;SpeciesHuman&#39;, adjust.method=&quot;BH&quot;, p.value=1)
+  print(&quot;All DE Genes&quot;)
+  print(dim(tt))
+  print(table(tt$adj.P.Val&lt;0.01))
+  #print(table(tt$adj.P.Val&lt;0.05))
+  print(summary(decideTests(fitmm, adjust.method=&quot;BH&quot;, p.value=0.01)))
+  #print(summary(decideTests(fitmm, adjust.method=&quot;BH&quot;, p.value=0.05)))
+  #print(summary(decideTests(fitmm, adjust.method=&quot;BH&quot;, p.value=0.01, lfc=abs(1.2)))) #DON&#39;T ADJUST LOGFC DURING TEST
+
+  hist(tt$logFC)
+  hist(tt$adj.P.Val)
+  plot(tt$logFC, -log10(tt$adj.P.Val))
+  qqplot(-log10(runif(length(tt$adj.P.Val))),
+         -log10(tt$adj.P.Val),
+         xlab=&quot;-log10(Uniform)&quot;,
+         ylab=&quot;-log10(Adjusted p-Value)&quot;,
+         main=paste0(&quot;QQ Plot&quot;))
+  
+  abline(0,1)
+  
+  #assess variance partitioning - more variance explained by individual than species (which explains more than collection)
+  #formula.x = ~(1|Species)+(1|Individual)+(1|Collection)
+  formula.x = ~(1|Individual)+(1|Species)
+  vp = fitExtractVarPartModel(vobjDream, formula.x, dge$samples)
+  plotVarPart(sortCols(vp))
+  
+  #add details to output
+  tt$data &lt;- rep(scrna, dim(tt$table)[1])
+  tt$cell.assign &lt;- rep(cell.assign, dim(tt$table)[1])
+  tt$cell.subset &lt;- rep(cell.subset, dim(tt$table)[1])
+  tt$gene.filter &lt;- rep(filter.arg, dim(tt$table)[1])
+  tt$gene.filter.args &lt;- rep(paste0(&quot;min.count=&quot;,min.count), dim(tt$table)[1])
+  tt$model &lt;- rep(model, dim(tt$table)[1])
+  tt$comparison &lt;- rep(tt$comparison, dim(tt$table)[1])
+  tt$test &lt;- rep(tt$test, dim(tt$table)[1])
+  tt$adjust.method &lt;- rep(tt$adjust.method, dim(tt$table)[1])
+
+  return(tt)
+
+}</code></pre>
+</div>
+<div id="scripts-for-de-tests" class="section level2">
+<h2>Scripts for DE tests</h2>
+<p>Run DE analysis on cluster using one of the following scripts.</p>
+<p>DEdream.R</p>
+<ul>
+<li><p>This script examines pairwise DE in defined subsets of the data:</p>
+<ul>
+<li>Stages of differentiation: Time 0, Time 1, Time 2</li>
+<li>Unsupervised clustering (res=0.05): iPSC.c1, iPSC.c2, iPSC.c3, MSC.c1, Osteogenic.c1, Osteogenic.c2</li>
+<li>Unsupervised clustering (res=0.05): iPSC clusters (iPSC.c1, iPSC.c2, iPSC.c3), MSC clusters (MSC.c1), Osteogenic clusters (Osteogenic.c1, Osteogenic.c2)</li>
+<li>General ad hoc assignments: iPSCs, MSCs, Osteogenic cells</li>
+<li>Osteogenic ad hoc asssignments: preosteoblasts, osteoblasts, embedding osteoblasts, mineralizing osteoblasts, maturing osteocytes</li>
+<li>Osteogenic ad hoc asssignments (Time 2 cells only): preosteoblasts, osteoblasts, embedding osteoblasts, mineralizing osteoblasts, maturing osteocytes</li>
+</ul></li>
+<li><p>Several arguments can be supplied into this script:</p>
+<ul>
+<li>name = unique character string to use for output file</li>
+<li>data.source = which data integration to use (tot, t0, t1, t2)</li>
+<li>data.type = whether DE test should be run on pseudobulk or single-cell data (pseudo, sc)</li>
+<li>filter.arg = whether gene set for DE test should be filtered or not (TRUE, FALSE)</li>
+<li>filter.type = what parameter should gene set be filtered on (logcpm, min.count, pch)</li>
+<li>filter.param = numeric value indicating the minimum threshold that retained genes should meet for the provided filter.type</li>
+<li>fml = formula for linear mixed model (see formula list below)</li>
+<li>assign = which cell assignments should pairwise tests be performed in (all, stage, cluster, adhoc, ostadhoc, ostadhocX, ostadhoc.T2, ostadhocX.T2)</li>
+<li>lfc = whether logFC should be adjusted in DE test (NOTE: always set to FALSE)</li>
+<li>fdr = which FDR method should be used in DE test (NOTE: always set to BH)</li>
+</ul></li>
+</ul>
+<p>DEdreamsubset.R</p>
+<ul>
+<li><p>This script examines pairwise DE in defined subsets of the data (see above), with the option of subsetting the data in the following ways:</p>
+<ul>
+<li>replicate 1 samples removed</li>
+<li>replicate 2 samples removed</li>
+<li>cells within a given assignment subsetted to smallest number across species</li>
+</ul></li>
+<li><p>Several arguments can be supplied into this script:</p>
+<ul>
+<li>name = unique character string to use for output file</li>
+<li>data.source = which data integration to use (tot, t0, t1, t2)</li>
+<li>data.type = whether DE test should be run on pseudobulk or single-cell data (NOTE: always set to pseudo)</li>
+<li>subset.rep = which data subsetting should be performed (keepRep1, keepRep2, subNum)</li>
+<li>subset.num = whether cells within a given assignment subsetted to smallest number across species (TRUE, FALSE)</li>
+<li>filter.arg = whether gene set for DE test should be filtered or not (TRUE, FALSE)</li>
+<li>filter.type = what parameter should gene set be filtered on (logcpm, min.count, pch)</li>
+<li>filter.param = numeric value indicating the minimum threshold that retained genes should meet for the provided filter.type</li>
+<li>fml = formula for linear mixed model (see formula list below)</li>
+<li>assign = which cell assignments should pairwise tests be performed in (all, stage, cluster, adhoc, ostadhoc, ostadhocX, ostadhoc.T2, ostadhocX.T2)</li>
+<li>lfc = whether logFC should be adjusted in DE test (NOTE: always set to FALSE)</li>
+<li>fdr = which FDR method should be used in DE test (NOTE: always set to BH)</li>
+</ul></li>
+</ul>
+<p>Different formulas options:</p>
+<ul>
+<li><p>pseudobulk:</p>
+<ul>
+<li>formula1: ~Species+(1|Individual)+(1|Replicate)</li>
+<li>formula2: ~Species+Collection+percent.mt+Phase+(1|Individual)</li>
+<li>formula3: ~Species+percent.mt+Phase+(1|Sample)</li>
+<li>formula4: ~Species+(1|Individual)+(1|Replicate)</li>
+<li>formula5: ~Species+(1|Individual)</li>
+<li>formula6: ~Species+(1|Individual)</li>
+</ul></li>
+<li><p>single-cell:</p>
+<ul>
+<li>formula1: ~Species+(1|Individual)+(1|Replicate)</li>
+<li>formula2: ~Species+Collection+percent.mt+Phase+(1|Individual)</li>
+<li>formula3: ~Species+percent.mt+Phase+(1|Sample)</li>
+<li>formula4: ~Species+percent.mt+Phase+(1|Individual)+(1|Replicate)</li>
+<li>formula5: ~Species+percent.mt+Phase+(1|Individual)</li>
+<li>formula6: ~Species+percent.mt+Phase+(1|Individual.Replicate)</li>
+</ul></li>
+</ul>
+<p>Decided to proceed with the following:</p>
+<ul>
+<li>pseudocounts calculated as sum of raw single-cell UMI counts within each individual-replicate</li>
+<li>genes filtered to only those with average log2cpm&gt;0 in the particular dataset being tested</li>
+<li>TMM normalized pseudocounts and calculated cpm (prior.count=0.25)</li>
+<li>identified DE using limma+voom (via dream)</li>
+<li>formula6: ~Species+(1|Individual)</li>
+<li>FDR&lt;0.01</li>
+</ul>
+<pre class="bash"><code>
+#run DEdream.sh/DEdream.R and DEdreamsubset.sh/DEdreamsubset.R on cluster
+
+cd /project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA/code/
+
+#pseudobulk DE analyses
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 stage
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 cluster
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 adhoc
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostcluster0.50
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostcluster0.75
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostcluster0.50.T2
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostcluster0.75.T2
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostadhoc
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostadhocX
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostadhoc.T2
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml6.nofc.bh tot pseudo TRUE logcpm 0 formula6 ostadhocX.T2
+
+#pseudobulk DE analyses with replicate 1 samples removed
+sbatch ./DEdreamsubset.sh tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh tot keepRep1 FALSE TRUE logcpm 0 formula6 stage
+sbatch ./DEdreamsubset.sh tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh tot keepRep1 FALSE TRUE logcpm 0 formula6 cluster
+sbatch ./DEdreamsubset.sh tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh tot keepRep1 FALSE TRUE logcpm 0 formula6 adhoc
+sbatch ./DEdreamsubset.sh tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh tot keepRep1 FALSE TRUE logcpm 0 formula6 ostcluster0.50
+sbatch ./DEdreamsubset.sh tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh tot keepRep1 FALSE TRUE logcpm 0 formula6 ostcluster0.75
+sbatch ./DEdreamsubset.sh tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh tot keepRep1 FALSE TRUE logcpm 0 formula6 ostcluster0.50.T2
+sbatch ./DEdreamsubset.sh tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh tot keepRep1 FALSE TRUE logcpm 0 formula6 ostcluster0.75.T2
+sbatch ./DEdreamsubset.sh tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh tot keepRep1 FALSE TRUE logcpm 0 formula6 ostadhoc
+sbatch ./DEdreamsubset.sh tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh tot keepRep1 FALSE TRUE logcpm 0 formula6 ostadhocX
+sbatch ./DEdreamsubset.sh tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh tot keepRep1 FALSE TRUE logcpm 0 formula6 ostadhoc.T2
+sbatch ./DEdreamsubset.sh tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh tot keepRep1 FALSE TRUE logcpm 0 formula6 ostadhocX.T2
+
+#pseudobulk DE analyses with replicate 2 samples removed
+sbatch ./DEdreamsubset.sh tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh tot keepRep2 FALSE TRUE logcpm 0 formula6 stage
+sbatch ./DEdreamsubset.sh tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh tot keepRep2 FALSE TRUE logcpm 0 formula6 cluster
+sbatch ./DEdreamsubset.sh tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh tot keepRep2 FALSE TRUE logcpm 0 formula6 adhoc
+sbatch ./DEdreamsubset.sh tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh tot keepRep2 FALSE TRUE logcpm 0 formula6 ostcluster0.50
+sbatch ./DEdreamsubset.sh tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh tot keepRep2 FALSE TRUE logcpm 0 formula6 ostcluster0.75
+sbatch ./DEdreamsubset.sh tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh tot keepRep2 FALSE TRUE logcpm 0 formula6 ostcluster0.50.T2
+sbatch ./DEdreamsubset.sh tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh tot keepRep2 FALSE TRUE logcpm 0 formula6 ostcluster0.75.T2
+sbatch ./DEdreamsubset.sh tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh tot keepRep2 FALSE TRUE logcpm 0 formula6 ostadhoc
+sbatch ./DEdreamsubset.sh tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh tot keepRep2 FALSE TRUE logcpm 0 formula6 ostadhocX
+sbatch ./DEdreamsubset.sh tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh tot keepRep2 FALSE TRUE logcpm 0 formula6 ostadhoc.T2
+sbatch ./DEdreamsubset.sh tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh tot keepRep2 FALSE TRUE logcpm 0 formula6 ostadhocX.T2
+
+#pseudobulk DE analyses with cells subsetted to smallest number across species
+sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 stage
+sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 cluster
+sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 adhoc
+sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 ostcluster0.50
+sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 ostcluster0.75
+sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 ostcluster0.50.T2
+sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 ostcluster0.75.T2
+sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 ostadhoc
+sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 ostadhocX
+sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 ostadhoc.T2
+sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE TRUE logcpm 0 formula6 ostadhocX.T2
+
+#single-cell DE analyses - NOT RUN
+#sbatch ./DEdream.sh tot.sc.pch20.fml6.nofc.bh tot sc TRUE pch 0.2 formula6 stage
+</code></pre>
+</div>
+<div id="do-a-quick-check-of-de-gene-data-output." class="section level2">
+<h2>Do a quick check of DE gene data output.</h2>
+<p>Similar trends in DE gene numbers seen when replicate 1 samples removed, replicate 2 samples removed, or cells are subsetted to smallest number across species.</p>
+<pre class="r"><code>compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.stage.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.cluster.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.adhoc.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.50.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.75.rds&quot;)
+#compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.50.T2.rds&quot;)
+#compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.75.T2.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhocX.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.T2.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhocX.T2.rds&quot;)
+
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh.stage.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh.cluster.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh.adhoc.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.50.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.75.rds&quot;)
+#compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.50.T2.rds&quot;)
+#compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.75.T2.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh.ostadhocX.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.T2.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep1.pseudo.logcpm0.fml6.nofc.bh.ostadhocX.T2.rds&quot;)
+
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh.stage.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh.cluster.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh.adhoc.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.50.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.75.rds&quot;)
+#compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.50.T2.rds&quot;)
+#compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.75.T2.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh.ostadhocX.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.T2.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.keepRep2.pseudo.logcpm0.fml6.nofc.bh.ostadhocX.T2.rds&quot;)
+
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.subNum.pseudo.logcpm0.fml6.nofc.bh.stage.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.subNum.pseudo.logcpm0.fml6.nofc.bh.cluster.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.subNum.pseudo.logcpm0.fml6.nofc.bh.adhoc.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.subNum.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.50.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.subNum.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.75.rds&quot;)
+#compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.subNum.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.50.T2.rds&quot;)
+#compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.subNum.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.75.T2.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.subNum.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.subNum.pseudo.logcpm0.fml6.nofc.bh.ostadhocX.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.subNum.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.T2.rds&quot;)
+compare &lt;- readRDS(&quot;./data/de-data/DEdream.tot.subNum.pseudo.logcpm0.fml6.nofc.bh.ostadhocX.T2.rds&quot;)
+
+colnames(compare)[5] &lt;- &quot;FDR&quot;
+
+#DE genes
+compare$DEgene &lt;- compare$FDR&lt;0.01
+#compare$DEgene &lt;- (compare$FDR&lt;0.05 &amp; abs(compare$logFC)&gt;0.5)
+#compare$DEgene &lt;- (compare$FDR&lt;0.01 &amp; abs(compare$logFC)&gt;1.2)
+
+#numbers of genes (total and DE)
+table(compare$cell.subset)
+#table(compare$cell.subset[which(compare$FDR&lt;0.1)])
+#table(compare$cell.subset[which(compare$FDR&lt;0.05)])
+table(compare$cell.subset[which(compare$FDR&lt;0.01)])
+#table(compare$cell.subset[which(compare$FDR&lt;0.05 &amp; abs(compare$logFC)&gt;.5)])
+#table(compare$cell.subset[which(compare$FDR&lt;0.05 &amp; abs(compare$logFC)&gt;1.2)])
+#table(compare$cell.subset[which(compare$FDR&lt;0.01 &amp; abs(compare$logFC)&gt;1.2)])
+
+#logFC
+ggplot(compare, aes(x=logFC)) +
+  geom_histogram(binwidth=0.2) +
+  facet_grid(~cell.subset)
+
+#FDR
+ggplot(compare, aes(x=FDR)) +
+  geom_histogram(binwidth=0.05) +
+  facet_grid(~cell.subset)
+
+#change FDR=0 to lowest non-zero FDR value
+for (i in unique(compare$cell.subset)) {
+  compare$FDR[which(compare$FDR==0 &amp; compare$cell.subset==i)] &lt;- min(compare$FDR[which(compare$FDR!=0 &amp; compare$cell.subset==i)])
+}
+
+#volcano plot
+ggplot(compare, aes(x=logFC,y=-log10(FDR),color=DEgene)) +
+  geom_point() +
+  scale_color_manual(values=c(&quot;TRUE&quot;=&quot;red&quot;,&quot;FALSE&quot;=&quot;black&quot;)) +
+  geom_vline(xintercept=c(-0.5,0.5)) +
+  geom_hline(yintercept=-log10(0.01)) +
+  facet_grid(~cell.subset)
+#EnhancedVolcano(compare,lab=rownames(compare),x=&quot;logFC&quot;,y=&quot;FDR&quot;)
+
+#qqplot
+par(mfrow=c(1,length(unique(compare$cell.subset))))
+for (i in unique(compare$cell.subset)) {
+  qqplot(-log10(runif(length(compare$FDR[which(compare$cell.subset==i)]))),
+       -log10(compare$FDR[which(compare$cell.subset==i)]),
+       xlab=&quot;-log10(Uniform)&quot;,
+       ylab=&quot;-log10(FDR)&quot;,
+       main=paste0(&quot;QQ Plot: &quot;,i))
+  abline(0,1)
+}</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.6.1 (2019-07-05)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Scientific Linux 7.4 (Nitrogen)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.2.19-el7-x86_64/lib/libopenblas_haswellp-r0.2.19.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+ [1] parallel  stats4    grid      stats     graphics  grDevices utils    
+ [8] datasets  methods   base     
+
+other attached packages:
+ [1] RUVSeq_1.18.0               EDASeq_2.18.0              
+ [3] ShortRead_1.42.0            GenomicAlignments_1.20.1   
+ [5] Rsamtools_2.0.0             Biostrings_2.52.0          
+ [7] XVector_0.24.0              viridis_0.5.1              
+ [9] viridisLite_0.3.0           enrichplot_1.4.0           
+[11] Rgraphviz_2.28.0            graph_1.62.0               
+[13] org.Hs.eg.db_3.8.2          AnnotationDbi_1.46.0       
+[15] clusterProfiler_3.12.0      UpSetR_1.4.0               
+[17] purrr_0.3.4                 variancePartition_1.14.1   
+[19] scales_1.1.1                foreach_1.4.4              
+[21] scran_1.12.1                SingleCellExperiment_1.6.0 
+[23] SummarizedExperiment_1.14.1 DelayedArray_0.10.0        
+[25] BiocParallel_1.18.0         matrixStats_0.57.0         
+[27] Biobase_2.44.0              GenomicRanges_1.36.0       
+[29] GenomeInfoDb_1.20.0         IRanges_2.18.1             
+[31] S4Vectors_0.22.1            BiocGenerics_0.30.0        
+[33] edgeR_3.26.5                limma_3.40.6               
+[35] RColorBrewer_1.1-2          colorspace_2.0-0           
+[37] gbm_2.1.5                   ggplot2_3.3.2              
+[39] stringr_1.4.0               stringi_1.4.3              
+[41] dplyr_1.0.2                 Seurat_3.1.3               
+
+loaded via a namespace (and not attached):
+  [1] rappdirs_0.3.1           rtracklayer_1.44.0      
+  [3] R.methodsS3_1.7.1        tidyr_1.1.2             
+  [5] bit64_0.9-7              knitr_1.23              
+  [7] irlba_2.3.3              aroma.light_3.14.0      
+  [9] R.utils_2.9.0            data.table_1.13.2       
+ [11] hwriter_1.3.2            RCurl_1.98-1.1          
+ [13] doParallel_1.0.14        generics_0.1.0          
+ [15] GenomicFeatures_1.36.3   metap_1.1               
+ [17] cowplot_1.1.0            RSQLite_2.1.1           
+ [19] RANN_2.6.1               europepmc_0.3           
+ [21] future_1.14.0            bit_1.1-14              
+ [23] xml2_1.3.2               httpuv_1.5.1            
+ [25] xfun_0.8                 hms_0.5.3               
+ [27] evaluate_0.14            promises_1.1.1          
+ [29] progress_1.2.2           caTools_1.17.1.2        
+ [31] geneplotter_1.62.0       igraph_1.2.4.1          
+ [33] DBI_1.1.0                htmlwidgets_1.5.2       
+ [35] ellipsis_0.3.1           annotate_1.62.0         
+ [37] gbRd_0.4-11              biomaRt_2.40.1          
+ [39] RcppParallel_5.0.2       vctrs_0.3.5             
+ [41] ROCR_1.0-7               withr_2.3.0             
+ [43] ggforce_0.2.2            triebeard_0.3.0         
+ [45] sctransform_0.2.0        prettyunits_1.1.1       
+ [47] cluster_2.1.0            DOSE_3.10.2             
+ [49] ape_5.4-1                lazyeval_0.2.2          
+ [51] crayon_1.3.4             genefilter_1.66.0       
+ [53] pkgconfig_2.0.3          tweenr_1.0.1            
+ [55] nlme_3.1-140             vipor_0.4.5             
+ [57] rlang_0.4.9              globals_0.12.4          
+ [59] lifecycle_0.2.0          rsvd_1.0.1              
+ [61] rprojroot_2.0.2          polyclip_1.10-0         
+ [63] lmtest_0.9-37            Matrix_1.2-18           
+ [65] urltools_1.7.3           boot_1.3-23             
+ [67] zoo_1.8-6                beeswarm_0.2.3          
+ [69] whisker_0.3-2            ggridges_0.5.1          
+ [71] png_0.1-7                bitops_1.0-6            
+ [73] R.oo_1.22.0              KernSmooth_2.23-15      
+ [75] blob_1.2.0               DelayedMatrixStats_1.6.1
+ [77] workflowr_1.6.2          qvalue_2.16.0           
+ [79] gridGraphics_0.4-1       memoise_1.1.0           
+ [81] magrittr_2.0.1           plyr_1.8.4              
+ [83] ica_1.0-2                gplots_3.0.1.1          
+ [85] bibtex_0.4.2             gdata_2.18.0            
+ [87] zlibbioc_1.30.0          compiler_3.6.1          
+ [89] lsei_1.2-0               dqrng_0.2.1             
+ [91] lme4_1.1-23              fitdistrplus_1.0-14     
+ [93] listenv_0.7.0            pbapply_1.4-0           
+ [95] MASS_7.3-51.4            tidyselect_1.1.0        
+ [97] yaml_2.2.1               GOSemSim_2.10.0         
+ [99] BiocSingular_1.0.0       locfit_1.5-9.1          
+[101] latticeExtra_0.6-28      ggrepel_0.8.2           
+[103] fastmatch_1.1-0          tools_3.6.1             
+[105] future.apply_1.3.0       git2r_0.26.1            
+[107] gridExtra_2.3            farver_2.0.3            
+[109] Rtsne_0.15               ggraph_1.0.2            
+[111] digest_0.6.27            rvcheck_0.1.3           
+[113] Rcpp_1.0.5               later_1.1.0.1           
+[115] RcppAnnoy_0.0.12         httr_1.4.2              
+[117] npsurv_0.4-0             Rdpack_0.11-0           
+[119] XML_3.98-1.20            fs_1.3.1                
+[121] reticulate_1.16          splines_3.6.1           
+[123] uwot_0.1.5               statmod_1.4.32          
+[125] scater_1.12.2            ggplotify_0.0.3         
+[127] plotly_4.9.2.1           xtable_1.8-4            
+[129] jsonlite_1.7.1           nloptr_1.2.2.1          
+[131] dynamicTreeCut_1.63-1    R6_2.5.0                
+[133] pillar_1.4.7             htmltools_0.5.0         
+[135] glue_1.4.2               minqa_1.2.4             
+[137] BiocNeighbors_1.2.0      DESeq_1.36.0            
+[139] codetools_0.2-16         fgsea_1.15.1            
+[141] tsne_0.1-3               lattice_0.20-38         
+[143] tibble_3.0.4             pbkrtest_0.4-7          
+[145] ggbeeswarm_0.6.0         leiden_0.3.1            
+[147] colorRamps_2.3           gtools_3.8.1            
+[149] GO.db_3.8.2              survival_2.44-1.1       
+[151] rmarkdown_1.13           munsell_0.5.0           
+[153] DO.db_2.9                GenomeInfoDbData_1.2.1  
+[155] iterators_1.0.10         reshape2_1.4.3          
+[157] gtable_0.3.0            </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

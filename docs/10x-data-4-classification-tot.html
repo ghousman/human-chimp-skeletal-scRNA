@@ -427,7 +427,7 @@ div.tocify {
 
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
-<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 </button>
 </p>
 <div id="workflowr-report" class="collapse">
@@ -436,7 +436,7 @@ div.tocify {
 <a data-toggle="tab" href="#summary">Summary</a>
 </li>
 <li>
-<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -445,10 +445,10 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-05-20
+<strong>Last updated:</strong> 2021-08-08
 </p>
 <p>
-<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
 </p>
 <p>
 <strong>Knit directory:</strong> <code>human-chimp-skeletal-scRNA/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
@@ -464,12 +464,12 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown file has unstaged changes. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
 </div>
 </div>
 </div>
@@ -536,16 +536,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtree325664d831fec2328643e91fec129a88f26fde72targetblank325664da"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/325664d831fec2328643e91fec129a88f26fde72" target="_blank">325664d</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreefd98145b0ad57351357e829de8f6f7ef4bd3261dtargetblankfd98145a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/fd98145b0ad57351357e829de8f6f7ef4bd3261d" target="_blank">fd98145</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtree325664d831fec2328643e91fec129a88f26fde72targetblank325664da" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreefd98145b0ad57351357e829de8f6f7ef4bd3261dtargetblankfd98145a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/325664d831fec2328643e91fec129a88f26fde72" target="_blank">325664d</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/fd98145b0ad57351357e829de8f6f7ef4bd3261d" target="_blank">fd98145</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -556,302 +556,53 @@ Ignored files:
     Ignored:    .Rproj.user/
 
 Untracked files:
-    Untracked:  analysis/10x-plot-enrichment-gom.Rmd
-    Untracked:  analysis/TODO_10x-data-4-classification-t2.Rmd
-    Untracked:  analysis/TODO_10x-data-4-classification.Rmd
-    Untracked:  analysis/TODO_10x-data-4-reclassification-tot.Rmd
-    Untracked:  analysis/TODO_10x-data-5-diffexp.Rmd
-    Untracked:  analysis/TODO_10x-data-6-conservexp.Rmd
-    Untracked:  analysis/TODO_10x-data-6-cormotif-t2.Rmd
-    Untracked:  analysis/TODO_10x-data-6-cormotif-tot.Rmd
-    Untracked:  analysis/TODO_10x-data-6-variance-t2.Rmd
-    Untracked:  analysis/TODO_10x-data-6-variance-tot.Rmd
-    Untracked:  analysis/TODO_10x-data-7-enrichment.Rmd
-    Untracked:  analysis/TODO_10x-data-8-batch-correlation.Rmd
-    Untracked:  analysis/TODO_10x-plot-diffexp.Rmd
-    Untracked:  analysis/TODO_10x-plot-replicate-correlation-t2.Rmd
-    Untracked:  analysis/TODO_10x-plot-replicate-correlation-tot.Rmd
-    Untracked:  analysis/TODO_10x-plot-utf1-tac3.Rmd
-    Untracked:  analysis/TODO_10x-view-batch-effects.Rmd
-    Untracked:  analysis/TODO_10x-view-data-metrics.Rmd
-    Untracked:  analysis/TODO_10x-view-species-assignments.Rmd
-    Untracked:  analysis/TODO_10x-view-validation-data.Rmd
-    Untracked:  analysis/v2/
-    Untracked:  code/FindMarkers.R
-    Untracked:  code/FindMarkers.sh
-    Untracked:  code/FindMarkers_0.1.err
-    Untracked:  code/FindMarkers_0.1.out
-    Untracked:  code/FindMarkers_0.25.err
-    Untracked:  code/FindMarkers_0.25.out
-    Untracked:  code/FindMarkers_0.5.err
-    Untracked:  code/FindMarkers_0.5.out
-    Untracked:  code/FindMarkers_0.75.err
-    Untracked:  code/FindMarkers_0.75.out
-    Untracked:  code/FindMarkers_1.err
-    Untracked:  code/FindMarkers_1.out
-    Untracked:  code/GoM.R
-    Untracked:  code/GoM.sh
-    Untracked:  code/fastTopics.R
-    Untracked:  code/fastTopics.sh
-    Untracked:  code/fastTopicsBC.R
-    Untracked:  code/fastTopicsBC.sh
-    Untracked:  code/fastTopicsBC_3_tot.err
-    Untracked:  code/fastTopicsBC_3_tot.out
-    Untracked:  code/fastTopicsBC_4_tot.err
-    Untracked:  code/fastTopicsBC_4_tot.out
-    Untracked:  code/fastTopicsBC_5_tot.err
-    Untracked:  code/fastTopicsBC_5_tot.out
-    Untracked:  code/fastTopicsBC_6_tot.err
-    Untracked:  code/fastTopicsBC_6_tot.out
-    Untracked:  code/fastTopicsBC_7_tot.err
-    Untracked:  code/fastTopicsBC_7_tot.out
-    Untracked:  code/fastTopicsSpp.R
-    Untracked:  code/fastTopicsSpp.sh
-    Untracked:  code/fastTopicsSppBC.R
-    Untracked:  code/fastTopicsSppBC.sh
-    Untracked:  code/fastTopicsSppBC_3_tot.err
-    Untracked:  code/fastTopicsSppBC_3_tot.out
-    Untracked:  code/fastTopicsSppBC_4_tot.err
-    Untracked:  code/fastTopicsSppBC_4_tot.out
-    Untracked:  code/fastTopicsSppBC_5_tot.err
-    Untracked:  code/fastTopicsSppBC_5_tot.out
-    Untracked:  code/fastTopicsSppBC_6_tot.err
-    Untracked:  code/fastTopicsSppBC_6_tot.out
-    Untracked:  code/fastTopicsSppBC_7_tot.err
-    Untracked:  code/fastTopicsSppBC_7_tot.out
-    Untracked:  code/fastTopicsSpp_3_tot.err
-    Untracked:  code/fastTopicsSpp_3_tot.out
-    Untracked:  code/fastTopicsSpp_4_tot.err
-    Untracked:  code/fastTopicsSpp_4_tot.out
-    Untracked:  code/fastTopicsSpp_5_tot.err
-    Untracked:  code/fastTopicsSpp_5_tot.out
-    Untracked:  code/fastTopicsSpp_6_tot.err
-    Untracked:  code/fastTopicsSpp_6_tot.out
-    Untracked:  code/fastTopicsSpp_7_tot.err
-    Untracked:  code/fastTopicsSpp_7_tot.out
-    Untracked:  code/fastTopics_3_tot.err
-    Untracked:  code/fastTopics_3_tot.out
-    Untracked:  code/fastTopics_4_tot.err
-    Untracked:  code/fastTopics_4_tot.out
-    Untracked:  code/fastTopics_5_tot.err
-    Untracked:  code/fastTopics_5_tot.out
-    Untracked:  code/fastTopics_6_tot.err
-    Untracked:  code/fastTopics_6_tot.out
-    Untracked:  code/fastTopics_7_tot.err
-    Untracked:  code/fastTopics_7_tot.out
-    Untracked:  code/v2/
     Untracked:  data/HumanPrimaryCellAtlasData-SingleR
     Untracked:  data/HumanPrimaryCellAtlasDetails-SingleR.csv
     Untracked:  data/HumanPrimaryCellAtlasLabels-SingleR.csv
-    Untracked:  data/alizarin-red-quant-total.csv
     Untracked:  data/cell_atlas_ref_panel
     Untracked:  data/cellranger-data-full/
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-cluster8.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/corrmatrix.ost
-    Untracked:  data/de-data/
-    Untracked:  data/facs-MSC-collection-summary-sample-avg.csv
-    Untracked:  data/facs-MSC-collection-summary-species-avg.csv
-    Untracked:  data/facs-MSC-collection-summary-total.csv
-    Untracked:  data/gom-data/
-    Untracked:  data/oil-red-quant-total.csv
-    Untracked:  data/scrna-batch-reformat.csv
-    Untracked:  data/scrna-batch.csv
-    Untracked:  output/data-qc-post-subsets-batchcor.pdf
+    Untracked:  data/gom-data/v2/gom10.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom3.100genes.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom3.100genes.log.indv-cell.int19k.reg-tot.rds
+    Untracked:  data/gom-data/v2/gom3.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom3.log.indv-cell.int19k.reg-tot.rds
+    Untracked:  data/gom-data/v2/gom4.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom5.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom6.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom7.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom8.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom9.log.indv-cell.int19k.reg-t2.rds
     Untracked:  output/data-qc-post-subsets-batchviz.pdf
-    Untracked:  output/data-qc-postfilterC-subsets-batchcor.pdf
     Untracked:  output/data-qc-postfilterC-subsets-batchviz.pdf
-    Untracked:  output/data-qc-postfilterC-subsets-int19k-batchcor.pdf
     Untracked:  output/data-qc-postfilterC-subsets-int19k-batchviz.pdf
-    Untracked:  output/data-qc-postfilterC-subsets-int19k.reg-batchcor.pdf
     Untracked:  output/data-qc-postfilterC-subsets-int19k.reg-batchviz.pdf
-    Untracked:  output/data-qc-postfilterC-subsets-intNo0-batchcor.pdf
     Untracked:  output/data-qc-postfilterC-subsets-intNo0-batchviz.pdf
-    Untracked:  output/data-qc-postfilterC-subsets-intNo0.reg-batchcor.pdf
     Untracked:  output/data-qc-postfilterC-subsets-intNo0.reg-batchviz.pdf
-    Untracked:  output/data-qc-postfilterC-subsets-merge-batchcor.pdf
     Untracked:  output/data-qc-postfilterC-subsets-merge-batchviz.pdf
-    Untracked:  output/data-qc-postfilterC.pdf
-    Untracked:  output/data-qc-postfilterL-subsets-batchcor.pdf
     Untracked:  output/data-qc-postfilterL-subsets-batchviz.pdf
-    Untracked:  output/data-qc-postfilterL-subsets-intNo0.reg-batchcor.pdf
     Untracked:  output/data-qc-postfilterL-subsets-intNo0.reg-batchviz.pdf
-    Untracked:  output/data-qc-postfilterL-subsets-merge-batchcor.pdf
     Untracked:  output/data-qc-postfilterL-subsets-merge-batchviz.pdf
-    Untracked:  output/data-qc-postfilterL.pdf
-    Untracked:  output/data-qc-prefilter.pdf
-    Untracked:  output/markers0.05-I.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markers0.05-M.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markers0.05-O.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markers0.05.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markers0.1.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markers0.25.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markers0.5.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markers0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markers1.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markersStage-I.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markersStage-M.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markersStage-O.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/v1/
-    Untracked:  output/v2/
+    Untracked:  output/v2/data-qc-postfilter-subsets-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-int-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-int19k-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-int19k.reg-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-merge-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets.reg-batchviz.pdf
 
 Unstaged changes:
-    Deleted:    analysis/10x-data-4-classification-t2.Rmd
-    Modified:   analysis/10x-data-4-classification-tot.Rmd
-    Deleted:    analysis/10x-data-4-classification.Rmd
-    Deleted:    analysis/10x-data-5-diffexp.Rmd
-    Deleted:    analysis/10x-data-6-conservexp.Rmd
-    Deleted:    analysis/10x-data-6-cormotif-t2.Rmd
-    Deleted:    analysis/10x-data-6-cormotif-tot.Rmd
-    Deleted:    analysis/10x-data-6-variance-t2.Rmd
-    Deleted:    analysis/10x-data-6-variance-tot.Rmd
-    Deleted:    analysis/10x-data-7-enrichment.Rmd
-    Deleted:    analysis/10x-data-8-batch-correlation.Rmd
-    Modified:   analysis/10x-plot-classification-adhoc.Rmd
-    Modified:   analysis/10x-plot-classification.Rmd
-    Deleted:    analysis/10x-plot-diffexp.Rmd
-    Deleted:    analysis/10x-plot-replicate-correlation-t2.Rmd
-    Deleted:    analysis/10x-plot-replicate-correlation-tot.Rmd
-    Deleted:    analysis/10x-plot-utf1-tac3.Rmd
-    Deleted:    analysis/10x-view-batch-effects.Rmd
-    Deleted:    analysis/10x-view-data-metrics.Rmd
-    Deleted:    analysis/10x-view-species-assignments.Rmd
-    Deleted:    analysis/10x-view-validation-data.Rmd
-    Deleted:    analysis/asbmr2020-plots.Rmd
-    Deleted:    analysis/ashg2020-plots.Rmd
-    Modified:   analysis/index.Rmd
-    Deleted:    analysis/temp-code.Rmd
-    Deleted:    analysis/v1/index.Rmd
-    Deleted:    analysis/v1/license.Rmd
-    Modified:   code/DEdream.R
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_FALSE.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_stage.out
-    Modified:   code/DEdreamsubset.R
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_adhoc.err
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_adhoc.out
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_cluster.err
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_cluster.out
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_ostadhoc.err
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_ostadhoc.out
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_stage.err
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_stage.out
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_adhoc.err
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_adhoc.out
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_cluster.err
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_cluster.out
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_ostadhoc.err
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_ostadhoc.out
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_stage.err
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_stage.out
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_adhoc.err
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_adhoc.out
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_cluster.err
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_cluster.out
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_ostadhoc.err
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_ostadhoc.out
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_stage.err
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_stage.out
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_adhoc.err
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_adhoc.out
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_cluster.err
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_cluster.out
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_ostadhoc.err
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_ostadhoc.out
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_stage.err
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_stage.out
+    Modified:   analysis/about.Rmd
+    Modified:   analysis/license.Rmd
+    Modified:   output/data-qc-prefilter.pdf
 
 </code></pre>
 <p>
@@ -890,6 +641,57 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/ghousman/human-chimp-skeletal-scRNA/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/10x-data-4-classification-tot.html" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+<td>
+initial docs
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/ffc61016dd695c8d383c7b1718025e1313beb58e/analysis/10x-data-4-classification-tot.Rmd" target="_blank">ffc6101</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-05-31
+</td>
+<td>
+checked osteogenic clusters
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/6d52043224b346f063dc61cee114dbc4ef4552ee/analysis/10x-data-4-classification-tot.Rmd" target="_blank">6d52043</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-05-20
+</td>
+<td>
+corrected osteogenic ad hoc assignments
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -1350,19 +1152,63 @@ H1.I_AAACCCAGTTATGGTC                   not osteogenic
 H1.I_AAACCCATCGTGGAAG                   not osteogenic
 H1.I_AAACCCATCTCGAGTA                   not osteogenic
 H1.I_AAACGAAAGGATCATA                   not osteogenic
-                      Individual.Replicate
-H1.I_AAACCCAAGCACCCAC                 H1.1
-H1.I_AAACCCACACAAGTTC                 H1.1
-H1.I_AAACCCAGTTATGGTC                 H1.1
-H1.I_AAACCCATCGTGGAAG                 H1.1
-H1.I_AAACCCATCTCGAGTA                 H1.1
-H1.I_AAACGAAAGGATCATA                 H1.1</code></pre>
+                      Individual.Replicate Cluster0.75 OstCluster0.05
+H1.I_AAACCCAAGCACCCAC                 H1.1     iPSC.c1 not osteogenic
+H1.I_AAACCCACACAAGTTC                 H1.1     iPSC.c3 not osteogenic
+H1.I_AAACCCAGTTATGGTC                 H1.1     iPSC.c2 not osteogenic
+H1.I_AAACCCATCGTGGAAG                 H1.1     iPSC.c3 not osteogenic
+H1.I_AAACCCATCTCGAGTA                 H1.1     iPSC.c1 not osteogenic
+H1.I_AAACGAAAGGATCATA                 H1.1     iPSC.c2 not osteogenic
+                      OstCluster0.25 OstCluster0.50 OstCluster0.75
+H1.I_AAACCCAAGCACCCAC not osteogenic not osteogenic not osteogenic
+H1.I_AAACCCACACAAGTTC not osteogenic not osteogenic not osteogenic
+H1.I_AAACCCAGTTATGGTC not osteogenic not osteogenic not osteogenic
+H1.I_AAACCCATCGTGGAAG not osteogenic not osteogenic not osteogenic
+H1.I_AAACCCATCTCGAGTA not osteogenic not osteogenic not osteogenic
+H1.I_AAACGAAAGGATCATA not osteogenic not osteogenic not osteogenic</code></pre>
 <pre class="r"><code>DimPlot(data,
         group.by=&quot;Stage&quot;,
         reduction=&quot;umap&quot;,
         cols=c(&quot;pink&quot;,&quot;mediumorchid&quot;,&quot;dodgerblue&quot;)) +
   labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;)</code></pre>
 <p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-3-1">
+Past versions of unnamed-chunk-3-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-3-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-3-1.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <div id="seurat-clustering" class="section level2">
 <h2>Seurat Clustering</h2>
 <pre><code>                           tot.intNo0.reg</code></pre>
@@ -1420,12 +1266,123 @@ CombinePlots(plots=list((DimPlot(data, group.by=x, reduction=&quot;pca&quot;, di
                         (DimPlot(data, group.by=x, reduction=&quot;pca&quot;, dims=c(7,8)) + labs(x=&quot;PC7&quot;,y=&quot;PC8&quot;)),
                         (DimPlot(data, group.by=x, reduction=&quot;pca&quot;, dims=c(9,10)) + labs(x=&quot;PC9&quot;,y=&quot;PC10&quot;))), ncol=5)</code></pre>
 <p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-1">
+Past versions of unnamed-chunk-9-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-9-1.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>DimPlot(data, group.by=x, reduction=&quot;umap&quot;) + labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;)</code></pre>
 <p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-2">
+Past versions of unnamed-chunk-9-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-9-2.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>CombinePlots(plots=list((DimPlot(subset(data,subset=Species==&quot;Human&quot;), split.by=x, reduction=&quot;umap&quot;) + labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;)),
                         (DimPlot(subset(data,subset=Species==&quot;Chimp&quot;), split.by=x, reduction=&quot;umap&quot;) + labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;))),
              ncol=1)</code></pre>
 <p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-9-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-3">
+Past versions of unnamed-chunk-9-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-9-3.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>CombinePlots(plots=list((DimPlot(subset(data,subset=Stage==&quot;Time 0&quot;), split.by=x, reduction=&quot;umap&quot;) + labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;)),
                         (DimPlot(subset(data,subset=Stage==&quot;Time 1&quot;), split.by=x, reduction=&quot;umap&quot;) + labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;)),
                         (DimPlot(subset(data,subset=Stage==&quot;Time 2&quot;), split.by=x, reduction=&quot;umap&quot;) + labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;))),
@@ -1433,7 +1390,44 @@ CombinePlots(plots=list((DimPlot(data, group.by=x, reduction=&quot;pca&quot;, di
 <pre><code>Warning: Graphs cannot be vertically aligned unless the axis parameter is
 set. Placing graphs unaligned.</code></pre>
 <p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-9-4.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Define new metadata label for clusters (resolution=0.05).</p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-4">
+Past versions of unnamed-chunk-9-4.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-9-4.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Define new metadata label for general clusters (resolution=0.05,0.25,0.50) and osteogenic clusters (resolution=0.05,0.25,0.50,0.75).</p>
 <pre class="r"><code>#resolution=0.05
 data &lt;- AddMetaData(data, rep(NA,length(rownames(data@meta.data))), col.name=&quot;Cluster0.05&quot;)
 data$Cluster0.05[which(data$integrated_snn_res.0.05==&quot;1&quot;)] &lt;- &quot;iPSC.c1&quot;
@@ -1475,7 +1469,95 @@ data$Cluster0.50[which(data$integrated_snn_res.0.5==&quot;5&quot;)]  &lt;- &quot
 data$Cluster0.50[which(data$integrated_snn_res.0.5==&quot;0&quot;)]  &lt;- &quot;Osteogenic.c1&quot;
 data$Cluster0.50[which(data$integrated_snn_res.0.5==&quot;13&quot;)] &lt;- &quot;Osteogenic.c2&quot;
 data$Cluster0.50[which(data$integrated_snn_res.0.5==&quot;8&quot;)]  &lt;- &quot;Osteogenic.c3&quot;
-data$Cluster0.50[which(data$integrated_snn_res.0.5==&quot;6&quot;)]  &lt;- &quot;Osteogenic.c4&quot;</code></pre>
+data$Cluster0.50[which(data$integrated_snn_res.0.5==&quot;6&quot;)]  &lt;- &quot;Osteogenic.c4&quot;
+
+#resolution=0.75
+data &lt;- AddMetaData(data, rep(NA,length(rownames(data@meta.data))), col.name=&quot;Cluster0.75&quot;)
+data$Cluster0.75[which(data$integrated_snn_res.0.75==&quot;1&quot;)]  &lt;- &quot;iPSC.c1&quot;
+data$Cluster0.75[which(data$integrated_snn_res.0.75==&quot;3&quot;)]  &lt;- &quot;iPSC.c2&quot;
+data$Cluster0.75[which(data$integrated_snn_res.0.75==&quot;7&quot;)]  &lt;- &quot;iPSC.c3&quot;
+data$Cluster0.75[which(data$integrated_snn_res.0.75==&quot;13&quot;)] &lt;- &quot;iPSC.c4&quot;
+data$Cluster0.75[which(data$integrated_snn_res.0.75==&quot;15&quot;)] &lt;- &quot;iPSC.c5&quot;
+data$Cluster0.75[which(data$integrated_snn_res.0.75==&quot;11&quot;)] &lt;- &quot;iPSC.c6&quot;
+data$Cluster0.75[which(data$integrated_snn_res.0.75==&quot;14&quot;)] &lt;- &quot;iPSC.c7&quot;
+data$Cluster0.75[which(data$integrated_snn_res.0.75==&quot;18&quot;)] &lt;- &quot;iPSC.c8&quot;
+data$Cluster0.75[which(data$integrated_snn_res.0.75==&quot;0&quot;)]  &lt;- &quot;MSC.c1&quot;
+data$Cluster0.75[which(data$integrated_snn_res.0.75==&quot;4&quot;)]  &lt;- &quot;MSC.c2&quot;
+data$Cluster0.75[which(data$integrated_snn_res.0.75==&quot;2&quot;)]  &lt;- &quot;MSC.c3&quot;
+data$Cluster0.75[which(data$integrated_snn_res.0.75==&quot;9&quot;)]  &lt;- &quot;MSC.c4&quot;
+data$Cluster0.75[which(data$integrated_snn_res.0.75==&quot;5&quot;)]  &lt;- &quot;Osteogenic.c1&quot;
+data$Cluster0.75[which(data$integrated_snn_res.0.75==&quot;8&quot;)]  &lt;- &quot;Osteogenic.c2&quot;
+data$Cluster0.75[which(data$integrated_snn_res.0.75==&quot;10&quot;)] &lt;- &quot;Osteogenic.c3&quot;
+data$Cluster0.75[which(data$integrated_snn_res.0.75==&quot;6&quot;)]  &lt;- &quot;Osteogenic.c4&quot;
+data$Cluster0.75[which(data$integrated_snn_res.0.75==&quot;12&quot;)] &lt;- &quot;Osteogenic.c5&quot;
+data$Cluster0.75[which(data$integrated_snn_res.0.75==&quot;16&quot;)] &lt;- &quot;Osteogenic.c6&quot;
+data$Cluster0.75[which(data$integrated_snn_res.0.75==&quot;17&quot;)] &lt;- &quot;Osteogenic.c7&quot;
+data$Cluster0.75[which(data$integrated_snn_res.0.75==&quot;19&quot;)] &lt;- &quot;Osteogenic.c8&quot;</code></pre>
+<pre class="r"><code>#resolution=0.05
+data &lt;- AddMetaData(data, rep(NA,length(rownames(data@meta.data))), col.name=&quot;OstCluster0.05&quot;)
+data$OstCluster0.05[which(data$integrated_snn_res.0.05==&quot;1&quot;)] &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.05[which(data$integrated_snn_res.0.05==&quot;4&quot;)] &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.05[which(data$integrated_snn_res.0.05==&quot;5&quot;)] &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.05[which(data$integrated_snn_res.0.05==&quot;0&quot;)] &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.05[which(data$integrated_snn_res.0.05==&quot;2&quot;)] &lt;- &quot;Osteogenic.c1&quot;
+data$OstCluster0.05[which(data$integrated_snn_res.0.05==&quot;3&quot;)] &lt;- &quot;Osteogenic.c2&quot;
+
+#resolution=0.25
+data &lt;- AddMetaData(data, rep(NA,length(rownames(data@meta.data))), col.name=&quot;OstCluster0.25&quot;)
+data$OstCluster0.25[which(data$integrated_snn_res.0.25==&quot;2&quot;)]  &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.25[which(data$integrated_snn_res.0.25==&quot;3&quot;)]  &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.25[which(data$integrated_snn_res.0.25==&quot;9&quot;)]  &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.25[which(data$integrated_snn_res.0.25==&quot;7&quot;)]  &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.25[which(data$integrated_snn_res.0.25==&quot;10&quot;)] &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.25[which(data$integrated_snn_res.0.25==&quot;11&quot;)] &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.25[which(data$integrated_snn_res.0.25==&quot;0&quot;)]  &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.25[which(data$integrated_snn_res.0.25==&quot;4&quot;)]  &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.25[which(data$integrated_snn_res.0.25==&quot;8&quot;)]  &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.25[which(data$integrated_snn_res.0.25==&quot;1&quot;)]  &lt;- &quot;Osteogenic.c1&quot;
+data$OstCluster0.25[which(data$integrated_snn_res.0.25==&quot;6&quot;)]  &lt;- &quot;Osteogenic.c2&quot;
+data$OstCluster0.25[which(data$integrated_snn_res.0.25==&quot;5&quot;)]  &lt;- &quot;Osteogenic.c3&quot;
+
+#resolution=0.50
+data &lt;- AddMetaData(data, rep(NA,length(rownames(data@meta.data))), col.name=&quot;OstCluster0.50&quot;)
+data$OstCluster0.50[which(data$integrated_snn_res.0.5==&quot;2&quot;)]  &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.50[which(data$integrated_snn_res.0.5==&quot;3&quot;)]  &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.50[which(data$integrated_snn_res.0.5==&quot;9&quot;)]  &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.50[which(data$integrated_snn_res.0.5==&quot;12&quot;)] &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.50[which(data$integrated_snn_res.0.5==&quot;11&quot;)] &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.50[which(data$integrated_snn_res.0.5==&quot;10&quot;)] &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.50[which(data$integrated_snn_res.0.5==&quot;14&quot;)] &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.50[which(data$integrated_snn_res.0.5==&quot;15&quot;)] &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.50[which(data$integrated_snn_res.0.5==&quot;1&quot;)]  &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.50[which(data$integrated_snn_res.0.5==&quot;4&quot;)]  &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.50[which(data$integrated_snn_res.0.5==&quot;7&quot;)]  &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.50[which(data$integrated_snn_res.0.5==&quot;5&quot;)]  &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.50[which(data$integrated_snn_res.0.5==&quot;0&quot;)]  &lt;- &quot;Osteogenic.c1&quot;
+data$OstCluster0.50[which(data$integrated_snn_res.0.5==&quot;13&quot;)] &lt;- &quot;Osteogenic.c2&quot;
+data$OstCluster0.50[which(data$integrated_snn_res.0.5==&quot;8&quot;)]  &lt;- &quot;Osteogenic.c3&quot;
+data$OstCluster0.50[which(data$integrated_snn_res.0.5==&quot;6&quot;)]  &lt;- &quot;Osteogenic.c4&quot;
+
+#resolution=0.75
+data &lt;- AddMetaData(data, rep(NA,length(rownames(data@meta.data))), col.name=&quot;OstCluster0.75&quot;)
+data$OstCluster0.75[which(data$integrated_snn_res.0.75==&quot;1&quot;)]  &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.75[which(data$integrated_snn_res.0.75==&quot;3&quot;)]  &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.75[which(data$integrated_snn_res.0.75==&quot;7&quot;)]  &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.75[which(data$integrated_snn_res.0.75==&quot;13&quot;)] &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.75[which(data$integrated_snn_res.0.75==&quot;15&quot;)] &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.75[which(data$integrated_snn_res.0.75==&quot;11&quot;)] &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.75[which(data$integrated_snn_res.0.75==&quot;14&quot;)] &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.75[which(data$integrated_snn_res.0.75==&quot;18&quot;)] &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.75[which(data$integrated_snn_res.0.75==&quot;0&quot;)]  &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.75[which(data$integrated_snn_res.0.75==&quot;4&quot;)]  &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.75[which(data$integrated_snn_res.0.75==&quot;2&quot;)]  &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.75[which(data$integrated_snn_res.0.75==&quot;9&quot;)]  &lt;- &quot;not osteogenic&quot;
+data$OstCluster0.75[which(data$integrated_snn_res.0.75==&quot;5&quot;)]  &lt;- &quot;Osteogenic.c1&quot;
+data$OstCluster0.75[which(data$integrated_snn_res.0.75==&quot;8&quot;)]  &lt;- &quot;Osteogenic.c2&quot;
+data$OstCluster0.75[which(data$integrated_snn_res.0.75==&quot;10&quot;)] &lt;- &quot;Osteogenic.c3&quot;
+data$OstCluster0.75[which(data$integrated_snn_res.0.75==&quot;6&quot;)]  &lt;- &quot;Osteogenic.c4&quot;
+data$OstCluster0.75[which(data$integrated_snn_res.0.75==&quot;12&quot;)] &lt;- &quot;Osteogenic.c5&quot;
+data$OstCluster0.75[which(data$integrated_snn_res.0.75==&quot;16&quot;)] &lt;- &quot;Osteogenic.c6&quot;
+data$OstCluster0.75[which(data$integrated_snn_res.0.75==&quot;17&quot;)] &lt;- &quot;Osteogenic.c7&quot;
+data$OstCluster0.75[which(data$integrated_snn_res.0.75==&quot;19&quot;)] &lt;- &quot;Osteogenic.c8&quot;</code></pre>
 <pre class="r"><code>saveRDS(data, file=&quot;./data/cellranger-data-full/data.filterC.log.indv-cell.intNo0.reg-tot.assign.rds&quot;)</code></pre>
 <p>Make nicer plots of clusters: resolution=0.05</p>
 <pre class="r"><code>y &lt;- &quot;Cluster0.05&quot;
@@ -1486,7 +1568,44 @@ DimPlot(data,
         reduction=&quot;umap&quot;,
         cols=c(&quot;pink&quot;,&quot;pink4&quot;,&quot;grey&quot;,&quot;mediumorchid&quot;,&quot;dodgerblue&quot;,&quot;navyblue&quot;)) +
   labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-13-1">
+Past versions of unnamed-chunk-13-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-13-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-13-1.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>CombinePlots(plots=list((DimPlot(data,
                                  group.by=y,
                                  reduction=&quot;pca&quot;,
@@ -1517,7 +1636,44 @@ DimPlot(data,
                                  dims=c(9,10),
                                  cols=c(&quot;pink&quot;,&quot;pink4&quot;,&quot;grey&quot;,&quot;mediumorchid&quot;,&quot;dodgerblue&quot;,&quot;navyblue&quot;)) +
                            labs(x=&quot;PC9&quot;,y=&quot;PC10&quot;))), ncol=5)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-13-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-13-2">
+Past versions of unnamed-chunk-13-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-13-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-13-2.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>CombinePlots(plots=list((DimPlot(subset(data,subset=Species==&quot;Human&quot;),
                                  group.by=y,
                                  reduction=&quot;umap&quot;,
@@ -1528,7 +1684,44 @@ DimPlot(data,
                                  reduction=&quot;umap&quot;,
                                  cols=c(&quot;pink&quot;,&quot;pink4&quot;,&quot;grey&quot;,&quot;mediumorchid&quot;,&quot;dodgerblue&quot;,&quot;navyblue&quot;)) +
                            labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;))), ncol=2)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-12-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-13-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-13-3">
+Past versions of unnamed-chunk-13-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-13-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-13-3.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>CombinePlots(plots=list((DimPlot(subset(data,subset=Stage==&quot;Time 0&quot;),
                                  group.by=y,
                                  reduction=&quot;umap&quot;,
@@ -1544,7 +1737,44 @@ DimPlot(data,
                                  reduction=&quot;umap&quot;,
                                  cols=c(&quot;mediumorchid&quot;,&quot;dodgerblue&quot;,&quot;navyblue&quot;)) +
                            labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;))), ncol=3)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-12-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-13-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-13-4">
+Past versions of unnamed-chunk-13-4.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-13-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-13-4.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Make nicer plots of clusters: resolution=0.25</p>
 <pre class="r"><code>y &lt;- &quot;Cluster0.25&quot;
 #c(&quot;pink&quot;,&quot;palevioletred1&quot;,&quot;pink3&quot;,&quot;pink4&quot;,&quot;grey40&quot;,&quot;grey&quot;,&quot;mediumorchid&quot;,&quot;orchid4&quot;,&quot;purple&quot;,&quot;dodgerblue&quot;,&quot;dodgerblue4&quot;,&quot;navyblue&quot;)
@@ -1554,7 +1784,44 @@ DimPlot(data,
         reduction=&quot;umap&quot;,
         cols=c(&quot;pink&quot;,&quot;palevioletred1&quot;,&quot;pink3&quot;,&quot;pink4&quot;,&quot;grey40&quot;,&quot;grey&quot;,&quot;mediumorchid&quot;,&quot;orchid4&quot;,&quot;purple&quot;,&quot;dodgerblue&quot;,&quot;dodgerblue4&quot;,&quot;navyblue&quot;)) +
   labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-1">
+Past versions of unnamed-chunk-14-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-14-1.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>CombinePlots(plots=list((DimPlot(data,
                                  group.by=y,
                                  reduction=&quot;pca&quot;,
@@ -1585,7 +1852,44 @@ DimPlot(data,
                                  dims=c(9,10),
                                  cols=c(&quot;pink&quot;,&quot;palevioletred1&quot;,&quot;pink3&quot;,&quot;pink4&quot;,&quot;grey40&quot;,&quot;grey&quot;,&quot;mediumorchid&quot;,&quot;orchid4&quot;,&quot;purple&quot;,&quot;dodgerblue&quot;,&quot;dodgerblue4&quot;,&quot;navyblue&quot;)) +
                            labs(x=&quot;PC9&quot;,y=&quot;PC10&quot;))), ncol=5)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-13-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-14-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-2">
+Past versions of unnamed-chunk-14-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-14-2.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>CombinePlots(plots=list((DimPlot(subset(data,subset=Species==&quot;Human&quot;),
                                  group.by=y,
                                  reduction=&quot;umap&quot;,
@@ -1596,7 +1900,44 @@ DimPlot(data,
                                  reduction=&quot;umap&quot;,
                                  cols=c(&quot;pink&quot;,&quot;palevioletred1&quot;,&quot;pink3&quot;,&quot;pink4&quot;,&quot;grey40&quot;,&quot;grey&quot;,&quot;mediumorchid&quot;,&quot;orchid4&quot;,&quot;purple&quot;,&quot;dodgerblue&quot;,&quot;dodgerblue4&quot;,&quot;navyblue&quot;)) +
                            labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;))), ncol=2)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-13-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-14-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-3">
+Past versions of unnamed-chunk-14-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-14-3.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>CombinePlots(plots=list((DimPlot(subset(data,subset=Stage==&quot;Time 0&quot;),
                                  group.by=y,
                                  reduction=&quot;umap&quot;,
@@ -1612,7 +1953,44 @@ DimPlot(data,
                                  reduction=&quot;umap&quot;,
                                  cols=c(&quot;mediumorchid&quot;,&quot;orchid4&quot;,&quot;purple&quot;,&quot;dodgerblue&quot;,&quot;dodgerblue4&quot;,&quot;navyblue&quot;)) +
                            labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;))), ncol=3)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-13-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-14-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-4">
+Past versions of unnamed-chunk-14-4.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-14-4.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Make nicer plots of clusters: resolution=0.50</p>
 <pre class="r"><code>y &lt;- &quot;Cluster0.50&quot;
 #c(&quot;pink&quot;,&quot;palevioletred1&quot;,&quot;palevioletred3&quot;,&quot;palevioletred4&quot;,&quot;pink3&quot;,&quot;pink4&quot;,&quot;grey40&quot;,&quot;grey&quot;,&quot;mediumorchid&quot;,&quot;orchid2&quot;,&quot;orchid4&quot;,&quot;purple&quot;,&quot;dodgerblue&quot;,&quot;deepskyblue2&quot;,&quot;dodgerblue4&quot;,&quot;navyblue&quot;)
@@ -1624,7 +2002,7 @@ DimPlot(data,
                &quot;mediumorchid&quot;,&quot;orchid2&quot;,&quot;orchid4&quot;,&quot;purple&quot;,
                &quot;dodgerblue&quot;,&quot;deepskyblue2&quot;,&quot;dodgerblue4&quot;,&quot;navyblue&quot;)) +
   labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>CombinePlots(plots=list((DimPlot(data,
                                  group.by=y,
                                  reduction=&quot;pca&quot;,
@@ -1665,7 +2043,7 @@ DimPlot(data,
                                         &quot;mediumorchid&quot;,&quot;orchid2&quot;,&quot;orchid4&quot;,&quot;purple&quot;,
                                         &quot;dodgerblue&quot;,&quot;deepskyblue2&quot;,&quot;dodgerblue4&quot;,&quot;navyblue&quot;)) +
                            labs(x=&quot;PC9&quot;,y=&quot;PC10&quot;))), ncol=5)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-14-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-15-2.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>CombinePlots(plots=list((DimPlot(subset(data,subset=Species==&quot;Human&quot;),
                                  group.by=y,
                                  reduction=&quot;umap&quot;,
@@ -1680,7 +2058,7 @@ DimPlot(data,
                                         &quot;mediumorchid&quot;,&quot;orchid2&quot;,&quot;orchid4&quot;,&quot;purple&quot;,
                                         &quot;dodgerblue&quot;,&quot;deepskyblue2&quot;,&quot;dodgerblue4&quot;,&quot;navyblue&quot;)) +
                            labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;))), ncol=2)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-14-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-15-3.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>CombinePlots(plots=list((DimPlot(subset(data,subset=Stage==&quot;Time 0&quot;),
                                  group.by=y,
                                  reduction=&quot;umap&quot;,
@@ -1701,7 +2079,7 @@ DimPlot(data,
                                  cols=c(&quot;mediumorchid&quot;,&quot;orchid2&quot;,&quot;orchid4&quot;,&quot;purple&quot;,
                                         &quot;dodgerblue&quot;,&quot;deepskyblue2&quot;,&quot;dodgerblue4&quot;,&quot;navyblue&quot;)) +
                            labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;))), ncol=3)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-14-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-15-4.png" width="672" style="display: block; margin: auto;" /></p>
 <p>Identify markers defining each cluster (resolution=0.05).</p>
 <pre class="r"><code>#Find markers for every cluster compared to all remaining cells, report only the positive ones
 markers &lt;- FindAllMarkers(data, only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)
@@ -1885,37 +2263,37 @@ x=c(3,4,5,6,7)
 y=c(2385198270,2347325326,2313214572,2281539581,2255267597)
 plot(x,y,xlab=&quot;Topics (k)&quot;,ylab=&quot;BIC&quot;)
 lines(x[order(x)],y[order(x)],xlim=range(x),ylim=range(y),pch=16)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-21-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-22-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>#fastTopics.Human BIC
 x=c(3,4,5,6,7)
 y=c(1098763998,1081234940,1064314595,1051699136,1037815943)
 plot(x,y,xlab=&quot;Topics (k)&quot;,ylab=&quot;BIC&quot;)
 lines(x[order(x)],y[order(x)],xlim=range(x),ylim=range(y),pch=16)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-21-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-22-2.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>#fastTopics.Chimp BIC
 x=c(3,4,5,6,7)
 y=c(1212496514,1183947130,1169079411,1154808262,1145154735)
 plot(x,y,xlab=&quot;Topics (k)&quot;,ylab=&quot;BIC&quot;)
 lines(x[order(x)],y[order(x)],xlim=range(x),ylim=range(y),pch=16)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-21-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-22-3.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>#fastTopics BIC (batch corrected)
 x=c(3,4,5,6,7)
 y=c(2340110918,2301627330,2268542187,2243574970,2222862911)
 plot(x,y,xlab=&quot;Topics (k)&quot;,ylab=&quot;BIC&quot;)
 lines(x[order(x)],y[order(x)],xlim=range(x),ylim=range(y),pch=16)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-21-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-22-4.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>#fastTopics.Human BIC (batch corrected)
 x=c(3,4,5,6,7)
 y=c(1068104529,1051742121,1036639381,1029192440,1022890111)
 plot(x,y,xlab=&quot;Topics (k)&quot;,ylab=&quot;BIC&quot;)
 lines(x[order(x)],y[order(x)],xlim=range(x),ylim=range(y),pch=16)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-21-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-22-5.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>#fastTopics.Chimp BIC (batch corrected)
 x=c(3,4,5,6,7)
 y=c(1168907169,1152256850,1141247764,1132319037,1123799212)
 plot(x,y,xlab=&quot;Topics (k)&quot;,ylab=&quot;BIC&quot;)
 lines(x[order(x)],y[order(x)],xlim=range(x),ylim=range(y),pch=16)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-21-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-22-6.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>#Examine structure plots and gene contributions to topics
 
 numclust &lt;- 3
@@ -2337,24 +2715,24 @@ data@meta.data$AdHoc.Assign.thresh0.1 &lt;- factor(data@meta.data$AdHoc.Assign.t
 <pre class="r"><code>ggplot(data@meta.data, aes(x=AdHoc.Assign.thresh0, fill=Species)) +
   geom_bar(stat=&quot;count&quot;, position=&quot;dodge&quot;) +
   scale_fill_manual(values=c(&quot;grey&quot;,&quot;black&quot;))</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-31-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-32-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>ggplot(data@meta.data, aes(x=AdHoc.Assign.thresh0, fill=Species)) +
   geom_bar(mapping = aes(x=AdHoc.Assign.thresh0, y=..prop.., group=Species), stat=&quot;count&quot;, position=&quot;dodge&quot;) +
   scale_fill_manual(values=c(&quot;grey&quot;,&quot;black&quot;))</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-31-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-32-2.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>ggplot(data@meta.data, aes(x=AdHoc.Assign.thresh0, fill=Individual)) +
   geom_bar(stat=&quot;count&quot;, position=&quot;dodge&quot;)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-31-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-32-3.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>ggplot(data@meta.data, aes(x=AdHoc.Assign.thresh0, fill=Individual)) +
   geom_bar(mapping = aes(x=AdHoc.Assign.thresh0, y=..prop.., group=Individual), stat=&quot;count&quot;, position=&quot;dodge&quot;)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-31-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-32-4.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>DimPlot(data,
         group.by=&quot;Species&quot;,
         split.by=&quot;AdHoc.Assign.thresh0&quot;,
         reduction=&quot;umap&quot;,
         cols=c(&quot;grey&quot;,&quot;black&quot;)) +
   labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-31-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-32-5.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>CombinePlots(plots=list((DimPlot(subset(data,subset=Species==&quot;Human&quot;),
                                  group.by=&quot;Stage&quot;,
                                  split.by=&quot;AdHoc.Assign.thresh0&quot;,
@@ -2367,7 +2745,7 @@ data@meta.data$AdHoc.Assign.thresh0.1 &lt;- factor(data@meta.data$AdHoc.Assign.t
                                  reduction=&quot;umap&quot;,
                                  cols=c(&quot;pink&quot;,&quot;mediumorchid&quot;,&quot;dodgerblue&quot;)) +
                            labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;))), ncol=1)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-31-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-32-6.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>CombinePlots(plots=list((DimPlot(subset(data,subset=Stage==&quot;Time 0&quot;),
                                  group.by=&quot;Stage&quot;,
                                  split.by=&quot;AdHoc.Assign.thresh0&quot;,
@@ -2386,7 +2764,7 @@ data@meta.data$AdHoc.Assign.thresh0.1 &lt;- factor(data@meta.data$AdHoc.Assign.t
                                  reduction=&quot;umap&quot;,
                                  cols=c(&quot;dodgerblue&quot;)) +
                            labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;))), ncol=1)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-31-7.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-32-7.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>saveRDS(data, file=&quot;./data/cellranger-data-full/data.filterC.log.indv-cell.intNo0.reg-tot.assign.rds&quot;)</code></pre>
 </div>
 <div id="ad-hoc-assignment-osteogenic" class="section level3">
@@ -2889,24 +3267,209 @@ mineralizing osteoblast      maturing osteocyte      unknown osteogenic
 <pre class="r"><code>ggplot(subset(data@meta.data, !is.na(OstAdHoc.Assign.8gene.thresh0)), aes(x=OstAdHoc.Assign.8gene.thresh0, fill=Species)) +
       geom_bar(stat=&quot;count&quot;, position=&quot;dodge&quot;) +
       scale_fill_manual(values=c(&quot;grey&quot;,&quot;black&quot;))</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-39-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-40-1">
+Past versions of unnamed-chunk-40-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-40-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-1.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(subset(data@meta.data, !is.na(OstAdHoc.Assign.8gene.thresh0)), aes(x=OstAdHoc.Assign.8gene.thresh0, fill=Species)) +
       geom_bar(mapping = aes(x=OstAdHoc.Assign.8gene.thresh0, y=..prop.., group=Species), stat=&quot;count&quot;, position=&quot;dodge&quot;) +
       scale_fill_manual(values=c(&quot;grey&quot;,&quot;black&quot;))</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-39-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-40-2">
+Past versions of unnamed-chunk-40-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-40-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-2.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(subset(data@meta.data, !is.na(OstAdHoc.Assign.8gene.thresh0)), aes(x=OstAdHoc.Assign.8gene.thresh0, fill=Individual)) +
       geom_bar(stat=&quot;count&quot;, position=&quot;dodge&quot;)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-39-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-40-3">
+Past versions of unnamed-chunk-40-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-40-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-3.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(subset(data@meta.data, !is.na(OstAdHoc.Assign.8gene.thresh0)), aes(x=OstAdHoc.Assign.8gene.thresh0, fill=Individual)) +
       geom_bar(mapping = aes(x=OstAdHoc.Assign.8gene.thresh0, y=..prop.., group=Individual), stat=&quot;count&quot;, position=&quot;dodge&quot;)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-39-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-40-4">
+Past versions of unnamed-chunk-40-4.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-40-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-4.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>DimPlot(data,
         group.by=&quot;Species&quot;,
         split.by=&quot;OstAdHoc.Assign.8gene.thresh0&quot;,
         reduction=&quot;umap&quot;,
         cols=c(&quot;grey&quot;,&quot;black&quot;)) +
   labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-39-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-40-5">
+Past versions of unnamed-chunk-40-5.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-40-5" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-5.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>CombinePlots(plots=list((DimPlot(subset(data,subset=Species==&quot;Human&quot;),
                                  group.by=&quot;Stage&quot;,
                                  split.by=&quot;OstAdHoc.Assign.8gene.thresh0&quot;,
@@ -2919,7 +3482,44 @@ mineralizing osteoblast      maturing osteocyte      unknown osteogenic
                                  reduction=&quot;umap&quot;,
                                  cols=c(&quot;lightgrey&quot;,&quot;lightgrey&quot;,&quot;dodgerblue&quot;)) +
                            labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;))), ncol=1)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-39-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-40-6">
+Past versions of unnamed-chunk-40-6.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-40-6" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-6.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>CombinePlots(plots=list((DimPlot(subset(data,subset=Stage==&quot;Time 0&quot;),
                                  group.by=&quot;Stage&quot;,
                                  split.by=&quot;OstAdHoc.Assign.8gene.thresh0&quot;,
@@ -2940,14 +3540,88 @@ mineralizing osteoblast      maturing osteocyte      unknown osteogenic
                            labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;))), ncol=1)</code></pre>
 <pre><code>Warning: Graphs cannot be vertically aligned unless the axis parameter is
 set. Placing graphs unaligned.</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-39-7.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-7.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-40-7">
+Past versions of unnamed-chunk-40-7.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-40-7" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-7.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>print(DimPlot(data,
               group.by=&quot;Stage&quot;,
               split.by=&quot;OstAdHoc.Assign.8gene.thresh0&quot;,
               reduction=&quot;umap&quot;,
               cols=c(&quot;lightgrey&quot;,&quot;lightgrey&quot;,&quot;dodgerblue&quot;)) +
         labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;))</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-39-8.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-8.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-40-8">
+Past versions of unnamed-chunk-40-8.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-40-8" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-8.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Make nicer plots of osteogenic ad hoc assignments (6 gene, thresh0).</p>
 <pre class="r"><code>table(subset(data,subset=Species==&quot;Human&quot;)@meta.data$OstAdHoc.Assign.6gene.thresh0)</code></pre>
 <pre><code>
@@ -3040,24 +3714,209 @@ mineralizing osteoblast      maturing osteocyte      unknown osteogenic
 <pre class="r"><code>ggplot(subset(data@meta.data, !is.na(OstAdHoc.Assign.6gene.thresh0)), aes(x=OstAdHoc.Assign.6gene.thresh0, fill=Species)) +
       geom_bar(stat=&quot;count&quot;, position=&quot;dodge&quot;) +
       scale_fill_manual(values=c(&quot;grey&quot;,&quot;black&quot;))</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-41-1">
+Past versions of unnamed-chunk-41-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-41-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-1.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(subset(data@meta.data, !is.na(OstAdHoc.Assign.6gene.thresh0)), aes(x=OstAdHoc.Assign.6gene.thresh0, fill=Species)) +
       geom_bar(mapping = aes(x=OstAdHoc.Assign.6gene.thresh0, y=..prop.., group=Species), stat=&quot;count&quot;, position=&quot;dodge&quot;) +
       scale_fill_manual(values=c(&quot;grey&quot;,&quot;black&quot;))</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-41-2">
+Past versions of unnamed-chunk-41-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-41-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-2.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(subset(data@meta.data, !is.na(OstAdHoc.Assign.6gene.thresh0)), aes(x=OstAdHoc.Assign.6gene.thresh0, fill=Individual)) +
       geom_bar(stat=&quot;count&quot;, position=&quot;dodge&quot;)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-41-3">
+Past versions of unnamed-chunk-41-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-41-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-3.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(subset(data@meta.data, !is.na(OstAdHoc.Assign.6gene.thresh0)), aes(x=OstAdHoc.Assign.6gene.thresh0, fill=Individual)) +
       geom_bar(mapping = aes(x=OstAdHoc.Assign.6gene.thresh0, y=..prop.., group=Individual), stat=&quot;count&quot;, position=&quot;dodge&quot;)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-41-4">
+Past versions of unnamed-chunk-41-4.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-41-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-4.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>DimPlot(data,
         group.by=&quot;Species&quot;,
         split.by=&quot;OstAdHoc.Assign.6gene.thresh0&quot;,
         reduction=&quot;umap&quot;,
         cols=c(&quot;grey&quot;,&quot;black&quot;)) +
   labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-41-5">
+Past versions of unnamed-chunk-41-5.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-41-5" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-5.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>CombinePlots(plots=list((DimPlot(subset(data,subset=Species==&quot;Human&quot;),
                                  group.by=&quot;Stage&quot;,
                                  split.by=&quot;OstAdHoc.Assign.6gene.thresh0&quot;,
@@ -3070,7 +3929,44 @@ mineralizing osteoblast      maturing osteocyte      unknown osteogenic
                                  reduction=&quot;umap&quot;,
                                  cols=c(&quot;lightgrey&quot;,&quot;lightgrey&quot;,&quot;dodgerblue&quot;)) +
                            labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;))), ncol=1)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-41-6">
+Past versions of unnamed-chunk-41-6.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-41-6" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-6.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>CombinePlots(plots=list((DimPlot(subset(data,subset=Stage==&quot;Time 0&quot;),
                                  group.by=&quot;Stage&quot;,
                                  split.by=&quot;OstAdHoc.Assign.6gene.thresh0&quot;,
@@ -3091,14 +3987,88 @@ mineralizing osteoblast      maturing osteocyte      unknown osteogenic
                            labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;))), ncol=1)</code></pre>
 <pre><code>Warning: Graphs cannot be vertically aligned unless the axis parameter is
 set. Placing graphs unaligned.</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-7.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-7.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-41-7">
+Past versions of unnamed-chunk-41-7.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-41-7" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-7.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>print(DimPlot(data,
               group.by=&quot;Stage&quot;,
               split.by=&quot;OstAdHoc.Assign.6gene.thresh0&quot;,
               reduction=&quot;umap&quot;,
               cols=c(&quot;lightgrey&quot;,&quot;lightgrey&quot;,&quot;dodgerblue&quot;)) +
         labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;))</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-40-8.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-8.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-41-8">
+Past versions of unnamed-chunk-41-8.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-41-8" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-8.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Make nicer plots of osteogenic ad hoc assignments (4 gene, thresh0).</p>
 <pre class="r"><code>table(subset(data,subset=Species==&quot;Human&quot;)@meta.data$OstAdHoc.Assign.4gene.thresh0)</code></pre>
 <pre><code>
@@ -3191,24 +4161,24 @@ mineralizing osteoblast      maturing osteocyte      unknown osteogenic
 <pre class="r"><code>ggplot(subset(data@meta.data, !is.na(OstAdHoc.Assign.4gene.thresh0)), aes(x=OstAdHoc.Assign.4gene.thresh0, fill=Species)) +
       geom_bar(stat=&quot;count&quot;, position=&quot;dodge&quot;) +
       scale_fill_manual(values=c(&quot;grey&quot;,&quot;black&quot;))</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-42-1.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>ggplot(subset(data@meta.data, !is.na(OstAdHoc.Assign.4gene.thresh0)), aes(x=OstAdHoc.Assign.4gene.thresh0, fill=Species)) +
       geom_bar(mapping = aes(x=OstAdHoc.Assign.4gene.thresh0, y=..prop.., group=Species), stat=&quot;count&quot;, position=&quot;dodge&quot;) +
       scale_fill_manual(values=c(&quot;grey&quot;,&quot;black&quot;))</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-42-2.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>ggplot(subset(data@meta.data, !is.na(OstAdHoc.Assign.4gene.thresh0)), aes(x=OstAdHoc.Assign.4gene.thresh0, fill=Individual)) +
       geom_bar(stat=&quot;count&quot;, position=&quot;dodge&quot;)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-42-3.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>ggplot(subset(data@meta.data, !is.na(OstAdHoc.Assign.4gene.thresh0)), aes(x=OstAdHoc.Assign.4gene.thresh0, fill=Individual)) +
       geom_bar(mapping = aes(x=OstAdHoc.Assign.4gene.thresh0, y=..prop.., group=Individual), stat=&quot;count&quot;, position=&quot;dodge&quot;)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-42-4.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>DimPlot(data,
         group.by=&quot;Species&quot;,
         split.by=&quot;OstAdHoc.Assign.4gene.thresh0&quot;,
         reduction=&quot;umap&quot;,
         cols=c(&quot;grey&quot;,&quot;black&quot;)) +
   labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-42-5.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>CombinePlots(plots=list((DimPlot(subset(data,subset=Species==&quot;Human&quot;),
                                  group.by=&quot;Stage&quot;,
                                  split.by=&quot;OstAdHoc.Assign.4gene.thresh0&quot;,
@@ -3221,7 +4191,7 @@ mineralizing osteoblast      maturing osteocyte      unknown osteogenic
                                  reduction=&quot;umap&quot;,
                                  cols=c(&quot;lightgrey&quot;,&quot;lightgrey&quot;,&quot;dodgerblue&quot;)) +
                            labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;))), ncol=1)</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-42-6.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>CombinePlots(plots=list((DimPlot(subset(data,subset=Stage==&quot;Time 0&quot;),
                                  group.by=&quot;Stage&quot;,
                                  split.by=&quot;OstAdHoc.Assign.4gene.thresh0&quot;,
@@ -3242,14 +4212,14 @@ mineralizing osteoblast      maturing osteocyte      unknown osteogenic
                            labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;))), ncol=1)</code></pre>
 <pre><code>Warning: Graphs cannot be vertically aligned unless the axis parameter is
 set. Placing graphs unaligned.</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-7.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-42-7.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>print(DimPlot(data,
               group.by=&quot;Stage&quot;,
               split.by=&quot;OstAdHoc.Assign.4gene.thresh0&quot;,
               reduction=&quot;umap&quot;,
               cols=c(&quot;lightgrey&quot;,&quot;lightgrey&quot;,&quot;dodgerblue&quot;)) +
         labs(x=&quot;UMAP1&quot;,y=&quot;UMAP2&quot;))</code></pre>
-<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-41-8.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-data-4-classification-tot.Rmd/unnamed-chunk-42-8.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>saveRDS(data, file=&quot;./data/cellranger-data-full/data.filterC.log.indv-cell.intNo0.reg-tot.assign.rds&quot;)</code></pre>
 <br>
 <p>

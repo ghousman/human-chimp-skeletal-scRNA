@@ -1,0 +1,2336 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Genevieve Housman" />
+
+
+<title>10x-view-validation-data</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">human-chimp-skeletal-scRNA</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">10x-view-validation-data</h1>
+<h4 class="author">Genevieve Housman</h4>
+<h4 class="date">May 2021</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2021-08-10
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong> <code>human-chimp-skeletal-scRNA/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20190719code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20190719)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20190719code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20190719)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreefd98145b0ad57351357e829de8f6f7ef4bd3261dtargetblankfd98145a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/fd98145b0ad57351357e829de8f6f7ef4bd3261d" target="_blank">fd98145</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreefd98145b0ad57351357e829de8f6f7ef4bd3261dtargetblankfd98145a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/fd98145b0ad57351357e829de8f6f7ef4bd3261d" target="_blank">fd98145</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+
+Untracked files:
+    Untracked:  data/HumanPrimaryCellAtlasData-SingleR
+    Untracked:  data/HumanPrimaryCellAtlasDetails-SingleR.csv
+    Untracked:  data/HumanPrimaryCellAtlasLabels-SingleR.csv
+    Untracked:  data/cell_atlas_ref_panel
+    Untracked:  data/cellranger-data-full/
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-cluster8.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/corrmatrix.ost
+    Untracked:  data/gom-data/v2/gom10.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom3.100genes.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom3.100genes.log.indv-cell.int19k.reg-tot.rds
+    Untracked:  data/gom-data/v2/gom3.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom3.log.indv-cell.int19k.reg-tot.rds
+    Untracked:  data/gom-data/v2/gom4.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom5.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom6.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom7.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom8.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom9.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  output/data-qc-post-subsets-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-int19k-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-int19k.reg-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-intNo0-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-intNo0.reg-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-merge-batchviz.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-batchviz.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-intNo0.reg-batchviz.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-merge-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-int-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-int19k-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-int19k.reg-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-merge-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets.reg-batchviz.pdf
+
+Unstaged changes:
+    Modified:   analysis/10x-data-6-cormotif-tot-cnts.Rmd
+    Modified:   analysis/10x-data-6-cormotif-tot.Rmd
+    Modified:   analysis/10x-data-7-variance-tot.Rmd
+    Modified:   analysis/10x-plot-classification.Rmd
+    Modified:   analysis/about.Rmd
+    Modified:   analysis/license.Rmd
+    Modified:   output/data-qc-prefilter.pdf
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/10x-view-validation-data.Rmd</code>) and HTML (<code>docs/10x-view-validation-data.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/e62c53703ed251e27c4d23397131fd218013a635/analysis/10x-view-validation-data.Rmd" target="_blank">e62c537</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-08-05
+</td>
+<td>
+updated analyses
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/750156c90d27b7c7b9b88b5a993c5ae749b9e2d8/analysis/10x-view-validation-data.Rmd" target="_blank">750156c</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2020-09-20
+</td>
+<td>
+Updated DE analyses
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/0fa4613db51c156d544c26a1c24cf22a64621c06/analysis/10x-view-validation-data.Rmd" target="_blank">0fa4613</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2020-08-13
+</td>
+<td>
+Data QC updated
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/f918f2b3e5531a109d05b2b42ffc8af09ab4fed5/analysis/10x-view-validation-data.Rmd" target="_blank">f918f2b</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2020-08-12
+</td>
+<td>
+Starting ortho-exon v2 reanalysis
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/6e47142cc90e74a675056855982ae89bce514004/analysis/10x-view-validation-data.Rmd" target="_blank">6e47142</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2020-05-20
+</td>
+<td>
+newfiles
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="viewing-of-traditional-cell-differentiation-validation-data-in-overall-study" class="section level2">
+<h2>Viewing of Traditional Cell Differentiation Validation Data in Overall Study</h2>
+<p>Data being examined comes from 6 humans and 6 chimpanzees.</p>
+<ul>
+<li>GHO-1: H1-I + C1-I (iPSCs from H23555 and C8861)</li>
+<li>GHO-2: H1-M + C1-M (iPSC-derived MSCs from H23555 and C8861)</li>
+<li>GHO-4: H1-O + C1-O (iPSC-MSC-derived osteoblasts from H23555 and C8861)</li>
+<li>HOU-10: H1-I-r2 + C1-I-r2 (iPSCs from H23555 and C8861)</li>
+<li>HOU-12: H1-M-r2 + C1-M-r2 (iPSC-derived MSCs from H23555 and C8861)</li>
+<li>HOU-16: H1-O-r2 + C1-O-r2 (iPSC-MSC-derived osteoblasts from H23555 and C8861)</li>
+<li>HOU-1: H2-I + C2-I (iPSCs from H20157 and C3647)</li>
+<li>HOU-2: H2-M + C2-M (iPSC-derived MSCs from H20157 and C3647)</li>
+<li>HOU-4: H2-O + C2-O (iPSC-MSC-derived osteoblasts from H20157 and C3647)</li>
+<li>HOU-9: H3-I + C3-I (iPSCs from H28126 and C3649)</li>
+<li>HOU-11: H3-M + C3-M (iPSC-derived MSCs from H28126 and C3649)</li>
+<li>HOU-15: H3-O + C3-O (iPSC-MSC-derived osteoblasts from H28126 and C3649)</li>
+<li>HOU-5: H4-I + C4-I (iPSCs from H28834 and C40210)</li>
+<li>HOU-6: H4-M + C4-M (iPSC-derived MSCs from H28834 and C40210)</li>
+<li>HOU-8: H4-O + C4-O (iPSC-MSC-derived osteoblasts from H28834 and C40210)</li>
+<li>HOU-17: H5-I + C5-I (iPSCs from H21792 and C40280)</li>
+<li>HOU-19: H5-M + C5-M (iPSC-derived MSCs from H21792 and C40280)</li>
+<li>HOU-21: H5-O + C5-O (iPSC-MSC-derived osteoblasts from H21792 and C40280)</li>
+<li>HOU-18: H6-I + C6-I (iPSCs from H20961 and C3624)</li>
+<li>HOU-20: H6-M + C6-M (iPSC-derived MSCs from H20961 and C3624)</li>
+<li>HOU-22: H6-O + C6-O (iPSC-MSC-derived osteoblasts from H20961 and C3624)</li>
+</ul>
+<pre class="r"><code>library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(ggsignif)
+library(gridExtra)
+library(colorspace)
+library(RColorBrewer)</code></pre>
+<div id="facs-results" class="section level3">
+<h3>FACS Results</h3>
+<p>Flow cytometry data were collected for iPSCs (Time 0) and iPSC-derived MSCs (Time 1) in order to confirm MSC differentiation. Expect positive expression of CD90 in cells collected at Time 0, positive expression of CD90, CD73, and CD105 in cells collected at Time 1, and no expression of control markers (CD45, CD34, CD11b, CD19, HLA-DR) in all cells.</p>
+<pre class="r"><code>#Load fcs data
+fcs &lt;- read.csv(file=&#39;./data/facs-MSC-collection-summary-total.csv&#39;, header=TRUE, sep=&quot;,&quot;)
+#fcs &lt;- read.csv(file=&#39;./data/facs-MSC-collection-summary-sample-avg.csv&#39;, header=TRUE, sep=&quot;,&quot;)</code></pre>
+<p>Look at all of the data:</p>
+<pre class="r"><code>p1 &lt;- ggplot(fcs, aes(x=Abbr_Details, y=CD90_Percentage)) + geom_boxplot()
+p2 &lt;- ggplot(fcs, aes(x=Abbr_Details, y=CD73_Percentage)) + geom_boxplot()
+p3 &lt;- ggplot(fcs, aes(x=Abbr_Details, y=CD105_Percentage)) + geom_boxplot()
+p4 &lt;- ggplot(fcs, aes(x=Abbr_Details, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage)) + geom_boxplot()
+grid.arrange(grobs=list(p1,p2,p3,p4), ncol=1)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#Reformat fcs data
+fcs &lt;- fcs[,c(2,4,6,8,9,29:36)]
+fcs$Abbr_Details &lt;- factor(fcs$Abbr_Details,
+                           levels=c(&quot;C1 iPSC - control&quot;,
+                                    &quot;C1 iPSC - cocktail&quot;,
+                                    &quot;C1 MSC - cocktail&quot;,
+                                    &quot;C1-r2 iPSC - control&quot;,
+                                    &quot;C1-r2 iPSC - cocktail&quot;,
+                                    &quot;C1-r2 MSC - cocktail&quot;,
+                                    &quot;C2 iPSC - control&quot;,
+                                    &quot;C2 iPSC - cocktail&quot;,
+                                    &quot;C2 MSC - cocktail&quot;,
+                                    &quot;C3 iPSC - control&quot;,
+                                    &quot;C3 iPSC - cocktail&quot;,
+                                    &quot;C3 MSC - cocktail&quot;,
+                                    &quot;C4 iPSC - control&quot;,
+                                    &quot;C4 iPSC - cocktail&quot;,
+                                    &quot;C4 MSC - cocktail&quot;,
+                                    &quot;C5 iPSC - control&quot;,
+                                    &quot;C5 iPSC - cocktail&quot;,
+                                    &quot;C5 MSC - cocktail&quot;,
+                                    &quot;C6 iPSC - control&quot;,
+                                    &quot;C6 iPSC - cocktail&quot;,
+                                    &quot;C6 MSC - cocktail&quot;,
+                                    &quot;H1 iPSC - control&quot;,
+                                    &quot;H1 iPSC - cocktail&quot;,
+                                    &quot;H1 MSC - cocktail&quot;,
+                                    &quot;H1-r2 iPSC - control&quot;,
+                                    &quot;H1-r2 iPSC - cocktail&quot;,
+                                    &quot;H1-r2 MSC - cocktail&quot;,
+                                    &quot;H2 iPSC - control&quot;,
+                                    &quot;H2 iPSC - cocktail&quot;,
+                                    &quot;H2 MSC - cocktail&quot;,
+                                    &quot;H3 iPSC - control&quot;,
+                                    &quot;H3 iPSC - cocktail&quot;,
+                                    &quot;H3 MSC - cocktail&quot;,
+                                    &quot;H4 iPSC - control&quot;,
+                                    &quot;H4 iPSC - cocktail&quot;,
+                                    &quot;H4 MSC - cocktail&quot;,
+                                    &quot;H5 iPSC - control&quot;,
+                                    &quot;H5 iPSC - cocktail&quot;,
+                                    &quot;H5 MSC - cocktail&quot;,
+                                    &quot;H6 iPSC - control&quot;,
+                                    &quot;H6 iPSC - cocktail&quot;,
+                                    &quot;H6 MSC - cocktail&quot;),
+                           labels=c(&quot;C1 iPSC - control&quot;,
+                                    &quot;C1 iPSC - cocktail&quot;,
+                                    &quot;C1 MSC - cocktail&quot;,
+                                    &quot;C1-r2 iPSC - control&quot;,
+                                    &quot;C1-r2 iPSC - cocktail&quot;,
+                                    &quot;C1-r2 MSC - cocktail&quot;,
+                                    &quot;C2 iPSC - control&quot;,
+                                    &quot;C2 iPSC - cocktail&quot;,
+                                    &quot;C2 MSC - cocktail&quot;,
+                                    &quot;C3 iPSC - control&quot;,
+                                    &quot;C3 iPSC - cocktail&quot;,
+                                    &quot;C3 MSC - cocktail&quot;,
+                                    &quot;C4 iPSC - control&quot;,
+                                    &quot;C4 iPSC - cocktail&quot;,
+                                    &quot;C4 MSC - cocktail&quot;,
+                                    &quot;C5 iPSC - control&quot;,
+                                    &quot;C5 iPSC - cocktail&quot;,
+                                    &quot;C5 MSC - cocktail&quot;,
+                                    &quot;C6 iPSC - control&quot;,
+                                    &quot;C6 iPSC - cocktail&quot;,
+                                    &quot;C6 MSC - cocktail&quot;,
+                                    &quot;H1 iPSC - control&quot;,
+                                    &quot;H1 iPSC - cocktail&quot;,
+                                    &quot;H1 MSC - cocktail&quot;,
+                                    &quot;H1-r2 iPSC - control&quot;,
+                                    &quot;H1-r2 iPSC - cocktail&quot;,
+                                    &quot;H1-r2 MSC - cocktail&quot;,
+                                    &quot;H2 iPSC - control&quot;,
+                                    &quot;H2 iPSC - cocktail&quot;,
+                                    &quot;H2 MSC - cocktail&quot;,
+                                    &quot;H3 iPSC - control&quot;,
+                                    &quot;H3 iPSC - cocktail&quot;,
+                                    &quot;H3 MSC - cocktail&quot;,
+                                    &quot;H4 iPSC - control&quot;,
+                                    &quot;H4 iPSC - cocktail&quot;,
+                                    &quot;H4 MSC - cocktail&quot;,
+                                    &quot;H5 iPSC - control&quot;,
+                                    &quot;H5 iPSC - cocktail&quot;,
+                                    &quot;H5 MSC - cocktail&quot;,
+                                    &quot;H6 iPSC - control&quot;,
+                                    &quot;H6 iPSC - cocktail&quot;,
+                                    &quot;H6 MSC - cocktail&quot;))
+fcs$Species_Details &lt;- factor(fcs$Species_Details,
+                              levels=c(&quot;Chimpanzee iPSC - control&quot;,
+                                       &quot;Chimpanzee iPSC - cocktail&quot;,
+                                       &quot;Chimpanzee MSC - cocktail&quot;,
+                                       &quot;Human iPSC - control&quot;,
+                                       &quot;Human iPSC - cocktail&quot;,
+                                       &quot;Human MSC - cocktail&quot;),
+                              labels=c(&quot;Chimpanzee iPSC - control&quot;,
+                                       &quot;Chimpanzee iPSC - cocktail&quot;,
+                                       &quot;Chimpanzee MSC - cocktail&quot;,
+                                       &quot;Human iPSC - control&quot;,
+                                       &quot;Human iPSC - cocktail&quot;,
+                                       &quot;Human MSC - cocktail&quot;))
+fcs$Sample_Details &lt;- factor(fcs$Sample_Details,
+                             levels=c(&quot;iPSC - control&quot;,
+                                      &quot;iPSC - cocktail&quot;,
+                                      &quot;MSC - cocktail&quot;),
+                             labels=c(&quot;iPSC - control&quot;,
+                                      &quot;iPSC - cocktail&quot;,
+                                      &quot;MSC - cocktail&quot;))
+fcs$Cell_Type &lt;- factor(fcs$Cell_Type,
+                        levels=c(&quot;iPSC&quot;,&quot;MSC&quot;),
+                        labels=c(&quot;iPSC&quot;,&quot;MSC&quot;))</code></pre>
+<p>Consolidate data across species and stages of cell differentiation:</p>
+<pre class="r"><code>p1 &lt;- ggplot(fcs, aes(x=Abbr_Details, y=CD90_Percentage)) + geom_boxplot()
+p2 &lt;- ggplot(fcs, aes(x=Species_Details, y=CD90_Percentage)) + geom_boxplot()
+p3 &lt;- ggplot(fcs, aes(x=Sample_Details, y=CD90_Percentage)) + geom_boxplot()
+grid.arrange(grobs=list(p1,p2,p3), ncol=1)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>p1 &lt;- ggplot(fcs, aes(x=Abbr_Details, y=CD73_Percentage)) + geom_boxplot()
+p2 &lt;- ggplot(fcs, aes(x=Species_Details, y=CD73_Percentage)) + geom_boxplot()
+p3 &lt;- ggplot(fcs, aes(x=Sample_Details, y=CD73_Percentage)) + geom_boxplot()
+grid.arrange(grobs=list(p1,p2,p3), ncol=1)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>p1 &lt;- ggplot(fcs, aes(x=Abbr_Details, y=CD105_Percentage)) + geom_boxplot()
+p2 &lt;- ggplot(fcs, aes(x=Species_Details, y=CD105_Percentage)) + geom_boxplot()
+p3 &lt;- ggplot(fcs, aes(x=Sample_Details, y=CD105_Percentage)) + geom_boxplot()
+grid.arrange(grobs=list(p1,p2,p3), ncol=1)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>p1 &lt;- ggplot(fcs, aes(x=Abbr_Details, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage)) + geom_boxplot()
+p2 &lt;- ggplot(fcs, aes(x=Species_Details, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage)) + geom_boxplot()
+p3 &lt;- ggplot(fcs, aes(x=Sample_Details, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage)) + geom_boxplot()
+grid.arrange(grobs=list(p1,p2,p3), ncol=1)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Remove any potential outliers:</p>
+<ul>
+<li>no samples removed at this time</li>
+</ul>
+<pre class="r"><code>#Identify outliers from fcs data - CD90 / CD105 / CD73 / CD45.CD34.CD11b.CD19.HLA.DR_Percentage
+
+##individual samples - none are outliers / none are outliers / none are outliers / none are outliers
+##1:3,4:6,7:9,10:12,13:15,16:18,19:21,22:24,25,26:28,29:31,32:34,35:37,38:40,41:43,44:46,47:49,50:52,53:55,56:58,59:61,62:64,65:67,
+##68:70,71:73,74:76,77:79,80:82,83:85,86:88,89:91,92:94,95:97,98:100,101:103,104:106,107:109,110:112,113:115,116:118,119:121,122:124
+x=c(122:124)
+fcs$Abbr_Details[x]
+
+outlier_values &lt;- boxplot.stats(fcs$CD90_Percentage[x])$out  #outlier values
+boxplot(fcs$CD90_Percentage[x], boxwex=0.1)
+mtext(paste(&quot;Outliers: &quot;, paste(outlier_values, collapse=&quot;, &quot;)), cex=0.6)
+
+outlier_values &lt;- boxplot.stats(fcs$CD73_Percentage[x])$out  #outlier values
+boxplot(fcs$CD73_Percentage[x], boxwex=0.1)
+mtext(paste(&quot;Outliers: &quot;, paste(outlier_values, collapse=&quot;, &quot;)), cex=0.6)
+
+outlier_values &lt;- boxplot.stats(fcs$CD105_Percentage[x])$out  #outlier values
+boxplot(fcs$CD105_Percentage[x], boxwex=0.1)
+mtext(paste(&quot;Outliers: &quot;, paste(outlier_values, collapse=&quot;, &quot;)), cex=0.6)
+
+outlier_values &lt;- boxplot.stats(fcs$CD45.CD34.CD11b.CD19.HLA.DR_Percentage[x])$out  #outlier values
+boxplot(fcs$CD45.CD34.CD11b.CD19.HLA.DR_Percentage[x], boxwex=0.1)
+mtext(paste(&quot;Outliers: &quot;, paste(outlier_values, collapse=&quot;, &quot;)), cex=0.6)
+
+##chimpanzee ipscs - C1-r2iPSCcontrol(n=3) (keep) / C6iPSCcontrol(n=2)+C5iPSCcontrol(n=1) (keep) / none are outliers / none are outliers
+##                   C2iPSCcocktail(n=2) (keep) / none are outliers / none are outliers / C4iPSCcocktail(n=1)+C6iPSCcocktail(n=1) (keep all)
+##which(fcs$Species_Details==&quot;Chimpanzee iPSC - control&quot;)
+##which(fcs$Species_Details==&quot;Chimpanzee iPSC - cocktail&quot;)
+##human ipscs - H1-r2iPSCcontrol(n=3) (keep) / H6iPSCcontrol(n=2)+H5iPSCcontrol(n=1) (keep, remove 1 H6) / H1-r2iPSCcontrol(n=2) (keep) / H6iPSCcontrol(n=1) (keep)
+##              none are outliers / H6iPSCcocktail(n=1) (keep) / H1-r2iPSCcocktail(n=2) (keep) / none are outliers
+##which(fcs$Species_Details==&quot;Human iPSC - control&quot;)
+##which(fcs$Species_Details==&quot;Human iPSC - cocktail&quot;)
+##chimpanzee mscs - none are outliers / none are outliers / C1MSCcocktail(n=3) (keep) / C1MSCcocktail(n=1) (keep)
+##which(fcs$Species_Details==&quot;Chimpanzee MSC - cocktail&quot;)
+##human mscs - H3MSCcocktail(n=1) (keep) / none are outliers / none are outliers / H1MSCcocktail(n=1)+H3MSCcocktail(n=1) (keep, remove H1)
+##which(fcs$Species_Details==&quot;Human MSC - cocktail&quot;))
+x=which(fcs$Species_Details==&quot;Human MSC - cocktail&quot;)
+
+outlier_values &lt;- boxplot.stats(fcs$CD90_Percentage[x])$out  #outlier values
+boxplot(fcs$CD90_Percentage[x], boxwex=0.1)
+mtext(paste(&quot;Outliers: &quot;, paste(outlier_values, collapse=&quot;, &quot;)), cex=0.6)
+
+outlier_values &lt;- boxplot.stats(fcs$CD73_Percentage[x])$out  #outlier values
+boxplot(fcs$CD73_Percentage[x], boxwex=0.1)
+mtext(paste(&quot;Outliers: &quot;, paste(outlier_values, collapse=&quot;, &quot;)), cex=0.6)
+
+outlier_values &lt;- boxplot.stats(fcs$CD105_Percentage[x])$out  #outlier values
+boxplot(fcs$CD105_Percentage[x], boxwex=0.1)
+mtext(paste(&quot;Outliers: &quot;, paste(outlier_values, collapse=&quot;, &quot;)), cex=0.6)
+
+outlier_values &lt;- boxplot.stats(fcs$CD45.CD34.CD11b.CD19.HLA.DR_Percentage[x])$out  #outlier values
+boxplot(fcs$CD45.CD34.CD11b.CD19.HLA.DR_Percentage[x], boxwex=0.1)
+mtext(paste(&quot;Outliers: &quot;, paste(outlier_values, collapse=&quot;, &quot;)), cex=0.6)
+
+##ipscs - C1-r2(n=3)+H1-r2(n=3)iPSCcontrol(keep) / C5(n=1)+C6(n=2)+H6(n=2)iPSCcontrol (keep) / H1-r2iPSCcontrol(n=2) (keep) / H4(n=1)+H6(n=2)iPSCcontrol (keep)
+##        none are outliers / C5iPSCcocktail(n=2)+H6iPSCcocktail(n=1) (keep) / H1-r2iPSCcocktail(n=2) (keep) / C6iPSCcocktail(n=1)+H5iPSCcocktail(n=2) (keep)
+##which(fcs$Sample_Details==&quot;iPSC - control&quot;)
+##which(fcs$Sample_Details==&quot;iPSC - cocktail&quot;)
+##mscs - H1MSCcocktail(n=3)+H3MSCcocktail(n=1)+H5MSCcocktail(n=3) (keep) / none are outliers / none are outliers / H1MSCcocktail(n=1)+H3MSCcocktail(n=1) (keep)
+##which(fcs$Sample_Details==&quot;MSC - cocktail&quot;)
+x=which(fcs$Sample_Details==&quot;MSC - cocktail&quot;)
+
+outlier_values &lt;- boxplot.stats(fcs$CD90_Percentage[x])$out  #outlier values
+boxplot(fcs$CD90_Percentage[x], boxwex=0.1)
+mtext(paste(&quot;Outliers: &quot;, paste(outlier_values, collapse=&quot;, &quot;)), cex=0.6)
+
+outlier_values &lt;- boxplot.stats(fcs$CD73_Percentage[x])$out  #outlier values
+boxplot(fcs$CD73_Percentage[x], boxwex=0.1)
+mtext(paste(&quot;Outliers: &quot;, paste(outlier_values, collapse=&quot;, &quot;)), cex=0.6)
+
+outlier_values &lt;- boxplot.stats(fcs$CD105_Percentage[x])$out  #outlier values
+boxplot(fcs$CD105_Percentage[x], boxwex=0.1)
+mtext(paste(&quot;Outliers: &quot;, paste(outlier_values, collapse=&quot;, &quot;)), cex=0.6)
+
+outlier_values &lt;- boxplot.stats(fcs$CD45.CD34.CD11b.CD19.HLA.DR_Percentage[x])$out  #outlier values
+boxplot(fcs$CD45.CD34.CD11b.CD19.HLA.DR_Percentage[x], boxwex=0.1)
+mtext(paste(&quot;Outliers: &quot;, paste(outlier_values, collapse=&quot;, &quot;)), cex=0.6)
+
+#fcs outliers to possibly remove: fcs[9,9], fcs[25,9], fcs[45,8] - KEEP ALL FOR NOW!
+ggplot(fcs, aes(x=Abbr_Details, y=CD90_Percentage)) + geom_boxplot()
+ggplot(fcs, aes(x=Abbr_Details, y=CD73_Percentage)) + geom_boxplot()
+ggplot(fcs, aes(x=Abbr_Details, y=CD105_Percentage)) + geom_boxplot()
+ggplot(fcs, aes(x=Abbr_Details, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage)) + geom_boxplot()</code></pre>
+<div id="comparison-across-samples" class="section level4">
+<h4>Comparison across samples</h4>
+<pre class="r"><code>ggplot(fcs, aes(x=Abbr_Details, y=CD90_Percentage, fill=Sample_Details)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Proportion of Cells Expressing CD90&quot;) +
+  theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
+  stat_signif(comparisons=list(c(&quot;C1 iPSC - cocktail&quot;,&quot;C1 iPSC - control&quot;),
+                               c(&quot;C1-r2 iPSC - cocktail&quot;,&quot;C1-r2 iPSC - control&quot;),
+                               c(&quot;C2 iPSC - cocktail&quot;,&quot;C2 iPSC - control&quot;),
+                               c(&quot;C3 iPSC - cocktail&quot;,&quot;C3 iPSC - control&quot;),
+                               c(&quot;C4 iPSC - cocktail&quot;,&quot;C4 iPSC - control&quot;),
+                               c(&quot;C5 iPSC - cocktail&quot;,&quot;C5 iPSC - control&quot;),
+                               c(&quot;C6 iPSC - cocktail&quot;,&quot;C6 iPSC - control&quot;),
+                               c(&quot;H1 iPSC - cocktail&quot;,&quot;H1 iPSC - control&quot;),
+                               c(&quot;H1-r2 iPSC - cocktail&quot;,&quot;H1-r2 iPSC - control&quot;),
+                               c(&quot;H2 iPSC - cocktail&quot;,&quot;H2 iPSC - control&quot;),
+                               c(&quot;H3 iPSC - cocktail&quot;,&quot;H3 iPSC - control&quot;),
+                               c(&quot;H4 iPSC - cocktail&quot;,&quot;H4 iPSC - control&quot;),
+                               c(&quot;H5 iPSC - cocktail&quot;,&quot;H5 iPSC - control&quot;),
+                               c(&quot;H6 iPSC - cocktail&quot;,&quot;H6 iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
+  stat_signif(comparisons=list(c(&quot;C1 MSC - cocktail&quot;,&quot;C1 iPSC - control&quot;),
+                               c(&quot;C1-r2 MSC - cocktail&quot;,&quot;C1-r2 iPSC - control&quot;),
+                               c(&quot;C2 MSC - cocktail&quot;,&quot;C2 iPSC - control&quot;),
+                               c(&quot;C3 MSC - cocktail&quot;,&quot;C3 iPSC - control&quot;),
+                               c(&quot;C4 MSC - cocktail&quot;,&quot;C4 iPSC - control&quot;),
+                               c(&quot;C5 MSC - cocktail&quot;,&quot;C5 iPSC - control&quot;),
+                               c(&quot;C6 MSC - cocktail&quot;,&quot;C6 iPSC - control&quot;),
+                               c(&quot;H1 MSC - cocktail&quot;,&quot;H1 iPSC - control&quot;),
+                               c(&quot;H1-r2 MSC - cocktail&quot;,&quot;H1-r2 iPSC - control&quot;),
+                               c(&quot;H2 MSC - cocktail&quot;,&quot;H2 iPSC - control&quot;),
+                               c(&quot;H3 MSC - cocktail&quot;,&quot;H3 iPSC - control&quot;),
+                               c(&quot;H4 MSC - cocktail&quot;,&quot;H4 iPSC - control&quot;),
+                               c(&quot;H5 MSC - cocktail&quot;,&quot;H5 iPSC - control&quot;),
+                               c(&quot;H6 MSC - cocktail&quot;,&quot;H6 iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
+  stat_signif(comparisons=list(c(&quot;C1 MSC - cocktail&quot;,&quot;C1 iPSC - cocktail&quot;),
+                               c(&quot;C1-r2 MSC - cocktail&quot;,&quot;C1-r2 iPSC - cocktail&quot;),
+                               c(&quot;C2 MSC - cocktail&quot;,&quot;C2 iPSC - cocktail&quot;),
+                               c(&quot;C3 MSC - cocktail&quot;,&quot;C3 iPSC - cocktail&quot;),
+                               c(&quot;C4 MSC - cocktail&quot;,&quot;C4 iPSC - cocktail&quot;),
+                               c(&quot;C5 MSC - cocktail&quot;,&quot;C5 iPSC - cocktail&quot;),
+                               c(&quot;C6 MSC - cocktail&quot;,&quot;C6 iPSC - cocktail&quot;),
+                               c(&quot;H1 MSC - cocktail&quot;,&quot;H1 iPSC - cocktail&quot;),
+                               c(&quot;H1-r2 MSC - cocktail&quot;,&quot;H1-r2 iPSC - cocktail&quot;),
+                               c(&quot;H2 MSC - cocktail&quot;,&quot;H2 iPSC - cocktail&quot;),
+                               c(&quot;H3 MSC - cocktail&quot;,&quot;H3 iPSC - cocktail&quot;),
+                               c(&quot;H4 MSC - cocktail&quot;,&quot;H4 iPSC - cocktail&quot;),
+                               c(&quot;H5 MSC - cocktail&quot;,&quot;H5 iPSC - cocktail&quot;),
+                               c(&quot;H6 MSC - cocktail&quot;,&quot;H6 iPSC - cocktail&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;two.sided&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(fcs, aes(x=Abbr_Details, y=CD73_Percentage, fill=Sample_Details)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Proportion of Cells Expressing CD73&quot;) +
+  theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
+  stat_signif(comparisons=list(c(&quot;C1 iPSC - cocktail&quot;,&quot;C1 iPSC - control&quot;),
+                               c(&quot;C1-r2 iPSC - cocktail&quot;,&quot;C1-r2 iPSC - control&quot;),
+                               c(&quot;C2 iPSC - cocktail&quot;,&quot;C2 iPSC - control&quot;),
+                               c(&quot;C3 iPSC - cocktail&quot;,&quot;C3 iPSC - control&quot;),
+                               c(&quot;C4 iPSC - cocktail&quot;,&quot;C4 iPSC - control&quot;),
+                               c(&quot;C5 iPSC - cocktail&quot;,&quot;C5 iPSC - control&quot;),
+                               c(&quot;C6 iPSC - cocktail&quot;,&quot;C6 iPSC - control&quot;),
+                               c(&quot;H1 iPSC - cocktail&quot;,&quot;H1 iPSC - control&quot;),
+                               c(&quot;H1-r2 iPSC - cocktail&quot;,&quot;H1-r2 iPSC - control&quot;),
+                               c(&quot;H2 iPSC - cocktail&quot;,&quot;H2 iPSC - control&quot;),
+                               c(&quot;H3 iPSC - cocktail&quot;,&quot;H3 iPSC - control&quot;),
+                               c(&quot;H4 iPSC - cocktail&quot;,&quot;H4 iPSC - control&quot;),
+                               c(&quot;H5 iPSC - cocktail&quot;,&quot;H5 iPSC - control&quot;),
+                               c(&quot;H6 iPSC - cocktail&quot;,&quot;H6 iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
+  stat_signif(comparisons=list(c(&quot;C1 MSC - cocktail&quot;,&quot;C1 iPSC - control&quot;),
+                               c(&quot;C1-r2 MSC - cocktail&quot;,&quot;C1-r2 iPSC - control&quot;),
+                               c(&quot;C2 MSC - cocktail&quot;,&quot;C2 iPSC - control&quot;),
+                               c(&quot;C3 MSC - cocktail&quot;,&quot;C3 iPSC - control&quot;),
+                               c(&quot;C4 MSC - cocktail&quot;,&quot;C4 iPSC - control&quot;),
+                               c(&quot;C5 MSC - cocktail&quot;,&quot;C5 iPSC - control&quot;),
+                               c(&quot;C6 MSC - cocktail&quot;,&quot;C6 iPSC - control&quot;),
+                               c(&quot;H1 MSC - cocktail&quot;,&quot;H1 iPSC - control&quot;),
+                               c(&quot;H1-r2 MSC - cocktail&quot;,&quot;H1-r2 iPSC - control&quot;),
+                               c(&quot;H2 MSC - cocktail&quot;,&quot;H2 iPSC - control&quot;),
+                               c(&quot;H3 MSC - cocktail&quot;,&quot;H3 iPSC - control&quot;),
+                               c(&quot;H4 MSC - cocktail&quot;,&quot;H4 iPSC - control&quot;),
+                               c(&quot;H5 MSC - cocktail&quot;,&quot;H5 iPSC - control&quot;),
+                               c(&quot;H6 MSC - cocktail&quot;,&quot;H6 iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
+  stat_signif(comparisons=list(c(&quot;C1 MSC - cocktail&quot;,&quot;C1 iPSC - cocktail&quot;)
+                               ,c(&quot;C1-r2 MSC - cocktail&quot;,&quot;C1-r2 iPSC - cocktail&quot;),
+                               c(&quot;C2 MSC - cocktail&quot;,&quot;C2 iPSC - cocktail&quot;),
+                               c(&quot;C3 MSC - cocktail&quot;,&quot;C3 iPSC - cocktail&quot;),
+                               c(&quot;C4 MSC - cocktail&quot;,&quot;C4 iPSC - cocktail&quot;),
+                               c(&quot;C5 MSC - cocktail&quot;,&quot;C5 iPSC - cocktail&quot;),
+                               c(&quot;C6 MSC - cocktail&quot;,&quot;C6 iPSC - cocktail&quot;),
+                               c(&quot;H1 MSC - cocktail&quot;,&quot;H1 iPSC - cocktail&quot;),
+                               c(&quot;H1-r2 MSC - cocktail&quot;,&quot;H1-r2 iPSC - cocktail&quot;),
+                               c(&quot;H2 MSC - cocktail&quot;,&quot;H2 iPSC - cocktail&quot;),
+                               c(&quot;H3 MSC - cocktail&quot;,&quot;H3 iPSC - cocktail&quot;),
+                               c(&quot;H4 MSC - cocktail&quot;,&quot;H4 iPSC - cocktail&quot;),
+                               c(&quot;H5 MSC - cocktail&quot;,&quot;H5 iPSC - cocktail&quot;),
+                               c(&quot;H6 MSC - cocktail&quot;,&quot;H6 iPSC - cocktail&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(fcs, aes(x=Abbr_Details, y=CD105_Percentage, fill=Sample_Details)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Proportion of Cells Expressing CD105&quot;) +
+  theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
+  stat_signif(comparisons=list(c(&quot;C1 iPSC - cocktail&quot;,&quot;C1 iPSC - control&quot;),
+                               c(&quot;C1-r2 iPSC - cocktail&quot;,&quot;C1-r2 iPSC - control&quot;),
+                               c(&quot;C2 iPSC - cocktail&quot;,&quot;C2 iPSC - control&quot;),
+                               c(&quot;C3 iPSC - cocktail&quot;,&quot;C3 iPSC - control&quot;),
+                               c(&quot;C4 iPSC - cocktail&quot;,&quot;C4 iPSC - control&quot;),
+                               c(&quot;C5 iPSC - cocktail&quot;,&quot;C5 iPSC - control&quot;),
+                               c(&quot;C6 iPSC - cocktail&quot;,&quot;C6 iPSC - control&quot;),
+                               c(&quot;H1 iPSC - cocktail&quot;,&quot;H1 iPSC - control&quot;),
+                               c(&quot;H1-r2 iPSC - cocktail&quot;,&quot;H1-r2 iPSC - control&quot;),
+                               c(&quot;H2 iPSC - cocktail&quot;,&quot;H2 iPSC - control&quot;),
+                               c(&quot;H3 iPSC - cocktail&quot;,&quot;H3 iPSC - control&quot;),
+                               c(&quot;H4 iPSC - cocktail&quot;,&quot;H4 iPSC - control&quot;),
+                               c(&quot;H5 iPSC - cocktail&quot;,&quot;H5 iPSC - control&quot;),
+                               c(&quot;H6 iPSC - cocktail&quot;,&quot;H6 iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
+  stat_signif(comparisons=list(c(&quot;C1 MSC - cocktail&quot;,&quot;C1 iPSC - control&quot;),
+                               c(&quot;C1-r2 MSC - cocktail&quot;,&quot;C1-r2 iPSC - control&quot;),
+                               c(&quot;C2 MSC - cocktail&quot;,&quot;C2 iPSC - control&quot;),
+                               c(&quot;C3 MSC - cocktail&quot;,&quot;C3 iPSC - control&quot;),
+                               c(&quot;C4 MSC - cocktail&quot;,&quot;C4 iPSC - control&quot;),
+                               c(&quot;C5 MSC - cocktail&quot;,&quot;C5 iPSC - control&quot;),
+                               c(&quot;C6 MSC - cocktail&quot;,&quot;C6 iPSC - control&quot;),
+                               c(&quot;H1 MSC - cocktail&quot;,&quot;H1 iPSC - control&quot;),
+                               c(&quot;H1-r2 MSC - cocktail&quot;,&quot;H1-r2 iPSC - control&quot;),
+                               c(&quot;H2 MSC - cocktail&quot;,&quot;H2 iPSC - control&quot;),
+                               c(&quot;H3 MSC - cocktail&quot;,&quot;H3 iPSC - control&quot;),
+                               c(&quot;H4 MSC - cocktail&quot;,&quot;H4 iPSC - control&quot;),
+                               c(&quot;H5 MSC - cocktail&quot;,&quot;H5 iPSC - control&quot;),
+                               c(&quot;H6 MSC - cocktail&quot;,&quot;H6 iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
+  stat_signif(comparisons=list(c(&quot;C1 MSC - cocktail&quot;,&quot;C1 iPSC - cocktail&quot;),
+                               c(&quot;C1-r2 MSC - cocktail&quot;,&quot;C1-r2 iPSC - cocktail&quot;),
+                               c(&quot;C2 MSC - cocktail&quot;,&quot;C2 iPSC - cocktail&quot;),
+                               c(&quot;C3 MSC - cocktail&quot;,&quot;C3 iPSC - cocktail&quot;),
+                               c(&quot;C4 MSC - cocktail&quot;,&quot;C4 iPSC - cocktail&quot;),
+                               c(&quot;C5 MSC - cocktail&quot;,&quot;C5 iPSC - cocktail&quot;),
+                               c(&quot;C6 MSC - cocktail&quot;,&quot;C6 iPSC - cocktail&quot;),
+                               c(&quot;H1 MSC - cocktail&quot;,&quot;H1 iPSC - cocktail&quot;),
+                               c(&quot;H1-r2 MSC - cocktail&quot;,&quot;H1-r2 iPSC - cocktail&quot;),
+                               c(&quot;H2 MSC - cocktail&quot;,&quot;H2 iPSC - cocktail&quot;),
+                               c(&quot;H3 MSC - cocktail&quot;,&quot;H3 iPSC - cocktail&quot;),
+                               c(&quot;H4 MSC - cocktail&quot;,&quot;H4 iPSC - cocktail&quot;),
+                               c(&quot;H5 MSC - cocktail&quot;,&quot;H5 iPSC - cocktail&quot;),
+                               c(&quot;H6 MSC - cocktail&quot;,&quot;H6 iPSC - cocktail&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(fcs, aes(x=Abbr_Details, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage, fill=Sample_Details)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Proportion of Cells Expressing\nCD45/CD34/CD11b/CD19/HLA.DR&quot;) +
+  theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
+  stat_signif(comparisons=list(c(&quot;C1 iPSC - cocktail&quot;,&quot;C1 iPSC - control&quot;),
+                               c(&quot;C1-r2 iPSC - cocktail&quot;,&quot;C1-r2 iPSC - control&quot;),
+                               c(&quot;C2 iPSC - cocktail&quot;,&quot;C2 iPSC - control&quot;),
+                               c(&quot;C3 iPSC - cocktail&quot;,&quot;C3 iPSC - control&quot;),
+                               c(&quot;C4 iPSC - cocktail&quot;,&quot;C4 iPSC - control&quot;),
+                               c(&quot;C5 iPSC - cocktail&quot;,&quot;C5 iPSC - control&quot;),
+                               c(&quot;C6 iPSC - cocktail&quot;,&quot;C6 iPSC - control&quot;),
+                               c(&quot;H1 iPSC - cocktail&quot;,&quot;H1 iPSC - control&quot;),
+                               c(&quot;H1-r2 iPSC - cocktail&quot;,&quot;H1-r2 iPSC - control&quot;),
+                               c(&quot;H2 iPSC - cocktail&quot;,&quot;H2 iPSC - control&quot;),
+                               c(&quot;H3 iPSC - cocktail&quot;,&quot;H3 iPSC - control&quot;),
+                               c(&quot;H4 iPSC - cocktail&quot;,&quot;H4 iPSC - control&quot;),
+                               c(&quot;H5 iPSC - cocktail&quot;,&quot;H5 iPSC - control&quot;),
+                               c(&quot;H6 iPSC - cocktail&quot;,&quot;H6 iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
+  stat_signif(comparisons=list(c(&quot;C1 MSC - cocktail&quot;,&quot;C1 iPSC - control&quot;),
+                               c(&quot;C1-r2 MSC - cocktail&quot;,&quot;C1-r2 iPSC - control&quot;),
+                               c(&quot;C2 MSC - cocktail&quot;,&quot;C2 iPSC - control&quot;),
+                               c(&quot;C3 MSC - cocktail&quot;,&quot;C3 iPSC - control&quot;),
+                               c(&quot;C4 MSC - cocktail&quot;,&quot;C4 iPSC - control&quot;),
+                               c(&quot;C5 MSC - cocktail&quot;,&quot;C5 iPSC - control&quot;),
+                               c(&quot;C6 MSC - cocktail&quot;,&quot;C6 iPSC - control&quot;),
+                               c(&quot;H1 MSC - cocktail&quot;,&quot;H1 iPSC - control&quot;),
+                               c(&quot;H1-r2 MSC - cocktail&quot;,&quot;H1-r2 iPSC - control&quot;),
+                               c(&quot;H2 MSC - cocktail&quot;,&quot;H2 iPSC - control&quot;),
+                               c(&quot;H3 MSC - cocktail&quot;,&quot;H3 iPSC - control&quot;),
+                               c(&quot;H4 MSC - cocktail&quot;,&quot;H4 iPSC - control&quot;),
+                               c(&quot;H5 MSC - cocktail&quot;,&quot;H5 iPSC - control&quot;),
+                               c(&quot;H6 MSC - cocktail&quot;,&quot;H6 iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
+  stat_signif(comparisons=list(c(&quot;C1 MSC - cocktail&quot;,&quot;C1 iPSC - cocktail&quot;),
+                               c(&quot;C1-r2 MSC - cocktail&quot;,&quot;C1-r2 iPSC - cocktail&quot;),
+                               c(&quot;C2 MSC - cocktail&quot;,&quot;C2 iPSC - cocktail&quot;),
+                               c(&quot;C3 MSC - cocktail&quot;,&quot;C3 iPSC - cocktail&quot;),
+                               c(&quot;C4 MSC - cocktail&quot;,&quot;C4 iPSC - cocktail&quot;),
+                               c(&quot;C5 MSC - cocktail&quot;,&quot;C5 iPSC - cocktail&quot;),
+                               c(&quot;C6 MSC - cocktail&quot;,&quot;C6 iPSC - cocktail&quot;),
+                               c(&quot;H1 MSC - cocktail&quot;,&quot;H1 iPSC - cocktail&quot;),
+                               c(&quot;H1-r2 MSC - cocktail&quot;,&quot;H1-r2 iPSC - cocktail&quot;),
+                               c(&quot;H2 MSC - cocktail&quot;,&quot;H2 iPSC - cocktail&quot;),
+                               c(&quot;H3 MSC - cocktail&quot;,&quot;H3 iPSC - cocktail&quot;),
+                               c(&quot;H4 MSC - cocktail&quot;,&quot;H4 iPSC - cocktail&quot;),
+                               c(&quot;H5 MSC - cocktail&quot;,&quot;H5 iPSC - cocktail&quot;),
+                               c(&quot;H6 MSC - cocktail&quot;,&quot;H6 iPSC - cocktail&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;two.sided&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="comparison-across-species" class="section level4">
+<h4>Comparison across species</h4>
+<pre class="r"><code>ggplot(fcs, aes(x=Species_Details, y=CD90_Percentage, fill=Sample_Details)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Proportion of Cells Expressing CD90&quot;) +
+  theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
+  stat_signif(comparisons=list(c(&quot;Chimpanzee iPSC - cocktail&quot;,&quot;Chimpanzee iPSC - control&quot;),
+                               c(&quot;Human iPSC - cocktail&quot;,&quot;Human iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
+  stat_signif(comparisons=list(c(&quot;Chimpanzee MSC - cocktail&quot;,&quot;Chimpanzee iPSC - control&quot;),
+                               c(&quot;Human MSC - cocktail&quot;,&quot;Human iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
+  stat_signif(comparisons=list(c(&quot;Chimpanzee MSC - cocktail&quot;,&quot;Chimpanzee iPSC - cocktail&quot;),
+                               c(&quot;Human MSC - cocktail&quot;,&quot;Human iPSC - cocktail&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;two.sided&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(fcs, aes(x=Species_Details, y=CD73_Percentage, fill=Sample_Details)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Proportion of Cells Expressing CD73&quot;) +
+  theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
+  stat_signif(comparisons=list(c(&quot;Chimpanzee iPSC - cocktail&quot;,&quot;Chimpanzee iPSC - control&quot;),
+                               c(&quot;Human iPSC - cocktail&quot;,&quot;Human iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
+  stat_signif(comparisons=list(c(&quot;Chimpanzee MSC - cocktail&quot;,&quot;Chimpanzee iPSC - control&quot;),
+                               c(&quot;Human MSC - cocktail&quot;,&quot;Human iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
+  stat_signif(comparisons=list(c(&quot;Chimpanzee MSC - cocktail&quot;,&quot;Chimpanzee iPSC - cocktail&quot;),
+                               c(&quot;Human MSC - cocktail&quot;,&quot;Human iPSC - cocktail&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(fcs, aes(x=Species_Details, y=CD105_Percentage, fill=Sample_Details)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Proportion of Cells Expressing CD105&quot;) +
+  theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
+  stat_signif(comparisons=list(c(&quot;Chimpanzee iPSC - cocktail&quot;,&quot;Chimpanzee iPSC - control&quot;),
+                               c(&quot;Human iPSC - cocktail&quot;,&quot;Human iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
+  stat_signif(comparisons=list(c(&quot;Chimpanzee MSC - cocktail&quot;,&quot;Chimpanzee iPSC - control&quot;),
+                               c(&quot;Human MSC - cocktail&quot;,&quot;Human iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
+  stat_signif(comparisons=list(c(&quot;Chimpanzee MSC - cocktail&quot;,&quot;Chimpanzee iPSC - cocktail&quot;),
+                               c(&quot;Human MSC - cocktail&quot;,&quot;Human iPSC - cocktail&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(fcs, aes(x=Species_Details, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage, fill=Sample_Details)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Proportion of Cells Expressing\nCD45/CD34/CD11b/CD19/HLA.DR&quot;) +
+  theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
+  stat_signif(comparisons=list(c(&quot;Chimpanzee iPSC - cocktail&quot;,&quot;Chimpanzee iPSC - control&quot;),
+                               c(&quot;Human iPSC - cocktail&quot;,&quot;Human iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
+  stat_signif(comparisons=list(c(&quot;Chimpanzee MSC - cocktail&quot;,&quot;Chimpanzee iPSC - control&quot;),
+                               c(&quot;Human MSC - cocktail&quot;,&quot;Human iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
+  stat_signif(comparisons=list(c(&quot;Chimpanzee MSC - cocktail&quot;,&quot;Chimpanzee iPSC - cocktail&quot;),
+                               c(&quot;Human MSC - cocktail&quot;,&quot;Human iPSC - cocktail&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;two.sided&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>fcs.temp &lt;- fcs[which(fcs$Sample_Details!=&quot;iPSC - control&quot;),]
+fcs.temp$Species &lt;- &quot;Chimp&quot;
+fcs.temp$Species[which(grep(&quot;Human&quot;,fcs.temp$Species_Details)&gt;=1)] &lt;- &quot;Human&quot;
+fcs.temp$Species &lt;- factor(fcs.temp$Species,
+                           levels=c(&quot;Human&quot;,&quot;Chimp&quot;),
+                           labels=c(&quot;Human&quot;,&quot;Chimp&quot;))
+fcs.temp$Stage &lt;- &quot;Time 0&quot;
+fcs.temp$Stage[which(fcs.temp$Cell_Type==&quot;MSC&quot;)] &lt;- &quot;Time 1&quot;
+fcs.temp$Stage &lt;- factor(fcs.temp$Stage,
+                         levels=c(&quot;Time 0&quot;,&quot;Time 1&quot;),
+                         labels=c(&quot;Time 0&quot;,&quot;Time 1&quot;))
+
+p1 &lt;- ggplot(fcs.temp, aes(x=Stage, y=CD90_Percentage, fill=Stage)) +
+        geom_boxplot() +
+        scale_fill_manual(values=c(&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+        labs(title=&quot;CD90&quot;, x=&quot;&quot;, y=&quot;Proportion of Cells Expressing Marker&quot;) +
+        theme_classic() +
+        theme(legend.title=element_blank(), text=element_text(size=18)) +
+        facet_wrap(~Species, nrow=2, strip.position=&quot;left&quot;) +
+        stat_signif(comparisons=list(c(&quot;Time 1&quot;,&quot;Time 0&quot;),
+                                     c(&quot;Time 1&quot;,&quot;Time 0&quot;)),
+                    test = &quot;wilcox.test&quot;,
+                    test.args=list(alternative=&quot;two.sided&quot;, exact=FALSE),
+                    map_signif_level=c(&quot;**&quot;=0.001, &quot;*&quot;=0.01),
+                    tip_length=0.01,
+                    y_position=1.05,
+                    textsize=3)
+
+p2 &lt;- ggplot(fcs.temp, aes(x=Stage, y=CD73_Percentage, fill=Stage)) +
+        geom_boxplot() +
+        scale_fill_manual(values=c(&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+        labs(title=&quot;CD73&quot;, x=&quot;&quot;, y=&quot;&quot;) +
+        theme_classic() +
+        theme(legend.title=element_blank(), text=element_text(size=18)) +
+        facet_wrap(~Species, nrow=2, strip.position=&quot;left&quot;) +
+        stat_signif(comparisons=list(c(&quot;Time 1&quot;,&quot;Time 0&quot;),
+                                     c(&quot;Time 1&quot;,&quot;Time 0&quot;)),
+                    test = &quot;wilcox.test&quot;,
+                    test.args=list(alternative=&quot;two.sided&quot;, exact=FALSE),
+                    map_signif_level=c(&quot;**&quot;=0.001, &quot;*&quot;=0.01),
+                    tip_length=0.01,
+                    y_position=1.05,
+                    textsize=3)
+
+p3 &lt;- ggplot(fcs.temp, aes(x=Stage, y=CD105_Percentage, fill=Stage)) +
+        geom_boxplot() +
+        scale_fill_manual(values=c(&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+        labs(title=&quot;CD105&quot;, x=&quot;&quot;, y=&quot;&quot;) +
+        theme_classic() +
+        theme(legend.title=element_blank(), text=element_text(size=18)) +
+        facet_wrap(~Species, nrow=2, strip.position=&quot;left&quot;) +
+        stat_signif(comparisons=list(c(&quot;Time 1&quot;,&quot;Time 0&quot;),
+                                     c(&quot;Time 1&quot;,&quot;Time 0&quot;)),
+                    test = &quot;wilcox.test&quot;,
+                    test.args=list(alternative=&quot;two.sided&quot;, exact=FALSE),
+                    map_signif_level=c(&quot;**&quot;=0.001, &quot;*&quot;=0.01),
+                    tip_length=0.01,
+                    y_position=1.05,
+                    textsize=3)
+
+p4 &lt;- ggplot(fcs.temp, aes(x=Stage, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage, fill=Stage)) +
+        geom_boxplot() +
+        scale_fill_manual(values=c(&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+        labs(title=&quot;Controls&quot;, x=&quot;&quot;, y=&quot;&quot;) +
+        theme_classic() +
+        theme(legend.title=element_blank(), text=element_text(size=18)) +
+        facet_wrap(~Species, nrow=2, strip.position=&quot;left&quot;) +
+        stat_signif(comparisons=list(c(&quot;Time 1&quot;,&quot;Time 0&quot;),
+                                     c(&quot;Time 1&quot;,&quot;Time 0&quot;)),
+                    test = &quot;wilcox.test&quot;,
+                    test.args=list(alternative=&quot;two.sided&quot;, exact=FALSE),
+                    map_signif_level=c(&quot;**&quot;=0.001, &quot;*&quot;=0.01),
+                    tip_length=0.01,
+                    y_position=1.05,
+                    textsize=3)
+
+CombinePlots(list(p1,p2,p3,p4),ncol=4,legend=&quot;none&quot;)</code></pre>
+<pre class="r"><code>#FIGURE FOR PAPER
+
+fcs.temp &lt;- fcs[which(fcs$Sample_Details!=&quot;iPSC - control&quot;),]
+fcs.temp$Species &lt;- &quot;Chimp&quot;
+fcs.temp$Species[which(grep(&quot;Human&quot;,fcs.temp$Species_Details)&gt;=1)] &lt;- &quot;Human&quot;
+fcs.temp$Species &lt;- factor(fcs.temp$Species,
+                           levels=c(&quot;Human&quot;,&quot;Chimp&quot;),
+                           labels=c(&quot;Human&quot;,&quot;Chimp&quot;))
+fcs.temp$Stage &lt;- &quot;Time 0&quot;
+fcs.temp$Stage[which(fcs.temp$Cell_Type==&quot;MSC&quot;)] &lt;- &quot;Time 1&quot;
+fcs.temp$Stage &lt;- factor(fcs.temp$Stage,
+                         levels=c(&quot;Time 0&quot;,&quot;Time 1&quot;),
+                         labels=c(&quot;Time 0&quot;,&quot;Time 1&quot;))
+
+p1 &lt;- ggplot(fcs.temp[which(fcs.temp$Species==&quot;Human&quot;),], aes(x=Stage, y=CD90_Percentage, fill=Stage)) +
+        geom_boxplot() +
+        scale_fill_manual(values=c(&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+        labs(title=&quot;CD90&quot;, x=&quot;&quot;, y=&quot;Proportion of Cells Expressing Marker&quot;) +
+        theme_classic() +
+        theme(legend.title=element_blank(), text=element_text(size=18)) +
+        stat_signif(comparisons=list(c(&quot;Time 1&quot;,&quot;Time 0&quot;),
+                                     c(&quot;Time 1&quot;,&quot;Time 0&quot;)),
+                    test = &quot;wilcox.test&quot;,
+                    test.args=list(alternative=&quot;two.sided&quot;, exact=FALSE),
+                    map_signif_level=c(&quot;**&quot;=0.001, &quot;*&quot;=0.01),
+                    tip_length=0.01,
+                    y_position=1.05,
+                    textsize=3)
+
+p2 &lt;- ggplot(fcs.temp[which(fcs.temp$Species==&quot;Human&quot;),], aes(x=Stage, y=CD73_Percentage, fill=Stage)) +
+        geom_boxplot() +
+        scale_fill_manual(values=c(&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+        labs(title=&quot;CD73&quot;, x=&quot;&quot;, y=&quot;&quot;) +
+        theme_classic() +
+        theme(legend.title=element_blank(), text=element_text(size=18)) +
+        stat_signif(comparisons=list(c(&quot;Time 1&quot;,&quot;Time 0&quot;),
+                                     c(&quot;Time 1&quot;,&quot;Time 0&quot;)),
+                    test = &quot;wilcox.test&quot;,
+                    test.args=list(alternative=&quot;two.sided&quot;, exact=FALSE),
+                    map_signif_level=c(&quot;**&quot;=0.001, &quot;*&quot;=0.01),
+                    tip_length=0.01,
+                    y_position=1.05,
+                    textsize=3)
+
+p3 &lt;- ggplot(fcs.temp[which(fcs.temp$Species==&quot;Human&quot;),], aes(x=Stage, y=CD105_Percentage, fill=Stage)) +
+        geom_boxplot() +
+        scale_fill_manual(values=c(&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+        labs(title=&quot;CD105&quot;, x=&quot;&quot;, y=&quot;&quot;) +
+        theme_classic() +
+        theme(legend.title=element_blank(), text=element_text(size=18)) +
+        stat_signif(comparisons=list(c(&quot;Time 1&quot;,&quot;Time 0&quot;),
+                                     c(&quot;Time 1&quot;,&quot;Time 0&quot;)),
+                    test = &quot;wilcox.test&quot;,
+                    test.args=list(alternative=&quot;two.sided&quot;, exact=FALSE),
+                    map_signif_level=c(&quot;**&quot;=0.001, &quot;*&quot;=0.01),
+                    tip_length=0.01,
+                    y_position=1.05,
+                    textsize=3)
+
+p4 &lt;- ggplot(fcs.temp[which(fcs.temp$Species==&quot;Human&quot;),], aes(x=Stage, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage, fill=Stage)) +
+        geom_boxplot() +
+        scale_fill_manual(values=c(&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+        labs(title=&quot;Controls&quot;, x=&quot;&quot;, y=&quot;&quot;) +
+        theme_classic() +
+        theme(legend.title=element_blank(), text=element_text(size=18)) +
+        stat_signif(comparisons=list(c(&quot;Time 1&quot;,&quot;Time 0&quot;),
+                                     c(&quot;Time 1&quot;,&quot;Time 0&quot;)),
+                    test = &quot;wilcox.test&quot;,
+                    test.args=list(alternative=&quot;two.sided&quot;, exact=FALSE),
+                    map_signif_level=c(&quot;**&quot;=0.001, &quot;*&quot;=0.01),
+                    tip_length=0.01,
+                    y_position=1.05,
+                    textsize=3)
+
+p5 &lt;- ggplot(fcs.temp[which(fcs.temp$Species==&quot;Chimp&quot;),], aes(x=Stage, y=CD90_Percentage, fill=Stage)) +
+        geom_boxplot() +
+        scale_fill_manual(values=c(&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+        labs(title=&quot;CD90&quot;, x=&quot;&quot;, y=&quot;Proportion of Cells Expressing Marker&quot;) +
+        theme_classic() +
+        theme(legend.title=element_blank(), text=element_text(size=18)) +
+        stat_signif(comparisons=list(c(&quot;Time 1&quot;,&quot;Time 0&quot;),
+                                     c(&quot;Time 1&quot;,&quot;Time 0&quot;)),
+                    test = &quot;wilcox.test&quot;,
+                    test.args=list(alternative=&quot;two.sided&quot;, exact=FALSE),
+                    map_signif_level=c(&quot;**&quot;=0.001, &quot;*&quot;=0.01),
+                    tip_length=0.01,
+                    y_position=1.05,
+                    textsize=3)
+
+p6 &lt;- ggplot(fcs.temp[which(fcs.temp$Species==&quot;Chimp&quot;),], aes(x=Stage, y=CD73_Percentage, fill=Stage)) +
+        geom_boxplot() +
+        scale_fill_manual(values=c(&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+        labs(title=&quot;CD73&quot;, x=&quot;&quot;, y=&quot;&quot;) +
+        theme_classic() +
+        theme(legend.title=element_blank(), text=element_text(size=18)) +
+        stat_signif(comparisons=list(c(&quot;Time 1&quot;,&quot;Time 0&quot;),
+                                     c(&quot;Time 1&quot;,&quot;Time 0&quot;)),
+                    test = &quot;wilcox.test&quot;,
+                    test.args=list(alternative=&quot;two.sided&quot;, exact=FALSE),
+                    map_signif_level=c(&quot;**&quot;=0.001, &quot;*&quot;=0.01),
+                    tip_length=0.01,
+                    y_position=1.05,
+                    textsize=3)
+
+p7 &lt;- ggplot(fcs.temp[which(fcs.temp$Species==&quot;Chimp&quot;),], aes(x=Stage, y=CD105_Percentage, fill=Stage)) +
+        geom_boxplot() +
+        scale_fill_manual(values=c(&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+        labs(title=&quot;CD105&quot;, x=&quot;&quot;, y=&quot;&quot;) +
+        theme_classic() +
+        theme(legend.title=element_blank(), text=element_text(size=18)) +
+        stat_signif(comparisons=list(c(&quot;Time 1&quot;,&quot;Time 0&quot;),
+                                     c(&quot;Time 1&quot;,&quot;Time 0&quot;)),
+                    test = &quot;wilcox.test&quot;,
+                    test.args=list(alternative=&quot;two.sided&quot;, exact=FALSE),
+                    map_signif_level=c(&quot;**&quot;=0.001, &quot;*&quot;=0.01),
+                    tip_length=0.01,
+                    y_position=1.05,
+                    textsize=3)
+
+p8 &lt;- ggplot(fcs.temp[which(fcs.temp$Species==&quot;Chimp&quot;),], aes(x=Stage, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage, fill=Stage)) +
+        geom_boxplot() +
+        scale_fill_manual(values=c(&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+        labs(title=&quot;Controls&quot;, x=&quot;&quot;, y=&quot;&quot;) +
+        theme_classic() +
+        theme(legend.title=element_blank(), text=element_text(size=18)) +
+        stat_signif(comparisons=list(c(&quot;Time 1&quot;,&quot;Time 0&quot;),
+                                     c(&quot;Time 1&quot;,&quot;Time 0&quot;)),
+                    test = &quot;wilcox.test&quot;,
+                    test.args=list(alternative=&quot;two.sided&quot;, exact=FALSE),
+                    map_signif_level=c(&quot;**&quot;=0.001, &quot;*&quot;=0.01),
+                    tip_length=0.01,
+                    y_position=1.05,
+                    textsize=3)
+
+CombinePlots(list(p1,p2,p3,p4),ncol=4,legend=&quot;none&quot;)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>CombinePlots(list(p5,p6,p7,p8),ncol=4,legend=&quot;none&quot;)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-20-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="comparison-across-full-sample-set" class="section level4">
+<h4>Comparison across full sample set</h4>
+<pre class="r"><code>ggplot(fcs, aes(x=Sample_Details, y=CD90_Percentage, fill=Sample_Details)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Proportion of Cells Expressing CD90&quot;) +
+  theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
+  stat_signif(comparisons=list(c(&quot;iPSC - cocktail&quot;,&quot;iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
+  stat_signif(comparisons=list(c(&quot;MSC - cocktail&quot;,&quot;iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
+  stat_signif(comparisons=list(c(&quot;MSC - cocktail&quot;,&quot;iPSC - cocktail&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;two.sided&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-22-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(fcs, aes(x=Sample_Details, y=CD73_Percentage, fill=Sample_Details)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Proportion of Cells Expressing CD73&quot;) +
+  theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
+  stat_signif(comparisons=list(c(&quot;iPSC - cocktail&quot;,&quot;iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
+  stat_signif(comparisons=list(c(&quot;MSC - cocktail&quot;,&quot;iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
+  stat_signif(comparisons=list(c(&quot;MSC - cocktail&quot;,&quot;iPSC - cocktail&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-23-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(fcs, aes(x=Sample_Details, y=CD105_Percentage, fill=Sample_Details)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Proportion of Cells Expressing CD105&quot;) +
+  theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
+  stat_signif(comparisons=list(c(&quot;iPSC - cocktail&quot;,&quot;iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
+  stat_signif(comparisons=list(c(&quot;MSC - cocktail&quot;,&quot;iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
+  stat_signif(comparisons=list(c(&quot;MSC - cocktail&quot;,&quot;iPSC - cocktail&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-24-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(fcs, aes(x=Sample_Details, y=CD45.CD34.CD11b.CD19.HLA.DR_Percentage, fill=Sample_Details)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;pink&quot;,&quot;mediumorchid&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Proportion of Cells Expressing\nCD45/CD34/CD11b/CD19/HLA.DR&quot;) +
+  theme(axis.text.x=element_text(angle=90, hjust=1), legend.title=element_blank()) +
+  stat_signif(comparisons=list(c(&quot;iPSC - cocktail&quot;,&quot;iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.05) +
+  stat_signif(comparisons=list(c(&quot;MSC - cocktail&quot;,&quot;iPSC - control&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.15) +
+  stat_signif(comparisons=list(c(&quot;MSC - cocktail&quot;,&quot;iPSC - cocktail&quot;)),
+              test = &quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;two.sided&quot;, exact=FALSE),
+              map_signif_level=TRUE,
+              tip_length=0.01,
+              y_position=1.25)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-25-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="staining-results---alizarin-red" class="section level3">
+<h3>Staining Results - Alizarin Red</h3>
+<p>Alizarin Red S staining which binds to calcium deposits was performed on iPSC-derived MSCs (Time 1) and iPSC-MSC-derived osteoblasts (Time 2) in order to confirm osteogenic differentiation. Quatification of stain was determined by extracting stain and measuring absorbance levels. Expect higher absorbance values in cells collected at Time 2 than Time 1.</p>
+<pre class="r"><code>#Load alizarin red data
+alz &lt;- read.csv(file=&#39;./data/alizarin-red-quant-total.csv&#39;, header=TRUE, sep=&quot;,&quot;)
+
+#Remove data not reformat alizarin red data
+alz &lt;- alz[c(1:8,13:20,25:60,65:72,77:140),] #remove C1-6W, H1-6W, H3-1A</code></pre>
+<p>Look at all of the data:</p>
+<pre class="r"><code>ggplot(alz, aes(x=Sample, y=Absorbance_Value)) + geom_boxplot()</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-26-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Remove any potential outliers from data and reformat.</p>
+<pre class="r"><code>#Remove outliers
+alz &lt;- alz[c(1:8,10:11,14:18,20:124),]
+
+#Adjust variables in alizarin red data
+alz$Sample &lt;- factor(alz$Sample, 
+                     levels = c(&quot;C1-M&quot;,&quot;C1-O 12w&quot;,
+                                &quot;CR-M&quot;,&quot;CR-O&quot;,
+                                &quot;C2-M&quot;,&quot;C2-O&quot;,
+                                &quot;C3-M&quot;,&quot;C3-O&quot;,
+                                &quot;C4-M&quot;,&quot;C4-O&quot;,
+                                &quot;C5-M&quot;,&quot;C5-O&quot;,
+                                &quot;C6-M&quot;,&quot;C6-O&quot;,
+                                &quot;H1-M&quot;,&quot;H1-O 12w&quot;,
+                                &quot;HR-M&quot;,&quot;HR-O&quot;,
+                                &quot;H2-M&quot;,&quot;H2-O&quot;,
+                                &quot;H3-M(1)&quot;,&quot;H3-O(1)&quot;,
+                                &quot;H4-M&quot;,&quot;H4-O&quot;,
+                                &quot;H5-M&quot;,&quot;H5-O&quot;,
+                                &quot;H6-M&quot;,&quot;H6-O&quot;),
+                     labels = c(&quot;C1-M&quot;,&quot;C1-O&quot;,
+                                &quot;C1-r2-M&quot;,&quot;C1-r2-O&quot;,
+                                &quot;C2-M&quot;,&quot;C2-O&quot;,
+                                &quot;C3-M&quot;,&quot;C3-O&quot;,
+                                &quot;C4-M&quot;,&quot;C4-O&quot;,
+                                &quot;C5-M&quot;,&quot;C5-O&quot;,
+                                &quot;C6-M&quot;,&quot;C6-O&quot;,
+                                &quot;H1-M&quot;,&quot;H1-O&quot;,
+                                &quot;H1-r2-M&quot;,&quot;H1-r2-O&quot;,
+                                &quot;H2-M&quot;,&quot;H2-O&quot;,
+                                &quot;H3-M&quot;,&quot;H3-O&quot;,
+                                &quot;H4-M&quot;,&quot;H4-O&quot;,
+                                &quot;H5-M&quot;,&quot;H5-O&quot;,
+                                &quot;H6-M&quot;,&quot;H6-O&quot;)) 
+alz$Species_Details &lt;- factor(alz$Species_Details,
+                              levels = c(&quot;Chimpanzee MSC&quot;,
+                                         &quot;Chimpanzee Osteoblast&quot;,
+                                         &quot;Human MSC&quot;,
+                                         &quot;Human Osteoblast&quot;),
+                              labels = c(&quot;Chimpanzee MSC&quot;,
+                                         &quot;Chimpanzee Osteoblast&quot;,
+                                         &quot;Human MSC&quot;,
+                                         &quot;Human Osteoblast&quot;)) 
+alz$Cell_Type &lt;- factor(alz$Cell_Type,
+                        levels = c(&quot;MSC&quot;,&quot;Osteoblast&quot;),
+                        labels = c(&quot;MSC&quot;,&quot;Osteoblast&quot;)) </code></pre>
+<pre class="r"><code>ggplot(alz, aes(x=Sample, y=Absorbance_Value)) + geom_boxplot()</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-29-1.png" width="672" style="display: block; margin: auto;" /></p>
+<div id="comparison-across-samples-1" class="section level4">
+<h4>Comparison across samples</h4>
+<pre class="r"><code>ggplot(alz, aes(x=Sample, y=Absorbance_Value, fill=Cell_Type)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;red&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Alizarin Red Absorbance&quot;) +
+  theme(legend.title = element_blank()) +
+  geom_signif(comparisons = list(c(&quot;C1-O&quot;,&quot;C1-M&quot;),
+                                 c(&quot;C1-r2-O&quot;,&quot;C1-r2-M&quot;),
+                                 c(&quot;C2-O&quot;,&quot;C2-M&quot;),
+                                 c(&quot;C3-O&quot;,&quot;C3-M&quot;),
+                                 c(&quot;C4-O&quot;,&quot;C4-M&quot;),
+                                 c(&quot;C5-O&quot;,&quot;C5-M&quot;),
+                                 c(&quot;C6-O&quot;,&quot;C6-M&quot;),
+                                 c(&quot;H1-O&quot;,&quot;H1-M&quot;),
+                                 c(&quot;H1-r2-O&quot;,&quot;H1-r2-M&quot;),
+                                 c(&quot;H2-O&quot;,&quot;H2-M&quot;),
+                                 c(&quot;H3-O&quot;,&quot;H3-M&quot;),
+                                 c(&quot;H4-O&quot;,&quot;H4-M&quot;),
+                                 c(&quot;H5-O&quot;,&quot;H5-M&quot;),
+                                 c(&quot;H6-O&quot;,&quot;H6-M&quot;)), 
+              test=&quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-31-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="comparison-across-species-1" class="section level4">
+<h4>Comparison across species</h4>
+<pre class="r"><code>ggplot(alz, aes(x=Species_Details, y=Absorbance_Value, fill=Cell_Type)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;red&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Alizarin Red Absorbance&quot;) +
+  theme(legend.title = element_blank()) +
+  geom_signif(comparisons = list(c(&quot;Chimpanzee Osteoblast&quot;,&quot;Chimpanzee MSC&quot;),
+                                 c(&quot;Human Osteoblast&quot;,&quot;Human MSC&quot;)), 
+              test=&quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-33-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#FIGURES IN PAPER
+
+ggplot(alz[which(alz$Species==&quot;Human&quot;),], aes(x=Cell_Type, y=Absorbance_Value, fill=Cell_Type)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;red&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Alizarin Red Absorbance&quot;) +
+  theme_classic() +
+  theme(legend.title = element_blank()) +
+  geom_signif(comparisons = list(c(&quot;Osteoblast&quot;,&quot;MSC&quot;)), 
+              test=&quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-34-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(alz[which(alz$Species==&quot;Chimpanzee&quot;),], aes(x=Cell_Type, y=Absorbance_Value, fill=Cell_Type)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;red&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Alizarin Red Absorbance&quot;) +
+  theme_classic() +
+  theme(legend.title = element_blank()) +
+  geom_signif(comparisons = list(c(&quot;Osteoblast&quot;,&quot;MSC&quot;)), 
+              test=&quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-34-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="comparison-across-full-sample-set-1" class="section level4">
+<h4>Comparison across full sample set</h4>
+<pre class="r"><code>ggplot(alz, aes(x=Cell_Type, y=Absorbance_Value, fill=Cell_Type)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;red&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Alizarin Red Absorbance&quot;) +
+  theme(legend.title = element_blank()) +
+  geom_signif(comparisons = list(c(&quot;Osteoblast&quot;,&quot;MSC&quot;)),
+              test=&quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-36-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="staining-results---oil-red" class="section level3">
+<h3>Staining Results - Oil Red</h3>
+<p>Oil Red O staining which binds to fat globules was performed on iPSC-derived MSCs (Time 1) and iPSC-MSC-derived adipocytes in order to confirm adipogenic differentiation. Quatification of stain was determined by extracting stain and measuring absorbance levels. Expect higher absorbance values in cells collected after adipogenic differentiation than Time 1.</p>
+<pre class="r"><code>#Load oil red data
+oil &lt;- read.csv(file=&#39;./data/oil-red-quant-total.csv&#39;, header=TRUE, sep=&quot;,&quot;)</code></pre>
+<p>Look at all of the data:</p>
+<pre class="r"><code>ggplot(oil, aes(x=Sample, y=Absorbance_Value)) + geom_boxplot()</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-38-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Remove any potential outliers from data and reformat.</p>
+<pre class="r"><code>#Remove outliers
+oil &lt;- oil[c(1:63,65:91,93:112),]
+
+#Adjust variables in oil red data
+oil$Sample &lt;- factor(oil$Sample, 
+                     levels = c(&quot;C1-M&quot;,&quot;C1-A&quot;,
+                                &quot;CR-M&quot;,&quot;CR-A&quot;,
+                                &quot;C2-M&quot;,&quot;C2-A&quot;,
+                                &quot;C3-M&quot;,&quot;C3-A&quot;,
+                                &quot;C4-M&quot;,&quot;C4-A&quot;,
+                                &quot;C5-M&quot;,&quot;C5-A&quot;,
+                                &quot;C6-M&quot;,&quot;C6-A&quot;,
+                                &quot;H1-M&quot;,&quot;H1-A&quot;,
+                                &quot;HR-M&quot;,&quot;HR-A&quot;,
+                                &quot;H2-M&quot;,&quot;H2-A&quot;,
+                                &quot;H3-M&quot;,&quot;H3-A&quot;,
+                                &quot;H4-M&quot;,&quot;H4-A&quot;,
+                                &quot;H5-M&quot;,&quot;H5-A&quot;,
+                                &quot;H6-M&quot;,&quot;H6-A&quot;),
+                     labels = c(&quot;C1-M&quot;,&quot;C1-A&quot;,
+                                &quot;C1-r2-M&quot;,&quot;C1-r2-A&quot;,
+                                &quot;C2-M&quot;,&quot;C2-A&quot;,
+                                &quot;C3-M&quot;,&quot;C3-A&quot;,
+                                &quot;C4-M&quot;,&quot;C4-A&quot;,
+                                &quot;C5-M&quot;,&quot;C5-A&quot;,
+                                &quot;C6-M&quot;,&quot;C6-A&quot;,
+                                &quot;H1-M&quot;,&quot;H1-A&quot;,
+                                &quot;H1-r2-M&quot;,&quot;H1-r2-A&quot;,
+                                &quot;H2-M&quot;,&quot;H2-A&quot;,
+                                &quot;H3-M&quot;,&quot;H3-A&quot;,
+                                &quot;H4-M&quot;,&quot;H4-A&quot;,
+                                &quot;H5-M&quot;,&quot;H5-A&quot;,
+                                &quot;H6-M&quot;,&quot;H6-A&quot;)) 
+oil$Species_Details &lt;- factor(oil$Species_Details,
+                              levels = c(&quot;Chimpanzee MSC&quot;,
+                                         &quot;Chimpanzee Adipocyte&quot;,
+                                         &quot;Human MSC&quot;,
+                                         &quot;Human Adipocyte&quot;),
+                              labels = c(&quot;Chimpanzee MSC&quot;,
+                                         &quot;Chimpanzee Adipocyte&quot;,
+                                         &quot;Human MSC&quot;,
+                                         &quot;Human Adipocyte&quot;)) 
+oil$Cell_Type &lt;- factor(oil$Cell_Type,
+                        levels = c(&quot;MSC&quot;,&quot;Adipocyte&quot;),
+                        labels = c(&quot;MSC&quot;,&quot;Adipocyte&quot;)) </code></pre>
+<pre class="r"><code>ggplot(oil, aes(x=Sample, y=Absorbance_Value)) + geom_boxplot()</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-41-1.png" width="672" style="display: block; margin: auto;" /></p>
+<div id="comparison-across-samples-2" class="section level4">
+<h4>Comparison across samples</h4>
+<pre class="r"><code>ggplot(oil, aes(x=Sample, y=Absorbance_Value, fill=Cell_Type)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;red&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Oil Red Absorbance&quot;) +
+  theme(legend.title = element_blank()) +
+  geom_signif(comparisons = list(c(&quot;C1-A&quot;,&quot;C1-M&quot;),
+                                 c(&quot;C1-r2-A&quot;,&quot;C1-r2-M&quot;),
+                                 c(&quot;C2-A&quot;,&quot;C2-M&quot;),
+                                 c(&quot;C3-A&quot;,&quot;C3-M&quot;),
+                                 c(&quot;C4-A&quot;,&quot;C4-M&quot;),
+                                 c(&quot;C5-A&quot;,&quot;C5-M&quot;),
+                                 c(&quot;C6-A&quot;,&quot;C6-M&quot;),
+                                 c(&quot;H1-A&quot;,&quot;H1-M&quot;),
+                                 c(&quot;H1-r2-A&quot;,&quot;H1-r2-M&quot;),
+                                 c(&quot;H2-A&quot;,&quot;H2-M&quot;),
+                                 c(&quot;H3-A&quot;,&quot;H3-M&quot;),
+                                 c(&quot;H4-A&quot;,&quot;H4-M&quot;),
+                                 c(&quot;H5-A&quot;,&quot;H5-M&quot;),
+                                 c(&quot;H6-A&quot;,&quot;H6-M&quot;)), 
+              test=&quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-43-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="comparison-across-species-2" class="section level4">
+<h4>Comparison across species</h4>
+<pre class="r"><code>ggplot(oil, aes(x=Species_Details, y=Absorbance_Value, fill=Cell_Type)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;red&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Oil Red Absorbance&quot;) +
+  theme(legend.title = element_blank()) +
+  geom_signif(comparisons = list(c(&quot;Chimpanzee Adipocyte&quot;,&quot;Chimpanzee MSC&quot;),
+                                 c(&quot;Human Adipocyte&quot;,&quot;Human MSC&quot;)), 
+              test=&quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-45-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#FIGURES IN PAPER
+
+ggplot(oil[which(oil$Species==&quot;Human&quot;),], aes(x=Cell_Type, y=Absorbance_Value, fill=Cell_Type)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;red&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Oil Red Absorbance&quot;) +
+  theme_classic() +
+  theme(legend.title = element_blank()) +
+  geom_signif(comparisons = list(c(&quot;Adipocyte&quot;,&quot;MSC&quot;)), 
+              test=&quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-46-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(oil[which(oil$Species==&quot;Chimpanzee&quot;),], aes(x=Cell_Type, y=Absorbance_Value, fill=Cell_Type)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;red&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Oil Red Absorbance&quot;) +
+  theme_classic() +
+  theme(legend.title = element_blank()) +
+  geom_signif(comparisons = list(c(&quot;Adipocyte&quot;,&quot;MSC&quot;)), 
+              test=&quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-46-2.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="comparison-across-full-sample-set-2" class="section level4">
+<h4>Comparison across full sample set</h4>
+<pre class="r"><code>ggplot(oil, aes(x=Cell_Type, y=Absorbance_Value, fill=Cell_Type)) +
+  geom_boxplot() +
+  scale_fill_manual(values=c(&quot;white&quot;,&quot;red&quot;)) +
+  labs(x=&quot;&quot;, y=&quot;Oil Red Absorbance&quot;) +
+  theme(legend.title = element_blank()) +
+  geom_signif(comparisons = list(c(&quot;Adipocyte&quot;,&quot;MSC&quot;)),
+              test=&quot;wilcox.test&quot;,
+              test.args=list(alternative=&quot;greater&quot;, exact=FALSE),
+              map_signif_level=TRUE)</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-48-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="qpcr-results" class="section level3">
+<h3>qPCR Results</h3>
+<p>qPCRs of candidate genes were performed on iPSCs (Time 0), iPSC-derived MSCs (Time 1), iPSC-MSC-derived osteogenic cells (Time 2), iPSC-MSC-derived chondrogenic cells, and iPSC-MSC-derived adipogenic cells in order to confirm cell differentiation. Flow cytometry data were collected for iPSCs (Time 0) and iPSC-derived MSCs (Time 1) in order to confirm MSC differentiation. Expect positive expression of CD90 in cells collected at Time 0, positive expression of CD90, CD73, and CD105 in cells collected at Time 1, and no expression of control markers (CD45, CD34, CD11b, CD19, HLA-DR) in all cells.</p>
+<pre class="r"><code>#Load fcs data
+qpcr &lt;- read.csv(file=&#39;./data/qPCR-summary-total.csv&#39;, header=TRUE, sep=&quot;,&quot;)</code></pre>
+<pre class="r"><code>#Reformat fcs data
+qpcr$Species_Details &lt;- factor(qpcr$Species_Details,
+                               levels=c(&quot;Chimpanzee iPSC&quot;,
+                                        &quot;Chimpanzee MSC&quot;,
+                                        &quot;Chimpanzee Adipogenic&quot;,
+                                        &quot;Chimpanzee Chondrogenic&quot;,
+                                        &quot;Chimpanzee Osteogenic&quot;,
+                                        &quot;Human iPSC&quot;,
+                                        &quot;Human MSC&quot;,
+                                        &quot;Human Adipogenic&quot;,
+                                        &quot;Human Chondrogenic&quot;,
+                                        &quot;Human Osteogenic&quot;),
+                               labels=c(&quot;Chimpanzee iPSC&quot;,
+                                        &quot;Chimpanzee MSC&quot;,
+                                        &quot;Chimpanzee Adipogenic&quot;,
+                                        &quot;Chimpanzee Chondrogenic&quot;,
+                                        &quot;Chimpanzee Osteogenic&quot;,
+                                        &quot;Human iPSC&quot;,
+                                        &quot;Human MSC&quot;,
+                                        &quot;Human Adipogenic&quot;,
+                                        &quot;Human Chondrogenic&quot;,
+                                        &quot;Human Osteogenic&quot;))
+qpcr$Sample_Details &lt;- factor(qpcr$Sample_Details,
+                              levels=c(&quot;Sample iPSC&quot;,
+                                      &quot;Sample MSC&quot;,
+                                      &quot;Sample Adipogenic&quot;,
+                                      &quot;Sample Chondrogenic&quot;,
+                                      &quot;Sample Osteogenic&quot;),
+                              labels=c(&quot;iPSC&quot;,
+                                      &quot;MSC&quot;,
+                                      &quot;Adipogenic&quot;,
+                                      &quot;Chondrogenic&quot;,
+                                      &quot;Osteogenic&quot;))
+qpcr$Cell_Type &lt;- factor(qpcr$Cell_Type,
+                         levels=c(&quot;iPSC&quot;,&quot;MSC&quot;,&quot;Adipogenic&quot;,&quot;Chondrogenic&quot;,&quot;Osteogenic&quot;),
+                         labels=c(&quot;iPSC&quot;,&quot;MSC&quot;,&quot;Adipogenic&quot;,&quot;Chondrogenic&quot;,&quot;Osteogenic&quot;))
+
+#Calculate deltadeltaCt for statistical testing
+qpcr$LogE_EdeltadeltaCt_GAPDHandGUSB_MSC &lt;- -(log(qpcr$EdeltadeltaCt_GAPDHandGUSB_MSC, base=qpcr$qPCR_Efficiency))</code></pre>
+<p>Look at all of the data:</p>
+<pre class="r"><code>#OSTEOGENIC MARKERS
+
+#COL1A1
+ggplot(qpcr[which(qpcr$Gene==&quot;COL1A1&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Osteogenic&quot;)),], aes(x=Abbr_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;COL1A1&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Osteogenic&quot;)),], aes(x=Species_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;COL1A1&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Osteogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+
+#BGLAP
+ggplot(qpcr[which(qpcr$Gene==&quot;BGLAP&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Osteogenic&quot;)),], aes(x=Abbr_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;BGLAP&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Osteogenic&quot;)),], aes(x=Species_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;BGLAP&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Osteogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+
+#RUNX2
+ggplot(qpcr[which(qpcr$Gene==&quot;RUNX2&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Osteogenic&quot;)),], aes(x=Abbr_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;RUNX2&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Osteogenic&quot;)),], aes(x=Species_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;RUNX2&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Osteogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+
+#IBSP
+ggplot(qpcr[which(qpcr$Gene==&quot;IBSP&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Osteogenic&quot;)),], aes(x=Abbr_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;IBSP&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Osteogenic&quot;)),], aes(x=Species_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;IBSP&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Osteogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+
+#SP7
+ggplot(qpcr[which(qpcr$Gene==&quot;SP7&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Osteogenic&quot;)),], aes(x=Abbr_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;SP7&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Osteogenic&quot;)),], aes(x=Species_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;SP7&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Osteogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+
+#CHONDROGENIC MARKERS
+
+#ACAN
+ggplot(qpcr[which(qpcr$Gene==&quot;ACAN&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Chondrogenic&quot;)),], aes(x=Abbr_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;ACAN&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Chondrogenic&quot;)),], aes(x=Species_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;ACAN&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Chondrogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+
+#COL2A1
+ggplot(qpcr[which(qpcr$Gene==&quot;COL2A1&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Chondrogenic&quot;)),], aes(x=Abbr_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;COL2A1&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Chondrogenic&quot;)),], aes(x=Species_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;COL2A1&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Chondrogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+
+#SOX9
+ggplot(qpcr[which(qpcr$Gene==&quot;SOX9&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Chondrogenic&quot;)),], aes(x=Abbr_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;SOX9&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Chondrogenic&quot;)),], aes(x=Species_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;SOX9&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Chondrogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+
+#COL11A1
+ggplot(qpcr[which(qpcr$Gene==&quot;COL11A1&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Chondrogenic&quot;)),], aes(x=Abbr_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;COL11A1&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Chondrogenic&quot;)),], aes(x=Species_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;COL11A1&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Chondrogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+
+#SOX6
+ggplot(qpcr[which(qpcr$Gene==&quot;SOX6&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Chondrogenic&quot;)),], aes(x=Abbr_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;SOX6&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Chondrogenic&quot;)),], aes(x=Species_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;SOX6&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Chondrogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+
+#ADIPOGENIC MARKERS
+
+#FABP4
+ggplot(qpcr[which(qpcr$Gene==&quot;FABP4&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Adipogenic&quot;)),], aes(x=Abbr_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;FABP4&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Adipogenic&quot;)),], aes(x=Species_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;FABP4&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Adipogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+
+#PPARG
+ggplot(qpcr[which(qpcr$Gene==&quot;PPARG&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Adipogenic&quot;)),], aes(x=Abbr_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;PPARG&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Adipogenic&quot;)),], aes(x=Species_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()
+ggplot(qpcr[which(qpcr$Gene==&quot;PPARG&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Adipogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) + geom_boxplot()</code></pre>
+<p>Make nicer plots for paper.</p>
+<pre class="r"><code>#OSTEOGENIC MARKERS
+
+ggplot(qpcr[which(qpcr$Gene==&quot;COL1A1&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Osteogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) +
+  geom_boxplot(fill=&quot;dodgerblue&quot;) +
+  labs(x=&quot;&quot;, y=&quot;Relative Fold Change in Gene Expression&quot;, title=&quot;COL1A1&quot;) +
+  geom_signif(aes(x=Sample_Details, y=LogE_EdeltadeltaCt_GAPDHandGUSB_MSC),
+              comparisons = list(c(&quot;Osteogenic&quot;,&quot;MSC&quot;)), 
+              test=&quot;t.test&quot;,
+              test.args=list(alternative=&quot;less&quot;),
+              map_signif_level=TRUE) +
+  theme_classic()</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-52-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(qpcr[which(qpcr$Gene==&quot;BGLAP&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Osteogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) +
+  geom_boxplot(fill=&quot;dodgerblue&quot;) +
+  labs(x=&quot;&quot;, y=&quot;Relative Fold Change in Gene Expression&quot;, title=&quot;BGLAP&quot;) +
+  geom_signif(aes(x=Sample_Details, y=LogE_EdeltadeltaCt_GAPDHandGUSB_MSC),
+              comparisons = list(c(&quot;Osteogenic&quot;,&quot;MSC&quot;)), 
+              test=&quot;t.test&quot;,
+              test.args=list(alternative=&quot;less&quot;),
+              map_signif_level=TRUE) +
+  theme_classic()</code></pre>
+<pre><code>Warning: Removed 4 rows containing non-finite values (stat_boxplot).</code></pre>
+<pre><code>Warning: Removed 4 rows containing non-finite values (stat_signif).</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-52-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(qpcr[which(qpcr$Gene==&quot;RUNX2&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Osteogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) +
+  geom_boxplot(fill=&quot;dodgerblue&quot;) +
+  labs(x=&quot;&quot;, y=&quot;Relative Fold Change in Gene Expression&quot;, title=&quot;RUNX2&quot;) +
+  geom_signif(aes(x=Sample_Details, y=LogE_EdeltadeltaCt_GAPDHandGUSB_MSC),
+              comparisons = list(c(&quot;Osteogenic&quot;,&quot;MSC&quot;)), 
+              test=&quot;t.test&quot;,
+              test.args=list(alternative=&quot;less&quot;),
+              map_signif_level=TRUE) +
+  theme_classic()</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-52-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(qpcr[which(qpcr$Gene==&quot;IBSP&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Osteogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) +
+  geom_boxplot(fill=&quot;dodgerblue&quot;) +
+  labs(x=&quot;&quot;, y=&quot;Relative Fold Change in Gene Expression&quot;, title=&quot;IBSP&quot;) +
+  geom_signif(aes(x=Sample_Details, y=LogE_EdeltadeltaCt_GAPDHandGUSB_MSC),
+              comparisons = list(c(&quot;Osteogenic&quot;,&quot;MSC&quot;)), 
+              test=&quot;t.test&quot;,
+              test.args=list(alternative=&quot;less&quot;),
+              map_signif_level=TRUE) +
+  theme_classic()</code></pre>
+<pre><code>Warning: Removed 40 rows containing non-finite values (stat_boxplot).</code></pre>
+<pre><code>Warning: Removed 40 rows containing non-finite values (stat_signif).</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-52-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(qpcr[which(qpcr$Gene==&quot;SP7&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Osteogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) +
+  geom_boxplot(fill=&quot;dodgerblue&quot;) +
+  labs(x=&quot;&quot;, y=&quot;Relative Fold Change in Gene Expression&quot;, title=&quot;SP7&quot;) +
+  geom_signif(aes(x=Sample_Details, y=LogE_EdeltadeltaCt_GAPDHandGUSB_MSC),
+              comparisons = list(c(&quot;Osteogenic&quot;,&quot;MSC&quot;)), 
+              test=&quot;t.test&quot;,
+              test.args=list(alternative=&quot;less&quot;),
+              map_signif_level=TRUE) +
+  theme_classic()</code></pre>
+<pre><code>Warning: Removed 20 rows containing non-finite values (stat_boxplot).</code></pre>
+<pre><code>Warning: Removed 20 rows containing non-finite values (stat_signif).</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-52-5.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#CHONDROGENIC MARKERS
+
+ggplot(qpcr[which(qpcr$Gene==&quot;ACAN&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Chondrogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) +
+  geom_boxplot(fill=&quot;gold&quot;) +
+  labs(x=&quot;&quot;, y=&quot;Relative Fold Change in Gene Expression&quot;, title=&quot;ACAN&quot;) +
+  geom_signif(aes(x=Sample_Details, y=LogE_EdeltadeltaCt_GAPDHandGUSB_MSC),
+              comparisons = list(c(&quot;Chondrogenic&quot;,&quot;MSC&quot;)), 
+              test=&quot;t.test&quot;,
+              test.args=list(alternative=&quot;less&quot;),
+              map_signif_level=TRUE) +
+  theme_classic()</code></pre>
+<pre><code>Warning: Removed 17 rows containing non-finite values (stat_boxplot).</code></pre>
+<pre><code>Warning: Removed 17 rows containing non-finite values (stat_signif).</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-52-6.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(qpcr[which(qpcr$Gene==&quot;COL2A1&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Chondrogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) +
+  geom_boxplot(fill=&quot;gold&quot;) +
+  labs(x=&quot;&quot;, y=&quot;Relative Fold Change in Gene Expression&quot;, title=&quot;COL2A1&quot;) +
+  geom_signif(aes(x=Sample_Details, y=LogE_EdeltadeltaCt_GAPDHandGUSB_MSC),
+              comparisons = list(c(&quot;Chondrogenic&quot;,&quot;MSC&quot;)), 
+              test=&quot;t.test&quot;,
+              test.args=list(alternative=&quot;less&quot;),
+              map_signif_level=TRUE) +
+  theme_classic()</code></pre>
+<pre><code>Warning: Removed 10 rows containing non-finite values (stat_boxplot).</code></pre>
+<pre><code>Warning: Removed 10 rows containing non-finite values (stat_signif).</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-52-7.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(qpcr[which(qpcr$Gene==&quot;SOX9&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Chondrogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) +
+  geom_boxplot(fill=&quot;gold&quot;) +
+  labs(x=&quot;&quot;, y=&quot;Relative Fold Change in Gene Expression&quot;, title=&quot;SOX9&quot;) +
+  geom_signif(aes(x=Sample_Details, y=LogE_EdeltadeltaCt_GAPDHandGUSB_MSC),
+              comparisons = list(c(&quot;Chondrogenic&quot;,&quot;MSC&quot;)), 
+              test=&quot;t.test&quot;,
+              test.args=list(alternative=&quot;less&quot;),
+              map_signif_level=TRUE) +
+  theme_classic()</code></pre>
+<pre><code>Warning: Removed 11 rows containing non-finite values (stat_boxplot).</code></pre>
+<pre><code>Warning: Removed 11 rows containing non-finite values (stat_signif).</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-52-8.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(qpcr[which(qpcr$Gene==&quot;COL11A1&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Chondrogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) +
+  geom_boxplot(fill=&quot;gold&quot;) +
+  labs(x=&quot;&quot;, y=&quot;Relative Fold Change in Gene Expression&quot;, title=&quot;COL11A1&quot;) +
+  geom_signif(aes(x=Sample_Details, y=LogE_EdeltadeltaCt_GAPDHandGUSB_MSC),
+              comparisons = list(c(&quot;Chondrogenic&quot;,&quot;MSC&quot;)), 
+              test=&quot;t.test&quot;,
+              test.args=list(alternative=&quot;less&quot;),
+              map_signif_level=TRUE) +
+  theme_classic()</code></pre>
+<pre><code>Warning: Removed 5 rows containing non-finite values (stat_boxplot).</code></pre>
+<pre><code>Warning: Removed 5 rows containing non-finite values (stat_signif).</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-52-9.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(qpcr[which(qpcr$Gene==&quot;SOX6&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Chondrogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) +
+  geom_boxplot(fill=&quot;gold&quot;) +
+  labs(x=&quot;&quot;, y=&quot;Relative Fold Change in Gene Expression&quot;, title=&quot;SOX6&quot;) +
+  geom_signif(aes(x=Sample_Details, y=LogE_EdeltadeltaCt_GAPDHandGUSB_MSC),
+              comparisons = list(c(&quot;Chondrogenic&quot;,&quot;MSC&quot;)), 
+              test=&quot;t.test&quot;,
+              test.args=list(alternative=&quot;less&quot;),
+              map_signif_level=TRUE) +
+  theme_classic()</code></pre>
+<pre><code>Warning: Removed 5 rows containing non-finite values (stat_boxplot).
+
+Warning: Removed 5 rows containing non-finite values (stat_signif).</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-52-10.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#ADIPOGENIC MARKERS
+
+ggplot(qpcr[which(qpcr$Gene==&quot;FABP4&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Adipogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) +
+  geom_boxplot(fill=&quot;darkolivegreen&quot;) +
+  labs(x=&quot;&quot;, y=&quot;Relative Fold Change in Gene Expression&quot;, title=&quot;FABP4&quot;) +
+  geom_signif(aes(x=Sample_Details, y=LogE_EdeltadeltaCt_GAPDHandGUSB_MSC),
+              comparisons = list(c(&quot;Adipogenic&quot;,&quot;MSC&quot;)), 
+              test=&quot;t.test&quot;,
+              test.args=list(alternative=&quot;less&quot;),
+              map_signif_level=TRUE) +
+  theme_classic()</code></pre>
+<pre><code>Warning: Removed 20 rows containing non-finite values (stat_boxplot).</code></pre>
+<pre><code>Warning: Removed 20 rows containing non-finite values (stat_signif).</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-52-11.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(qpcr[which(qpcr$Gene==&quot;PPARG&quot; &amp; qpcr$Cell_Type %in% c(&quot;MSC&quot;,&quot;Adipogenic&quot;)),], aes(x=Sample_Details, y=EdeltadeltaCt_GAPDHandGUSB_MSC)) +
+  geom_boxplot(fill=&quot;darkolivegreen&quot;) +
+  labs(x=&quot;&quot;, y=&quot;Relative Fold Change in Gene Expression&quot;, title=&quot;PPARG&quot;) +
+  geom_signif(aes(x=Sample_Details, y=LogE_EdeltadeltaCt_GAPDHandGUSB_MSC),
+              comparisons = list(c(&quot;Adipogenic&quot;,&quot;MSC&quot;)), 
+              test=&quot;t.test&quot;,
+              test.args=list(alternative=&quot;less&quot;),
+              map_signif_level=TRUE) +
+  theme_classic()</code></pre>
+<pre><code>Warning: Removed 5 rows containing non-finite values (stat_boxplot).</code></pre>
+<pre><code>Warning: Removed 5 rows containing non-finite values (stat_signif).</code></pre>
+<p><img src="figure/10x-view-validation-data.Rmd/unnamed-chunk-52-12.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Decided to use t.test (expect Ct value to be lower in osteo/chondro/adipo than in MSCs = higer expression of gene in osteo/chondro/adipo than in MSCs).</p>
+</div>
+<div id="conclusions-of-validation-data" class="section level3">
+<h3>Conclusions of Validation Data</h3>
+<ul>
+<li>Most results match the expectations</li>
+<li>H3 MSC FACS values are off - nonsignificant CD90, CD73, and CD105 but CD45/CD34/CD11b/CD19/HLA-DR is more highly expressed than expected</li>
+</ul>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.6.1 (2019-07-05)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Scientific Linux 7.4 (Nitrogen)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.2.19-el7-x86_64/lib/libopenblas_haswellp-r0.2.19.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] RColorBrewer_1.1-2 colorspace_2.0-0   gridExtra_2.3     
+[4] ggsignif_0.5.0     ggplot2_3.3.2      stringr_1.4.0     
+[7] stringi_1.4.3      dplyr_1.0.2        Seurat_3.1.3      
+
+loaded via a namespace (and not attached):
+ [1] tsne_0.1-3          nlme_3.1-140        bitops_1.0-6       
+ [4] fs_1.3.1            RcppAnnoy_0.0.12    httr_1.4.2         
+ [7] rprojroot_2.0.2     sctransform_0.2.0   tools_3.6.1        
+[10] R6_2.5.0            irlba_2.3.3         KernSmooth_2.23-15 
+[13] uwot_0.1.5          lazyeval_0.2.2      withr_2.3.0        
+[16] npsurv_0.4-0        tidyselect_1.1.0    compiler_3.6.1     
+[19] git2r_0.26.1        plotly_4.9.2.1      labeling_0.4.2     
+[22] caTools_1.17.1.2    scales_1.1.1        lmtest_0.9-37      
+[25] ggridges_0.5.1      pbapply_1.4-0       rappdirs_0.3.1     
+[28] digest_0.6.27       rmarkdown_1.13      pkgconfig_2.0.3    
+[31] htmltools_0.5.0     bibtex_0.4.2        htmlwidgets_1.5.2  
+[34] rlang_0.4.9         farver_2.0.3        generics_0.1.0     
+[37] zoo_1.8-6           jsonlite_1.7.1      ica_1.0-2          
+[40] gtools_3.8.1        magrittr_2.0.1      Matrix_1.2-18      
+[43] Rcpp_1.0.5          munsell_0.5.0       ape_5.4-1          
+[46] reticulate_1.16     lifecycle_0.2.0     whisker_0.3-2      
+[49] yaml_2.2.1          gbRd_0.4-11         MASS_7.3-51.4      
+[52] gplots_3.0.1.1      Rtsne_0.15          plyr_1.8.4         
+[55] grid_3.6.1          parallel_3.6.1      gdata_2.18.0       
+[58] listenv_0.7.0       promises_1.1.1      ggrepel_0.8.2      
+[61] crayon_1.3.4        lattice_0.20-38     cowplot_1.1.0      
+[64] splines_3.6.1       knitr_1.23          pillar_1.4.7       
+[67] igraph_1.2.4.1      reshape2_1.4.3      future.apply_1.3.0 
+[70] codetools_0.2-16    leiden_0.3.1        glue_1.4.2         
+[73] evaluate_0.14       lsei_1.2-0          metap_1.1          
+[76] RcppParallel_5.0.2  data.table_1.13.2   png_0.1-7          
+[79] vctrs_0.3.5         httpuv_1.5.1        Rdpack_0.11-0      
+[82] gtable_0.3.0        RANN_2.6.1          purrr_0.3.4        
+[85] tidyr_1.1.2         future_1.14.0       xfun_0.8           
+[88] rsvd_1.0.1          later_1.1.0.1       survival_2.44-1.1  
+[91] viridisLite_0.3.0   tibble_3.0.4        workflowr_1.6.2    
+[94] cluster_2.1.0       globals_0.12.4      fitdistrplus_1.0-14
+[97] ellipsis_0.3.1      ROCR_1.0-7         </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

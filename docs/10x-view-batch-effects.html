@@ -427,7 +427,7 @@ div.tocify {
 
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
-<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 </button>
 </p>
 <div id="workflowr-report" class="collapse">
@@ -436,7 +436,7 @@ div.tocify {
 <a data-toggle="tab" href="#summary">Summary</a>
 </li>
 <li>
-<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -445,10 +445,10 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-05-23
+<strong>Last updated:</strong> 2021-08-10
 </p>
 <p>
-<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
 </p>
 <p>
 <strong>Knit directory:</strong> <code>human-chimp-skeletal-scRNA/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
@@ -464,12 +464,12 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown file has unstaged changes. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
 </div>
 </div>
 </div>
@@ -536,16 +536,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreeb242b7302e9ad2aafb5015b35d4496659dcb67fctargetblankb242b73a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/b242b7302e9ad2aafb5015b35d4496659dcb67fc" target="_blank">b242b73</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreefd98145b0ad57351357e829de8f6f7ef4bd3261dtargetblankfd98145a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/fd98145b0ad57351357e829de8f6f7ef4bd3261d" target="_blank">fd98145</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreeb242b7302e9ad2aafb5015b35d4496659dcb67fctargetblankb242b73a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreefd98145b0ad57351357e829de8f6f7ef4bd3261dtargetblankfd98145a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/b242b7302e9ad2aafb5015b35d4496659dcb67fc" target="_blank">b242b73</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/fd98145b0ad57351357e829de8f6f7ef4bd3261d" target="_blank">fd98145</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -554,299 +554,60 @@ Note that you need to be careful to ensure that all relevant files for the analy
 Ignored files:
     Ignored:    .Rhistory
     Ignored:    .Rproj.user/
+    Ignored:    analysis/figure/
 
 Untracked files:
-    Untracked:  analysis/10x-plot-enrichment-gom.Rmd
-    Untracked:  analysis/TODO_10x-data-4-classification-t2.Rmd
-    Untracked:  analysis/TODO_10x-data-4-classification.Rmd
-    Untracked:  analysis/TODO_10x-data-4-reclassification-tot.Rmd
-    Untracked:  analysis/TODO_10x-data-5-diffexp.Rmd
-    Untracked:  analysis/TODO_10x-data-6-conservexp.Rmd
-    Untracked:  analysis/TODO_10x-data-6-cormotif-t2.Rmd
-    Untracked:  analysis/TODO_10x-data-6-cormotif-tot.Rmd
-    Untracked:  analysis/TODO_10x-data-6-variance-t2.Rmd
-    Untracked:  analysis/TODO_10x-data-6-variance-tot.Rmd
-    Untracked:  analysis/TODO_10x-data-7-enrichment.Rmd
-    Untracked:  analysis/TODO_10x-data-8-batch-correlation.Rmd
-    Untracked:  analysis/TODO_10x-plot-diffexp.Rmd
-    Untracked:  analysis/TODO_10x-plot-replicate-correlation-t2.Rmd
-    Untracked:  analysis/TODO_10x-plot-utf1-tac3.Rmd
-    Untracked:  analysis/TODO_10x-view-species-assignments.Rmd
-    Untracked:  analysis/TODO_10x-view-validation-data.Rmd
-    Untracked:  analysis/v2/
-    Untracked:  code/FindMarkers.R
-    Untracked:  code/FindMarkers.sh
-    Untracked:  code/FindMarkers_0.1.err
-    Untracked:  code/FindMarkers_0.1.out
-    Untracked:  code/FindMarkers_0.25.err
-    Untracked:  code/FindMarkers_0.25.out
-    Untracked:  code/FindMarkers_0.5.err
-    Untracked:  code/FindMarkers_0.5.out
-    Untracked:  code/FindMarkers_0.75.err
-    Untracked:  code/FindMarkers_0.75.out
-    Untracked:  code/FindMarkers_1.err
-    Untracked:  code/FindMarkers_1.out
-    Untracked:  code/GoM.R
-    Untracked:  code/GoM.sh
-    Untracked:  code/fastTopics.R
-    Untracked:  code/fastTopics.sh
-    Untracked:  code/fastTopicsBC.R
-    Untracked:  code/fastTopicsBC.sh
-    Untracked:  code/fastTopicsBC_3_tot.err
-    Untracked:  code/fastTopicsBC_3_tot.out
-    Untracked:  code/fastTopicsBC_4_tot.err
-    Untracked:  code/fastTopicsBC_4_tot.out
-    Untracked:  code/fastTopicsBC_5_tot.err
-    Untracked:  code/fastTopicsBC_5_tot.out
-    Untracked:  code/fastTopicsBC_6_tot.err
-    Untracked:  code/fastTopicsBC_6_tot.out
-    Untracked:  code/fastTopicsBC_7_tot.err
-    Untracked:  code/fastTopicsBC_7_tot.out
-    Untracked:  code/fastTopicsSpp.R
-    Untracked:  code/fastTopicsSpp.sh
-    Untracked:  code/fastTopicsSppBC.R
-    Untracked:  code/fastTopicsSppBC.sh
-    Untracked:  code/fastTopicsSppBC_3_tot.err
-    Untracked:  code/fastTopicsSppBC_3_tot.out
-    Untracked:  code/fastTopicsSppBC_4_tot.err
-    Untracked:  code/fastTopicsSppBC_4_tot.out
-    Untracked:  code/fastTopicsSppBC_5_tot.err
-    Untracked:  code/fastTopicsSppBC_5_tot.out
-    Untracked:  code/fastTopicsSppBC_6_tot.err
-    Untracked:  code/fastTopicsSppBC_6_tot.out
-    Untracked:  code/fastTopicsSppBC_7_tot.err
-    Untracked:  code/fastTopicsSppBC_7_tot.out
-    Untracked:  code/fastTopicsSpp_3_tot.err
-    Untracked:  code/fastTopicsSpp_3_tot.out
-    Untracked:  code/fastTopicsSpp_4_tot.err
-    Untracked:  code/fastTopicsSpp_4_tot.out
-    Untracked:  code/fastTopicsSpp_5_tot.err
-    Untracked:  code/fastTopicsSpp_5_tot.out
-    Untracked:  code/fastTopicsSpp_6_tot.err
-    Untracked:  code/fastTopicsSpp_6_tot.out
-    Untracked:  code/fastTopicsSpp_7_tot.err
-    Untracked:  code/fastTopicsSpp_7_tot.out
-    Untracked:  code/fastTopics_3_tot.err
-    Untracked:  code/fastTopics_3_tot.out
-    Untracked:  code/fastTopics_4_tot.err
-    Untracked:  code/fastTopics_4_tot.out
-    Untracked:  code/fastTopics_5_tot.err
-    Untracked:  code/fastTopics_5_tot.out
-    Untracked:  code/fastTopics_6_tot.err
-    Untracked:  code/fastTopics_6_tot.out
-    Untracked:  code/fastTopics_7_tot.err
-    Untracked:  code/fastTopics_7_tot.out
-    Untracked:  code/v2/
     Untracked:  data/HumanPrimaryCellAtlasData-SingleR
     Untracked:  data/HumanPrimaryCellAtlasDetails-SingleR.csv
     Untracked:  data/HumanPrimaryCellAtlasLabels-SingleR.csv
-    Untracked:  data/alizarin-red-quant-total.csv
     Untracked:  data/cell_atlas_ref_panel
     Untracked:  data/cellranger-data-full/
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-cluster8.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/corrmatrix.ost
-    Untracked:  data/de-data/
-    Untracked:  data/facs-MSC-collection-summary-sample-avg.csv
-    Untracked:  data/facs-MSC-collection-summary-species-avg.csv
-    Untracked:  data/facs-MSC-collection-summary-total.csv
-    Untracked:  data/gom-data/
-    Untracked:  data/oil-red-quant-total.csv
-    Untracked:  data/scrna-batch-reformat.csv
-    Untracked:  data/scrna-batch.csv
-    Untracked:  output/data-qc-post-subsets-batchcor.pdf
+    Untracked:  data/gom-data/v2/gom10.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom3.100genes.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom3.100genes.log.indv-cell.int19k.reg-tot.rds
+    Untracked:  data/gom-data/v2/gom3.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom3.log.indv-cell.int19k.reg-tot.rds
+    Untracked:  data/gom-data/v2/gom4.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom5.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom6.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom7.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom8.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom9.log.indv-cell.int19k.reg-t2.rds
     Untracked:  output/data-qc-post-subsets-batchviz.pdf
-    Untracked:  output/data-qc-postfilterC-subsets-batchcor.pdf
     Untracked:  output/data-qc-postfilterC-subsets-batchviz.pdf
-    Untracked:  output/data-qc-postfilterC-subsets-int19k-batchcor.pdf
     Untracked:  output/data-qc-postfilterC-subsets-int19k-batchviz.pdf
-    Untracked:  output/data-qc-postfilterC-subsets-int19k.reg-batchcor.pdf
     Untracked:  output/data-qc-postfilterC-subsets-int19k.reg-batchviz.pdf
-    Untracked:  output/data-qc-postfilterC-subsets-intNo0-batchcor.pdf
     Untracked:  output/data-qc-postfilterC-subsets-intNo0-batchviz.pdf
-    Untracked:  output/data-qc-postfilterC-subsets-intNo0.reg-batchcor.pdf
     Untracked:  output/data-qc-postfilterC-subsets-intNo0.reg-batchviz.pdf
-    Untracked:  output/data-qc-postfilterC-subsets-merge-batchcor.pdf
     Untracked:  output/data-qc-postfilterC-subsets-merge-batchviz.pdf
-    Untracked:  output/data-qc-postfilterC.pdf
-    Untracked:  output/data-qc-postfilterL-subsets-batchcor.pdf
     Untracked:  output/data-qc-postfilterL-subsets-batchviz.pdf
-    Untracked:  output/data-qc-postfilterL-subsets-intNo0.reg-batchcor.pdf
     Untracked:  output/data-qc-postfilterL-subsets-intNo0.reg-batchviz.pdf
-    Untracked:  output/data-qc-postfilterL-subsets-merge-batchcor.pdf
     Untracked:  output/data-qc-postfilterL-subsets-merge-batchviz.pdf
-    Untracked:  output/data-qc-postfilterL.pdf
-    Untracked:  output/data-qc-prefilter.pdf
-    Untracked:  output/markers0.05-I.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markers0.05-M.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markers0.05-O.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markers0.05.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markers0.1.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markers0.25.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markers0.5.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markers0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markers1.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markersStage-I.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markersStage-M.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/markersStage-O.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  output/v1/
-    Untracked:  output/v2/
+    Untracked:  output/v2/data-qc-postfilter-subsets-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-int-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-int19k-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-int19k.reg-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-merge-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets.reg-batchviz.pdf
 
 Unstaged changes:
-    Deleted:    analysis/10x-data-4-classification-t2.Rmd
-    Deleted:    analysis/10x-data-4-classification.Rmd
-    Deleted:    analysis/10x-data-5-diffexp.Rmd
-    Deleted:    analysis/10x-data-6-conservexp.Rmd
-    Deleted:    analysis/10x-data-6-cormotif-t2.Rmd
-    Deleted:    analysis/10x-data-6-cormotif-tot.Rmd
-    Deleted:    analysis/10x-data-6-variance-t2.Rmd
-    Deleted:    analysis/10x-data-6-variance-tot.Rmd
-    Deleted:    analysis/10x-data-7-enrichment.Rmd
-    Deleted:    analysis/10x-data-8-batch-correlation.Rmd
-    Deleted:    analysis/10x-plot-diffexp.Rmd
-    Deleted:    analysis/10x-plot-replicate-correlation-t2.Rmd
-    Deleted:    analysis/10x-plot-utf1-tac3.Rmd
-    Modified:   analysis/10x-view-batch-effects.Rmd
-    Deleted:    analysis/10x-view-species-assignments.Rmd
-    Deleted:    analysis/10x-view-validation-data.Rmd
-    Deleted:    analysis/asbmr2020-plots.Rmd
-    Deleted:    analysis/ashg2020-plots.Rmd
-    Modified:   analysis/index.Rmd
-    Deleted:    analysis/temp-code.Rmd
-    Deleted:    analysis/v1/index.Rmd
-    Deleted:    analysis/v1/license.Rmd
-    Modified:   code/DEdream.R
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_FALSE.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_stage.out
-    Modified:   code/DEdreamsubset.R
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_adhoc.err
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_adhoc.out
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_cluster.err
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_cluster.out
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_ostadhoc.err
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_ostadhoc.out
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_stage.err
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_stage.out
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_adhoc.err
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_adhoc.out
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_cluster.err
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_cluster.out
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_ostadhoc.err
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_ostadhoc.out
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_stage.err
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_stage.out
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_adhoc.err
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_adhoc.out
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_cluster.err
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_cluster.out
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_ostadhoc.err
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_ostadhoc.out
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_stage.err
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_stage.out
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_adhoc.err
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_adhoc.out
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_cluster.err
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_cluster.out
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_ostadhoc.err
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_ostadhoc.out
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_stage.err
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_stage.out
-
-Staged changes:
-    Modified:   analysis/10x-view-data-metrics.Rmd
+    Modified:   analysis/10x-data-6-cormotif-tot-cnts.Rmd
+    Modified:   analysis/10x-data-6-cormotif-tot.Rmd
+    Modified:   analysis/10x-data-7-variance-tot.Rmd
+    Modified:   analysis/10x-plot-classification.Rmd
+    Modified:   analysis/about.Rmd
+    Modified:   analysis/license.Rmd
+    Modified:   output/data-qc-prefilter.pdf
 
 </code></pre>
 <p>
@@ -885,6 +646,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/ghousman/human-chimp-skeletal-scRNA/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/10x-view-batch-effects.html" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+<td>
+initial docs
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/87daf24809dac315d4f3e6e0ad10dde77186ec2c/analysis/10x-view-batch-effects.Rmd" target="_blank">87daf24</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-05-23
+</td>
+<td>
+updated data viewing scripts
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -1130,6 +925,43 @@ cov.cor.df$batch &lt;- factor(cov.cor.df$batch,
   labs(title=&quot;Correlation between known batch effects&quot;, x=&quot;&quot;, y=&quot;&quot;) +
   theme(axis.text.x=element_text(angle=90, hjust=1))</code></pre>
 <p><img src="figure/10x-view-batch-effects.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-2-1">
+Past versions of unnamed-chunk-2-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-2-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-view-batch-effects.Rmd/unnamed-chunk-2-1.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="examine-cell-viability-information" class="section level3">
 <h3>Examine cell viability information</h3>
@@ -1155,6 +987,43 @@ ggplot(batch.full, aes(x=Pooled_Sample_Name, y=X10X_Cell_Viability_Postwash_Post
   labs(x=&quot;10X Collections&quot;, y=&quot;Cell Viability Post-Mixing&quot;) +
   theme(text=element_text(size=14)) </code></pre>
 <p><img src="figure/10x-view-batch-effects.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-4-1">
+Past versions of unnamed-chunk-4-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-4-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-view-batch-effects.Rmd/unnamed-chunk-4-1.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>#postmix viabilities for each cell type
 ggplot(batch.full, aes(x=Cell_Type, y=X10X_Cell_Viability_Postwash_Postmix)) +
   geom_boxplot() +
@@ -1162,6 +1031,43 @@ ggplot(batch.full, aes(x=Cell_Type, y=X10X_Cell_Viability_Postwash_Postmix)) +
   labs(x=&quot;&quot;, y=&quot;Cell Viability Post-Mixing&quot;) +
   theme(text=element_text(size=14)) </code></pre>
 <p><img src="figure/10x-view-batch-effects.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-view-batch-effects.Rmd/unnamed-chunk-5-1.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>#make data frame for human and chimp sample plotting
 h.batch.full &lt;- batch.full[,c(1:8,13:21)]
 c.batch.full &lt;- batch.full[,c(1:4,9:12,13:14,22:28)]
@@ -1205,6 +1111,43 @@ ggplot(batch.sub, aes(x=Individual_in_Pool, y=X10X_Cell_Viability_Postwash)) +
   labs(x=&quot;Samples&quot;, y=&quot;Cell Viability Pre-Mixing&quot;) +
   theme(text=element_text(size=14)) </code></pre>
 <p><img src="figure/10x-view-batch-effects.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-7-1">
+Past versions of unnamed-chunk-7-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-7-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-view-batch-effects.Rmd/unnamed-chunk-7-1.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>#premix viabilities for each cell type and species
 ggplot(batch.sub, aes(x=Cell_Type, y=X10X_Cell_Viability_Postwash, fill=Species)) +
   geom_boxplot() +
@@ -1213,6 +1156,43 @@ ggplot(batch.sub, aes(x=Cell_Type, y=X10X_Cell_Viability_Postwash, fill=Species)
   theme(text=element_text(size=14)) +
   scale_fill_manual(values=c(&quot;grey30&quot;,&quot;grey70&quot;))</code></pre>
 <p><img src="figure/10x-view-batch-effects.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-1">
+Past versions of unnamed-chunk-8-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/figure/10x-view-batch-effects.Rmd/unnamed-chunk-8-1.png" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">

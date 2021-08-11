@@ -427,7 +427,7 @@ div.tocify {
 
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
-<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 </button>
 </p>
 <div id="workflowr-report" class="collapse">
@@ -436,7 +436,7 @@ div.tocify {
 <a data-toggle="tab" href="#summary">Summary</a>
 </li>
 <li>
-<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -445,10 +445,10 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-02-18
+<strong>Last updated:</strong> 2021-08-08
 </p>
 <p>
-<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
 </p>
 <p>
 <strong>Knit directory:</strong> <code>human-chimp-skeletal-scRNA/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
@@ -464,12 +464,12 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown file has unstaged changes. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
 </div>
 </div>
 </div>
@@ -536,16 +536,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtree54261270aee5af2c4236a248c5ccc994e652a469targetblank5426127a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/54261270aee5af2c4236a248c5ccc994e652a469" target="_blank">5426127</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreefd98145b0ad57351357e829de8f6f7ef4bd3261dtargetblankfd98145a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/fd98145b0ad57351357e829de8f6f7ef4bd3261d" target="_blank">fd98145</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtree54261270aee5af2c4236a248c5ccc994e652a469targetblank5426127a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreefd98145b0ad57351357e829de8f6f7ef4bd3261dtargetblankfd98145a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/54261270aee5af2c4236a248c5ccc994e652a469" target="_blank">5426127</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/fd98145b0ad57351357e829de8f6f7ef4bd3261d" target="_blank">fd98145</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -556,220 +556,52 @@ Ignored files:
     Ignored:    .Rproj.user/
 
 Untracked files:
-    Untracked:  analysis/TODO_10x-data-2-qc.Rmd
-    Untracked:  analysis/TODO_10x-data-3-integrate.Rmd
-    Untracked:  analysis/TODO_10x-data-4-classification-t2.Rmd
-    Untracked:  analysis/TODO_10x-data-4-classification-tot.Rmd
-    Untracked:  analysis/TODO_10x-data-4-classification.Rmd
-    Untracked:  analysis/TODO_10x-data-5-diffexp.Rmd
-    Untracked:  analysis/TODO_10x-data-6-conservexp.Rmd
-    Untracked:  analysis/TODO_10x-data-6-cormotif-t2.Rmd
-    Untracked:  analysis/TODO_10x-data-6-cormotif-tot.Rmd
-    Untracked:  analysis/TODO_10x-data-6-variance-t2.Rmd
-    Untracked:  analysis/TODO_10x-data-6-variance-tot.Rmd
-    Untracked:  analysis/TODO_10x-data-7-enrichment.Rmd
-    Untracked:  analysis/TODO_10x-data-8-batch-correlation.Rmd
-    Untracked:  analysis/TODO_10x-plot-classification.Rmd
-    Untracked:  analysis/TODO_10x-plot-diffexp.Rmd
-    Untracked:  analysis/TODO_10x-plot-replicate-correlation-t2.Rmd
-    Untracked:  analysis/TODO_10x-plot-replicate-correlation-tot.Rmd
-    Untracked:  analysis/TODO_10x-plot-utf1-tac3.Rmd
-    Untracked:  analysis/TODO_10x-view-batch-effects.Rmd
-    Untracked:  analysis/TODO_10x-view-data-metrics.Rmd
-    Untracked:  analysis/TODO_10x-view-species-assignments.Rmd
-    Untracked:  analysis/TODO_10x-view-validation-data.Rmd
-    Untracked:  analysis/v2/
-    Untracked:  code/FindMarkers.R
-    Untracked:  code/FindMarkers.sh
-    Untracked:  code/GoM.R
-    Untracked:  code/GoM.sh
-    Untracked:  code/fastTopics.R
-    Untracked:  code/fastTopics.sh
-    Untracked:  code/fastTopicsBC.R
-    Untracked:  code/fastTopicsBC.sh
-    Untracked:  code/fastTopicsSpp.R
-    Untracked:  code/fastTopicsSpp.sh
-    Untracked:  code/fastTopicsSppBC.R
-    Untracked:  code/fastTopicsSppBC.sh
-    Untracked:  code/v2/
     Untracked:  data/HumanPrimaryCellAtlasData-SingleR
     Untracked:  data/HumanPrimaryCellAtlasDetails-SingleR.csv
     Untracked:  data/HumanPrimaryCellAtlasLabels-SingleR.csv
-    Untracked:  data/alizarin-red-quant-total.csv
     Untracked:  data/cell_atlas_ref_panel
     Untracked:  data/cellranger-data-full/
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-cluster8.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/corrmatrix.ost
-    Untracked:  data/de-data/
-    Untracked:  data/facs-MSC-collection-summary-sample-avg.csv
-    Untracked:  data/facs-MSC-collection-summary-species-avg.csv
-    Untracked:  data/facs-MSC-collection-summary-total.csv
-    Untracked:  data/gom-data/
-    Untracked:  data/oil-red-quant-total.csv
-    Untracked:  data/scrna-batch-reformat.csv
-    Untracked:  data/scrna-batch.csv
-    Untracked:  output/v1/
-    Untracked:  output/v2/
+    Untracked:  data/gom-data/v2/gom10.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom3.100genes.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom3.100genes.log.indv-cell.int19k.reg-tot.rds
+    Untracked:  data/gom-data/v2/gom3.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom3.log.indv-cell.int19k.reg-tot.rds
+    Untracked:  data/gom-data/v2/gom4.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom5.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom6.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom7.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom8.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom9.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  output/data-qc-post-subsets-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-int19k-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-int19k.reg-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-intNo0-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-intNo0.reg-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-merge-batchviz.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-batchviz.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-intNo0.reg-batchviz.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-merge-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-int-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-int19k-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-int19k.reg-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-merge-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets.reg-batchviz.pdf
 
 Unstaged changes:
-    Modified:   analysis/10x-data-1-process.Rmd
-    Deleted:    analysis/10x-data-2-qc.Rmd
-    Deleted:    analysis/10x-data-3-integrate.Rmd
-    Deleted:    analysis/10x-data-4-classification-t2.Rmd
-    Deleted:    analysis/10x-data-4-classification-tot.Rmd
-    Deleted:    analysis/10x-data-4-classification.Rmd
-    Deleted:    analysis/10x-data-5-diffexp.Rmd
-    Deleted:    analysis/10x-data-6-conservexp.Rmd
-    Deleted:    analysis/10x-data-6-cormotif-t2.Rmd
-    Deleted:    analysis/10x-data-6-cormotif-tot.Rmd
-    Deleted:    analysis/10x-data-6-variance-t2.Rmd
-    Deleted:    analysis/10x-data-6-variance-tot.Rmd
-    Deleted:    analysis/10x-data-7-enrichment.Rmd
-    Deleted:    analysis/10x-data-8-batch-correlation.Rmd
-    Deleted:    analysis/10x-plot-classification.Rmd
-    Deleted:    analysis/10x-plot-diffexp.Rmd
-    Deleted:    analysis/10x-plot-replicate-correlation-t2.Rmd
-    Deleted:    analysis/10x-plot-replicate-correlation-tot.Rmd
-    Deleted:    analysis/10x-plot-utf1-tac3.Rmd
-    Deleted:    analysis/10x-view-batch-effects.Rmd
-    Deleted:    analysis/10x-view-data-metrics.Rmd
-    Deleted:    analysis/10x-view-species-assignments.Rmd
-    Deleted:    analysis/10x-view-validation-data.Rmd
-    Deleted:    analysis/asbmr2020-plots.Rmd
-    Deleted:    analysis/ashg2020-plots.Rmd
-    Deleted:    analysis/temp-code.Rmd
-    Deleted:    analysis/v1/index.Rmd
-    Deleted:    analysis/v1/license.Rmd
-    Modified:   code/DEdream.R
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml1.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml2.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml3.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml4.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.filter.pch20.fml5.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml1.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.keepRep1.filter.pch20.fml5.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_FALSE.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml1.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.keepRep2.filter.pch20.fml5.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.pseudo.nofilter.fml1.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml1.nofc.bh_stage.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_adhoc.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_adhoc.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_cluster.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_cluster.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_ostadhoc.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_ostadhoc.out
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_stage.err
-    Deleted:    code/DEdream_totcell.subNum.filter.pch20.fml5.nofc.bh_stage.out
-    Modified:   code/DEdreamsubset.R
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_adhoc.err
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_adhoc.out
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_cluster.err
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_cluster.out
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_ostadhoc.err
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_ostadhoc.out
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_stage.err
-    Deleted:    code/DEedgeR_totcell.filter.pch20.fc.bh_stage.out
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_adhoc.err
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_adhoc.out
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_cluster.err
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_cluster.out
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_ostadhoc.err
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_ostadhoc.out
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_stage.err
-    Deleted:    code/DEedgeR_totcell.keepRep1.filter.pch20.fc.bh_stage.out
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_adhoc.err
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_adhoc.out
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_cluster.err
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_cluster.out
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_ostadhoc.err
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_ostadhoc.out
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_stage.err
-    Deleted:    code/DEedgeR_totcell.keepRep2.filter.pch20.fc.bh_stage.out
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_adhoc.err
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_adhoc.out
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_cluster.err
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_cluster.out
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_ostadhoc.err
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_ostadhoc.out
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_stage.err
-    Deleted:    code/DEedgeR_totcell.subNum.filter.pch20.fc.bh_stage.out
+    Modified:   analysis/about.Rmd
+    Modified:   analysis/license.Rmd
 
 </code></pre>
 <p>
@@ -808,6 +640,57 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/e54f13853433f82c3dd33d33f0140d3210999ea9/analysis/10x-data-1-process.Rmd" target="_blank">e54f138</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-08-08
+</td>
+<td>
+fixed analyses
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/ghousman/human-chimp-skeletal-scRNA/9ba9279ef2b3fe2df1025b69d41bc94e1bbfa886/docs/10x-data-1-process.html" target="_blank">9ba9279</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-06-01
+</td>
+<td>
+initial docs
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/62859fac59cb1dbb8df09febfb9b4c0373628872/analysis/10x-data-1-process.Rmd" target="_blank">62859fa</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-02-18
+</td>
+<td>
+add geo submission details
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -1710,10 +1593,11 @@ write.table(tbl.met,
             col.names=T,
             quote=F)</code></pre>
 <pre class="bash"><code>#easiest to do this on the computing cluster
+cd /project2/gilad/ghousman
 
 #Make folder containing files to be uploaded to GEO
-mkdir geo_GHO_20210415
-cd geo_GHO_20210415
+mkdir geo_GHO_20210807
+cd geo_GHO_20210807
 mkdir data_raw
 mkdir data_proc
 cd data_proc
@@ -1726,32 +1610,58 @@ cd data_raw
 cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191112_K00242_0637_AHCLNGBBXY-YG-GH-10X-12S-HOU-lns1-2/HCLNGBBXY_78/*/*.fastq.gz .
 cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191217_K00242_0648_BHFHY7BBXY-YG-GH-10X-12S-HOU-lns345/FastQ/HFHY7BBXY_123/*/*.fastq.gz .
 #these files have the same names as some in the next folder [see notes below] so rename the files
-mv *_L001_*.fastq.gz *_L005_*.fastq.gz
-mv *_L002_*.fastq.gz *_L006_*.fastq.gz
-mv *_L003_*.fastq.gz *_L009_*.fastq.gz
+for file in *.fastq.gz; do mv &quot;$file&quot; &quot;${file//_L001_/_L005_}&quot;; done
+for file in *.fastq.gz; do mv &quot;$file&quot; &quot;${file//_L002_/_L006_}&quot;; done
+for file in *.fastq.gz; do mv &quot;$file&quot; &quot;${file//_L003_/_L009_}&quot;; done
 cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191220_K00242_0650_BHFTJ2BBXY-YG-GH-10X-12S-HOU-lns6789/FastQ/HFTJ2BBXY_1234/*/*.fastq.gz .
 cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191227_K00242_0655_BHG3MCBBXY-YG-GH-10X-HOU2-6s-lns12/Unaligned_YG-GH-10X-HOU2-6S/HG3MCBBXY_78/*/*.fastq.gz .
 #these files have the same names as some in the next two folders [see notes below] so rename the files
-mv *_L007_*.fastq.gz *_L005_*.fastq.gz
+for file in *.fastq.gz; do mv &quot;$file&quot; &quot;${file//HOU-17_S1_L007_/HOU-17_S1_L005_}&quot;; done
+for file in *.fastq.gz; do mv &quot;$file&quot; &quot;${file//HOU-18_S2_L007_/HOU-18_S2_L005_}&quot;; done
+for file in *.fastq.gz; do mv &quot;$file&quot; &quot;${file//HOU-19_S3_L007_/HOU-19_S3_L005_}&quot;; done
+for file in *.fastq.gz; do mv &quot;$file&quot; &quot;${file//HOU-20_S4_L007_/HOU-20_S4_L005_}&quot;; done
+for file in *.fastq.gz; do mv &quot;$file&quot; &quot;${file//HOU-21_S5_L007_/HOU-21_S5_L005_}&quot;; done
+for file in *.fastq.gz; do mv &quot;$file&quot; &quot;${file//HOU-22_S6_L007_/HOU-22_S6_L005_}&quot;; done
 cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/200103_K00242_0656_BHFYVWBBXY_YG-GH-10X-HOU2-6S-ln3/Unaligned_YG-GH-10X-HOU2-6S-ln3/HFYVWBBXY_7/*/*.fastq.gz .
 #these files have the same names as some in the next folder [see notes below] so rename the files
-mv *_L007_*.fastq.gz *_L006_*.fastq.gz
+for file in *.fastq.gz; do mv &quot;$file&quot; &quot;${file//HOU-17_S1_L007_/HOU-17_S1_L006_}&quot;; done
+for file in *.fastq.gz; do mv &quot;$file&quot; &quot;${file//HOU-18_S2_L007_/HOU-18_S2_L006_}&quot;; done
+for file in *.fastq.gz; do mv &quot;$file&quot; &quot;${file//HOU-19_S3_L007_/HOU-19_S3_L006_}&quot;; done
+for file in *.fastq.gz; do mv &quot;$file&quot; &quot;${file//HOU-20_S4_L007_/HOU-20_S4_L006_}&quot;; done
+for file in *.fastq.gz; do mv &quot;$file&quot; &quot;${file//HOU-21_S5_L007_/HOU-21_S5_L006_}&quot;; done
+for file in *.fastq.gz; do mv &quot;$file&quot; &quot;${file//HOU-22_S6_L007_/HOU-22_S6_L006_}&quot;; done
 cp -r /project2/gilad/ghousman/skeletal-human-chimp/scRNA/200124_K00242_0661_BHGGF3BBXY-YG-GH-HOU2-10X-6S-ln4/Unaligned_YG-GH-10X-HOU2-6S-ln4/HGGF3BBXY_7/*/*.fastq.gz .
 rm *_I1_*.fastq.gz
 md5sum *
 #manually added file checksum to metadata file
-#manually transferred metadata file to geo_GHO_20210415 via FileZilla
+#manually transferred metadata file to geo_GHO_20210807 via FileZilla
 
 #Upload files to GEO
 cd /project2/gilad/ghousman
 sftp geoftp@sftp-private.ncbi.nlm.nih.gov
 cd uploads/ghousman_SbedAyUe
-mkdir geo_GHO_20210415
-put -R /project2/gilad/ghousman/geo_GHO_20210415
+mkdir geo_GHO_20210807
+put -R /project2/gilad/ghousman/geo_GHO_20210807
 
 #Remove files for GEO
 cd /project2/gilad/ghousman
-rm -r geo_GHO_20210415</code></pre>
+rm -r geo_GHO_20210807
+
+### FILE RENAMING NOTES
+### NEED TO RENAME FILES TO L005/L006/L009 ###
+### /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191217_K00242_0648_BHFHY7BBXY-YG-GH-10X-12S-HOU-lns345/FastQ/HFHY7BBXY_123/*/*_L001_*.fastq.gz
+### /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191217_K00242_0648_BHFHY7BBXY-YG-GH-10X-12S-HOU-lns345/FastQ/HFHY7BBXY_123/*/*_L002_*.fastq.gz
+### /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191217_K00242_0648_BHFHY7BBXY-YG-GH-10X-12S-HOU-lns345/FastQ/HFHY7BBXY_123/*/*_L003_*.fastq.gz
+### vs.
+### /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191220_K00242_0650_BHFTJ2BBXY-YG-GH-10X-12S-HOU-lns6789/FastQ/HFTJ2BBXY_1234/*/*_L001_*.fastq.gz
+### /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191220_K00242_0650_BHFTJ2BBXY-YG-GH-10X-12S-HOU-lns6789/FastQ/HFTJ2BBXY_1234/*/*_L002_*.fastq.gz
+### /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191220_K00242_0650_BHFTJ2BBXY-YG-GH-10X-12S-HOU-lns6789/FastQ/HFTJ2BBXY_1234/*/*_L003_*.fastq.gz
+### NEED TO RENAME FILES TO L005/L006 ###
+### /project2/gilad/ghousman/skeletal-human-chimp/scRNA/191227_K00242_0655_BHG3MCBBXY-YG-GH-10X-HOU2-6s-lns12/Unaligned_YG-GH-10X-HOU2-6S/HG3MCBBXY_78/*/*_L007_*.fastq.gz
+### vs.
+### /project2/gilad/ghousman/skeletal-human-chimp/scRNA/200103_K00242_0656_BHFYVWBBXY_YG-GH-10X-HOU2-6S-ln3/Unaligned_YG-GH-10X-HOU2-6S-ln3/HFYVWBBXY_7/*/*_L007_*.fastq.gz
+### vs.
+### /project2/gilad/ghousman/skeletal-human-chimp/scRNA/200124_K00242_0661_BHGGF3BBXY-YG-GH-HOU2-10X-6S-ln4/Unaligned_YG-GH-10X-HOU2-6S-ln4/HGGF3BBXY_7/*/*_L007_*.fastq.gz</code></pre>
 <br>
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
