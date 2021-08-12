@@ -20,4 +20,4 @@ output:
     theme: cosmo
     highlight: textmate
 
-theme: jekyll-theme-cayman
+theme: jekyll-theme-slate
