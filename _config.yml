@@ -1,7 +1,7 @@
-name: human-chimp-skeletal-scRNA
-output_dir: ../docs
+name: "human-chimp-skeletal-scRNA"
+output_dir: ./docs
 navbar:
-  title: human-chimp-skeletal-scRNA
+  title: "human-chimp-skeletal-scRNA"
   left:
   - text: Home
     href: index.html
