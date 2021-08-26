@@ -82,9 +82,9 @@ If you are running the files in this repository to recreate the analyses, runnin
 
 * Examined enrichment of GO categories and external gene sets in DE genes identified using:
 
-    + [Pairwise tests] (10x-plot-diffexp.html)
+    + [Pairwise tests](10x-plot-diffexp.html)
 
-    + [Cormotif] (10x-plot-cormotif-cnts.html)
+    + [Cormotif](10x-plot-cormotif-cnts.html)
 
 ## Standard validation analyses
 
