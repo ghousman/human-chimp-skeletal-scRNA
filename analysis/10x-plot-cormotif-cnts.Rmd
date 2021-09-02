@@ -2104,15 +2104,19 @@ length(rownames(gene.prob[(gene.prob[ ,1]<0.5 & gene.prob[ ,2]<0.5 & gene.prob[ 
 ```
 
 ## Osteogenic Clusters (res=0.75)
+
 ### Examine Numbers and Overlap of Cormotif DE Genes & Functional/GeneSet Enrichment of DE Genes
 
 ## Osteogenic Clusters (res=0.50) (Time 2 only)
+
 ### Examine Numbers and Overlap of Cormotif DE Genes & Functional/GeneSet Enrichment of DE Genes
 
 ## Osteogenic Clusters (res=0.75) (Time 2 only)
+
 ### Examine Numbers and Overlap of Cormotif DE Genes & Functional/GeneSet Enrichment of DE Genes
 
 ## Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene flexible)
+
 ### Examine Numbers and Overlap of Cormotif DE Genes & Functional/GeneSet Enrichment of DE Genes
 
 Note: Too few DE genes shared across pre+obl+emb+min and obl+emb+min, so these were not examined further. Instead, DE genes shared across obl+emb+min+mat and emb+min+mat were considered.
@@ -2782,10 +2786,12 @@ for (genesExternal in listsExternal) {
 
 ```
 
-### Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene strict)
+## Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene strict)
+
 ### Examine Numbers and Overlap of Cormotif DE Genes & Functional/GeneSet Enrichment of DE Genes
 
-### Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene flexible, Time 2 only)
+## Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene flexible, Time 2 only)
+
 ### Examine Numbers and Overlap of Cormotif DE Genes & Functional/GeneSet Enrichment of DE Genes
 
 Note: Too few DE genes shared across obl+emb+min+mat, so these were not examined further. Instead, DE genes shared across pre+obl+emb+min+mat and unique to min were considered.
@@ -3437,5 +3443,6 @@ for (genesExternal in listsExternal) {
 
 ```
 
-### Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene strict, Time 2 only)
+## Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene strict, Time 2 only)
+
 ### Examine Numbers and Overlap of Cormotif DE Genes & Functional/GeneSet Enrichment of DE Genes
