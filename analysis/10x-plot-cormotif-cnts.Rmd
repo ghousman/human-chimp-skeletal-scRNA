@@ -2105,15 +2105,12 @@ length(rownames(gene.prob[(gene.prob[ ,1]<0.5 & gene.prob[ ,2]<0.5 & gene.prob[ 
 
 ## Osteogenic Clusters (res=0.75)
 ### Examine Numbers and Overlap of Cormotif DE Genes & Functional/GeneSet Enrichment of DE Genes
-### Examine Conservation of Differentiation-Specific DE Genes
 
 ## Osteogenic Clusters (res=0.50) (Time 2 only)
 ### Examine Numbers and Overlap of Cormotif DE Genes & Functional/GeneSet Enrichment of DE Genes
-### Examine Conservation of Differentiation-Specific DE Genes
 
 ## Osteogenic Clusters (res=0.75) (Time 2 only)
 ### Examine Numbers and Overlap of Cormotif DE Genes & Functional/GeneSet Enrichment of DE Genes
-### Examine Conservation of Differentiation-Specific DE Genes
 
 ## Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene flexible)
 ### Examine Numbers and Overlap of Cormotif DE Genes & Functional/GeneSet Enrichment of DE Genes
@@ -2787,12 +2784,658 @@ for (genesExternal in listsExternal) {
 
 ### Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene strict)
 ### Examine Numbers and Overlap of Cormotif DE Genes & Functional/GeneSet Enrichment of DE Genes
-### Examine Conservation of Differentiation-Specific DE Genes
 
 ### Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene flexible, Time 2 only)
 ### Examine Numbers and Overlap of Cormotif DE Genes & Functional/GeneSet Enrichment of DE Genes
-### Examine Conservation of Differentiation-Specific DE Genes
+
+Note: Too few DE genes shared across obl+emb+min+mat, so these were not examined further. Instead, DE genes shared across pre+obl+emb+min+mat and unique to min were considered.
+
+```{r}
+
+#load data
+cormotifData <- readRDS("./data/cormotif-data/cormotif.cnts.pseudo-ostadhoc4gene.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+
+#plot BIC/AIC comparisons
+plotIC(cormotifData)
+
+#plot the probability that each motif is differentially expressed in each comparison
+HAtop <- HeatmapAnnotation(AdHoc=c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                           col=list(AdHoc=c("preosteoblast"="lightblue1",
+                                            "osteoblast"="deepskyblue",
+                                            "embedding.osteoblast"="dodgerblue2",
+                                            "mineralizing.osteoblast"="royalblue3",
+                                            "maturing.osteocyte"="royalblue4")),
+                           gp=gpar(col="black"),
+                           gap=unit(5,"points"),
+                           annotation_name_side="left")
+HAside = rowAnnotation(No.Genes=anno_barplot(floor(cormotifData$bestmotif$motif.p * nrow(cormotifData$bestmotif$p.post))),
+                       width=unit(3,"cm"),
+                       border=FALSE)
+Heatmap(cormotifData$bestmotif$motif.q,
+        col=gray(seq(from=1,to=0,by=-0.1)),
+        name="DE Prob.",
+        rect_gp=gpar(col="black",lwd=.3),
+        top_annotation=HAtop,
+        right_annotation=HAside,
+        column_title="Comparisons across Osteogenic Ad Hoc",
+        row_title="Motif",
+        column_dend_reorder=FALSE,
+        row_dend_reorder=TRUE,
+        heatmap_legend_param=list(at=c(0,0.2,0.4,0.6,0.8,1)))
+
+```
+
+```{r}
+
+#obtain DE pattern at 0.5 posterior distribution cutoff and reformat for plotting
+#0.5 cutoff is used in Wei et al. 2015 and Blake et al. 2018
+head(cormotifData$bestmotif$p.post)
+
+dataUpset <- as.data.frame(cormotifData$bestmotif$p.post)
+dataUpset[dataUpset>0.5] <- 1
+dataUpset[dataUpset<=0.5] <- 0
+head(dataUpset)
+#dataUpset <- as.data.frame(cormotifData$bestmotif$p.post)
+#dataUpset[dataUpset>0.95] <- 1
+#dataUpset[dataUpset<=0.95] <- 0
+#head(dataUpset)
+
+dataPlot <- data.frame("cell.subset"=c(rep("preosteoblast",length(which(dataUpset$preosteoblast==1))),
+                                       rep("osteoblast",length(which(dataUpset$osteoblast==1))),
+                                       rep("embedding.osteoblast",length(which(dataUpset$embedding.osteoblast==1))),
+                                       rep("mineralizing.osteoblast",length(which(dataUpset$mineralizing.osteoblast==1))),
+                                       rep("maturing.osteocyte",length(which(dataUpset$maturing.osteocyte==1)))),
+                       "gene"=c(rownames(dataUpset)[which(dataUpset$preosteoblast==1)],
+                                rownames(dataUpset)[which(dataUpset$osteoblast==1)],
+                                rownames(dataUpset)[which(dataUpset$embedding.osteoblast==1)],
+                                rownames(dataUpset)[which(dataUpset$mineralizing.osteoblast==1)],
+                                rownames(dataUpset)[which(dataUpset$maturing.osteocyte==1)]),
+                       "post.p"=c(cormotifData$bestmotif$p.post[which(dataUpset$preosteoblast==1),"preosteoblast"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$osteoblast==1),"osteoblast"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$embedding.osteoblast==1),"embedding.osteoblast"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$mineralizing.osteoblast==1),"mineralizing.osteoblast"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$maturing.osteocyte==1),"maturing.osteocyte"]),
+                       row.names=NULL)
+
+dataPlot$cell.subset <- factor(dataPlot$cell.subset,
+                               levels=c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                               labels=c("preosteoblast","osteoblast","embedding\nosteoblast","mineralizing\nosteoblast","maturing\nosteocyte"))
+
+
+#number of DE genes
+ggplot(dataPlot, aes(x=cell.subset, fill=cell.subset)) +
+  geom_bar() +
+  ylab('Number of DE Genes') +
+  xlab('') +
+  scale_fill_manual(name="Osteogenic Stage",
+                    labels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                    values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+#total number of DE genes identified
+table(dataPlot$cell.subset)
+
+#make upset plot of DE genes
+upset(dataUpset,
+      text.scale=2)
+upset(dataUpset,
+      keep.order=TRUE,
+      empty.intersections=TRUE,
+      intersections=list(list("preosteoblast"),
+                         list("osteoblast"),
+                         list("embedding.osteoblast"),
+                         list("mineralizing.osteoblast"),
+                         list("maturing.osteocyte"),
+                         list("osteoblast","embedding.osteoblast"),
+                         list("embedding.osteoblast","mineralizing.osteoblast"),
+                         list("osteoblast","embedding.osteoblast","mineralizing.osteoblast"),
+                         list("embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                         list("preosteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                         list("osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                         list("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte")),
+      text.scale=2)
+upset(dataUpset,
+      keep.order=TRUE,
+      empty.intersections=TRUE,
+      intersections=list(list("preosteoblast"),
+                         list("osteoblast"),
+                         list("embedding.osteoblast"),
+                         list("mineralizing.osteoblast"),
+                         list("maturing.osteocyte"),
+                         list("osteoblast","embedding.osteoblast"),
+                         list("embedding.osteoblast","mineralizing.osteoblast"),
+                         list("embedding.osteoblast","maturing.osteocyte"),
+                         list("preosteoblast","embedding.osteoblast","mineralizing.osteoblast"),
+                         list("preosteoblast","embedding.osteoblast","maturing.osteocyte"),
+                         list("osteoblast","embedding.osteoblast","mineralizing.osteoblast"),
+                         list("embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                         list("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast"),
+                         list("preosteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                         list("osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                         list("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte")),
+      text.scale=2)
+
+```
+
+```{r, eval=FALSE}
+
+#Save DE gene lists
+write.csv(rownames(dataUpset),"./data/cormotif-data/cormotif.cnts.pseudo-ostadhoc.T2.data.filterC.log.indv-cell.intNo0.reg-tot.DE-tests.csv")
+write.csv(rownames(dataUpset)[which(dataUpset$preosteoblast==1 &
+                                    dataUpset$osteoblast==1 &
+                                    dataUpset$embedding.osteoblast==1 &
+                                    dataUpset$mineralizing.osteoblast==1 &
+                                    dataUpset$maturing.osteocyte==1)],
+          "./data/cormotif-data/cormotif.cnts.pseudo-ostadhoc.T2.data.filterC.log.indv-cell.intNo0.reg-tot.DE-post0.50-shareX.oad.csv")
+write.csv(rownames(dataUpset)[which(dataUpset$preosteoblast==1 &
+                                    dataUpset$osteoblast==1 &
+                                    dataUpset$embedding.osteoblast==1 &
+                                    dataUpset$mineralizing.osteoblast==1 &
+                                    dataUpset$maturing.osteocyte==0)],
+          "./data/cormotif-data/cormotif.cnts.pseudo-ostadhoc.T2.data.filterC.log.indv-cell.intNo0.reg-tot.DE-post0.50-shareX.oad.poem.csv")
+write.csv(rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
+                                    dataUpset$osteoblast==0 &
+                                    dataUpset$embedding.osteoblast==0 &
+                                    dataUpset$mineralizing.osteoblast==1 &
+                                    dataUpset$maturing.osteocyte==0)],
+          "./data/cormotif-data/cormotif.cnts.pseudo-ostadhoc.T2.data.filterC.log.indv-cell.intNo0.reg-tot.DE-post0.50-uniqX.oad.min.csv")
+write.csv(rownames(dataUpset)[which(dataUpset$preosteoblast==1)],
+          "./data/cormotif-data/cormotif.cnts.pseudo-ostadhoc.T2.data.filterC.log.indv-cell.intNo0.reg-tot.DE-post0.50-all.oad.pre.csv")
+write.csv(rownames(dataUpset)[which(dataUpset$osteoblast==1)],
+          "./data/cormotif-data/cormotif.cnts.pseudo-ostadhoc.T2.data.filterC.log.indv-cell.intNo0.reg-tot.DE-post0.50-all.oad.obl.csv")
+write.csv(rownames(dataUpset)[which(dataUpset$embedding.osteoblast==1)],
+          "./data/cormotif-data/cormotif.cnts.pseudo-ostadhoc.T2.data.filterC.log.indv-cell.intNo0.reg-tot.DE-post0.50-all.oad.emb.csv")
+write.csv(rownames(dataUpset)[which(dataUpset$mineralizing.osteoblast==1)],
+          "./data/cormotif-data/cormotif.cnts.pseudo-ostadhoc.T2.data.filterC.log.indv-cell.intNo0.reg-tot.DE-post0.50-all.oad.min.csv")
+write.csv(rownames(dataUpset)[which(dataUpset$maturing.osteocyte==1)],
+          "./data/cormotif-data/cormotif.cnts.pseudo-ostadhoc.T2.data.filterC.log.indv-cell.intNo0.reg-tot.DE-post0.50-all.oad.mat.csv")
+
+```
+
+Assess GO functional enrichment of interesting DE genes.
+
+```{r, eval=FALSE}
+
+#Shared across Osteogenic Ad Hoc Classifications
+subGenes <- rownames(dataUpset)[which(rowSums(dataUpset)==5)]
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Shared in All")
+
+#Shared across pre+obl+emb+min
+#subGenes <- rownames(dataUpset)[which(dataUpset$preosteoblast==1 &
+#                                      dataUpset$osteoblast==1 &
+#                                      dataUpset$embedding.osteoblast==1 &
+#                                      dataUpset$mineralizing.osteoblast==1 &
+#                                      dataUpset$maturing.osteocyte==0)]
+#totGenes <- rownames(dataUpset)
+#goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+#goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+#goEnPlot(goTot,title="Shared in obl+emb+min+mat")
+
+#Unique to Mineralizing Osteoblasts
+subGenes <- rownames(dataUpset)[which(dataUpset$mineralizing.osteoblast==1)]
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+goEnPlot(goTot,title="Unique to Min")
+
+```
+
+Test for significant enrichment of external gene sets in DE gene sets using Fisher's exact test.
+
+```{r, eval=FALSE}
+
+#Enrichment of external gene sets in cormotif DE gene sets
+
+listsExternal <- list(
+
+  list("GallegoRomero2015-DE.iPSCs",gallegoromero2015$gene[which(gallegoromero2015$DE.iPSC==1)]), #iPSCs
+
+  list("Blake2018-DE.iPSCs",blake2018$gene[which(blake2018$DE.Day0==1)]),              #iPSCs
+  list("Blake2018-DE.iPSC-endoderm-day1",blake2018$gene[which(blake2018$DE.Day1==1)]), #iPSC-endoderm day1
+  list("Blake2018-DE.iPSC-endoderm-day2",blake2018$gene[which(blake2018$DE.Day2==1)]), #iPSC-endoderm day2
+  list("Blake2018-DE.iPSC-endoderm-day3",blake2018$gene[which(blake2018$DE.Day3==1)]), #iPSC-endoderm day3
+  
+  list("Blake2018-DE.iPSCs-UNIQUE",blake2018$gene[which(blake2018$DE.Day0==1 &
+                                                        blake2018$DE.Day1==0 &
+                                              					blake2018$DE.Day2==0 &
+                                              					blake2018$DE.Day3==0)]),              #iPSCs-UNIQUE
+  list("Blake2018-DE.iPSC-endoderm-day1-UNIQUE",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==1 &
+                                                          				 	 blake2018$DE.Day2==0 &
+                                                          				   blake2018$DE.Day3==0)]), #iPSC-endoderm day1-UNIQUE
+  list("Blake2018-DE.iPSC-endoderm-day2-UNIQUE",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==0 &
+                                                          				 	 blake2018$DE.Day2==1 &
+                                                          				   blake2018$DE.Day3==0)]), #iPSC-endoderm day2-UNIQUE
+  list("Blake2018-DE.iPSC-endoderm-day3-UNIQUE",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==0 &
+                                                          				 	 blake2018$DE.Day2==0 &
+                                                          				   blake2018$DE.Day3==1)]), #iPSC-endoderm day3-UNIQUE
+
+  list("Blake2020-DE.heart",blake2020$gene[which(blake2020$DE.HvC_Heart==1)]),   #heart
+  list("Blake2020-DE.kidney",blake2020$gene[which(blake2020$DE.HvC_Kidney==1)]), #kidney
+  list("Blake2020-DE.liver",blake2020$gene[which(blake2020$DE.HvC_Liver==1)]),   #liver
+  list("Blake2020-DE.lung",blake2020$gene[which(blake2020$DE.HvC_Lung==1)]),     #lung
+  
+  list("Blake2020-DE.heart-UNIQUE",blake2020$gene[which(blake2020$DE.HvC_Heart==1 &
+                                                        blake2020$DE.HvC_Kidney==0 &
+                                                        blake2020$DE.HvC_Liver==0 &
+                                                        blake2020$DE.HvC_Lung==0)]),   #heart-UNIQUE
+  list("Blake2020-DE.kidney-UNIQUE",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                         blake2020$DE.HvC_Kidney==1 &
+                                                         blake2020$DE.HvC_Liver==0 &
+                                                         blake2020$DE.HvC_Lung==0)]), #kidney-UNIQUE
+  list("Blake2020-DE.liver-UNIQUE",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                        blake2020$DE.HvC_Kidney==0 &
+                                                        blake2020$DE.HvC_Liver==1 &
+                                                        blake2020$DE.HvC_Lung==0)]),   #liver-UNIQUE
+  list("Blake2020-DE.lung-UNIQUE",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                       blake2020$DE.HvC_Kidney==0 &
+                                                       blake2020$DE.HvC_Liver==0 &
+                                                       blake2020$DE.HvC_Lung==1)]),     #lung-UNIQUE
+
+  list("Gokhman2021-DE.Parental.iPSCs",gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==1)]), #parental.iPSCs
+  list("Gokhman2021-DE.Hybrid.iPSCs",  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==1)]),   #hybrid.iPSCs
+  list("Gokhman2021-DE.Parental.CNCCs",gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.CNCCs==1)]), #parental.CNCCs
+  list("Gokhman2021-DE.Hybrid.CNCCs",  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.CNCCs==1)]),   #hybrid.CNCCs
+  
+  list("Gokhman2021-DE.Parental.iPSCs-UNIQUE",gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==1 &
+                                                                            gokhman2021$DE.Parental.CNCCs==0)]), #parental.iPSCs-UNIQUE
+  list("Gokhman2021-DE.Hybrid.iPSCs-UNIQUE",  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==1 &
+                                                                            gokhman2021$DE.Hybrid.CNCCs==0)]),   #hybrid.iPSCs-UNIQUE
+  list("Gokhman2021-DE.Parental.CNCCs-UNIQUE",gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==0 &
+                                                                            gokhman2021$DE.Parental.CNCCs==1)]), #parental.CNCCs-UNIQUE
+  list("Gokhman2021-DE.Hybrid.CNCCs-UNIQUE",  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==0 &
+                                                                            gokhman2021$DE.Hybrid.CNCCs==1)]),   #hybrid.CNCCs-UNIQUE
+  
+  list("Gokhman2020-DMR.bone",gokhman2020$Gene[which(gokhman2020$Chimp.DMR.Promotor==1 |
+                                                     gokhman2020$Human.DMR.Promotor==1)]), #all human-chimp DMRs
+
+  list("Gokhman2020-skeletal.genes",gokhman2020.skeleton$Skeleton.related.gene),                                          #skeleton-related
+  list("Hsu2019-GWAS.hip.geometry",hsu2019$Nearby.gene[which(hsu2019$GWAS.hip.geometry==1)]),                             #hip geometry GWAS
+  list("Styrkarsdottir2019-GWAS.bone.area",styrkarsdottir2019$Closest.Gene[which(styrkarsdottir2019$GWAS.bone.area==1)]), #bone area GWAS
+  list("Yengo2018-GWAS.height",yengo2018$gene[which(yengo2018$GWAS.Height==1)]),                                          #height GWAS
+
+  list("Steinberg2020-GWAS.OA",steinberg2020$GeneName[which(steinberg2020$OA.omics==1)]), #OA GWAS
+  list("Morris2020-GWAS.OP",morris2019$unique.gene[which(morris2019$GWAS.BMD==1)])        #OP GWAS
+
+)
+
+for (genesExternal in listsExternal) {
+  
+  print(genesExternal[[1]])
+  
+  #All preosteoblasts
+  print("All preosteoblasts")
+  tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==1)]
+  nonDEgenes <- rownames(dataUpset)[which(!(rownames(dataUpset) %in% tempDE))]
+  genesetEnrich(GenesOfInterest=genesExternal[[2]],
+                DEgenes=tempDE,
+                NonDEGenes=nonDEgenes)
+  
+  #All osteoblasts
+  print("All osteoblasts")
+  tempDE <- rownames(dataUpset)[which(dataUpset$osteoblast==1)]
+  nonDEgenes <- rownames(dataUpset)[which(!(rownames(dataUpset) %in% tempDE))]
+  genesetEnrich(GenesOfInterest=genesExternal[[2]],
+                DEgenes=tempDE,
+                NonDEGenes=nonDEgenes)
+  
+  #All embedding osteoblasts
+  print("All embedding osteoblasts")
+  tempDE <- rownames(dataUpset)[which(dataUpset$embedding.osteoblast==1)]
+  nonDEgenes <- rownames(dataUpset)[which(!(rownames(dataUpset) %in% tempDE))]
+  genesetEnrich(GenesOfInterest=genesExternal[[2]],
+                DEgenes=tempDE,
+                NonDEGenes=nonDEgenes)
+  
+  #All mineralizing osteoblasts
+  print("All mineralizing osteoblasts")
+  tempDE <- rownames(dataUpset)[which(dataUpset$mineralizing.osteoblast==1)]
+  nonDEgenes <- rownames(dataUpset)[which(!(rownames(dataUpset) %in% tempDE))]
+  genesetEnrich(GenesOfInterest=genesExternal[[2]],
+                DEgenes=tempDE,
+                NonDEGenes=nonDEgenes)
+  
+  #All maturing osteocytes
+  print("All maturing osteocytes")
+  tempDE <- rownames(dataUpset)[which(dataUpset$maturing.osteocyte==1)]
+  nonDEgenes <- rownames(dataUpset)[which(!(rownames(dataUpset) %in% tempDE))]
+  genesetEnrich(GenesOfInterest=genesExternal[[2]],
+                DEgenes=tempDE,
+                NonDEGenes=nonDEgenes)
+  
+  #Shared across all ostadhoc classifications
+  print("Shared across all ostadhoc classifications")
+  tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==1 &
+                                      dataUpset$osteoblast==1 &
+                                      dataUpset$embedding.osteoblast==1 &
+                                      dataUpset$mineralizing.osteoblast==1 &
+                                      dataUpset$maturing.osteocyte==1)]
+  nonDEgenes <- rownames(dataUpset)[which(!(rownames(dataUpset) %in% tempDE))]
+  genesetEnrich(GenesOfInterest=genesExternal[[2]],
+                DEgenes=tempDE,
+                NonDEGenes=nonDEgenes)
+
+  #Shared across obl+emb+min+mat
+  print("Shared across obl+emb+min+mat")
+  tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
+                                      dataUpset$osteoblast==1 &
+                                      dataUpset$embedding.osteoblast==1 &
+                                      dataUpset$mineralizing.osteoblast==1 &
+                                      dataUpset$maturing.osteocyte==1)]
+  nonDEgenes <- rownames(dataUpset)[which(!(rownames(dataUpset) %in% tempDE))]
+  genesetEnrich(GenesOfInterest=genesExternal[[2]],
+                DEgenes=tempDE,
+                NonDEGenes=nonDEgenes)
+
+  #Shared across emb+min+mat
+  print("Shared across emb+min+mat")
+  tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
+                                      dataUpset$osteoblast==0 &
+                                      dataUpset$embedding.osteoblast==1 &
+                                      dataUpset$mineralizing.osteoblast==1 &
+                                      dataUpset$maturing.osteocyte==1)]
+  nonDEgenes <- rownames(dataUpset)[which(!(rownames(dataUpset) %in% tempDE))]
+  genesetEnrich(GenesOfInterest=genesExternal[[2]],
+                DEgenes=tempDE,
+                NonDEGenes=nonDEgenes)
+
+}
+
+```
+
+Make enrichment plot:
+
+```{r}
+
+#Enrichment of external gene sets in DE gene sets
+
+listsExternal <- list(
+
+  list("Blake2018-DE.iPSCs-Unique",blake2018$gene[which(blake2018$DE.Day0==1 &
+                                                        blake2018$DE.Day1==0 &
+                                              					blake2018$DE.Day2==0 &
+                                              					blake2018$DE.Day3==0)]),              #iPSCs-Unique
+  list("Blake2018-DE.iPSC-endoderm-day1-Unique",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==1 &
+                                                          				 	 blake2018$DE.Day2==0 &
+                                                          				   blake2018$DE.Day3==0)]), #iPSC-endoderm day1-Unique
+  list("Blake2018-DE.iPSC-endoderm-day2-Unique",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==0 &
+                                                          				 	 blake2018$DE.Day2==1 &
+                                                          				   blake2018$DE.Day3==0)]), #iPSC-endoderm day2-Unique
+  list("Blake2018-DE.iPSC-endoderm-day3-Unique",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==0 &
+                                                          				 	 blake2018$DE.Day2==0 &
+                                                          				   blake2018$DE.Day3==1)]), #iPSC-endoderm day3-Unique
+
+  list("Blake2020-DE.heart-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==1 &
+                                                        blake2020$DE.HvC_Kidney==0 &
+                                                        blake2020$DE.HvC_Liver==0 &
+                                                        blake2020$DE.HvC_Lung==0)]),   #heart-Unique
+  list("Blake2020-DE.kidney-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                         blake2020$DE.HvC_Kidney==1 &
+                                                         blake2020$DE.HvC_Liver==0 &
+                                                         blake2020$DE.HvC_Lung==0)]), #kidney-Unique
+  list("Blake2020-DE.liver-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                        blake2020$DE.HvC_Kidney==0 &
+                                                        blake2020$DE.HvC_Liver==1 &
+                                                        blake2020$DE.HvC_Lung==0)]),   #liver-Unique
+  list("Blake2020-DE.lung-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                       blake2020$DE.HvC_Kidney==0 &
+                                                       blake2020$DE.HvC_Liver==0 &
+                                                       blake2020$DE.HvC_Lung==1)]),     #lung-Unique
+
+  list("Gokhman2021-DE.Parental.iPSCs-Unique",gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==1 &
+                                                                            gokhman2021$DE.Parental.CNCCs==0)]), #parental.iPSCs-Unique
+  list("Gokhman2021-DE.Hybrid.iPSCs-Unique",  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==1 &
+                                                                            gokhman2021$DE.Hybrid.CNCCs==0)]),   #hybrid.iPSCs-Unique
+  list("Gokhman2021-DE.Parental.CNCCs-Unique",gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==0 &
+                                                                            gokhman2021$DE.Parental.CNCCs==1)]), #parental.CNCCs-Unique
+  list("Gokhman2021-DE.Hybrid.CNCCs-Unique",  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==0 &
+                                                                            gokhman2021$DE.Hybrid.CNCCs==1)]),   #hybrid.CNCCs-Unique
+  
+  list("Gokhman2020-DMR.bone",gokhman2020$Gene[which(gokhman2020$Chimp.DMR.Promotor==1 |
+                                                     gokhman2020$Human.DMR.Promotor==1)]), #all human-chimp DMRs
+
+  list("Hsu2019-GWAS.hip.geometry",hsu2019$Nearby.gene[which(hsu2019$GWAS.hip.geometry==1)]),                             #hip geometry GWAS
+  list("Styrkarsdottir2019-GWAS.bone.area",styrkarsdottir2019$Closest.Gene[which(styrkarsdottir2019$GWAS.bone.area==1)]), #bone area GWAS
+  list("Yengo2018-GWAS.height",yengo2018$gene[which(yengo2018$GWAS.Height==1)]),                                          #height GWAS
+
+  list("Steinberg2020-GWAS.OA",steinberg2020$GeneName[which(steinberg2020$OA.omics==1)]), #OA GWAS
+  list("Morris2020-GWAS.OP",morris2019$unique.gene[which(morris2019$GWAS.BMD==1)])        #OP GWAS
+
+)
+
+DEenrich <- data.frame("Source.DEGenes"=character(),
+                       "Source.GenesOfInterest"=character(),
+                       "DE.Interest"=integer(),
+                       "NonDE.Interest"=integer(),
+                       "DE.NotInterest"=integer(),
+                       "NonDE.NotInterest"=integer(),
+                       "p.value"=double(),
+                       "odds.ratio"=double())
+
+for (genesExternal in listsExternal) {
+
+  #Shared across all ostadhoc classifications
+  tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==1 &
+                                      dataUpset$osteoblast==1 &
+                                      dataUpset$embedding.osteoblast==1 &
+                                      dataUpset$mineralizing.osteoblast==1 &
+                                      dataUpset$maturing.osteocyte==1)]
+  nonDEgenes <- rownames(dataUpset)[which(!(rownames(dataUpset) %in% tempDE))]
+  DEenrich <- rbind(DEenrich,
+                    genesetEnrich.data(InternalDataSource="Shared in All",
+                                       ExternalDataSource=genesExternal[[1]],
+                                       GenesOfInterest=genesExternal[[2]],
+                                       DEgenes=tempDE,
+                                       NonDEGenes=nonDEgenes))
+  
+  #Shared across pre+obl+emb+min
+  tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==1 &
+                                      dataUpset$osteoblast==1 &
+                                      dataUpset$embedding.osteoblast==1 &
+                                      dataUpset$mineralizing.osteoblast==1 &
+                                      dataUpset$maturing.osteocyte==0)]
+  nonDEgenes <- rownames(dataUpset)[which(!(rownames(dataUpset) %in% tempDE))]
+  DEenrich <- rbind(DEenrich,
+                    genesetEnrich.data(InternalDataSource="Shared in Pre/Obl/Emb/Min",
+                                       ExternalDataSource=genesExternal[[1]],
+                                       GenesOfInterest=genesExternal[[2]],
+                                       DEgenes=tempDE,
+                                       NonDEGenes=nonDEgenes))
+
+  #Unique to min
+  tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
+                                      dataUpset$osteoblast==0 &
+                                      dataUpset$embedding.osteoblast==0 &
+                                      dataUpset$mineralizing.osteoblast==1 &
+                                      dataUpset$maturing.osteocyte==0)]
+  nonDEgenes <- rownames(dataUpset)[which(!(rownames(dataUpset) %in% tempDE))]
+  DEenrich <- rbind(DEenrich,
+                    genesetEnrich.data(InternalDataSource="Unique to Min",
+                                       ExternalDataSource=genesExternal[[1]],
+                                       GenesOfInterest=genesExternal[[2]],
+                                       DEgenes=tempDE,
+                                       NonDEGenes=nonDEgenes))
+                    
+  #All preosteoblasts
+  tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==1)]
+  nonDEgenes <- rownames(dataUpset)[which(!(rownames(dataUpset) %in% tempDE))]
+  DEenrich <- rbind(DEenrich,
+                    genesetEnrich.data(InternalDataSource="All Preostoblasts",
+                                       ExternalDataSource=genesExternal[[1]],
+                                       GenesOfInterest=genesExternal[[2]],
+                                       DEgenes=tempDE,
+                                       NonDEGenes=nonDEgenes))
+  
+  #All osteoblasts
+  tempDE <- rownames(dataUpset)[which(dataUpset$osteoblast==1)]
+  nonDEgenes <- rownames(dataUpset)[which(!(rownames(dataUpset) %in% tempDE))]
+  DEenrich <- rbind(DEenrich,
+                    genesetEnrich.data(InternalDataSource="All Osteoblasts",
+                                       ExternalDataSource=genesExternal[[1]],
+                                       GenesOfInterest=genesExternal[[2]],
+                                       DEgenes=tempDE,
+                                       NonDEGenes=nonDEgenes))
+  
+  #All embedding osteoblasts
+  tempDE <- rownames(dataUpset)[which(dataUpset$embedding.osteoblast==1)]
+  nonDEgenes <- rownames(dataUpset)[which(!(rownames(dataUpset) %in% tempDE))]
+  DEenrich <- rbind(DEenrich,
+                    genesetEnrich.data(InternalDataSource="All Embedding Osteoblasts",
+                                       ExternalDataSource=genesExternal[[1]],
+                                       GenesOfInterest=genesExternal[[2]],
+                                       DEgenes=tempDE,
+                                       NonDEGenes=nonDEgenes))
+  
+  #All mineralizing osteoblasts
+  tempDE <- rownames(dataUpset)[which(dataUpset$mineralizing.osteoblast==1)]
+  nonDEgenes <- rownames(dataUpset)[which(!(rownames(dataUpset) %in% tempDE))]
+  DEenrich <- rbind(DEenrich,
+                    genesetEnrich.data(InternalDataSource="All Mineralizing Osteoblasts",
+                                       ExternalDataSource=genesExternal[[1]],
+                                       GenesOfInterest=genesExternal[[2]],
+                                       DEgenes=tempDE,
+                                       NonDEGenes=nonDEgenes))
+  
+  #All maturing osteocytes
+  tempDE <- rownames(dataUpset)[which(dataUpset$maturing.osteocyte==1)]
+  nonDEgenes <- rownames(dataUpset)[which(!(rownames(dataUpset) %in% tempDE))]
+  DEenrich <- rbind(DEenrich,
+                    genesetEnrich.data(InternalDataSource="All Maturing Osteocytes",
+                                       ExternalDataSource=genesExternal[[1]],
+                                       GenesOfInterest=genesExternal[[2]],
+                                       DEgenes=tempDE,
+                                       NonDEGenes=nonDEgenes))
+
+}
+
+#Reformat Data
+DEenrich$Source.DEGenes <- as.factor(DEenrich$Source.DEGenes)
+DEenrich$Source.GenesOfInterest <- as.factor(DEenrich$Source.GenesOfInterest)
+
+#Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
+DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
+
+#Calculate Ratio of Overlapping DE Genes vs. Total Genes (do not do this)
+#DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$NonDE.Interest,DEenrich$DE.NotInterest,DEenrich$NonDE.NotInterest)
+
+#Plot Enrichments
+ggplot(DEenrich, aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=DE.Interest)) +
+          geom_point() +
+          facet_grid(~Source.DEGenes) +
+          scale_size_area(max_size=10) +
+          scale_color_viridis(option="C", limits=c(0,0.05)) +
+          theme_bw() +
+          labs(x="Gene Ratio", y="") +
+          xlim(0,0.017) +
+          scale_y_discrete(limits=rev)
+
+```
+
+Determine which skeletal-phenotype-related genes overlap with DE genes:
+
+```{r}
+
+#Enrichment of external gene sets in DE gene sets
+
+listsExternal <- list(
+
+  list("Hsu2019-GWAS.hip.geometry",hsu2019$Nearby.gene[which(hsu2019$GWAS.hip.geometry==1)]),                             #hip geometry GWAS
+  list("Styrkarsdottir2019-GWAS.bone.area",styrkarsdottir2019$Closest.Gene[which(styrkarsdottir2019$GWAS.bone.area==1)]), #bone area GWAS
+  list("Yengo2018-GWAS.height",yengo2018$gene[which(yengo2018$GWAS.Height==1)]),                                          #height GWAS
+
+  list("Steinberg2020-GWAS.OA",steinberg2020$GeneName[which(steinberg2020$OA.omics==1)]), #OA GWAS
+  list("Morris2020-GWAS.OP",morris2019$unique.gene[which(morris2019$GWAS.BMD==1)])        #OP GWAS
+
+)
+
+for (genesExternal in listsExternal) {
+  
+  print(genesExternal[[1]])
+
+  #Shared across all ostadhoc classifications, tested in all classifications
+  print("Shared across all ostadhoc classifications, tested in all classifications")
+  tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==1 &
+                                      dataUpset$osteoblast==1 &
+                                      dataUpset$embedding.osteoblast==1 &
+                                      dataUpset$mineralizing.osteoblast==1 &
+                                      dataUpset$maturing.osteocyte==1)]
+  print(intersect(genesExternal[[2]],tempDE))
+  
+  #Shared across pre+obl+emb+min, tested in all classifications
+  print("Shared across pre+obl+emb+min, tested in all classifications")
+  tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==1 &
+                                      dataUpset$osteoblast==1 &
+                                      dataUpset$embedding.osteoblast==1 &
+                                      dataUpset$mineralizing.osteoblast==1 &
+                                      dataUpset$maturing.osteocyte==0)]
+  print(intersect(genesExternal[[2]],tempDE))
+  
+  #Shared across obl+emb+min, tested in all classifications
+  print("Shared across obl+emb+min, tested in all classifications")
+  tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
+                                      dataUpset$osteoblast==1 &
+                                      dataUpset$embedding.osteoblast==1 &
+                                      dataUpset$mineralizing.osteoblast==1 &
+                                      dataUpset$maturing.osteocyte==0)]
+  print(intersect(genesExternal[[2]],tempDE))
+
+  #Unique to preosteoblasts, tested in all classifications
+  print("Unique to preosteoblasts, tested in all classifications")
+  tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==1 &
+                                      dataUpset$osteoblast==0 &
+                                      dataUpset$embedding.osteoblast==0 &
+                                      dataUpset$mineralizing.osteoblast==0 &
+                                      dataUpset$maturing.osteocyte==0)]
+  print(intersect(genesExternal[[2]],tempDE))
+  
+  #Unique to osteoblasts, tested in all classifications
+  print("Unique to osteoblasts, tested in all classifications")
+  tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
+                                      dataUpset$osteoblast==1 &
+                                      dataUpset$embedding.osteoblast==0 &
+                                      dataUpset$mineralizing.osteoblast==0 &
+                                      dataUpset$maturing.osteocyte==0)]
+  print(intersect(genesExternal[[2]],tempDE))
+
+  #Unique to embedding osteoblasts, tested in all classifications
+  print("Unique to embedding osteoblasts, tested in all classifications")
+  tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
+                                      dataUpset$osteoblast==0 &
+                                      dataUpset$embedding.osteoblast==1 &
+                                      dataUpset$mineralizing.osteoblast==0 &
+                                      dataUpset$maturing.osteocyte==0)]
+  print(intersect(genesExternal[[2]],tempDE))
+  
+  #Unique to mineralizing osteoblasts, tested in all classifications
+  print("Unique to mineralizing osteoblasts, tested in all classifications")
+  tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
+                                      dataUpset$osteoblast==0 &
+                                      dataUpset$embedding.osteoblast==0 &
+                                      dataUpset$mineralizing.osteoblast==1 &
+                                      dataUpset$maturing.osteocyte==0)]
+  print(intersect(genesExternal[[2]],tempDE))
+  
+  #Unique to maturing osteocytes, tested in all classifications
+  print("Unique to maturing osteocytes, tested in all classifications")
+  tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
+                                      dataUpset$osteoblast==0 &
+                                      dataUpset$embedding.osteoblast==0 &
+                                      dataUpset$mineralizing.osteoblast==0 &
+                                      dataUpset$maturing.osteocyte==1)]
+  print(intersect(genesExternal[[2]],tempDE))
+
+}
+
+```
 
 ### Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene strict, Time 2 only)
 ### Examine Numbers and Overlap of Cormotif DE Genes & Functional/GeneSet Enrichment of DE Genes
-### Examine Conservation of Differentiation-Specific DE Genes
