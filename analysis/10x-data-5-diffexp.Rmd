@@ -521,6 +521,11 @@ sbatch ./DEdreamsubset.sh tot.subNum.pseudo.logcpm0.fml6.nofc.bh tot subNum TRUE
 #single-cell DE analyses - NOT RUN
 #sbatch ./DEdream.sh tot.sc.pch20.fml6.nofc.bh tot sc TRUE pch 0.2 formula6 stage
 
+#pseudobulk DE analyses - check Cormotif model (~Species)
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml7.nofc.bh tot pseudo TRUE logcpm 0 formula7 stage
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml7.nofc.bh tot pseudo TRUE logcpm 0 formula7 ostadhoc
+sbatch ./DEdream.sh tot.pseudo.logcpm0.fml7.nofc.bh tot pseudo TRUE logcpm 0 formula7 ostadhoc.T2
+
 ```
 
 ## Do a quick check of DE gene data output.

@@ -525,6 +525,49 @@ t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 1")]),abs(DEgenes$logF
 
 ```
 
+```{r, eval=FALSE}
+
+DEdataCells <-
+  DEdata %>%
+    dplyr::filter(cell.assign=="stage") %>%
+    dplyr::select(cell.subset,gene,logFC,FDR)
+
+#FDR Distribution
+ggplot(DEdataCells, aes(x=FDR)) +
+  geom_histogram() +
+  facet_grid(~cell.subset)
+
+#Volcano plot
+ggplot(DEdataCells, aes(x=logFC,y=-log10(FDR))) +
+  geom_point() +
+  facet_grid(~cell.subset)
+
+#qqplot
+qqplot(-log10(runif(length(DEdataCells$FDR[which(DEdataCells$cell.subset=="Time 0")]))),
+       -log10(DEdataCells$FDR[which(DEdataCells$cell.subset=="Time 0")]),
+       xlab="-log10(Uniform)",
+       ylab="-log10(FDR)",
+       main="QQ Plot: Time 0",
+       ylim=c(0,10),
+       xlim=c(0,4.75))
+abline(0,1)
+qqplot(-log10(runif(length(DEdataCells$FDR[which(DEdataCells$cell.subset=="Time 1")]))),
+       -log10(DEdataCells$FDR[which(DEdataCells$cell.subset=="Time 1")]),
+       xlab="-log10(Uniform)",
+       ylab="-log10(FDR)",
+       main="QQ Plot: Time 1",
+       ylim=c(0,8.5),
+       xlim=c(0,4.5))
+abline(0,1)
+qqplot(-log10(runif(length(DEdataCells$FDR[which(DEdataCells$cell.subset=="Time 2")]))),
+       -log10(DEdataCells$FDR[which(DEdataCells$cell.subset=="Time 2")]),
+       xlab="-log10(Uniform)",
+       ylab="-log10(FDR)",
+       main="QQ Plot: Time 2")
+abline(0,1)
+
+```
+
 ### General Clusters (res=0.05)
 
 DE Genes
@@ -1134,6 +1177,57 @@ t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="mineralizing\nosteoblast")]
 
 ```
 
+```{r, eval=FALSE}
+
+DEdataCells <-
+  DEdata %>%
+    dplyr::filter(cell.assign=="ostadhoc") %>%
+    dplyr::select(cell.subset,gene,logFC,FDR)
+
+#FDR Distribution
+ggplot(DEdataCells, aes(x=FDR)) +
+  geom_histogram() +
+  facet_grid(~cell.subset)
+
+#Volcano plot
+ggplot(DEdataCells, aes(x=logFC,y=-log10(FDR))) +
+  geom_point() +
+  facet_grid(~cell.subset)
+
+#qqplot
+qqplot(-log10(runif(length(DEdataCells$FDR[which(DEdataCells$cell.subset=="preosteoblast")]))),
+       -log10(DEdataCells$FDR[which(DEdataCells$cell.subset=="preosteoblast")]),
+       xlab="-log10(Uniform)",
+       ylab="-log10(FDR)",
+       main="QQ Plot: preosteoblast")
+abline(0,1)
+qqplot(-log10(runif(length(DEdataCells$FDR[which(DEdataCells$cell.subset=="osteoblast")]))),
+       -log10(DEdataCells$FDR[which(DEdataCells$cell.subset=="osteoblast")]),
+       xlab="-log10(Uniform)",
+       ylab="-log10(FDR)",
+       main="QQ Plot: osteoblast")
+abline(0,1)
+qqplot(-log10(runif(length(DEdataCells$FDR[which(DEdataCells$cell.subset=="embedding osteoblast")]))),
+       -log10(DEdataCells$FDR[which(DEdataCells$cell.subset=="embedding osteoblast")]),
+       xlab="-log10(Uniform)",
+       ylab="-log10(FDR)",
+       main="QQ Plot: embedding osteoblast")
+abline(0,1)
+qqplot(-log10(runif(length(DEdataCells$FDR[which(DEdataCells$cell.subset=="mineralizing osteoblast")]))),
+       -log10(DEdataCells$FDR[which(DEdataCells$cell.subset=="mineralizing osteoblast")]),
+       xlab="-log10(Uniform)",
+       ylab="-log10(FDR)",
+       main="QQ Plot: mineralizing osteoblast")
+abline(0,1)
+qqplot(-log10(runif(length(DEdataCells$FDR[which(DEdataCells$cell.subset=="maturing osteocyte")]))),
+       -log10(DEdataCells$FDR[which(DEdataCells$cell.subset=="maturing osteocyte")]),
+       xlab="-log10(Uniform)",
+       ylab="-log10(FDR)",
+       main="QQ Plot: maturing osteocyte")
+abline(0,1)
+
+```
+
 ### Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene strict)
 
 DE Genes
@@ -1341,6 +1435,57 @@ t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="preosteoblast")]),abs(DEgen
 t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="osteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="embedding\nosteoblast")]))
 t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="embedding\nosteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="mineralizing\nosteoblast")]))
 t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="mineralizing\nosteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="maturing\nosteocyte")]))
+
+```
+
+```{r, eval=FALSE}
+
+DEdataCells <-
+  DEdata %>%
+    dplyr::filter(cell.assign=="ostadhoc.T2") %>%
+    dplyr::select(cell.subset,gene,logFC,FDR)
+
+#FDR Distribution
+ggplot(DEdataCells, aes(x=FDR)) +
+  geom_histogram() +
+  facet_grid(~cell.subset)
+
+#Volcano plot
+ggplot(DEdataCells, aes(x=logFC,y=-log10(FDR))) +
+  geom_point() +
+  facet_grid(~cell.subset)
+
+#qqplot
+qqplot(-log10(runif(length(DEdataCells$FDR[which(DEdataCells$cell.subset=="preosteoblast")]))),
+       -log10(DEdataCells$FDR[which(DEdataCells$cell.subset=="preosteoblast")]),
+       xlab="-log10(Uniform)",
+       ylab="-log10(FDR)",
+       main="QQ Plot: preosteoblast (t2)")
+abline(0,1)
+qqplot(-log10(runif(length(DEdataCells$FDR[which(DEdataCells$cell.subset=="osteoblast")]))),
+       -log10(DEdataCells$FDR[which(DEdataCells$cell.subset=="osteoblast")]),
+       xlab="-log10(Uniform)",
+       ylab="-log10(FDR)",
+       main="QQ Plot: osteoblast (t2)")
+abline(0,1)
+qqplot(-log10(runif(length(DEdataCells$FDR[which(DEdataCells$cell.subset=="embedding osteoblast")]))),
+       -log10(DEdataCells$FDR[which(DEdataCells$cell.subset=="embedding osteoblast")]),
+       xlab="-log10(Uniform)",
+       ylab="-log10(FDR)",
+       main="QQ Plot: embedding osteoblast (t2)")
+abline(0,1)
+qqplot(-log10(runif(length(DEdataCells$FDR[which(DEdataCells$cell.subset=="mineralizing osteoblast")]))),
+       -log10(DEdataCells$FDR[which(DEdataCells$cell.subset=="mineralizing osteoblast")]),
+       xlab="-log10(Uniform)",
+       ylab="-log10(FDR)",
+       main="QQ Plot: mineralizing osteoblast (t2)")
+abline(0,1)
+qqplot(-log10(runif(length(DEdataCells$FDR[which(DEdataCells$cell.subset=="maturing osteocyte")]))),
+       -log10(DEdataCells$FDR[which(DEdataCells$cell.subset=="maturing osteocyte")]),
+       xlab="-log10(Uniform)",
+       ylab="-log10(FDR)",
+       main="QQ Plot: maturing osteocyte (t2)")
+abline(0,1)
 
 ```
 
