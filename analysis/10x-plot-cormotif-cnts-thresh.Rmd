@@ -1,0 +1,1356 @@
+---
+title: "10x-plot-cormotif-cnts-thresh"
+author: "Genevieve Housman"
+date: "September 2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 10X Data Cellranger Analysis - Correlation Motifs (different thresholds)
+
+View results of correlation motifs tests between humans and chimpanzees using different posterior probability thresholds.
+
+* within stages of differentiation
+* within stages of osteogenesis
+* within stages of osteogenesis (T2 only)
+
+```{r, message=FALSE}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(grid)
+library(gbm)
+library(colorspace)
+library(RColorBrewer)
+library(edgeR)
+library(scran)
+library(SingleCellExperiment)
+library(purrr)
+library(UpSetR)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(Rgraphviz)
+library(enrichplot)
+library(viridis)
+library(VennDiagram)
+library(ComplexHeatmap)
+library(Cormotif)
+
+```
+
+## Load External Gene Datasets
+
+Several external gene datasets were manually compiled from papers to test for enrichment in interesting DE gene sets.
+
+Genes previously identified as human and chimpanzee differences:
+
+* Blake et al. 2018 Genome Biology (Supplementary Table S5A-D)
+    + DE genes in human and chimpanzee iPSC-derived endoderm day 0 (n = 3267 DE genes at FDR < 1% out of 10304 genes)
+    + DE genes in human and chimpanzee iPSC-derived endoderm day 1 (n = 3239 DE genes at FDR < 1% out of 10304 genes)
+    + DE genes in human and chimpanzee iPSC-derived endoderm day 2 (n = 3477 DE genes at FDR < 1% out of 10304 genes)
+    + DE genes in human and chimpanzee iPSC-derived endoderm day 3 (n = 3820 DE genes at FDR < 1% out of 10304 genes)
+    + Note: only included genes with a known gene symbol (retreived from https://www.biotools.fr/human/ensembl_symbol_converter)
+    + Note: only considered DE genes unique to each cell type
+    
+* Blake et al. 2020 Genome Research (Supplemental Table S4)
+    + DE genes in human and chimpanzee heart tissue (n = 2195 DE genes at FDR < 1% out of 12184 genes)
+    + DE genes in human and chimpanzee kidney tissue (n = 799 DE genes at FDR < 1% out of 12184 genes)
+    + DE genes in human and chimpanzee liver tissue (n = 1364 DE genes at FDR < 1% out of 12184 genes)
+    + DE genes in human and chimpanzee lung tissue (n = 805 DE genes at FDR < 1% out of 12184 genes)
+    + Note: only included genes with a known gene symbol (retreived from https://www.biotools.fr/human/ensembl_symbol_converter)
+    + Note: only considered DE genes unique to each tissue type
+
+* Gokhman et al. 2021 Nature Genetics (Supplementary Table 5)
+    + DE genes in parental iPSC lines (n = 7655)
+    + DE genes in hybrid iPSC lines (n = 6009)
+    + DE genes in parental CNCC lines (n = 2223)
+    + DE genes in hybrid CNCC lines (n = 3612)
+    + Note: only considered DE genes unique to each cell type
+    
+* Gokhman et al. 2020 Nature Communications (Supplementary Data 2)
+    + DMRs identified between chimpanzees and archaic/modern humans in bone tissues (n = 2031 DMRs)
+    + AMH-derived methylation patterns in bone tissues (n = 873 DMRs linked with 588 DMGs)
+    + (human hypermethylated promotor regions: expect higher gene expression in chimps as compared to humans)
+    + (chimp hypermethylated promotor regions: expect higher gene expression in humans as compared to chimps)
+    + Note: only DMRs that overlapped promotor regions of genes were included
+    + Note: hyper/hypomethylation determined by comparing average AMH methylation levels with average chimp methylation levels
+
+General skeleton-related and skeletal phenotype-related genes:
+
+* Hsu et al. 2019 Journal of Bone and Mineral Research (Table 1)
+    + hip geometry GWAS loci (n = 10)
+
+* Styrkarsdottir et al. 2019 Nature Communications (Table 1)
+    + DXA bone area GWAS loci (n = 21 associated with 20 genes)
+
+* Yengo et al. 2018 Human Molecular Genetics
+    + height GWAS loci (n = 3290) (data provided at https://portals.broadinstitute.org/collaboration/giant/index.php/GIANT_consortium_data_files)
+    + height GWAS loci with associated eQTLs (n = 610) (list not provided)
+    + Note: only used unique gene symbols associated with height GWAS loci (n = 1500)
+
+Genes associated with skeletal diseases (OA + OP):
+
+* Steinberg et al. 2020 bioRxiv (Supplementary Table 2)
+    + genes with cross-omics (DE RNA + protein) evidence for involvement in OA progression (n = 409)
+    
+* Morris et al. 2019 Nature Genetics (Supplemental Table 2)
+    + OP GWAS loci (n = 1103 conditionally independent signals associated with 863 genes)
+    
+```{r}
+
+#Define function for testing significant enrichment of gene sets
+
+genesetEnrich <- function(GenesOfInterest, DEgenes, NonDEGenes){
+  
+  #fill contingency table
+  DE.Interest       <- length(intersect(GenesOfInterest, DEgenes))
+  NonDE.Interest    <- length(intersect(GenesOfInterest, NonDEGenes))
+  DE.NotInterest    <- length(DEgenes) - DE.Interest
+  NonDE.NotInterest <- length(NonDEGenes) - NonDE.Interest
+  
+  ContingencyTable <- matrix(c(DE.Interest,
+                               NonDE.Interest,
+                               DE.NotInterest,
+                               NonDE.NotInterest),
+                             nrow=2,
+                             ncol=2,
+                             byrow=TRUE)
+  colnames(ContingencyTable) <- c("DE Genes","Non DE Genes")
+  rownames(ContingencyTable) <- c("Genes of Interest","Not Genes of Interest")
+  
+  #perform test
+  print(ContingencyTable)
+  print(fisher.test(ContingencyTable, alternative="greater"))
+
+}
+
+genesetEnrich.data <- function(InternalDataCutoff, InternalDataSource, ExternalDataSource, GenesOfInterest, DEgenes, NonDEGenes){
+  
+  #fill contingency table
+  DE.Interest       <- length(intersect(GenesOfInterest, DEgenes))
+  NonDE.Interest    <- length(intersect(GenesOfInterest, NonDEGenes))
+  DE.NotInterest    <- length(DEgenes) - DE.Interest
+  NonDE.NotInterest <- length(NonDEGenes) - NonDE.Interest
+  
+  ContingencyTable <- matrix(c(DE.Interest,
+                               NonDE.Interest,
+                               DE.NotInterest,
+                               NonDE.NotInterest),
+                             nrow=2,
+                             ncol=2,
+                             byrow=TRUE)
+  colnames(ContingencyTable) <- c("DE Genes","Non DE Genes")
+  rownames(ContingencyTable) <- c("Genes of Interest","Not Genes of Interest")
+  
+  #perform test and output data
+  data <- data.frame("Post.Prob.Cutoff"=InternalDataCutoff,
+                     "Source.DEGenes"=InternalDataSource,
+                     "Source.GenesOfInterest"=ExternalDataSource,
+                     "DE.Interest"=DE.Interest,
+                     "NonDE.Interest"=NonDE.Interest,
+                     "DE.NotInterest"=DE.NotInterest,
+                     "NonDE.NotInterest"=NonDE.NotInterest,
+                     "p.value"=fisher.test(ContingencyTable, alternative="greater")$p.value,
+                     "odds.ratio"=fisher.test(ContingencyTable, alternative="greater")$estimate,
+                     row.names=NULL)
+  return(data)
+
+}
+
+```
+
+```{r}
+
+#Load external datasets (manually currated from papers)
+gallegoromero2015    <- read.csv("./data/external-gene-sets/GallegoRomero2015eLife.csv")
+blake2018            <- read.csv("./data/external-gene-sets/Blake2018GenBio.csv")
+blake2020            <- read.csv("./data/external-gene-sets/Blake2020GenRes.csv")
+gokhman2021          <- read.csv("./data/external-gene-sets/Gokhman2021NatGen.csv")
+gokhman2020          <- read.csv("./data/external-gene-sets/Gokhman2020NatComm.csv")
+gokhman2020.skeleton <- read.csv("./data/external-gene-sets/Gokhman2020NatComm_skeleton.csv")
+hsu2019              <- read.csv("./data/external-gene-sets/Hsu2019JBoneMinRes.csv")
+styrkarsdottir2019   <- read.csv("./data/external-gene-sets/Styrkarsdottir2019NatComm.csv")
+yengo2018            <- read.csv("./data/external-gene-sets/Yengo2018HumMolGen.csv")
+steinberg2020        <- read.csv("./data/external-gene-sets/Steinberg2020biorxiv.csv")
+morris2019           <- read.csv("./data/external-gene-sets/Morris2019NatGen.csv")
+#cibrianuhalte2017    <- read.csv("./data/external-gene-sets/CibrianUhalte2017HumMolGen.csv")
+#tachmazidou2019      <- read.csv("./data/external-gene-sets/Tachmazidou2019NatGen_AH.csv")
+
+```
+
+## Stages of Differentiation at Collection
+
+```{r}
+
+#load data
+cormotifData <- readRDS("./data/cormotif-data/cormotif.cnts.pseudo-stage.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+
+#plot BIC/AIC comparisons
+plotIC(cormotifData)
+
+#plot the probability that each motif is differentially expressed in each comparison
+HAtop <- HeatmapAnnotation(Stage=c("Time 0","Time 1","Time 2"),
+                           col=list(Stage=c("Time 0"="pink","Time 1"="mediumorchid","Time 2"="dodgerblue")),
+                           gp=gpar(col="black"),
+                           gap=unit(5,"points"),
+                           annotation_name_side="left")
+HAside = rowAnnotation(No.Genes=anno_barplot(floor(cormotifData$bestmotif$motif.p * nrow(cormotifData$bestmotif$p.post))),
+                       width=unit(3,"cm"),
+                       border=FALSE)
+Heatmap(cormotifData$bestmotif$motif.q,
+        col=gray(seq(from=1,to=0,by=-0.1)),
+        name="DE Prob.",
+        rect_gp=gpar(col="black",lwd=.3),
+        top_annotation=HAtop,
+        right_annotation=HAside,
+        column_title="Comparisons across Species",
+        row_title="Motif",
+        column_dend_reorder=FALSE,
+        row_dend_reorder=TRUE,
+        heatmap_legend_param=list(at=c(0,0.2,0.4,0.6,0.8,1)))
+
+```
+
+Define different posterior probability thresholds (0.50, 0.60, 0.70, 0.75, 0.80, 0.85, 0.90, 0.925, 0.95, 0.975, 0.99).
+
+* 0.50 cutoff is used in Wei et al. 2015 and Blake et al. 2018
+* 0.95 is closer to an FDR < 0.05
+* 0.99 is closer to an FDR < 0.01
+
+```{r}
+
+cutoffs <- c(0.50, 0.60, 0.70, 0.75, 0.80, 0.85, 0.90, 0.925, 0.95, 0.975, 0.99)
+
+```
+
+```{r}
+
+#obtain DE pattern at different posterior distribution cutoffs and reformat for plotting
+dataUpset <- list()
+dataPlot <- list()
+x=1
+
+while (x <= length(cutoffs)) {
+  
+  dataUpsetTEMP <- as.data.frame(cormotifData$bestmotif$p.post)
+  dataUpsetTEMP[dataUpsetTEMP>cutoffs[x]] <- 1
+  dataUpsetTEMP[dataUpsetTEMP<=cutoffs[x]] <- 0
+  dataUpset[[x]] <- dataUpsetTEMP
+  
+  dataPlotTEMP <- data.frame("cell.subset"=c(rep("Time.0",length(which(dataUpsetTEMP$Time.0==1))),
+                                             rep("Time.1",length(which(dataUpsetTEMP$Time.1==1))),
+                                             rep("Time.2",length(which(dataUpsetTEMP$Time.2==1)))),
+                             "gene"=c(rownames(dataUpsetTEMP)[which(dataUpsetTEMP$Time.0==1)],
+                                      rownames(dataUpsetTEMP)[which(dataUpsetTEMP$Time.1==1)],
+                                      rownames(dataUpsetTEMP)[which(dataUpsetTEMP$Time.2==1)]),
+                             "post.p"=c(cormotifData$bestmotif$p.post[which(dataUpsetTEMP$Time.0==1),"Time.0"],
+                                        cormotifData$bestmotif$p.post[which(dataUpsetTEMP$Time.1==1),"Time.1"],
+                                        cormotifData$bestmotif$p.post[which(dataUpsetTEMP$Time.2==1),"Time.2"]),
+                             row.names=NULL)
+  dataPlotTEMP$cell.subset <- factor(dataPlotTEMP$cell.subset,
+                                     levels=c("Time.0","Time.1","Time.2"),
+                                     labels=c("Time 0","Time 1","Time 2"))
+  dataPlot[[x]] <- dataPlotTEMP
+  
+  x=x+1
+  
+}
+
+```
+
+Plot number of DE genes for each cutoff.
+
+```{r}
+
+x=1
+
+while (x <= length(cutoffs)) {
+  
+  #cutoff
+  print(paste0("Posterior Probability Cutoff: ",cutoffs[x]))
+
+  #number of DE genes
+  print(ggplot(dataPlot[[x]], aes(x=cell.subset, fill=cell.subset)) +
+          geom_bar() +
+          ylab('Number of DE Genes') +
+          xlab('') +
+          scale_fill_manual(name="Stage",
+                            values=c("pink","mediumorchid","dodgerblue")) +
+          theme_classic() +
+          theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10)))
+  
+  #total number of DE genes identified
+  print(table(dataPlot[[x]]$cell.subset))
+  
+  #make upset plot of DE genes
+  print(upset(dataUpset[[x]],
+              keep.order=TRUE,
+              empty.intersections="on",
+              intersections=list(list("Time.0"),
+                                 list("Time.1"),
+                                 list("Time.2"),
+                                 list("Time.0","Time.1"),
+                                 list("Time.1","Time.2"),
+                                 list("Time.0","Time.2"),
+                                 list("Time.0","Time.1","Time.2")),
+              text.scale=2))
+
+  x=x+1
+  
+}
+
+```
+
+Test for significant enrichment of external gene sets in DE gene sets using Fisher's exact test.
+Make enrichment plot:
+
+```{r}
+
+#Enrichment of external gene sets in DE gene sets
+
+listsExternal <- list(
+
+  list("Blake2018-DE.iPSCs-Unique",blake2018$gene[which(blake2018$DE.Day0==1 &
+                                                        blake2018$DE.Day1==0 &
+                                              					blake2018$DE.Day2==0 &
+                                              					blake2018$DE.Day3==0)]),              #iPSCs-Unique
+  list("Blake2018-DE.iPSC-endoderm-day1-Unique",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==1 &
+                                                          				 	 blake2018$DE.Day2==0 &
+                                                          				   blake2018$DE.Day3==0)]), #iPSC-endoderm day1-Unique
+  list("Blake2018-DE.iPSC-endoderm-day2-Unique",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==0 &
+                                                          				 	 blake2018$DE.Day2==1 &
+                                                          				   blake2018$DE.Day3==0)]), #iPSC-endoderm day2-Unique
+  list("Blake2018-DE.iPSC-endoderm-day3-Unique",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==0 &
+                                                          				 	 blake2018$DE.Day2==0 &
+                                                          				   blake2018$DE.Day3==1)]), #iPSC-endoderm day3-Unique
+
+  list("Blake2020-DE.heart-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==1 &
+                                                        blake2020$DE.HvC_Kidney==0 &
+                                                        blake2020$DE.HvC_Liver==0 &
+                                                        blake2020$DE.HvC_Lung==0)]),   #heart-Unique
+  list("Blake2020-DE.kidney-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                         blake2020$DE.HvC_Kidney==1 &
+                                                         blake2020$DE.HvC_Liver==0 &
+                                                         blake2020$DE.HvC_Lung==0)]), #kidney-Unique
+  list("Blake2020-DE.liver-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                        blake2020$DE.HvC_Kidney==0 &
+                                                        blake2020$DE.HvC_Liver==1 &
+                                                        blake2020$DE.HvC_Lung==0)]),   #liver-Unique
+  list("Blake2020-DE.lung-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                       blake2020$DE.HvC_Kidney==0 &
+                                                       blake2020$DE.HvC_Liver==0 &
+                                                       blake2020$DE.HvC_Lung==1)]),     #lung-Unique
+
+  list("Gokhman2021-DE.Parental.iPSCs-Unique",gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==1 &
+                                                                            gokhman2021$DE.Parental.CNCCs==0)]), #parental.iPSCs-Unique
+  list("Gokhman2021-DE.Hybrid.iPSCs-Unique",  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==1 &
+                                                                            gokhman2021$DE.Hybrid.CNCCs==0)]),   #hybrid.iPSCs-Unique
+  list("Gokhman2021-DE.Parental.CNCCs-Unique",gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==0 &
+                                                                            gokhman2021$DE.Parental.CNCCs==1)]), #parental.CNCCs-Unique
+  list("Gokhman2021-DE.Hybrid.CNCCs-Unique",  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==0 &
+                                                                            gokhman2021$DE.Hybrid.CNCCs==1)]),   #hybrid.CNCCs-Unique
+  
+  list("Gokhman2020-DMR.bone",gokhman2020$Gene[which(gokhman2020$Chimp.DMR.Promotor==1 |
+                                                     gokhman2020$Human.DMR.Promotor==1)]), #all human-chimp DMRs
+
+  list("Hsu2019-GWAS.hip.geometry",hsu2019$Nearby.gene[which(hsu2019$GWAS.hip.geometry==1)]),                             #hip geometry GWAS
+  list("Styrkarsdottir2019-GWAS.bone.area",styrkarsdottir2019$Closest.Gene[which(styrkarsdottir2019$GWAS.bone.area==1)]), #bone area GWAS
+  list("Yengo2018-GWAS.height",yengo2018$gene[which(yengo2018$GWAS.Height==1)]),                                          #height GWAS
+
+  list("Steinberg2020-GWAS.OA",steinberg2020$GeneName[which(steinberg2020$OA.omics==1)]), #OA GWAS
+  list("Morris2020-GWAS.OP",morris2019$unique.gene[which(morris2019$GWAS.BMD==1)])        #OP GWAS
+
+)
+
+DEenrich <- data.frame("Post.Prob.Cutoff"=double(),
+                       "Source.DEGenes"=character(),
+                       "Source.GenesOfInterest"=character(),
+                       "DE.Interest"=integer(),
+                       "NonDE.Interest"=integer(),
+                       "DE.NotInterest"=integer(),
+                       "NonDE.NotInterest"=integer(),
+                       "p.value"=double(),
+                       "odds.ratio"=double())
+x=1
+
+while (x <= length(cutoffs)) {
+  
+  for (genesExternal in listsExternal) {
+  
+    #Shared across All Stages
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$Time.0==1 &
+                                             dataUpset[[x]]$Time.1==1 &
+                                             dataUpset[[x]]$Time.2==1)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in All",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+  
+    #Shared across Time 0 & Time 1
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$Time.0==1 &
+                                             dataUpset[[x]]$Time.1==1 &
+                                             dataUpset[[x]]$Time.2==0)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in Time 0 & Time 1",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+  
+    #Shared across Time 1 & Time 2
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$Time.0==0 &
+                                             dataUpset[[x]]$Time.1==1 &
+                                             dataUpset[[x]]$Time.2==1)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in Time 1 & Time 2",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to Time 0
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$Time.0==1 &
+                                             dataUpset[[x]]$Time.1==0 &
+                                             dataUpset[[x]]$Time.2==0)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Unique to Time 0",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+  
+    #Unique to Time 1
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$Time.0==0 &
+                                             dataUpset[[x]]$Time.1==1 &
+                                             dataUpset[[x]]$Time.2==0)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Unique to Time 1",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+  
+    #Unique to Time 2
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$Time.0==0 &
+                                             dataUpset[[x]]$Time.1==0 &
+                                             dataUpset[[x]]$Time.2==1)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Unique to Time 2",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+  }
+  x=x+1
+  
+}
+
+#Reformat Data
+DEenrich$Source.DEGenes <- as.factor(DEenrich$Source.DEGenes)
+DEenrich$Source.GenesOfInterest <- as.factor(DEenrich$Source.GenesOfInterest)
+
+#Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
+DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
+
+#Add p-value color variable
+DEenrich$p.value.color <- "nonsignificant"
+DEenrich$p.value.color[which(DEenrich$p.value<0.05)] <- "significant"
+DEenrich$p.value.color <- as.factor(DEenrich$p.value.color)
+
+```
+
+Check how the gene ratio and p value change across posterior probability cutoffs for different external gene datasets.
+
+```{r}
+
+#aiming for a cutoff at which only Unique to Time 0 are enriched
+tempSource <- c("Blake2018-DE.iPSCs-Unique",
+                "Gokhman2021-DE.Parental.iPSCs-Unique",
+                "Gokhman2021-DE.Hybrid.iPSCs-Unique")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+#aiming for a cutoff which minimizes enrichments across cell types
+tempSource <- c("Blake2018-DE.iPSC-endoderm-day1-Unique",
+                "Blake2018-DE.iPSC-endoderm-day2-Unique",
+                "Blake2018-DE.iPSC-endoderm-day3-Unique",
+                "Blake2020-DE.heart-Unique",
+                "Blake2020-DE.kidney-Unique",
+                "Blake2020-DE.liver-Unique",
+                "Blake2020-DE.lung-Unique")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+#no prior expectations
+tempSource <- c("Gokhman2021-DE.Parental.CNCCs-Unique",
+                "Gokhman2021-DE.Hybrid.CNCCs-Unique",
+                "Gokhman2020-DMR.bone",
+                "Hsu2019-GWAS.hip.geometry",
+                "Styrkarsdottir2019-GWAS.bone.area",
+                "Yengo2018-GWAS.height",
+                "Steinberg2020-GWAS.OA",
+                "Morris2020-GWAS.OP")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+```
+
+## Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene flexible)
+
+Note: Too few DE genes shared across pre+obl+emb+min and obl+emb+min, so these were not examined further. Instead, DE genes shared across obl+emb+min+mat and emb+min+mat were considered.
+
+```{r}
+
+#load data
+cormotifData <- readRDS("./data/cormotif-data/cormotif.cnts.pseudo-ostadhoc4gene.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+
+#plot BIC/AIC comparisons
+plotIC(cormotifData)
+
+#plot the probability that each motif is differentially expressed in each comparison
+HAtop <- HeatmapAnnotation(AdHoc=c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                           col=list(AdHoc=c("preosteoblast"="lightblue1",
+                                            "osteoblast"="deepskyblue",
+                                            "embedding.osteoblast"="dodgerblue2",
+                                            "mineralizing.osteoblast"="royalblue3",
+                                            "maturing.osteocyte"="royalblue4")),
+                           gp=gpar(col="black"),
+                           gap=unit(5,"points"),
+                           annotation_name_side="left")
+HAside = rowAnnotation(No.Genes=anno_barplot(floor(cormotifData$bestmotif$motif.p * nrow(cormotifData$bestmotif$p.post))),
+                       width=unit(3,"cm"),
+                       border=FALSE)
+Heatmap(cormotifData$bestmotif$motif.q,
+        col=gray(seq(from=1,to=0,by=-0.1)),
+        name="DE Prob.",
+        rect_gp=gpar(col="black",lwd=.3),
+        top_annotation=HAtop,
+        right_annotation=HAside,
+        column_title="Comparisons across Osteogenic Ad Hoc",
+        row_title="Motif",
+        column_dend_reorder=FALSE,
+        row_dend_reorder=TRUE,
+        heatmap_legend_param=list(at=c(0,0.2,0.4,0.6,0.8,1)))
+
+```
+
+Define different posterior probability thresholds (0.50, 0.60, 0.70, 0.75, 0.80, 0.85, 0.90, 0.925, 0.95, 0.975, 0.99).
+
+* 0.50 cutoff is used in Wei et al. 2015 and Blake et al. 2018
+* 0.95 is closer to an FDR < 0.05
+* 0.99 is closer to an FDR < 0.01
+
+```{r}
+
+cutoffs <- c(0.50, 0.60, 0.70, 0.75, 0.80, 0.85, 0.90, 0.925, 0.95, 0.975, 0.99)
+
+```
+
+```{r}
+
+#obtain DE pattern at different posterior distribution cutoffs and reformat for plotting
+dataUpset <- list()
+dataPlot <- list()
+x=1
+
+while (x <= length(cutoffs)) {
+  
+  dataUpsetTEMP <- as.data.frame(cormotifData$bestmotif$p.post)
+  dataUpsetTEMP[dataUpsetTEMP>cutoffs[x]] <- 1
+  dataUpsetTEMP[dataUpsetTEMP<=cutoffs[x]] <- 0
+  dataUpset[[x]] <- dataUpsetTEMP
+
+  dataPlotTEMP <- data.frame("cell.subset"=c(rep("preosteoblast",length(which(dataUpsetTEMP$preosteoblast==1))),
+                                             rep("osteoblast",length(which(dataUpsetTEMP$osteoblast==1))),
+                                             rep("embedding.osteoblast",length(which(dataUpsetTEMP$embedding.osteoblast==1))),
+                                             rep("mineralizing.osteoblast",length(which(dataUpsetTEMP$mineralizing.osteoblast==1))),
+                                             rep("maturing.osteocyte",length(which(dataUpsetTEMP$maturing.osteocyte==1)))),
+                             "gene"=c(rownames(dataUpsetTEMP)[which(dataUpsetTEMP$preosteoblast==1)],
+                                      rownames(dataUpsetTEMP)[which(dataUpsetTEMP$osteoblast==1)],
+                                      rownames(dataUpsetTEMP)[which(dataUpsetTEMP$embedding.osteoblast==1)],
+                                      rownames(dataUpsetTEMP)[which(dataUpsetTEMP$mineralizing.osteoblast==1)],
+                                      rownames(dataUpsetTEMP)[which(dataUpsetTEMP$maturing.osteocyte==1)]),
+                             "post.p"=c(cormotifData$bestmotif$p.post[which(dataUpsetTEMP$preosteoblast==1),"preosteoblast"],
+                                        cormotifData$bestmotif$p.post[which(dataUpsetTEMP$osteoblast==1),"osteoblast"],
+                                        cormotifData$bestmotif$p.post[which(dataUpsetTEMP$embedding.osteoblast==1),"embedding.osteoblast"],
+                                        cormotifData$bestmotif$p.post[which(dataUpsetTEMP$mineralizing.osteoblast==1),"mineralizing.osteoblast"],
+                                        cormotifData$bestmotif$p.post[which(dataUpsetTEMP$maturing.osteocyte==1),"maturing.osteocyte"]),
+                             row.names=NULL)
+  dataPlotTEMP$cell.subset <- factor(dataPlotTEMP$cell.subset,
+                                     levels=c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                                     labels=c("preosteoblast","osteoblast","embedding\nosteoblast","mineralizing\nosteoblast","maturing\nosteocyte"))
+  dataPlot[[x]] <- dataPlotTEMP
+  
+  x=x+1
+  
+}
+
+```
+
+Plot number of DE genes for each cutoff.
+
+```{r}
+
+x=1
+
+while (x <= length(cutoffs)) {
+  
+  #cutoff
+  print(paste0("Posterior Probability Cutoff: ",cutoffs[x]))
+
+  #number of DE genes
+  print(ggplot(dataPlot[[x]], aes(x=cell.subset, fill=cell.subset)) +
+          geom_bar() +
+          ylab('Number of DE Genes') +
+          xlab('') +
+          scale_fill_manual(name="Osteogenic Stage",
+                            labels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                            values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4")) +
+          theme_classic() +
+          theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10)))
+  
+  #total number of DE genes identified
+  print(table(dataPlot[[x]]$cell.subset))
+  
+  #make upset plot of DE genes
+  print(upset(dataUpset[[x]],
+          text.scale=2))
+
+  x=x+1
+  
+}
+
+```
+
+Test for significant enrichment of external gene sets in DE gene sets using Fisher's exact test.
+Make enrichment plot:
+
+```{r}
+
+#Enrichment of external gene sets in DE gene sets
+
+listsExternal <- list(
+
+  list("Blake2018-DE.iPSCs-Unique",blake2018$gene[which(blake2018$DE.Day0==1 &
+                                                        blake2018$DE.Day1==0 &
+                                              					blake2018$DE.Day2==0 &
+                                              					blake2018$DE.Day3==0)]),              #iPSCs-Unique
+  list("Blake2018-DE.iPSC-endoderm-day1-Unique",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==1 &
+                                                          				 	 blake2018$DE.Day2==0 &
+                                                          				   blake2018$DE.Day3==0)]), #iPSC-endoderm day1-Unique
+  list("Blake2018-DE.iPSC-endoderm-day2-Unique",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==0 &
+                                                          				 	 blake2018$DE.Day2==1 &
+                                                          				   blake2018$DE.Day3==0)]), #iPSC-endoderm day2-Unique
+  list("Blake2018-DE.iPSC-endoderm-day3-Unique",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==0 &
+                                                          				 	 blake2018$DE.Day2==0 &
+                                                          				   blake2018$DE.Day3==1)]), #iPSC-endoderm day3-Unique
+
+  list("Blake2020-DE.heart-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==1 &
+                                                        blake2020$DE.HvC_Kidney==0 &
+                                                        blake2020$DE.HvC_Liver==0 &
+                                                        blake2020$DE.HvC_Lung==0)]),   #heart-Unique
+  list("Blake2020-DE.kidney-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                         blake2020$DE.HvC_Kidney==1 &
+                                                         blake2020$DE.HvC_Liver==0 &
+                                                         blake2020$DE.HvC_Lung==0)]), #kidney-Unique
+  list("Blake2020-DE.liver-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                        blake2020$DE.HvC_Kidney==0 &
+                                                        blake2020$DE.HvC_Liver==1 &
+                                                        blake2020$DE.HvC_Lung==0)]),   #liver-Unique
+  list("Blake2020-DE.lung-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                       blake2020$DE.HvC_Kidney==0 &
+                                                       blake2020$DE.HvC_Liver==0 &
+                                                       blake2020$DE.HvC_Lung==1)]),     #lung-Unique
+
+  list("Gokhman2021-DE.Parental.iPSCs-Unique",gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==1 &
+                                                                            gokhman2021$DE.Parental.CNCCs==0)]), #parental.iPSCs-Unique
+  list("Gokhman2021-DE.Hybrid.iPSCs-Unique",  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==1 &
+                                                                            gokhman2021$DE.Hybrid.CNCCs==0)]),   #hybrid.iPSCs-Unique
+  list("Gokhman2021-DE.Parental.CNCCs-Unique",gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==0 &
+                                                                            gokhman2021$DE.Parental.CNCCs==1)]), #parental.CNCCs-Unique
+  list("Gokhman2021-DE.Hybrid.CNCCs-Unique",  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==0 &
+                                                                            gokhman2021$DE.Hybrid.CNCCs==1)]),   #hybrid.CNCCs-Unique
+  
+  list("Gokhman2020-DMR.bone",gokhman2020$Gene[which(gokhman2020$Chimp.DMR.Promotor==1 |
+                                                     gokhman2020$Human.DMR.Promotor==1)]), #all human-chimp DMRs
+
+  list("Hsu2019-GWAS.hip.geometry",hsu2019$Nearby.gene[which(hsu2019$GWAS.hip.geometry==1)]),                             #hip geometry GWAS
+  list("Styrkarsdottir2019-GWAS.bone.area",styrkarsdottir2019$Closest.Gene[which(styrkarsdottir2019$GWAS.bone.area==1)]), #bone area GWAS
+  list("Yengo2018-GWAS.height",yengo2018$gene[which(yengo2018$GWAS.Height==1)]),                                          #height GWAS
+
+  list("Steinberg2020-GWAS.OA",steinberg2020$GeneName[which(steinberg2020$OA.omics==1)]), #OA GWAS
+  list("Morris2020-GWAS.OP",morris2019$unique.gene[which(morris2019$GWAS.BMD==1)])        #OP GWAS
+
+)
+
+DEenrich <- data.frame("Post.Prob.Cutoff"=double(),
+                       "Source.DEGenes"=character(),
+                       "Source.GenesOfInterest"=character(),
+                       "DE.Interest"=integer(),
+                       "NonDE.Interest"=integer(),
+                       "DE.NotInterest"=integer(),
+                       "NonDE.NotInterest"=integer(),
+                       "p.value"=double(),
+                       "odds.ratio"=double())
+x=1
+
+while (x <= length(cutoffs)) {
+  
+  for (genesExternal in listsExternal) {
+
+    #Shared across all ostadhoc classifications
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==1 &
+                                             dataUpset[[x]]$osteoblast==1 &
+                                             dataUpset[[x]]$embedding.osteoblast==1 &
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &
+                                             dataUpset[[x]]$maturing.osteocyte==1)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in All",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared across pre+obl+emb+min
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==1 &
+                                             dataUpset[[x]]$osteoblast==1 &
+                                             dataUpset[[x]]$embedding.osteoblast==1 &
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &
+                                             dataUpset[[x]]$maturing.osteocyte==0)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in Pre/Obl/Emb/Min",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared across obl+emb+min+mat
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &
+                                             dataUpset[[x]]$osteoblast==1 &
+                                             dataUpset[[x]]$embedding.osteoblast==1 &
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &
+                                             dataUpset[[x]]$maturing.osteocyte==1)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in Obl/Emb/Min/Mat",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared across emb+min+mat
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &
+                                             dataUpset[[x]]$osteoblast==0 &
+                                             dataUpset[[x]]$embedding.osteoblast==1 &
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &
+                                             dataUpset[[x]]$maturing.osteocyte==1)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in Emb/Min/Mat",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared across emb+min
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &
+                                             dataUpset[[x]]$osteoblast==0 &
+                                             dataUpset[[x]]$embedding.osteoblast==1 &
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &
+                                             dataUpset[[x]]$maturing.osteocyte==0)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in Emb/Min",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to embedding osteoblasts
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &
+                                             dataUpset[[x]]$osteoblast==0 &
+                                             dataUpset[[x]]$embedding.osteoblast==1 &
+                                             dataUpset[[x]]$mineralizing.osteoblast==0 &
+                                             dataUpset[[x]]$maturing.osteocyte==0)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Unique to Emb",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to mineralizing osteoblasts
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &
+                                             dataUpset[[x]]$osteoblast==0 &
+                                             dataUpset[[x]]$embedding.osteoblast==0 &
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &
+                                             dataUpset[[x]]$maturing.osteocyte==0)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Unique to Min",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+  }
+  
+  x=x+1
+  
+}
+
+#Reformat Data
+DEenrich$Source.DEGenes <- as.factor(DEenrich$Source.DEGenes)
+DEenrich$Source.GenesOfInterest <- as.factor(DEenrich$Source.GenesOfInterest)
+
+#Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
+DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
+
+#Add p-value color variable
+DEenrich$p.value.color <- "nonsignificant"
+DEenrich$p.value.color[which(DEenrich$p.value<0.05)] <- "significant"
+DEenrich$p.value.color <- as.factor(DEenrich$p.value.color)
+
+```
+
+Check how the gene ratio and p value change across posterior probability cutoffs for different external gene datasets.
+
+```{r}
+
+#aiming for a cutoff which minimizes enrichments across cell types
+tempSource <- c("Blake2018-DE.iPSCs-Unique",
+                "Gokhman2021-DE.Parental.iPSCs-Unique",
+                "Gokhman2021-DE.Hybrid.iPSCs-Unique")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+#aiming for a cutoff which minimizes enrichments across cell types
+tempSource <- c("Blake2018-DE.iPSC-endoderm-day1-Unique",
+                "Blake2018-DE.iPSC-endoderm-day2-Unique",
+                "Blake2018-DE.iPSC-endoderm-day3-Unique",
+                "Blake2020-DE.heart-Unique",
+                "Blake2020-DE.kidney-Unique",
+                "Blake2020-DE.liver-Unique",
+                "Blake2020-DE.lung-Unique")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+#no prior expectations
+tempSource <- c("Gokhman2021-DE.Parental.CNCCs-Unique",
+                "Gokhman2021-DE.Hybrid.CNCCs-Unique",
+                "Gokhman2020-DMR.bone",
+                "Hsu2019-GWAS.hip.geometry",
+                "Styrkarsdottir2019-GWAS.bone.area",
+                "Yengo2018-GWAS.height",
+                "Steinberg2020-GWAS.OA",
+                "Morris2020-GWAS.OP")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+```
+
+## Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene flexible, Time 2 only)
+
+Note: Too few DE genes shared across obl+emb+min+mat, so these were not examined further. Instead, DE genes shared across pre+obl+emb+min+mat and unique to min were considered.
+
+```{r}
+
+#load data
+cormotifData <- readRDS("./data/cormotif-data/cormotif.cnts.pseudo-ostadhoc4gene.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+
+#plot BIC/AIC comparisons
+plotIC(cormotifData)
+
+#plot the probability that each motif is differentially expressed in each comparison
+HAtop <- HeatmapAnnotation(AdHoc=c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                           col=list(AdHoc=c("preosteoblast"="lightblue1",
+                                            "osteoblast"="deepskyblue",
+                                            "embedding.osteoblast"="dodgerblue2",
+                                            "mineralizing.osteoblast"="royalblue3",
+                                            "maturing.osteocyte"="royalblue4")),
+                           gp=gpar(col="black"),
+                           gap=unit(5,"points"),
+                           annotation_name_side="left")
+HAside = rowAnnotation(No.Genes=anno_barplot(floor(cormotifData$bestmotif$motif.p * nrow(cormotifData$bestmotif$p.post))),
+                       width=unit(3,"cm"),
+                       border=FALSE)
+Heatmap(cormotifData$bestmotif$motif.q,
+        col=gray(seq(from=1,to=0,by=-0.1)),
+        name="DE Prob.",
+        rect_gp=gpar(col="black",lwd=.3),
+        top_annotation=HAtop,
+        right_annotation=HAside,
+        column_title="Comparisons across Osteogenic Ad Hoc",
+        row_title="Motif",
+        column_dend_reorder=FALSE,
+        row_dend_reorder=TRUE,
+        heatmap_legend_param=list(at=c(0,0.2,0.4,0.6,0.8,1)))
+
+```
+
+Define different posterior probability thresholds (0.50, 0.60, 0.70, 0.75, 0.80, 0.85, 0.90, 0.925, 0.95, 0.975, 0.99).
+
+* 0.50 cutoff is used in Wei et al. 2015 and Blake et al. 2018
+* 0.95 is closer to an FDR < 0.05
+* 0.99 is closer to an FDR < 0.01
+
+```{r}
+
+cutoffs <- c(0.50, 0.60, 0.70, 0.75, 0.80, 0.85, 0.90, 0.925, 0.95, 0.975, 0.99)
+
+```
+
+```{r}
+
+#obtain DE pattern at different posterior distribution cutoffs and reformat for plotting
+dataUpset <- list()
+dataPlot <- list()
+x=1
+
+while (x <= length(cutoffs)) {
+  
+  dataUpsetTEMP <- as.data.frame(cormotifData$bestmotif$p.post)
+  dataUpsetTEMP[dataUpsetTEMP>cutoffs[x]] <- 1
+  dataUpsetTEMP[dataUpsetTEMP<=cutoffs[x]] <- 0
+  dataUpset[[x]] <- dataUpsetTEMP
+
+  dataPlotTEMP <- data.frame("cell.subset"=c(rep("preosteoblast",length(which(dataUpsetTEMP$preosteoblast==1))),
+                                             rep("osteoblast",length(which(dataUpsetTEMP$osteoblast==1))),
+                                             rep("embedding.osteoblast",length(which(dataUpsetTEMP$embedding.osteoblast==1))),
+                                             rep("mineralizing.osteoblast",length(which(dataUpsetTEMP$mineralizing.osteoblast==1))),
+                                             rep("maturing.osteocyte",length(which(dataUpsetTEMP$maturing.osteocyte==1)))),
+                             "gene"=c(rownames(dataUpsetTEMP)[which(dataUpsetTEMP$preosteoblast==1)],
+                                      rownames(dataUpsetTEMP)[which(dataUpsetTEMP$osteoblast==1)],
+                                      rownames(dataUpsetTEMP)[which(dataUpsetTEMP$embedding.osteoblast==1)],
+                                      rownames(dataUpsetTEMP)[which(dataUpsetTEMP$mineralizing.osteoblast==1)],
+                                      rownames(dataUpsetTEMP)[which(dataUpsetTEMP$maturing.osteocyte==1)]),
+                             "post.p"=c(cormotifData$bestmotif$p.post[which(dataUpsetTEMP$preosteoblast==1),"preosteoblast"],
+                                        cormotifData$bestmotif$p.post[which(dataUpsetTEMP$osteoblast==1),"osteoblast"],
+                                        cormotifData$bestmotif$p.post[which(dataUpsetTEMP$embedding.osteoblast==1),"embedding.osteoblast"],
+                                        cormotifData$bestmotif$p.post[which(dataUpsetTEMP$mineralizing.osteoblast==1),"mineralizing.osteoblast"],
+                                        cormotifData$bestmotif$p.post[which(dataUpsetTEMP$maturing.osteocyte==1),"maturing.osteocyte"]),
+                             row.names=NULL)
+  dataPlotTEMP$cell.subset <- factor(dataPlotTEMP$cell.subset,
+                                     levels=c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                                     labels=c("preosteoblast","osteoblast","embedding\nosteoblast","mineralizing\nosteoblast","maturing\nosteocyte"))
+  dataPlot[[x]] <- dataPlotTEMP
+  
+  x=x+1
+  
+}
+
+```
+
+Plot number of DE genes for each cutoff.
+
+```{r}
+
+x=1
+
+while (x <= length(cutoffs)) {
+  
+  #cutoff
+  print(paste0("Posterior Probability Cutoff: ",cutoffs[x]))
+
+  #number of DE genes
+  print(ggplot(dataPlot[[x]], aes(x=cell.subset, fill=cell.subset)) +
+          geom_bar() +
+          ylab('Number of DE Genes') +
+          xlab('') +
+          scale_fill_manual(name="Osteogenic Stage",
+                            labels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                            values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4")) +
+          theme_classic() +
+          theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10)))
+  
+  #total number of DE genes identified
+  print(table(dataPlot[[x]]$cell.subset))
+  
+  #make upset plot of DE genes
+  print(upset(dataUpset[[x]],
+          text.scale=2))
+
+  x=x+1
+  
+}
+
+```
+
+Test for significant enrichment of external gene sets in DE gene sets using Fisher's exact test.
+Make enrichment plot:
+
+```{r}
+
+#Enrichment of external gene sets in DE gene sets
+
+listsExternal <- list(
+
+  list("Blake2018-DE.iPSCs-Unique",blake2018$gene[which(blake2018$DE.Day0==1 &
+                                                        blake2018$DE.Day1==0 &
+                                              					blake2018$DE.Day2==0 &
+                                              					blake2018$DE.Day3==0)]),              #iPSCs-Unique
+  list("Blake2018-DE.iPSC-endoderm-day1-Unique",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==1 &
+                                                          				 	 blake2018$DE.Day2==0 &
+                                                          				   blake2018$DE.Day3==0)]), #iPSC-endoderm day1-Unique
+  list("Blake2018-DE.iPSC-endoderm-day2-Unique",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==0 &
+                                                          				 	 blake2018$DE.Day2==1 &
+                                                          				   blake2018$DE.Day3==0)]), #iPSC-endoderm day2-Unique
+  list("Blake2018-DE.iPSC-endoderm-day3-Unique",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==0 &
+                                                          				 	 blake2018$DE.Day2==0 &
+                                                          				   blake2018$DE.Day3==1)]), #iPSC-endoderm day3-Unique
+
+  list("Blake2020-DE.heart-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==1 &
+                                                        blake2020$DE.HvC_Kidney==0 &
+                                                        blake2020$DE.HvC_Liver==0 &
+                                                        blake2020$DE.HvC_Lung==0)]),   #heart-Unique
+  list("Blake2020-DE.kidney-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                         blake2020$DE.HvC_Kidney==1 &
+                                                         blake2020$DE.HvC_Liver==0 &
+                                                         blake2020$DE.HvC_Lung==0)]), #kidney-Unique
+  list("Blake2020-DE.liver-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                        blake2020$DE.HvC_Kidney==0 &
+                                                        blake2020$DE.HvC_Liver==1 &
+                                                        blake2020$DE.HvC_Lung==0)]),   #liver-Unique
+  list("Blake2020-DE.lung-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                       blake2020$DE.HvC_Kidney==0 &
+                                                       blake2020$DE.HvC_Liver==0 &
+                                                       blake2020$DE.HvC_Lung==1)]),     #lung-Unique
+
+  list("Gokhman2021-DE.Parental.iPSCs-Unique",gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==1 &
+                                                                            gokhman2021$DE.Parental.CNCCs==0)]), #parental.iPSCs-Unique
+  list("Gokhman2021-DE.Hybrid.iPSCs-Unique",  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==1 &
+                                                                            gokhman2021$DE.Hybrid.CNCCs==0)]),   #hybrid.iPSCs-Unique
+  list("Gokhman2021-DE.Parental.CNCCs-Unique",gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==0 &
+                                                                            gokhman2021$DE.Parental.CNCCs==1)]), #parental.CNCCs-Unique
+  list("Gokhman2021-DE.Hybrid.CNCCs-Unique",  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==0 &
+                                                                            gokhman2021$DE.Hybrid.CNCCs==1)]),   #hybrid.CNCCs-Unique
+  
+  list("Gokhman2020-DMR.bone",gokhman2020$Gene[which(gokhman2020$Chimp.DMR.Promotor==1 |
+                                                     gokhman2020$Human.DMR.Promotor==1)]), #all human-chimp DMRs
+
+  list("Hsu2019-GWAS.hip.geometry",hsu2019$Nearby.gene[which(hsu2019$GWAS.hip.geometry==1)]),                             #hip geometry GWAS
+  list("Styrkarsdottir2019-GWAS.bone.area",styrkarsdottir2019$Closest.Gene[which(styrkarsdottir2019$GWAS.bone.area==1)]), #bone area GWAS
+  list("Yengo2018-GWAS.height",yengo2018$gene[which(yengo2018$GWAS.Height==1)]),                                          #height GWAS
+
+  list("Steinberg2020-GWAS.OA",steinberg2020$GeneName[which(steinberg2020$OA.omics==1)]), #OA GWAS
+  list("Morris2020-GWAS.OP",morris2019$unique.gene[which(morris2019$GWAS.BMD==1)])        #OP GWAS
+
+)
+
+DEenrich <- data.frame("Post.Prob.Cutoff"=double(),
+                       "Source.DEGenes"=character(),
+                       "Source.GenesOfInterest"=character(),
+                       "DE.Interest"=integer(),
+                       "NonDE.Interest"=integer(),
+                       "DE.NotInterest"=integer(),
+                       "NonDE.NotInterest"=integer(),
+                       "p.value"=double(),
+                       "odds.ratio"=double())
+x=1
+
+while (x <= length(cutoffs)) {
+  
+  for (genesExternal in listsExternal) {
+
+    #Shared across all ostadhoc classifications
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==1 &
+                                             dataUpset[[x]]$osteoblast==1 &
+                                             dataUpset[[x]]$embedding.osteoblast==1 &
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &
+                                             dataUpset[[x]]$maturing.osteocyte==1)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in All",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared across pre+obl+emb+min
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==1 &
+                                             dataUpset[[x]]$osteoblast==1 &
+                                             dataUpset[[x]]$embedding.osteoblast==1 &
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &
+                                             dataUpset[[x]]$maturing.osteocyte==0)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in Pre/Obl/Emb/Min",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared across obl+emb+min+mat
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &
+                                             dataUpset[[x]]$osteoblast==1 &
+                                             dataUpset[[x]]$embedding.osteoblast==1 &
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &
+                                             dataUpset[[x]]$maturing.osteocyte==1)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in Obl/Emb/Min/Mat",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared across emb+min+mat
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &
+                                             dataUpset[[x]]$osteoblast==0 &
+                                             dataUpset[[x]]$embedding.osteoblast==1 &
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &
+                                             dataUpset[[x]]$maturing.osteocyte==1)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in Emb/Min/Mat",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared across emb+min
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &
+                                             dataUpset[[x]]$osteoblast==0 &
+                                             dataUpset[[x]]$embedding.osteoblast==1 &
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &
+                                             dataUpset[[x]]$maturing.osteocyte==0)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in Emb/Min",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to embedding osteoblasts
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &
+                                             dataUpset[[x]]$osteoblast==0 &
+                                             dataUpset[[x]]$embedding.osteoblast==1 &
+                                             dataUpset[[x]]$mineralizing.osteoblast==0 &
+                                             dataUpset[[x]]$maturing.osteocyte==0)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Unique to Emb",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to mineralizing osteoblasts
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &
+                                             dataUpset[[x]]$osteoblast==0 &
+                                             dataUpset[[x]]$embedding.osteoblast==0 &
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &
+                                             dataUpset[[x]]$maturing.osteocyte==0)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Unique to Min",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+  }
+  
+  x=x+1
+  
+}
+
+#Reformat Data
+DEenrich$Source.DEGenes <- as.factor(DEenrich$Source.DEGenes)
+DEenrich$Source.GenesOfInterest <- as.factor(DEenrich$Source.GenesOfInterest)
+
+#Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
+DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
+
+#Add p-value color variable
+DEenrich$p.value.color <- "nonsignificant"
+DEenrich$p.value.color[which(DEenrich$p.value<0.05)] <- "significant"
+DEenrich$p.value.color <- as.factor(DEenrich$p.value.color)
+
+```
+
+Check how the gene ratio and p value change across posterior probability cutoffs for different external gene datasets.
+
+```{r}
+
+#aiming for a cutoff which minimizes enrichments across cell types
+tempSource <- c("Blake2018-DE.iPSCs-Unique",
+                "Gokhman2021-DE.Parental.iPSCs-Unique",
+                "Gokhman2021-DE.Hybrid.iPSCs-Unique")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+#aiming for a cutoff which minimizes enrichments across cell types
+tempSource <- c("Blake2018-DE.iPSC-endoderm-day1-Unique",
+                "Blake2018-DE.iPSC-endoderm-day2-Unique",
+                "Blake2018-DE.iPSC-endoderm-day3-Unique",
+                "Blake2020-DE.heart-Unique",
+                "Blake2020-DE.kidney-Unique",
+                "Blake2020-DE.liver-Unique",
+                "Blake2020-DE.lung-Unique")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+#no prior expectations
+tempSource <- c("Gokhman2021-DE.Parental.CNCCs-Unique",
+                "Gokhman2021-DE.Hybrid.CNCCs-Unique",
+                "Gokhman2020-DMR.bone",
+                "Hsu2019-GWAS.hip.geometry",
+                "Styrkarsdottir2019-GWAS.bone.area",
+                "Yengo2018-GWAS.height",
+                "Steinberg2020-GWAS.OA",
+                "Morris2020-GWAS.OP")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+```
+
+## Conclusions
+
+Best Cormotif Posterior Probability Cutoffs
+
+* Stages of Differentiation: 0.60 > 0.50 or 0.75 > 0.70 or 0.99
+* Stages of Osteogenesis: 0.50 or 0.60 or 0.75 or 0.90 or 0.925 or 0.95
+* Stages of Osteogenesis (Time 2 only): 0.50 or 0.60 or 0.70 or 0.80 or 0.85
+* OVERALL: 0.60

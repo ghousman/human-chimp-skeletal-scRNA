@@ -1,0 +1,1473 @@
+---
+title: "10x-plot-diffexp-thresh"
+author: "Genevieve Housman"
+date: "September 2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 10X Data Cellranger Analysis - Differential Expression (different thresholds)
+
+View results of pairwise differential expression tests between humans and chimpanzees within stages of differentiation using different FDR thresholds.
+
+* within stages of differentiation
+* within stages of osteogenesis
+* within stages of osteogenesis (T2 only)
+
+```{r, message=FALSE}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(grid)
+library(gbm)
+library(colorspace)
+library(RColorBrewer)
+library(edgeR)
+library(scran)
+library(SingleCellExperiment)
+library(purrr)
+library(UpSetR)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(Rgraphviz)
+library(enrichplot)
+library(viridis)
+library(VennDiagram)
+library(ggsignif)
+
+```
+
+## Load External Gene Datasets
+
+Several external gene datasets were manually compiled from papers to test for enrichment in interesting DE gene sets.
+
+Genes previously identified as human and chimpanzee differences:
+
+* Blake et al. 2018 Genome Biology (Supplementary Table S5A-D)
+    + DE genes in human and chimpanzee iPSC-derived endoderm day 0 (n = 3267 DE genes at FDR < 1% out of 10304 genes)
+    + DE genes in human and chimpanzee iPSC-derived endoderm day 1 (n = 3239 DE genes at FDR < 1% out of 10304 genes)
+    + DE genes in human and chimpanzee iPSC-derived endoderm day 2 (n = 3477 DE genes at FDR < 1% out of 10304 genes)
+    + DE genes in human and chimpanzee iPSC-derived endoderm day 3 (n = 3820 DE genes at FDR < 1% out of 10304 genes)
+    + Note: only included genes with a known gene symbol (retreived from https://www.biotools.fr/human/ensembl_symbol_converter)
+    + Note: only considered DE genes unique to each cell type
+    
+* Blake et al. 2020 Genome Research (Supplemental Table S4)
+    + DE genes in human and chimpanzee heart tissue (n = 2195 DE genes at FDR < 1% out of 12184 genes)
+    + DE genes in human and chimpanzee kidney tissue (n = 799 DE genes at FDR < 1% out of 12184 genes)
+    + DE genes in human and chimpanzee liver tissue (n = 1364 DE genes at FDR < 1% out of 12184 genes)
+    + DE genes in human and chimpanzee lung tissue (n = 805 DE genes at FDR < 1% out of 12184 genes)
+    + Note: only included genes with a known gene symbol (retreived from https://www.biotools.fr/human/ensembl_symbol_converter)
+    + Note: only considered DE genes unique to each tissue type
+
+* Gokhman et al. 2021 Nature Genetics (Supplementary Table 5)
+    + DE genes in parental iPSC lines (n = 7655)
+    + DE genes in hybrid iPSC lines (n = 6009)
+    + DE genes in parental CNCC lines (n = 2223)
+    + DE genes in hybrid CNCC lines (n = 3612)
+    + Note: only considered DE genes unique to each cell type
+    
+* Gokhman et al. 2020 Nature Communications (Supplementary Data 2)
+    + DMRs identified between chimpanzees and archaic/modern humans in bone tissues (n = 2031 DMRs)
+    + AMH-derived methylation patterns in bone tissues (n = 873 DMRs linked with 588 DMGs)
+    + (human hypermethylated promotor regions: expect higher gene expression in chimps as compared to humans)
+    + (chimp hypermethylated promotor regions: expect higher gene expression in humans as compared to chimps)
+    + Note: only DMRs that overlapped promotor regions of genes were included
+    + Note: hyper/hypomethylation determined by comparing average AMH methylation levels with average chimp methylation levels
+
+General skeleton-related and skeletal phenotype-related genes:
+
+* Hsu et al. 2019 Journal of Bone and Mineral Research (Table 1)
+    + hip geometry GWAS loci (n = 10)
+
+* Styrkarsdottir et al. 2019 Nature Communications (Table 1)
+    + DXA bone area GWAS loci (n = 21 associated with 20 genes)
+
+* Yengo et al. 2018 Human Molecular Genetics
+    + height GWAS loci (n = 3290) (data provided at https://portals.broadinstitute.org/collaboration/giant/index.php/GIANT_consortium_data_files)
+    + height GWAS loci with associated eQTLs (n = 610) (list not provided)
+    + Note: only used unique gene symbols associated with height GWAS loci (n = 1500)
+
+Genes associated with skeletal diseases (OA + OP):
+
+* Steinberg et al. 2020 bioRxiv (Supplementary Table 2)
+    + genes with cross-omics (DE RNA + protein) evidence for involvement in OA progression (n = 409)
+    
+* Morris et al. 2019 Nature Genetics (Supplemental Table 2)
+    + OP GWAS loci (n = 1103 conditionally independent signals associated with 863 genes)
+
+```{r}
+
+#Define function for testing significant enrichment of gene sets
+
+genesetEnrich <- function(GenesOfInterest, DEgenes, NonDEGenes){
+  
+  #fill contingency table
+  DE.Interest       <- length(intersect(GenesOfInterest, DEgenes))
+  NonDE.Interest    <- length(intersect(GenesOfInterest, NonDEGenes))
+  DE.NotInterest    <- length(DEgenes) - DE.Interest
+  NonDE.NotInterest <- length(NonDEGenes) - NonDE.Interest
+  
+  ContingencyTable <- matrix(c(DE.Interest,
+                               NonDE.Interest,
+                               DE.NotInterest,
+                               NonDE.NotInterest),
+                             nrow=2,
+                             ncol=2,
+                             byrow=TRUE)
+  colnames(ContingencyTable) <- c("DE Genes","Non DE Genes")
+  rownames(ContingencyTable) <- c("Genes of Interest","Not Genes of Interest")
+  
+  #perform test
+  print(ContingencyTable)
+  print(fisher.test(ContingencyTable, alternative="greater"))
+
+}
+
+genesetEnrich.data <- function(InternalDataCutoff, InternalDataSource, ExternalDataSource, GenesOfInterest, DEgenes, NonDEGenes){
+  
+  #fill contingency table
+  DE.Interest       <- length(intersect(GenesOfInterest, DEgenes))
+  NonDE.Interest    <- length(intersect(GenesOfInterest, NonDEGenes))
+  DE.NotInterest    <- length(DEgenes) - DE.Interest
+  NonDE.NotInterest <- length(NonDEGenes) - NonDE.Interest
+  
+  ContingencyTable <- matrix(c(DE.Interest,
+                               NonDE.Interest,
+                               DE.NotInterest,
+                               NonDE.NotInterest),
+                             nrow=2,
+                             ncol=2,
+                             byrow=TRUE)
+  colnames(ContingencyTable) <- c("DE Genes","Non DE Genes")
+  rownames(ContingencyTable) <- c("Genes of Interest","Not Genes of Interest")
+  
+  #perform test and output data
+  data <- data.frame("FDR.Cutoff"=InternalDataCutoff,
+                     "Source.DEGenes"=InternalDataSource,
+                     "Source.GenesOfInterest"=ExternalDataSource,
+                     "DE.Interest"=DE.Interest,
+                     "NonDE.Interest"=NonDE.Interest,
+                     "DE.NotInterest"=DE.NotInterest,
+                     "NonDE.NotInterest"=NonDE.NotInterest,
+                     "p.value"=fisher.test(ContingencyTable, alternative="greater")$p.value,
+                     "odds.ratio"=fisher.test(ContingencyTable, alternative="greater")$estimate,
+                     row.names=NULL)
+  return(data)
+
+}
+
+```
+
+```{r}
+
+#Load external datasets (manually currated from papers)
+gallegoromero2015    <- read.csv("./data/external-gene-sets/GallegoRomero2015eLife.csv")
+blake2018            <- read.csv("./data/external-gene-sets/Blake2018GenBio.csv")
+blake2020            <- read.csv("./data/external-gene-sets/Blake2020GenRes.csv")
+gokhman2021          <- read.csv("./data/external-gene-sets/Gokhman2021NatGen.csv")
+gokhman2020          <- read.csv("./data/external-gene-sets/Gokhman2020NatComm.csv")
+gokhman2020.skeleton <- read.csv("./data/external-gene-sets/Gokhman2020NatComm_skeleton.csv")
+hsu2019              <- read.csv("./data/external-gene-sets/Hsu2019JBoneMinRes.csv")
+styrkarsdottir2019   <- read.csv("./data/external-gene-sets/Styrkarsdottir2019NatComm.csv")
+yengo2018            <- read.csv("./data/external-gene-sets/Yengo2018HumMolGen.csv")
+steinberg2020        <- read.csv("./data/external-gene-sets/Steinberg2020biorxiv.csv")
+morris2019           <- read.csv("./data/external-gene-sets/Morris2019NatGen.csv")
+#cibrianuhalte2017    <- read.csv("./data/external-gene-sets/CibrianUhalte2017HumMolGen.csv")
+#tachmazidou2019      <- read.csv("./data/external-gene-sets/Tachmazidou2019NatGen_AH.csv")
+
+```
+
+## Load output of DE analyses
+
+```{r}
+
+#Load DE results
+
+compare1 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.stage.rds")
+compare2 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.rds")
+compare3 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.T2.rds")
+
+DEdata <- rbind(compare1,compare2,compare3)
+colnames(DEdata)[5] <- "FDR"
+DEdata <- as_tibble(DEdata)
+
+rm(compare1,compare2,compare3)
+
+```
+
+## Define FDR Thresholds
+
+Define different FDR thresholds (0.50, 0.40, 0.30, 0.20, 0.10, 0.05, 0.01, 0.001).
+
+```{r}
+
+cutoffs <- c(0.50, 0.40, 0.30, 0.20, 0.10, 0.05, 0.01, 0.001)
+
+```
+
+## Stages of Differentiation at Collection
+
+Plot number of DE genes for each cutoff.
+
+```{r}
+
+x=1
+
+while (x <= length(cutoffs)) {
+  
+  #cutoff
+  print(paste0("Posterior Probability Cutoff: ",cutoffs[x]))
+
+  DEgenes <-
+    DEdata %>%
+    filter(FDR<=cutoffs[x]) %>%
+    dplyr::filter(cell.assign=="stage") %>%
+    dplyr::select(cell.subset,gene,logFC)
+
+  #number of DE genes
+  print(table(DEgenes$cell.subset))
+  print(ggplot(DEgenes, aes(x=cell.subset, fill=cell.subset)) +
+          geom_bar() +
+          ylab('Number of DE Genes') +
+          xlab('') +
+          scale_fill_manual(name="Stage",
+                            labels=c("Time 0","Time 1","Time 2"),
+                            values=c("pink","mediumorchid","dodgerblue")) +
+          theme_classic() +
+          theme(axis.text=element_text(size=12), axis.title=element_text(size=12), legend.text=element_text(size=12)))
+
+  #overlap of DE genes
+  combined <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="Time 0") %>% dplyr::select(gene), "Time.0"=1),
+                          data.frame(gene=DEgenes %>% filter(cell.subset=="Time 1") %>% dplyr::select(gene), "Time.1"=1),
+                          data.frame(gene=DEgenes %>% filter(cell.subset=="Time 2") %>% dplyr::select(gene), "Time.2"=1)
+                          ), full_join)
+  combined[is.na(combined)] <- 0
+  print(upset(combined,
+              keep.order=TRUE,
+              empty.intersections="on",
+              intersections=list(list("Time.0"),
+                                 list("Time.1"),
+                                 list("Time.2"),
+                                 list("Time.0","Time.1"),
+                                 list("Time.1","Time.2"),
+                                 list("Time.0","Time.2"),
+                                 list("Time.0","Time.1","Time.2")),
+              text.scale=2))
+
+  x=x+1
+
+}
+  
+```
+
+Test for significant enrichment of external gene sets in DE gene sets using Fisher's exact test.
+Make enrichment plot:
+
+```{r}
+
+#Enrichment of external gene sets in DE gene sets
+
+listsExternal <- list(
+
+  list("Blake2018-DE.iPSCs-Unique",blake2018$gene[which(blake2018$DE.Day0==1 &
+                                                        blake2018$DE.Day1==0 &
+                                              					blake2018$DE.Day2==0 &
+                                              					blake2018$DE.Day3==0)]),              #iPSCs-Unique
+  list("Blake2018-DE.iPSC-endoderm-day1-Unique",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==1 &
+                                                          				 	 blake2018$DE.Day2==0 &
+                                                          				   blake2018$DE.Day3==0)]), #iPSC-endoderm day1-Unique
+  list("Blake2018-DE.iPSC-endoderm-day2-Unique",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==0 &
+                                                          				 	 blake2018$DE.Day2==1 &
+                                                          				   blake2018$DE.Day3==0)]), #iPSC-endoderm day2-Unique
+  list("Blake2018-DE.iPSC-endoderm-day3-Unique",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==0 &
+                                                          				 	 blake2018$DE.Day2==0 &
+                                                          				   blake2018$DE.Day3==1)]), #iPSC-endoderm day3-Unique
+
+  list("Blake2020-DE.heart-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==1 &
+                                                        blake2020$DE.HvC_Kidney==0 &
+                                                        blake2020$DE.HvC_Liver==0 &
+                                                        blake2020$DE.HvC_Lung==0)]),   #heart-Unique
+  list("Blake2020-DE.kidney-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                         blake2020$DE.HvC_Kidney==1 &
+                                                         blake2020$DE.HvC_Liver==0 &
+                                                         blake2020$DE.HvC_Lung==0)]), #kidney-Unique
+  list("Blake2020-DE.liver-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                        blake2020$DE.HvC_Kidney==0 &
+                                                        blake2020$DE.HvC_Liver==1 &
+                                                        blake2020$DE.HvC_Lung==0)]),   #liver-Unique
+  list("Blake2020-DE.lung-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                       blake2020$DE.HvC_Kidney==0 &
+                                                       blake2020$DE.HvC_Liver==0 &
+                                                       blake2020$DE.HvC_Lung==1)]),     #lung-Unique
+
+  list("Gokhman2021-DE.Parental.iPSCs-Unique",gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==1 &
+                                                                            gokhman2021$DE.Parental.CNCCs==0)]), #parental.iPSCs-Unique
+  list("Gokhman2021-DE.Hybrid.iPSCs-Unique",  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==1 &
+                                                                            gokhman2021$DE.Hybrid.CNCCs==0)]),   #hybrid.iPSCs-Unique
+  list("Gokhman2021-DE.Parental.CNCCs-Unique",gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==0 &
+                                                                            gokhman2021$DE.Parental.CNCCs==1)]), #parental.CNCCs-Unique
+  list("Gokhman2021-DE.Hybrid.CNCCs-Unique",  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==0 &
+                                                                            gokhman2021$DE.Hybrid.CNCCs==1)]),   #hybrid.CNCCs-Unique
+  
+  list("Gokhman2020-DMR.bone",gokhman2020$Gene[which(gokhman2020$Chimp.DMR.Promotor==1 |
+                                                     gokhman2020$Human.DMR.Promotor==1)]), #all human-chimp DMRs
+
+  list("Hsu2019-GWAS.hip.geometry",hsu2019$Nearby.gene[which(hsu2019$GWAS.hip.geometry==1)]),                             #hip geometry GWAS
+  list("Styrkarsdottir2019-GWAS.bone.area",styrkarsdottir2019$Closest.Gene[which(styrkarsdottir2019$GWAS.bone.area==1)]), #bone area GWAS
+  list("Yengo2018-GWAS.height",yengo2018$gene[which(yengo2018$GWAS.Height==1)]),                                          #height GWAS
+
+  list("Steinberg2020-GWAS.OA",steinberg2020$GeneName[which(steinberg2020$OA.omics==1)]), #OA GWAS
+  list("Morris2020-GWAS.OP",morris2019$unique.gene[which(morris2019$GWAS.BMD==1)])        #OP GWAS
+
+)
+
+DEenrich <- data.frame("FDR.Cutoff"=double(),
+                       "Source.DEGenes"=character(),
+                       "Source.GenesOfInterest"=character(),
+                       "DE.Interest"=integer(),
+                       "NonDE.Interest"=integer(),
+                       "DE.NotInterest"=integer(),
+                       "NonDE.NotInterest"=integer(),
+                       "p.value"=double(),
+                       "odds.ratio"=double())
+
+x=1
+
+while (x <= length(cutoffs)) {
+  
+  for (genesExternal in listsExternal) {
+    
+    #Pairwise DE genes and cell subset overlap
+    DEgenes <-
+      DEdata %>%
+      filter(FDR<=cutoffs[x]) %>%
+      dplyr::filter(cell.assign=="stage") %>%
+      dplyr::select(cell.subset,gene,logFC,FDR)
+    comboGenes <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="Time 0") %>% dplyr::select(gene), "Time.0"=1),
+                              data.frame(gene=DEgenes %>% filter(cell.subset=="Time 1") %>% dplyr::select(gene), "Time.1"=1),
+                              data.frame(gene=DEgenes %>% filter(cell.subset=="Time 2") %>% dplyr::select(gene), "Time.2"=1)
+                              ), full_join)
+    comboGenes[is.na(comboGenes)] <- 0
+    
+    #Isolate genes tested in all cell classifications
+    DEtests <-
+      DEdata %>%
+        dplyr::filter(cell.assign=="stage") %>%
+        dplyr::select(cell.subset,gene,logFC,FDR)
+    comboTests <- reduce(list(data.frame(gene=DEtests %>% filter(cell.subset=="Time 0") %>% dplyr::select(gene), "Time.0"=1),
+                              data.frame(gene=DEtests %>% filter(cell.subset=="Time 1") %>% dplyr::select(gene), "Time.1"=1),
+                              data.frame(gene=DEtests %>% filter(cell.subset=="Time 2") %>% dplyr::select(gene), "Time.2"=1)
+                              ), full_join)
+    comboTests[is.na(comboTests)] <- 0
+    tests <- pull(comboTests %>%
+                    filter(Time.0==1,
+                           Time.1==1,
+                           Time.2==1) %>%
+                    dplyr::select(gene))
+
+    #Shared in All Stages (tested in all classifications)
+    share.stg <- DEgenes %>% 
+                 filter(gene %in%
+                          pull(comboGenes %>%
+                                 filter(Time.0==1,
+                                        Time.1==1,
+                                        Time.2==1) %>%
+                                 dplyr::select(gene))) %>% 
+                 arrange(gene)
+    shareX.stg <- share.stg[which(share.stg$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% shareX.stg$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in All",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=unique(shareX.stg$gene),
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared in Time 0 & Time 1 (tested in all classifications)
+    share.stg.t01 <- DEgenes %>% 
+                     filter(gene %in%
+                              pull(comboGenes %>%
+                                     filter(Time.0==1,
+                                            Time.1==1,
+                                            Time.2==0) %>%
+                                     dplyr::select(gene))) %>% 
+                     arrange(gene)
+    shareX.stg.t01 <- share.stg.t01[which(share.stg.t01$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% shareX.stg.t01$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in Time 0 & Time 1",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=unique(shareX.stg.t01$gene),
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared in Time 1 & Time 2 (tested in all classifications)
+    share.stg.t12 <- DEgenes %>% 
+                     filter(gene %in%
+                              pull(comboGenes %>%
+                                     filter(Time.0==0,
+                                            Time.1==1,
+                                            Time.2==1) %>%
+                                     dplyr::select(gene))) %>% 
+                     arrange(gene)
+    shareX.stg.t12 <- share.stg.t12[which(share.stg.t12$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% shareX.stg.t12$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in Time 1 & Time 2",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=unique(shareX.stg.t12$gene),
+                                         NonDEGenes=nonDEgenes))  
+    
+    #Unique to Time 0 (tested in all classifications)
+    uniq.stg.t0 <- DEgenes %>% 
+                   filter(cell.subset=="Time 0",
+                          gene %in%
+                            pull(comboGenes %>%
+                                   filter(Time.0==1,
+                                          Time.1==0,
+                                          Time.2==0) %>%
+                                   dplyr::select(gene))) %>% 
+                   arrange(gene)
+    uniqX.stg.t0 <- uniq.stg.t0[which(uniq.stg.t0$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% uniqX.stg.t0$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Unique to Time 0",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=uniqX.stg.t0$gene,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to Time 1 (tested in all classifications)
+    uniq.stg.t1 <- DEgenes %>% 
+                   filter(cell.subset=="Time 1",
+                          gene %in%
+                            pull(comboGenes %>%
+                                   filter(Time.0==0,
+                                          Time.1==1,
+                                          Time.2==0) %>%
+                                   dplyr::select(gene))) %>% 
+                   arrange(gene)
+    uniqX.stg.t1 <- uniq.stg.t1[which(uniq.stg.t1$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% uniqX.stg.t1$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Unique to Time 1",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=uniqX.stg.t1$gene,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to Time 2 (tested in all classifications)
+    uniq.stg.t2 <- DEgenes %>% 
+                   filter(cell.subset=="Time 2",
+                          gene %in%
+                            pull(comboGenes %>%
+                                   filter(Time.0==0,
+                                          Time.1==0,
+                                          Time.2==1) %>%
+                                   dplyr::select(gene))) %>% 
+                   arrange(gene)
+    uniqX.stg.t2 <- uniq.stg.t2[which(uniq.stg.t2$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% uniqX.stg.t2$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Unique to Time 2",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=uniqX.stg.t2$gene,
+                                         NonDEGenes=nonDEgenes))
+  
+  }
+  
+  x=x+1
+
+}
+
+#Reformat Data
+DEenrich$Source.DEGenes <- as.factor(DEenrich$Source.DEGenes)
+DEenrich$Source.GenesOfInterest <- as.factor(DEenrich$Source.GenesOfInterest)
+
+#Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
+DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
+
+#Add p-value color variable
+DEenrich$p.value.color <- "nonsignificant"
+DEenrich$p.value.color[which(DEenrich$p.value<0.05)] <- "significant"
+DEenrich$p.value.color <- as.factor(DEenrich$p.value.color)
+
+```
+
+Check how the gene ratio and p value change across posterior probability cutoffs for different external gene datasets.
+
+```{r}
+
+#aiming for a cutoff at which only Unique to Time 0 are enriched
+tempSource <- c("Blake2018-DE.iPSCs-Unique",
+                "Gokhman2021-DE.Parental.iPSCs-Unique",
+                "Gokhman2021-DE.Hybrid.iPSCs-Unique")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+#aiming for a cutoff which minimizes enrichments across cell types
+tempSource <- c("Blake2018-DE.iPSC-endoderm-day1-Unique",
+                "Blake2018-DE.iPSC-endoderm-day2-Unique",
+                "Blake2018-DE.iPSC-endoderm-day3-Unique",
+                "Blake2020-DE.heart-Unique",
+                "Blake2020-DE.kidney-Unique",
+                "Blake2020-DE.liver-Unique",
+                "Blake2020-DE.lung-Unique")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+#no prior expectations
+tempSource <- c("Gokhman2021-DE.Parental.CNCCs-Unique",
+                "Gokhman2021-DE.Hybrid.CNCCs-Unique",
+                "Gokhman2020-DMR.bone",
+                "Hsu2019-GWAS.hip.geometry",
+                "Styrkarsdottir2019-GWAS.bone.area",
+                "Yengo2018-GWAS.height",
+                "Steinberg2020-GWAS.OA",
+                "Morris2020-GWAS.OP")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+```
+
+## Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene flexible)
+
+Plot number of DE genes for each cutoff.
+
+```{r}
+
+x=1
+
+while (x <= length(cutoffs)) {
+  
+  #cutoff
+  print(paste0("Posterior Probability Cutoff: ",cutoffs[x]))
+
+  DEgenes <-
+    DEdata %>%
+    filter(FDR<=cutoffs[x]) %>%
+    dplyr::filter(cell.assign=="ostadhoc") %>%
+    dplyr::select(cell.subset,gene,logFC)
+
+  DEgenes$cell.subset <- factor(DEgenes$cell.subset,
+                                levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                                labels=c("preosteoblast","osteoblast","embedding\nosteoblast","mineralizing\nosteoblast","maturing\nosteocyte"))
+
+  #number of DE genes
+  print(table(DEgenes$cell.subset))
+  print(ggplot(DEgenes, aes(x=cell.subset, fill=cell.subset)) +
+          geom_bar() +
+          ylab('Number of DE Genes') +
+          xlab('') +
+          scale_fill_manual(name="Osteogenic Stage",
+                            labels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                            values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4")) +
+          theme_classic() +
+          theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10)))
+
+  #overlap of DE genes
+  combined <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="preosteoblast")            %>% dplyr::select(gene), "preosteoblast"=1),
+                          data.frame(gene=DEgenes %>% filter(cell.subset=="osteoblast")               %>% dplyr::select(gene), "osteoblast"=1),
+                          data.frame(gene=DEgenes %>% filter(cell.subset=="embedding\nosteoblast")    %>% dplyr::select(gene), "embedding.osteoblast"=1),
+                          data.frame(gene=DEgenes %>% filter(cell.subset=="mineralizing\nosteoblast") %>% dplyr::select(gene), "mineralizing.osteoblast"=1),
+                          data.frame(gene=DEgenes %>% filter(cell.subset=="maturing\nosteocyte")      %>% dplyr::select(gene), "maturing.osteocyte"=1)
+                        ), full_join)
+  combined[is.na(combined)] <- 0
+  print(upset(combined,
+              keep.order=TRUE,
+              empty.intersections="on"))
+
+  x=x+1
+
+}
+  
+```
+
+Test for significant enrichment of external gene sets in DE gene sets using Fisher's exact test.
+Make enrichment plot:
+
+```{r}
+
+#Enrichment of external gene sets in DE gene sets
+
+listsExternal <- list(
+
+  list("Blake2018-DE.iPSCs-Unique",blake2018$gene[which(blake2018$DE.Day0==1 &
+                                                        blake2018$DE.Day1==0 &
+                                              					blake2018$DE.Day2==0 &
+                                              					blake2018$DE.Day3==0)]),              #iPSCs-Unique
+  list("Blake2018-DE.iPSC-endoderm-day1-Unique",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==1 &
+                                                          				 	 blake2018$DE.Day2==0 &
+                                                          				   blake2018$DE.Day3==0)]), #iPSC-endoderm day1-Unique
+  list("Blake2018-DE.iPSC-endoderm-day2-Unique",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==0 &
+                                                          				 	 blake2018$DE.Day2==1 &
+                                                          				   blake2018$DE.Day3==0)]), #iPSC-endoderm day2-Unique
+  list("Blake2018-DE.iPSC-endoderm-day3-Unique",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==0 &
+                                                          				 	 blake2018$DE.Day2==0 &
+                                                          				   blake2018$DE.Day3==1)]), #iPSC-endoderm day3-Unique
+
+  list("Blake2020-DE.heart-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==1 &
+                                                        blake2020$DE.HvC_Kidney==0 &
+                                                        blake2020$DE.HvC_Liver==0 &
+                                                        blake2020$DE.HvC_Lung==0)]),   #heart-Unique
+  list("Blake2020-DE.kidney-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                         blake2020$DE.HvC_Kidney==1 &
+                                                         blake2020$DE.HvC_Liver==0 &
+                                                         blake2020$DE.HvC_Lung==0)]), #kidney-Unique
+  list("Blake2020-DE.liver-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                        blake2020$DE.HvC_Kidney==0 &
+                                                        blake2020$DE.HvC_Liver==1 &
+                                                        blake2020$DE.HvC_Lung==0)]),   #liver-Unique
+  list("Blake2020-DE.lung-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                       blake2020$DE.HvC_Kidney==0 &
+                                                       blake2020$DE.HvC_Liver==0 &
+                                                       blake2020$DE.HvC_Lung==1)]),     #lung-Unique
+
+  list("Gokhman2021-DE.Parental.iPSCs-Unique",gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==1 &
+                                                                            gokhman2021$DE.Parental.CNCCs==0)]), #parental.iPSCs-Unique
+  list("Gokhman2021-DE.Hybrid.iPSCs-Unique",  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==1 &
+                                                                            gokhman2021$DE.Hybrid.CNCCs==0)]),   #hybrid.iPSCs-Unique
+  list("Gokhman2021-DE.Parental.CNCCs-Unique",gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==0 &
+                                                                            gokhman2021$DE.Parental.CNCCs==1)]), #parental.CNCCs-Unique
+  list("Gokhman2021-DE.Hybrid.CNCCs-Unique",  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==0 &
+                                                                            gokhman2021$DE.Hybrid.CNCCs==1)]),   #hybrid.CNCCs-Unique
+  
+  list("Gokhman2020-DMR.bone",gokhman2020$Gene[which(gokhman2020$Chimp.DMR.Promotor==1 |
+                                                     gokhman2020$Human.DMR.Promotor==1)]), #all human-chimp DMRs
+
+  list("Hsu2019-GWAS.hip.geometry",hsu2019$Nearby.gene[which(hsu2019$GWAS.hip.geometry==1)]),                             #hip geometry GWAS
+  list("Styrkarsdottir2019-GWAS.bone.area",styrkarsdottir2019$Closest.Gene[which(styrkarsdottir2019$GWAS.bone.area==1)]), #bone area GWAS
+  list("Yengo2018-GWAS.height",yengo2018$gene[which(yengo2018$GWAS.Height==1)]),                                          #height GWAS
+
+  list("Steinberg2020-GWAS.OA",steinberg2020$GeneName[which(steinberg2020$OA.omics==1)]), #OA GWAS
+  list("Morris2020-GWAS.OP",morris2019$unique.gene[which(morris2019$GWAS.BMD==1)])        #OP GWAS
+
+)
+
+DEenrich <- data.frame("FDR.Cutoff"=double(),
+                       "Source.DEGenes"=character(),
+                       "Source.GenesOfInterest"=character(),
+                       "DE.Interest"=integer(),
+                       "NonDE.Interest"=integer(),
+                       "DE.NotInterest"=integer(),
+                       "NonDE.NotInterest"=integer(),
+                       "p.value"=double(),
+                       "odds.ratio"=double())
+
+
+x=1
+
+while (x <= length(cutoffs)) {
+  
+  for (genesExternal in listsExternal) {
+    
+    #Pairwise DE genes and cell subset overlap
+    DEgenes <-
+      DEdata %>%
+      filter(FDR<=cutoffs[x]) %>%
+      dplyr::filter(cell.assign=="ostadhoc") %>%
+      dplyr::select(cell.subset,gene,logFC)
+    comboGenes <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="preosteoblast")           %>% dplyr::select(gene), "preosteoblast"=1),
+                              data.frame(gene=DEgenes %>% filter(cell.subset=="osteoblast")              %>% dplyr::select(gene), "osteoblast"=1),
+                              data.frame(gene=DEgenes %>% filter(cell.subset=="embedding osteoblast")    %>% dplyr::select(gene), "embedding.osteoblast"=1),
+                              data.frame(gene=DEgenes %>% filter(cell.subset=="mineralizing osteoblast") %>% dplyr::select(gene), "mineralizing.osteoblast"=1),
+                              data.frame(gene=DEgenes %>% filter(cell.subset=="maturing osteocyte")      %>% dplyr::select(gene), "maturing.osteocyte"=1)
+                              ), full_join)
+    comboGenes[is.na(comboGenes)] <- 0
+    
+    #Isolate genes tested in all cell classifications
+    DEtests <-
+      DEdata %>%
+        dplyr::filter(cell.assign=="ostadhoc") %>%
+        dplyr::select(cell.subset,gene,logFC,FDR)
+    comboTests <- reduce(list(data.frame(gene=DEtests %>% filter(cell.subset=="preosteoblast")           %>% dplyr::select(gene), "preosteoblast"=1),
+                              data.frame(gene=DEtests %>% filter(cell.subset=="osteoblast")              %>% dplyr::select(gene), "osteoblast"=1),
+                              data.frame(gene=DEtests %>% filter(cell.subset=="embedding osteoblast")    %>% dplyr::select(gene), "embedding.osteoblast"=1),
+                              data.frame(gene=DEtests %>% filter(cell.subset=="mineralizing osteoblast") %>% dplyr::select(gene), "mineralizing.osteoblast"=1),
+                              data.frame(gene=DEtests %>% filter(cell.subset=="maturing osteocyte")      %>% dplyr::select(gene), "maturing.osteocyte"=1)
+                              ), full_join)
+    comboTests[is.na(comboTests)] <- 0
+    tests <- pull(comboTests %>%
+                    filter(preosteoblast==1,
+                           osteoblast==1,
+                           embedding.osteoblast==1,
+                           mineralizing.osteoblast==1,
+                           maturing.osteocyte==1) %>%
+                    dplyr::select(gene))
+
+    #Shared across all ostadhoc classifications, tested in all classifications
+    share.oad <- DEgenes %>% 
+               filter(gene %in%
+                        pull(comboGenes %>%
+                               filter(preosteoblast==1,
+                                      osteoblast==1,
+                                      embedding.osteoblast==1,
+                                      mineralizing.osteoblast==1,
+                                      maturing.osteocyte==1) %>%
+                               dplyr::select(gene))) %>% 
+               arrange(gene)
+    shareX.oad <- share.oad[which(share.oad$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% shareX.oad$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in All",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=unique(shareX.oad$gene),
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared across pre+obl+emb+min, tested in all classifications
+    share.oad.poem <- DEgenes %>% 
+                   filter(gene %in%
+                            pull(comboGenes %>%
+                                   filter(preosteoblast==1,
+                                          osteoblast==1,
+                                          embedding.osteoblast==1,
+                                          mineralizing.osteoblast==1,
+                                          maturing.osteocyte==0) %>%
+                                   dplyr::select(gene))) %>% 
+                   arrange(gene)
+    shareX.oad.poem <- share.oad.poem[which(share.oad.poem$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% shareX.oad.poem$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in Pre/Obl/Emb/Min",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=unique(shareX.oad.poem$gene),
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared across obl+emb+min, tested in all classifications
+    share.oad.oem <- DEgenes %>% 
+                   filter(gene %in%
+                            pull(comboGenes %>%
+                                   filter(preosteoblast==0,
+                                          osteoblast==1,
+                                          embedding.osteoblast==1,
+                                          mineralizing.osteoblast==1,
+                                          maturing.osteocyte==0) %>%
+                                   dplyr::select(gene))) %>% 
+                   arrange(gene)
+    shareX.oad.oem <- share.oad.oem[which(share.oad.oem$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% shareX.oad.oem$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in Obl/Emb/Min",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=unique(shareX.oad.oem$gene),
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to preosteoblasts, tested in all classifications
+    uniq.oad.pre <- DEgenes %>% 
+                  filter(gene %in%
+                           pull(comboGenes %>%
+                                  filter(preosteoblast==1,
+                                         osteoblast==0,
+                                         embedding.osteoblast==0,
+                                         mineralizing.osteoblast==0,
+                                         maturing.osteocyte==0) %>%
+                                  dplyr::select(gene))) %>% 
+                  arrange(gene)
+    uniqX.oad.pre <- uniq.oad.pre[which(uniq.oad.pre$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% uniqX.oad.pre$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Unique to Preosteoblasts",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=uniqX.oad.pre$gene,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to osteoblasts, tested in all classifications
+    uniq.oad.obl <- DEgenes %>% 
+                  filter(gene %in%
+                           pull(comboGenes %>%
+                                  filter(preosteoblast==0,
+                                         osteoblast==1,
+                                         embedding.osteoblast==0,
+                                         mineralizing.osteoblast==0,
+                                         maturing.osteocyte==0) %>%
+                                  dplyr::select(gene))) %>% 
+                  arrange(gene)
+    uniqX.oad.obl <- uniq.oad.obl[which(uniq.oad.obl$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% uniqX.oad.obl$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Unique to Osteoblasts",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=uniqX.oad.obl$gene,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to embedding osteoblasts, tested in all classifications
+    uniq.oad.emb <- DEgenes %>% 
+                  filter(gene %in%
+                           pull(comboGenes %>%
+                                  filter(preosteoblast==0,
+                                         osteoblast==0,
+                                         embedding.osteoblast==1,
+                                         mineralizing.osteoblast==0,
+                                         maturing.osteocyte==0) %>%
+                                  dplyr::select(gene))) %>% 
+                  arrange(gene)
+    uniqX.oad.emb <- uniq.oad.emb[which(uniq.oad.emb$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% uniqX.oad.emb$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Unique to Embedding Osteoblasts",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=uniqX.oad.emb$gene,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to mineralizing osteoblasts, tested in all classifications
+    uniq.oad.min <- DEgenes %>% 
+                  filter(gene %in%
+                           pull(comboGenes %>%
+                                  filter(preosteoblast==0,
+                                         osteoblast==0,
+                                         embedding.osteoblast==0,
+                                         mineralizing.osteoblast==1,
+                                         maturing.osteocyte==0) %>%
+                                  dplyr::select(gene))) %>% 
+                  arrange(gene)
+    uniqX.oad.min <- uniq.oad.min[which(uniq.oad.min$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% uniqX.oad.min$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Unique to Mineralizing Osteoblasts",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=uniqX.oad.min$gene,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to maturing osteocytes, tested in all classifications
+    uniq.oad.mat <- DEgenes %>% 
+                  filter(gene %in%
+                           pull(comboGenes %>%
+                                  filter(preosteoblast==0,
+                                         osteoblast==0,
+                                         embedding.osteoblast==0,
+                                         mineralizing.osteoblast==0,
+                                         maturing.osteocyte==1) %>%
+                                  dplyr::select(gene))) %>% 
+                  arrange(gene)
+    uniqX.oad.mat <- uniq.oad.mat[which(uniq.oad.mat$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% uniqX.oad.mat$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Unique to Maturing Osteocytes",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=uniqX.oad.mat$gene,
+                                         NonDEGenes=nonDEgenes))
+  
+  }
+  
+  x=x+1
+  
+}
+
+#Reformat Data
+DEenrich$Source.DEGenes <- as.factor(DEenrich$Source.DEGenes)
+DEenrich$Source.GenesOfInterest <- as.factor(DEenrich$Source.GenesOfInterest)
+
+#Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
+DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
+
+#Add p-value color variable
+DEenrich$p.value.color <- "nonsignificant"
+DEenrich$p.value.color[which(DEenrich$p.value<0.05)] <- "significant"
+DEenrich$p.value.color <- as.factor(DEenrich$p.value.color)
+
+```
+
+Check how the gene ratio and p value change across posterior probability cutoffs for different external gene datasets.
+
+```{r}
+
+#aiming for a cutoff at which only Unique to Time 0 are enriched
+tempSource <- c("Blake2018-DE.iPSCs-Unique",
+                "Gokhman2021-DE.Parental.iPSCs-Unique",
+                "Gokhman2021-DE.Hybrid.iPSCs-Unique")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+#aiming for a cutoff which minimizes enrichments across cell types
+tempSource <- c("Blake2018-DE.iPSC-endoderm-day1-Unique",
+                "Blake2018-DE.iPSC-endoderm-day2-Unique",
+                "Blake2018-DE.iPSC-endoderm-day3-Unique",
+                "Blake2020-DE.heart-Unique",
+                "Blake2020-DE.kidney-Unique",
+                "Blake2020-DE.liver-Unique",
+                "Blake2020-DE.lung-Unique")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+#no prior expectations
+tempSource <- c("Gokhman2021-DE.Parental.CNCCs-Unique",
+                "Gokhman2021-DE.Hybrid.CNCCs-Unique",
+                "Gokhman2020-DMR.bone",
+                "Hsu2019-GWAS.hip.geometry",
+                "Styrkarsdottir2019-GWAS.bone.area",
+                "Yengo2018-GWAS.height",
+                "Steinberg2020-GWAS.OA",
+                "Morris2020-GWAS.OP")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+```
+
+## Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene flexible, Time 2 only)
+
+Plot number of DE genes for each cutoff.
+
+```{r}
+
+x=1
+
+while (x <= length(cutoffs)) {
+  
+  #cutoff
+  print(paste0("Posterior Probability Cutoff: ",cutoffs[x]))
+
+  DEgenes <-
+    DEdata %>%
+    filter(FDR<=cutoffs[x]) %>%
+    dplyr::filter(cell.assign=="ostadhoc.T2") %>%
+    dplyr::select(cell.subset,gene,logFC)
+
+  DEgenes$cell.subset <- factor(DEgenes$cell.subset,
+                                levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                                labels=c("preosteoblast","osteoblast","embedding\nosteoblast","mineralizing\nosteoblast","maturing\nosteocyte"))
+
+  #number of DE genes
+  print(table(DEgenes$cell.subset))
+  print(ggplot(DEgenes, aes(x=cell.subset, fill=cell.subset)) +
+          geom_bar() +
+          ylab('Number of DE Genes') +
+          xlab('') +
+          scale_fill_manual(name="Osteogenic Stage",
+                            labels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                            values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4")) +
+          theme_classic() +
+          theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10)))
+
+  #overlap of DE genes
+  if(cutoffs[x]==0.001) {
+      combined <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="preosteoblast")            %>% dplyr::select(gene), "preosteoblast"=1),
+                              data.frame(gene=DEgenes %>% filter(cell.subset=="osteoblast")               %>% dplyr::select(gene), "osteoblast"=1),
+                              data.frame(gene=DEgenes %>% filter(cell.subset=="embedding\nosteoblast")    %>% dplyr::select(gene), "embedding.osteoblast"=1),
+                              data.frame(gene=DEgenes %>% filter(cell.subset=="mineralizing\nosteoblast") %>% dplyr::select(gene), "mineralizing.osteoblast"=1)
+                        ), full_join)
+      combined[is.na(combined)] <- 0
+      combined$maturing.osteocyte <- rep(0, dim(combined)[1])
+  }
+  else {
+      combined <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="preosteoblast")            %>% dplyr::select(gene), "preosteoblast"=1),
+                              data.frame(gene=DEgenes %>% filter(cell.subset=="osteoblast")               %>% dplyr::select(gene), "osteoblast"=1),
+                              data.frame(gene=DEgenes %>% filter(cell.subset=="embedding\nosteoblast")    %>% dplyr::select(gene), "embedding.osteoblast"=1),
+                              data.frame(gene=DEgenes %>% filter(cell.subset=="mineralizing\nosteoblast") %>% dplyr::select(gene), "mineralizing.osteoblast"=1),
+                              data.frame(gene=DEgenes %>% filter(cell.subset=="maturing\nosteocyte")      %>% dplyr::select(gene), "maturing.osteocyte"=1)
+                        ), full_join)
+      combined[is.na(combined)] <- 0
+  }
+  print(upset(combined,
+              keep.order=TRUE,
+              empty.intersections="on"))
+  print(upset(combined,
+              keep.order=TRUE,
+              empty.intersections="on"))
+
+  x=x+1
+
+}
+  
+```
+
+Test for significant enrichment of external gene sets in DE gene sets using Fisher's exact test.
+Make enrichment plot:
+
+```{r}
+
+#Enrichment of external gene sets in DE gene sets
+
+listsExternal <- list(
+
+  list("Blake2018-DE.iPSCs-Unique",blake2018$gene[which(blake2018$DE.Day0==1 &
+                                                        blake2018$DE.Day1==0 &
+                                              					blake2018$DE.Day2==0 &
+                                              					blake2018$DE.Day3==0)]),              #iPSCs-Unique
+  list("Blake2018-DE.iPSC-endoderm-day1-Unique",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==1 &
+                                                          				 	 blake2018$DE.Day2==0 &
+                                                          				   blake2018$DE.Day3==0)]), #iPSC-endoderm day1-Unique
+  list("Blake2018-DE.iPSC-endoderm-day2-Unique",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==0 &
+                                                          				 	 blake2018$DE.Day2==1 &
+                                                          				   blake2018$DE.Day3==0)]), #iPSC-endoderm day2-Unique
+  list("Blake2018-DE.iPSC-endoderm-day3-Unique",blake2018$gene[which(blake2018$DE.Day0==0 &
+                                                                     blake2018$DE.Day1==0 &
+                                                          				 	 blake2018$DE.Day2==0 &
+                                                          				   blake2018$DE.Day3==1)]), #iPSC-endoderm day3-Unique
+
+  list("Blake2020-DE.heart-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==1 &
+                                                        blake2020$DE.HvC_Kidney==0 &
+                                                        blake2020$DE.HvC_Liver==0 &
+                                                        blake2020$DE.HvC_Lung==0)]),   #heart-Unique
+  list("Blake2020-DE.kidney-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                         blake2020$DE.HvC_Kidney==1 &
+                                                         blake2020$DE.HvC_Liver==0 &
+                                                         blake2020$DE.HvC_Lung==0)]), #kidney-Unique
+  list("Blake2020-DE.liver-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                        blake2020$DE.HvC_Kidney==0 &
+                                                        blake2020$DE.HvC_Liver==1 &
+                                                        blake2020$DE.HvC_Lung==0)]),   #liver-Unique
+  list("Blake2020-DE.lung-Unique",blake2020$gene[which(blake2020$DE.HvC_Heart==0 &
+                                                       blake2020$DE.HvC_Kidney==0 &
+                                                       blake2020$DE.HvC_Liver==0 &
+                                                       blake2020$DE.HvC_Lung==1)]),     #lung-Unique
+
+  list("Gokhman2021-DE.Parental.iPSCs-Unique",gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==1 &
+                                                                            gokhman2021$DE.Parental.CNCCs==0)]), #parental.iPSCs-Unique
+  list("Gokhman2021-DE.Hybrid.iPSCs-Unique",  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==1 &
+                                                                            gokhman2021$DE.Hybrid.CNCCs==0)]),   #hybrid.iPSCs-Unique
+  list("Gokhman2021-DE.Parental.CNCCs-Unique",gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==0 &
+                                                                            gokhman2021$DE.Parental.CNCCs==1)]), #parental.CNCCs-Unique
+  list("Gokhman2021-DE.Hybrid.CNCCs-Unique",  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==0 &
+                                                                            gokhman2021$DE.Hybrid.CNCCs==1)]),   #hybrid.CNCCs-Unique
+  
+  list("Gokhman2020-DMR.bone",gokhman2020$Gene[which(gokhman2020$Chimp.DMR.Promotor==1 |
+                                                     gokhman2020$Human.DMR.Promotor==1)]), #all human-chimp DMRs
+
+  list("Hsu2019-GWAS.hip.geometry",hsu2019$Nearby.gene[which(hsu2019$GWAS.hip.geometry==1)]),                             #hip geometry GWAS
+  list("Styrkarsdottir2019-GWAS.bone.area",styrkarsdottir2019$Closest.Gene[which(styrkarsdottir2019$GWAS.bone.area==1)]), #bone area GWAS
+  list("Yengo2018-GWAS.height",yengo2018$gene[which(yengo2018$GWAS.Height==1)]),                                          #height GWAS
+
+  list("Steinberg2020-GWAS.OA",steinberg2020$GeneName[which(steinberg2020$OA.omics==1)]), #OA GWAS
+  list("Morris2020-GWAS.OP",morris2019$unique.gene[which(morris2019$GWAS.BMD==1)])        #OP GWAS
+
+)
+
+DEenrich <- data.frame("FDR.Cutoff"=double(),
+                       "Source.DEGenes"=character(),
+                       "Source.GenesOfInterest"=character(),
+                       "DE.Interest"=integer(),
+                       "NonDE.Interest"=integer(),
+                       "DE.NotInterest"=integer(),
+                       "NonDE.NotInterest"=integer(),
+                       "p.value"=double(),
+                       "odds.ratio"=double())
+
+
+x=1
+
+while (x <= length(cutoffs)) {
+  
+  for (genesExternal in listsExternal) {
+    
+    #Pairwise DE genes and cell subset overlap
+    DEgenes <-
+      DEdata %>%
+      filter(FDR<=cutoffs[x]) %>%
+      dplyr::filter(cell.assign=="ostadhoc.T2") %>%
+      dplyr::select(cell.subset,gene,logFC)
+    if(cutoffs[x]==0.001) {
+      comboGenes <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="preosteoblast")           %>% dplyr::select(gene), "preosteoblast"=1),
+                                data.frame(gene=DEgenes %>% filter(cell.subset=="osteoblast")              %>% dplyr::select(gene), "osteoblast"=1),
+                                data.frame(gene=DEgenes %>% filter(cell.subset=="embedding osteoblast")    %>% dplyr::select(gene), "embedding.osteoblast"=1),
+                                data.frame(gene=DEgenes %>% filter(cell.subset=="mineralizing osteoblast") %>% dplyr::select(gene), "mineralizing.osteoblast"=1)
+                                ), full_join)
+      comboGenes[is.na(comboGenes)] <- 0
+      comboGenes$maturing.osteocyte <- rep(0, dim(comboGenes)[1])
+    }
+    else {
+      comboGenes <- reduce(list(data.frame(gene=DEgenes %>% filter(cell.subset=="preosteoblast")           %>% dplyr::select(gene), "preosteoblast"=1),
+                                data.frame(gene=DEgenes %>% filter(cell.subset=="osteoblast")              %>% dplyr::select(gene), "osteoblast"=1),
+                                data.frame(gene=DEgenes %>% filter(cell.subset=="embedding osteoblast")    %>% dplyr::select(gene), "embedding.osteoblast"=1),
+                                data.frame(gene=DEgenes %>% filter(cell.subset=="mineralizing osteoblast") %>% dplyr::select(gene), "mineralizing.osteoblast"=1),
+                                data.frame(gene=DEgenes %>% filter(cell.subset=="maturing osteocyte")      %>% dplyr::select(gene), "maturing.osteocyte"=1)
+                                ), full_join)
+      comboGenes[is.na(comboGenes)] <- 0
+    }
+
+    #Isolate genes tested in all cell classifications
+    DEtests <-
+      DEdata %>%
+      dplyr::filter(cell.assign=="ostadhoc.T2") %>%
+      dplyr::select(cell.subset,gene,logFC,FDR)
+    if(cutoffs[x]==0.001) {
+      comboTests <- reduce(list(data.frame(gene=DEtests %>% filter(cell.subset=="preosteoblast")           %>% dplyr::select(gene), "preosteoblast"=1),
+                                data.frame(gene=DEtests %>% filter(cell.subset=="osteoblast")              %>% dplyr::select(gene), "osteoblast"=1),
+                                data.frame(gene=DEtests %>% filter(cell.subset=="embedding osteoblast")    %>% dplyr::select(gene), "embedding.osteoblast"=1),
+                                data.frame(gene=DEtests %>% filter(cell.subset=="mineralizing osteoblast") %>% dplyr::select(gene), "mineralizing.osteoblast"=1)
+                                ), full_join)
+      comboTests[is.na(comboTests)] <- 0
+      comboTests$maturing.osteocyte <- rep(0, dim(comboTests)[1])
+    }
+    else {
+      comboTests <- reduce(list(data.frame(gene=DEtests %>% filter(cell.subset=="preosteoblast")           %>% dplyr::select(gene), "preosteoblast"=1),
+                                data.frame(gene=DEtests %>% filter(cell.subset=="osteoblast")              %>% dplyr::select(gene), "osteoblast"=1),
+                                data.frame(gene=DEtests %>% filter(cell.subset=="embedding osteoblast")    %>% dplyr::select(gene), "embedding.osteoblast"=1),
+                                data.frame(gene=DEtests %>% filter(cell.subset=="mineralizing osteoblast") %>% dplyr::select(gene), "mineralizing.osteoblast"=1),
+                                data.frame(gene=DEtests %>% filter(cell.subset=="maturing osteocyte")      %>% dplyr::select(gene), "maturing.osteocyte"=1)
+                                ), full_join)
+      comboTests[is.na(comboTests)] <- 0
+    }
+    tests <- pull(comboTests %>%
+                    filter(preosteoblast==1,
+                           osteoblast==1,
+                           embedding.osteoblast==1,
+                           mineralizing.osteoblast==1,
+                           maturing.osteocyte==1) %>%
+                    dplyr::select(gene))
+
+    #Shared across all ostadhoc classifications, tested in all classifications
+    share.oad <- DEgenes %>% 
+               filter(gene %in%
+                        pull(comboGenes %>%
+                               filter(preosteoblast==1,
+                                      osteoblast==1,
+                                      embedding.osteoblast==1,
+                                      mineralizing.osteoblast==1,
+                                      maturing.osteocyte==1) %>%
+                               dplyr::select(gene))) %>% 
+               arrange(gene)
+    shareX.oad <- share.oad[which(share.oad$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% shareX.oad$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in All",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=unique(shareX.oad$gene),
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared across pre+obl+emb+min, tested in all classifications
+    share.oad.poem <- DEgenes %>% 
+                   filter(gene %in%
+                            pull(comboGenes %>%
+                                   filter(preosteoblast==1,
+                                          osteoblast==1,
+                                          embedding.osteoblast==1,
+                                          mineralizing.osteoblast==1,
+                                          maturing.osteocyte==0) %>%
+                                   dplyr::select(gene))) %>% 
+                   arrange(gene)
+    shareX.oad.poem <- share.oad.poem[which(share.oad.poem$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% shareX.oad.poem$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in Pre/Obl/Emb/Min",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=unique(shareX.oad.poem$gene),
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared across obl+emb+min, tested in all classifications
+    share.oad.oem <- DEgenes %>% 
+                   filter(gene %in%
+                            pull(comboGenes %>%
+                                   filter(preosteoblast==0,
+                                          osteoblast==1,
+                                          embedding.osteoblast==1,
+                                          mineralizing.osteoblast==1,
+                                          maturing.osteocyte==0) %>%
+                                   dplyr::select(gene))) %>% 
+                   arrange(gene)
+    shareX.oad.oem <- share.oad.oem[which(share.oad.oem$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% shareX.oad.oem$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in Obl/Emb/Min",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=unique(shareX.oad.oem$gene),
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to preosteoblasts, tested in all classifications
+    uniq.oad.pre <- DEgenes %>% 
+                  filter(gene %in%
+                           pull(comboGenes %>%
+                                  filter(preosteoblast==1,
+                                         osteoblast==0,
+                                         embedding.osteoblast==0,
+                                         mineralizing.osteoblast==0,
+                                         maturing.osteocyte==0) %>%
+                                  dplyr::select(gene))) %>% 
+                  arrange(gene)
+    uniqX.oad.pre <- uniq.oad.pre[which(uniq.oad.pre$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% uniqX.oad.pre$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Unique to Preosteoblasts",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=uniqX.oad.pre$gene,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to osteoblasts, tested in all classifications
+    uniq.oad.obl <- DEgenes %>% 
+                  filter(gene %in%
+                           pull(comboGenes %>%
+                                  filter(preosteoblast==0,
+                                         osteoblast==1,
+                                         embedding.osteoblast==0,
+                                         mineralizing.osteoblast==0,
+                                         maturing.osteocyte==0) %>%
+                                  dplyr::select(gene))) %>% 
+                  arrange(gene)
+    uniqX.oad.obl <- uniq.oad.obl[which(uniq.oad.obl$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% uniqX.oad.obl$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Unique to Osteoblasts",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=uniqX.oad.obl$gene,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to embedding osteoblasts, tested in all classifications
+    uniq.oad.emb <- DEgenes %>% 
+                  filter(gene %in%
+                           pull(comboGenes %>%
+                                  filter(preosteoblast==0,
+                                         osteoblast==0,
+                                         embedding.osteoblast==1,
+                                         mineralizing.osteoblast==0,
+                                         maturing.osteocyte==0) %>%
+                                  dplyr::select(gene))) %>% 
+                  arrange(gene)
+    uniqX.oad.emb <- uniq.oad.emb[which(uniq.oad.emb$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% uniqX.oad.emb$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Unique to Embedding Osteoblasts",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=uniqX.oad.emb$gene,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to mineralizing osteoblasts, tested in all classifications
+    uniq.oad.min <- DEgenes %>% 
+                  filter(gene %in%
+                           pull(comboGenes %>%
+                                  filter(preosteoblast==0,
+                                         osteoblast==0,
+                                         embedding.osteoblast==0,
+                                         mineralizing.osteoblast==1,
+                                         maturing.osteocyte==0) %>%
+                                  dplyr::select(gene))) %>% 
+                  arrange(gene)
+    uniqX.oad.min <- uniq.oad.min[which(uniq.oad.min$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% uniqX.oad.min$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Unique to Mineralizing Osteoblasts",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=uniqX.oad.min$gene,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to maturing osteocytes, tested in all classifications
+    uniq.oad.mat <- DEgenes %>% 
+                  filter(gene %in%
+                           pull(comboGenes %>%
+                                  filter(preosteoblast==0,
+                                         osteoblast==0,
+                                         embedding.osteoblast==0,
+                                         mineralizing.osteoblast==0,
+                                         maturing.osteocyte==1) %>%
+                                  dplyr::select(gene))) %>% 
+                  arrange(gene)
+    uniqX.oad.mat <- uniq.oad.mat[which(uniq.oad.mat$gene %in% tests),]
+    nonDEgenes <- tests[which(tests %in% uniqX.oad.mat$gene == FALSE)]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Unique to Maturing Osteocytes",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=uniqX.oad.mat$gene,
+                                         NonDEGenes=nonDEgenes))
+  
+  }
+  
+  x=x+1
+  
+}
+
+#Reformat Data
+DEenrich$Source.DEGenes <- as.factor(DEenrich$Source.DEGenes)
+DEenrich$Source.GenesOfInterest <- as.factor(DEenrich$Source.GenesOfInterest)
+
+#Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
+DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
+
+#Add p-value color variable
+DEenrich$p.value.color <- "nonsignificant"
+DEenrich$p.value.color[which(DEenrich$p.value<0.05)] <- "significant"
+DEenrich$p.value.color <- as.factor(DEenrich$p.value.color)
+
+```
+
+Check how the gene ratio and p value change across posterior probability cutoffs for different external gene datasets.
+
+```{r}
+
+#aiming for a cutoff at which only Unique to Time 0 are enriched
+tempSource <- c("Blake2018-DE.iPSCs-Unique",
+                "Gokhman2021-DE.Parental.iPSCs-Unique",
+                "Gokhman2021-DE.Hybrid.iPSCs-Unique")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+#aiming for a cutoff which minimizes enrichments across cell types
+tempSource <- c("Blake2018-DE.iPSC-endoderm-day1-Unique",
+                "Blake2018-DE.iPSC-endoderm-day2-Unique",
+                "Blake2018-DE.iPSC-endoderm-day3-Unique",
+                "Blake2020-DE.heart-Unique",
+                "Blake2020-DE.kidney-Unique",
+                "Blake2020-DE.liver-Unique",
+                "Blake2020-DE.lung-Unique")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+#no prior expectations
+tempSource <- c("Gokhman2021-DE.Parental.CNCCs-Unique",
+                "Gokhman2021-DE.Hybrid.CNCCs-Unique",
+                "Gokhman2020-DMR.bone",
+                "Hsu2019-GWAS.hip.geometry",
+                "Styrkarsdottir2019-GWAS.bone.area",
+                "Yengo2018-GWAS.height",
+                "Steinberg2020-GWAS.OA",
+                "Morris2020-GWAS.OP")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+```
+
+## Conclusions
+
+Best Pairwise DE FDR Cutoffs
+
+* Stages of Differentiation: 0.01
+* Stages of Osteogenesis: 0.05 or 0.20 or 0.30 > 0.01 or 0.10
+* Stages of Osteogenesis (Time 2 only): 0.01 or 0.05 or 0.20 > 0.10
+* OVERALL: 0.01 (0.05 is slightly better for osteogenesis)
+* (0.001 not included because it reduces DE gene count substantially)
+
+
