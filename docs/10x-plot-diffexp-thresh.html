@@ -445,7 +445,7 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-09-05
+<strong>Last updated:</strong> 2021-09-06
 </p>
 <p>
 <strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
@@ -469,7 +469,7 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 </div>
 <div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown is untracked by Git. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+<p>The R Markdown file has unstaged changes. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
 </div>
 </div>
 </div>
@@ -536,16 +536,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreeb97d07b7d6e8928f1c68741df8773f74d6cbf4c9targetblankb97d07ba"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/b97d07b7d6e8928f1c68741df8773f74d6cbf4c9" target="_blank">b97d07b</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreede2afe484d8dd8020aabbe827591a36112cc1a85targetblankde2afe4a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/de2afe484d8dd8020aabbe827591a36112cc1a85" target="_blank">de2afe4</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreeb97d07b7d6e8928f1c68741df8773f74d6cbf4c9targetblankb97d07ba" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreede2afe484d8dd8020aabbe827591a36112cc1a85targetblankde2afe4a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/b97d07b7d6e8928f1c68741df8773f74d6cbf4c9" target="_blank">b97d07b</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/de2afe484d8dd8020aabbe827591a36112cc1a85" target="_blank">de2afe4</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -556,8 +556,6 @@ Ignored files:
     Ignored:    .Rproj.user/
 
 Untracked files:
-    Untracked:  analysis/10x-plot-cormotif-cnts-thresh.Rmd
-    Untracked:  analysis/10x-plot-diffexp-thresh.Rmd
     Untracked:  data/HumanPrimaryCellAtlasData-SingleR
     Untracked:  data/HumanPrimaryCellAtlasDetails-SingleR.csv
     Untracked:  data/HumanPrimaryCellAtlasLabels-SingleR.csv
@@ -568,6 +566,12 @@ Untracked files:
     Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-cluster8.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.75.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.sc-cluster6b.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
@@ -602,8 +606,8 @@ Untracked files:
     Untracked:  output/v2/data-qc-postfilter-subsets.reg-batchviz.pdf
 
 Unstaged changes:
-    Modified:   code/DEdream.R
-    Modified:   code/DEdream.sh
+    Modified:   analysis/10x-plot-cormotif-cnts-thresh_v2.Rmd
+    Modified:   analysis/10x-plot-diffexp-thresh.Rmd
 
 </code></pre>
 <p>
@@ -616,9 +620,69 @@ Note that any generated files, e.g. HTML, png, CSS, etc., are not included in t
 <hr>
 </div>
 <div id="versions" class="tab-pane fade">
+
 <p>
-There are no past versions. Publish this analysis with <code>wflow_publish()</code> to start tracking its development.
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/10x-plot-diffexp-thresh.Rmd</code>) and HTML (<code>docs/10x-plot-diffexp-thresh.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
 </p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/analysis/10x-plot-diffexp-thresh.Rmd" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+<td>
+checked DE thresholds
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/ghousman/human-chimp-skeletal-scRNA/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/10x-plot-diffexp-thresh.html" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+<td>
+checked DE thresholds
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 <hr>
 </div>
 </div>
@@ -869,56 +933,656 @@ Time 0 Time 1 Time 2
   8999   7846   7143 </code></pre>
 <pre><code>Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-1">
+Past versions of unnamed-chunk-6-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-1.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-2">
+Past versions of unnamed-chunk-6-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-2.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>[1] &quot;Posterior Probability Cutoff: 0.4&quot;
 
 Time 0 Time 1 Time 2 
   8316   7015   6312 </code></pre>
 <pre><code>Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-3">
+Past versions of unnamed-chunk-6-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-3.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-4">
+Past versions of unnamed-chunk-6-4.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-4.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>[1] &quot;Posterior Probability Cutoff: 0.3&quot;
 
 Time 0 Time 1 Time 2 
   7477   6107   5305 </code></pre>
 <pre><code>Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-5.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-5">
+Past versions of unnamed-chunk-6-5.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-5" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-5.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-6">
+Past versions of unnamed-chunk-6-6.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-6" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-6.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>[1] &quot;Posterior Probability Cutoff: 0.2&quot;
 
 Time 0 Time 1 Time 2 
   6464   5062   4097 </code></pre>
 <pre><code>Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-7.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-8.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-7.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-7">
+Past versions of unnamed-chunk-6-7.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-7" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-7.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-8.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-8">
+Past versions of unnamed-chunk-6-8.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-8" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-8.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>[1] &quot;Posterior Probability Cutoff: 0.1&quot;
 
 Time 0 Time 1 Time 2 
   5133   3529   2604 </code></pre>
 <pre><code>Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-9.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-10.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-9.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-9">
+Past versions of unnamed-chunk-6-9.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-9" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-9.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-10.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-10">
+Past versions of unnamed-chunk-6-10.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-10" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-10.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>[1] &quot;Posterior Probability Cutoff: 0.05&quot;
 
 Time 0 Time 1 Time 2 
   4002   2441   1603 </code></pre>
 <pre><code>Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-11.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-12.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-11.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-11">
+Past versions of unnamed-chunk-6-11.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-11" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-11.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-12.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-12">
+Past versions of unnamed-chunk-6-12.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-12" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-12.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>[1] &quot;Posterior Probability Cutoff: 0.01&quot;
 
 Time 0 Time 1 Time 2 
   2098    904    446 </code></pre>
 <pre><code>Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-13.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-14.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-13.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-13">
+Past versions of unnamed-chunk-6-13.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-13" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-13.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-14.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-14">
+Past versions of unnamed-chunk-6-14.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-14" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-14.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>[1] &quot;Posterior Probability Cutoff: 0.001&quot;
 
 Time 0 Time 1 Time 2 
    697    196     81 </code></pre>
 <pre><code>Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-15.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-16.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-15.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-15">
+Past versions of unnamed-chunk-6-15.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-15" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-15.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-16.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-16">
+Past versions of unnamed-chunk-6-16.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-16" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-6-16.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Test for significant enrichment of external gene sets in DE gene sets using Fisher’s exact test. Make enrichment plot:</p>
 <pre class="r"><code>#Enrichment of external gene sets in DE gene sets
 
@@ -1744,19 +2408,257 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
                     values=c(&quot;black&quot;,&quot;red&quot;)) +
   geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
 <p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-1">
+Past versions of unnamed-chunk-8-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-1.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
 <p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-2">
+Past versions of unnamed-chunk-8-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-2.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
 <p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-3">
+Past versions of unnamed-chunk-8-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-3.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>#aiming for a cutoff which minimizes enrichments across cell types
 tempSource &lt;- c(&quot;Blake2018-DE.iPSC-endoderm-day1-Unique&quot;,
                 &quot;Blake2018-DE.iPSC-endoderm-day2-Unique&quot;,
-                &quot;Blake2018-DE.iPSC-endoderm-day3-Unique&quot;,
-                &quot;Blake2020-DE.heart-Unique&quot;,
+                &quot;Blake2018-DE.iPSC-endoderm-day3-Unique&quot;)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name=&quot;P-Value&quot;,
+                    values=c(&quot;black&quot;,&quot;red&quot;)) +
+  geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-4">
+Past versions of unnamed-chunk-8-4.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-4.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-5">
+Past versions of unnamed-chunk-8-5.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-5" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-5.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-6">
+Past versions of unnamed-chunk-8-6.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-6" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-6.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>#aiming for a cutoff which minimizes enrichments across cell types
+tempSource &lt;- c(&quot;Blake2020-DE.heart-Unique&quot;,
                 &quot;Blake2020-DE.kidney-Unique&quot;,
                 &quot;Blake2020-DE.liver-Unique&quot;,
                 &quot;Blake2020-DE.lung-Unique&quot;)
@@ -1766,15 +2668,126 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
   scale_color_manual(name=&quot;P-Value&quot;,
                     values=c(&quot;black&quot;,&quot;red&quot;)) +
   geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-7.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-7">
+Past versions of unnamed-chunk-8-7.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-7" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-7.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-8.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-8">
+Past versions of unnamed-chunk-8-8.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-8" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-8.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-9.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-8-9">
+Past versions of unnamed-chunk-8-9.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-8-9" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-9.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>#no prior expectations
 tempSource &lt;- c(&quot;Gokhman2021-DE.Parental.CNCCs-Unique&quot;,
                 &quot;Gokhman2021-DE.Hybrid.CNCCs-Unique&quot;,
@@ -1790,15 +2803,15 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
   scale_color_manual(name=&quot;P-Value&quot;,
                     values=c(&quot;black&quot;,&quot;red&quot;)) +
   geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-7.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-10.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-8.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-11.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-9.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-8-12.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="osteogenic-ad-hoc-classification-of-cells-scaled-integrated-data-thresh0-4gene-flexible" class="section level2">
 <h2>Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene flexible)</h2>
@@ -1857,7 +2870,82 @@ mineralizing\nosteoblast      maturing\nosteocyte
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-1">
+Past versions of unnamed-chunk-9-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-1.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-2">
+Past versions of unnamed-chunk-9-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-2.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>[1] &quot;Posterior Probability Cutoff: 0.4&quot;
 
            preosteoblast               osteoblast    embedding\nosteoblast 
@@ -1868,7 +2956,82 @@ mineralizing\nosteoblast      maturing\nosteocyte
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-3.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-3">
+Past versions of unnamed-chunk-9-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-3.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-4">
+Past versions of unnamed-chunk-9-4.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-4.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>[1] &quot;Posterior Probability Cutoff: 0.3&quot;
 
            preosteoblast               osteoblast    embedding\nosteoblast 
@@ -1879,7 +3042,82 @@ mineralizing\nosteoblast      maturing\nosteocyte
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-5.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-5">
+Past versions of unnamed-chunk-9-5.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-5" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-5.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-6">
+Past versions of unnamed-chunk-9-6.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-6" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-6.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>[1] &quot;Posterior Probability Cutoff: 0.2&quot;
 
            preosteoblast               osteoblast    embedding\nosteoblast 
@@ -1890,7 +3128,82 @@ mineralizing\nosteoblast      maturing\nosteocyte
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-7.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-8.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-7.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-7">
+Past versions of unnamed-chunk-9-7.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-7" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-7.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-8.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-8">
+Past versions of unnamed-chunk-9-8.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-8" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-8.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>[1] &quot;Posterior Probability Cutoff: 0.1&quot;
 
            preosteoblast               osteoblast    embedding\nosteoblast 
@@ -1901,7 +3214,82 @@ mineralizing\nosteoblast      maturing\nosteocyte
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-9.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-10.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-9.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-9">
+Past versions of unnamed-chunk-9-9.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-9" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-9.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-10.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-10">
+Past versions of unnamed-chunk-9-10.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-10" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-10.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>[1] &quot;Posterior Probability Cutoff: 0.05&quot;
 
            preosteoblast               osteoblast    embedding\nosteoblast 
@@ -1912,7 +3300,82 @@ mineralizing\nosteoblast      maturing\nosteocyte
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-11.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-12.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-11.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-11">
+Past versions of unnamed-chunk-9-11.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-11" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-11.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-12.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-12">
+Past versions of unnamed-chunk-9-12.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-12" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-12.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>[1] &quot;Posterior Probability Cutoff: 0.01&quot;
 
            preosteoblast               osteoblast    embedding\nosteoblast 
@@ -1923,7 +3386,82 @@ mineralizing\nosteoblast      maturing\nosteocyte
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-13.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-14.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-13.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-13">
+Past versions of unnamed-chunk-9-13.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-13" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-13.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-14.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-14">
+Past versions of unnamed-chunk-9-14.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-14" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-14.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>[1] &quot;Posterior Probability Cutoff: 0.001&quot;
 
            preosteoblast               osteoblast    embedding\nosteoblast 
@@ -1934,7 +3472,82 @@ mineralizing\nosteoblast      maturing\nosteocyte
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-15.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-16.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-15.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-15">
+Past versions of unnamed-chunk-9-15.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-15" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-15.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-16.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-16">
+Past versions of unnamed-chunk-9-16.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-16" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-9-16.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Test for significant enrichment of external gene sets in DE gene sets using Fisher’s exact test. Make enrichment plot:</p>
 <pre class="r"><code>#Enrichment of external gene sets in DE gene sets
 
@@ -3394,19 +5007,257 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
                     values=c(&quot;black&quot;,&quot;red&quot;)) +
   geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
 <p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-1">
+Past versions of unnamed-chunk-11-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-1.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
 <p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-2">
+Past versions of unnamed-chunk-11-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-2.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
 <p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-3">
+Past versions of unnamed-chunk-11-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-3.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>#aiming for a cutoff which minimizes enrichments across cell types
 tempSource &lt;- c(&quot;Blake2018-DE.iPSC-endoderm-day1-Unique&quot;,
                 &quot;Blake2018-DE.iPSC-endoderm-day2-Unique&quot;,
-                &quot;Blake2018-DE.iPSC-endoderm-day3-Unique&quot;,
-                &quot;Blake2020-DE.heart-Unique&quot;,
+                &quot;Blake2018-DE.iPSC-endoderm-day3-Unique&quot;)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name=&quot;P-Value&quot;,
+                    values=c(&quot;black&quot;,&quot;red&quot;)) +
+  geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-4">
+Past versions of unnamed-chunk-11-4.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-4.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-5">
+Past versions of unnamed-chunk-11-5.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-5" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-5.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-6">
+Past versions of unnamed-chunk-11-6.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-6" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-6.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>#aiming for a cutoff which minimizes enrichments across cell types
+tempSource &lt;- c(&quot;Blake2020-DE.heart-Unique&quot;,
                 &quot;Blake2020-DE.kidney-Unique&quot;,
                 &quot;Blake2020-DE.liver-Unique&quot;,
                 &quot;Blake2020-DE.lung-Unique&quot;)
@@ -3416,15 +5267,126 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
   scale_color_manual(name=&quot;P-Value&quot;,
                     values=c(&quot;black&quot;,&quot;red&quot;)) +
   geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-7.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-7">
+Past versions of unnamed-chunk-11-7.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-7" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-7.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-8.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-8">
+Past versions of unnamed-chunk-11-8.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-8" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-8.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-9.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-9">
+Past versions of unnamed-chunk-11-9.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-9" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-9.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>#no prior expectations
 tempSource &lt;- c(&quot;Gokhman2021-DE.Parental.CNCCs-Unique&quot;,
                 &quot;Gokhman2021-DE.Hybrid.CNCCs-Unique&quot;,
@@ -3440,15 +5402,15 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
   scale_color_manual(name=&quot;P-Value&quot;,
                     values=c(&quot;black&quot;,&quot;red&quot;)) +
   geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-7.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-10.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-8.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-11.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-9.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-11-12.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="osteogenic-ad-hoc-classification-of-cells-scaled-integrated-data-thresh0-4gene-flexible-time-2-only" class="section level2">
 <h2>Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene flexible, Time 2 only)</h2>
@@ -3521,7 +5483,120 @@ mineralizing\nosteoblast      maturing\nosteocyte
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-1">
+Past versions of unnamed-chunk-12-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-1.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-2">
+Past versions of unnamed-chunk-12-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-2.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-3">
+Past versions of unnamed-chunk-12-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-3.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>[1] &quot;Posterior Probability Cutoff: 0.4&quot;
 
            preosteoblast               osteoblast    embedding\nosteoblast 
@@ -3532,7 +5607,120 @@ mineralizing\nosteoblast      maturing\nosteocyte
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-4.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-5.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-4">
+Past versions of unnamed-chunk-12-4.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-4.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-5">
+Past versions of unnamed-chunk-12-5.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-5" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-5.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-6">
+Past versions of unnamed-chunk-12-6.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-6" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-6.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>[1] &quot;Posterior Probability Cutoff: 0.3&quot;
 
            preosteoblast               osteoblast    embedding\nosteoblast 
@@ -3543,7 +5731,120 @@ mineralizing\nosteoblast      maturing\nosteocyte
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-7.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-8.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-9.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-7.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-7">
+Past versions of unnamed-chunk-12-7.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-7" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-7.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-8.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-8">
+Past versions of unnamed-chunk-12-8.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-8" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-8.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-9.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-9">
+Past versions of unnamed-chunk-12-9.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-9" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-9.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>[1] &quot;Posterior Probability Cutoff: 0.2&quot;
 
            preosteoblast               osteoblast    embedding\nosteoblast 
@@ -3554,7 +5855,120 @@ mineralizing\nosteoblast      maturing\nosteocyte
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-10.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-11.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-12.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-10.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-10">
+Past versions of unnamed-chunk-12-10.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-10" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-10.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-11.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-11">
+Past versions of unnamed-chunk-12-11.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-11" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-11.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-12.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-12">
+Past versions of unnamed-chunk-12-12.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-12" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-12.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>[1] &quot;Posterior Probability Cutoff: 0.1&quot;
 
            preosteoblast               osteoblast    embedding\nosteoblast 
@@ -3565,7 +5979,120 @@ mineralizing\nosteoblast      maturing\nosteocyte
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-13.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-14.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-15.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-13.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-13">
+Past versions of unnamed-chunk-12-13.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-13" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-13.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-14.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-14">
+Past versions of unnamed-chunk-12-14.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-14" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-14.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-15.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-15">
+Past versions of unnamed-chunk-12-15.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-15" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-15.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>[1] &quot;Posterior Probability Cutoff: 0.05&quot;
 
            preosteoblast               osteoblast    embedding\nosteoblast 
@@ -3576,7 +6103,120 @@ mineralizing\nosteoblast      maturing\nosteocyte
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-16.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-17.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-18.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-16.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-16">
+Past versions of unnamed-chunk-12-16.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-16" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-16.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-17.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-17">
+Past versions of unnamed-chunk-12-17.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-17" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-17.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-18.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-18">
+Past versions of unnamed-chunk-12-18.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-18" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-18.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>[1] &quot;Posterior Probability Cutoff: 0.01&quot;
 
            preosteoblast               osteoblast    embedding\nosteoblast 
@@ -3587,7 +6227,120 @@ mineralizing\nosteoblast      maturing\nosteocyte
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-19.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-20.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-21.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-19.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-19">
+Past versions of unnamed-chunk-12-19.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-19" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-19.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-20.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-20">
+Past versions of unnamed-chunk-12-20.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-20" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-20.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-21.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-21">
+Past versions of unnamed-chunk-12-21.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-21" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-21.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre><code>[1] &quot;Posterior Probability Cutoff: 0.001&quot;
 
            preosteoblast               osteoblast    embedding\nosteoblast 
@@ -3597,7 +6350,120 @@ mineralizing\nosteoblast      maturing\nosteocyte
 <pre><code>Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;
 Joining, by = &quot;gene&quot;</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-22.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-23.png" width="672" style="display: block; margin: auto;" /><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-24.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-22.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-22">
+Past versions of unnamed-chunk-12-22.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-22" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-22.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-23.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-23">
+Past versions of unnamed-chunk-12-23.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-23" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-23.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-24.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-24">
+Past versions of unnamed-chunk-12-24.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-24" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-12-24.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Test for significant enrichment of external gene sets in DE gene sets using Fisher’s exact test. Make enrichment plot:</p>
 <pre class="r"><code>#Enrichment of external gene sets in DE gene sets
 
@@ -5043,19 +7909,257 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
                     values=c(&quot;black&quot;,&quot;red&quot;)) +
   geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
 <p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-1">
+Past versions of unnamed-chunk-14-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-1.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
 <p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-2">
+Past versions of unnamed-chunk-14-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-2.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
 <p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-3">
+Past versions of unnamed-chunk-14-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-3.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>#aiming for a cutoff which minimizes enrichments across cell types
 tempSource &lt;- c(&quot;Blake2018-DE.iPSC-endoderm-day1-Unique&quot;,
                 &quot;Blake2018-DE.iPSC-endoderm-day2-Unique&quot;,
-                &quot;Blake2018-DE.iPSC-endoderm-day3-Unique&quot;,
-                &quot;Blake2020-DE.heart-Unique&quot;,
+                &quot;Blake2018-DE.iPSC-endoderm-day3-Unique&quot;)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name=&quot;P-Value&quot;,
+                    values=c(&quot;black&quot;,&quot;red&quot;)) +
+  geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-4">
+Past versions of unnamed-chunk-14-4.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-4.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-5">
+Past versions of unnamed-chunk-14-5.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-5" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-5.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-6">
+Past versions of unnamed-chunk-14-6.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-6" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-6.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<pre class="r"><code>#aiming for a cutoff which minimizes enrichments across cell types
+tempSource &lt;- c(&quot;Blake2020-DE.heart-Unique&quot;,
                 &quot;Blake2020-DE.kidney-Unique&quot;,
                 &quot;Blake2020-DE.liver-Unique&quot;,
                 &quot;Blake2020-DE.lung-Unique&quot;)
@@ -5065,15 +8169,126 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
   scale_color_manual(name=&quot;P-Value&quot;,
                     values=c(&quot;black&quot;,&quot;red&quot;)) +
   geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-7.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-7">
+Past versions of unnamed-chunk-14-7.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-7" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-7.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-5.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-8.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-8">
+Past versions of unnamed-chunk-14-8.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-8" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-8.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-6.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-9.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-9">
+Past versions of unnamed-chunk-14-9.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-9" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/1c012e52cf0c550665750d98f5bce1a68e06adff/docs/figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-9.png" target="_blank">1c012e5</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>#no prior expectations
 tempSource &lt;- c(&quot;Gokhman2021-DE.Parental.CNCCs-Unique&quot;,
                 &quot;Gokhman2021-DE.Hybrid.CNCCs-Unique&quot;,
@@ -5089,23 +8304,23 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
   scale_color_manual(name=&quot;P-Value&quot;,
                     values=c(&quot;black&quot;,&quot;red&quot;)) +
   geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-7.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-10.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-8.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-11.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
-<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-9.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/10x-plot-diffexp-thresh.Rmd/unnamed-chunk-14-12.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
 <div id="conclusions" class="section level2">
 <h2>Conclusions</h2>
 <p>Best Pairwise DE FDR Cutoffs</p>
 <ul>
 <li>Stages of Differentiation: 0.01</li>
-<li>Stages of Osteogenesis: 0.05 or 0.20 or 0.30 &gt; 0.01 or 0.10</li>
-<li>Stages of Osteogenesis (Time 2 only): 0.01 or 0.05 or 0.20 &gt; 0.10</li>
+<li>Stages of Osteogenesis: 0.05 or 0.20 or 0.30 &gt; 0.10 &gt; 0.01</li>
+<li>Stages of Osteogenesis (Time 2 only): 0.01 or 0.05 or 0.20 &gt; 0.10 or 0.50</li>
 <li>OVERALL: 0.01 (0.05 is slightly better for osteogenesis)</li>
 <li>(0.001 not included because it reduces DE gene count substantially)</li>
 </ul>
@@ -5196,37 +8411,37 @@ loaded via a namespace (and not attached):
  [73] futile.options_1.0.1     data.table_1.13.2       
  [75] DO.db_2.9                lmtest_0.9-37           
  [77] triebeard_0.3.0          RANN_2.6.1              
- [79] fitdistrplus_1.0-14      hms_0.5.3               
- [81] lsei_1.2-0               evaluate_0.14           
- [83] gridExtra_2.3            compiler_3.6.1          
- [85] scater_1.12.2            tibble_3.0.4            
- [87] KernSmooth_2.23-15       crayon_1.3.4            
- [89] htmltools_0.5.0          later_1.1.0.1           
- [91] tidyr_1.1.2              RcppParallel_5.0.2      
- [93] DBI_1.1.0                formatR_1.7             
- [95] tweenr_1.0.1             MASS_7.3-51.4           
- [97] rappdirs_0.3.1           Matrix_1.2-18           
- [99] gdata_2.18.0             metap_1.1               
-[101] igraph_1.2.4.1           pkgconfig_2.0.3         
-[103] rvcheck_0.1.3            plotly_4.9.2.1          
-[105] xml2_1.3.2               vipor_0.4.5             
-[107] dqrng_0.2.1              XVector_0.24.0          
-[109] bibtex_0.4.2             digest_0.6.27           
-[111] sctransform_0.2.0        RcppAnnoy_0.0.12        
-[113] tsne_0.1-3               rmarkdown_1.13          
-[115] leiden_0.3.1             fastmatch_1.1-0         
-[117] uwot_0.1.5               DelayedMatrixStats_1.6.1
-[119] gtools_3.8.1             lifecycle_0.2.0         
-[121] nlme_3.1-140             jsonlite_1.7.1          
-[123] BiocNeighbors_1.2.0      pillar_1.4.7            
-[125] lattice_0.20-38          httr_1.4.2              
-[127] survival_2.44-1.1        GO.db_3.8.2             
-[129] glue_1.4.2               png_0.1-7               
-[131] bit_1.1-14               ggforce_0.2.2           
-[133] blob_1.2.0               BiocSingular_1.0.0      
-[135] caTools_1.17.1.2         memoise_1.1.0           
-[137] irlba_2.3.3              future.apply_1.3.0      
-[139] ape_5.4-1               </code></pre>
+ [79] whisker_0.3-2            fitdistrplus_1.0-14     
+ [81] hms_0.5.3                lsei_1.2-0              
+ [83] evaluate_0.14            gridExtra_2.3           
+ [85] compiler_3.6.1           scater_1.12.2           
+ [87] tibble_3.0.4             KernSmooth_2.23-15      
+ [89] crayon_1.3.4             htmltools_0.5.0         
+ [91] later_1.1.0.1            tidyr_1.1.2             
+ [93] RcppParallel_5.0.2       DBI_1.1.0               
+ [95] formatR_1.7              tweenr_1.0.1            
+ [97] MASS_7.3-51.4            rappdirs_0.3.1          
+ [99] Matrix_1.2-18            gdata_2.18.0            
+[101] metap_1.1                igraph_1.2.4.1          
+[103] pkgconfig_2.0.3          rvcheck_0.1.3           
+[105] plotly_4.9.2.1           xml2_1.3.2              
+[107] vipor_0.4.5              dqrng_0.2.1             
+[109] XVector_0.24.0           bibtex_0.4.2            
+[111] digest_0.6.27            sctransform_0.2.0       
+[113] RcppAnnoy_0.0.12         tsne_0.1-3              
+[115] rmarkdown_1.13           leiden_0.3.1            
+[117] fastmatch_1.1-0          uwot_0.1.5              
+[119] DelayedMatrixStats_1.6.1 gtools_3.8.1            
+[121] lifecycle_0.2.0          nlme_3.1-140            
+[123] jsonlite_1.7.1           BiocNeighbors_1.2.0     
+[125] pillar_1.4.7             lattice_0.20-38         
+[127] httr_1.4.2               survival_2.44-1.1       
+[129] GO.db_3.8.2              glue_1.4.2              
+[131] png_0.1-7                bit_1.1-14              
+[133] ggforce_0.2.2            blob_1.2.0              
+[135] BiocSingular_1.0.0       caTools_1.17.1.2        
+[137] memoise_1.1.0            irlba_2.3.3             
+[139] future.apply_1.3.0       ape_5.4-1               </code></pre>
 </div>
 </div>
 </div>

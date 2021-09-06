@@ -538,8 +538,22 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
 #aiming for a cutoff which minimizes enrichments across cell types
 tempSource <- c("Blake2018-DE.iPSC-endoderm-day1-Unique",
                 "Blake2018-DE.iPSC-endoderm-day2-Unique",
-                "Blake2018-DE.iPSC-endoderm-day3-Unique",
-                "Blake2020-DE.heart-Unique",
+                "Blake2018-DE.iPSC-endoderm-day3-Unique")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+#aiming for a cutoff which minimizes enrichments across cell types
+tempSource <- c("Blake2020-DE.heart-Unique",
                 "Blake2020-DE.kidney-Unique",
                 "Blake2020-DE.liver-Unique",
                 "Blake2020-DE.lung-Unique")
@@ -960,8 +974,22 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
 #aiming for a cutoff which minimizes enrichments across cell types
 tempSource <- c("Blake2018-DE.iPSC-endoderm-day1-Unique",
                 "Blake2018-DE.iPSC-endoderm-day2-Unique",
-                "Blake2018-DE.iPSC-endoderm-day3-Unique",
-                "Blake2020-DE.heart-Unique",
+                "Blake2018-DE.iPSC-endoderm-day3-Unique")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+#aiming for a cutoff which minimizes enrichments across cell types
+tempSource <- c("Blake2020-DE.heart-Unique",
                 "Blake2020-DE.kidney-Unique",
                 "Blake2020-DE.liver-Unique",
                 "Blake2020-DE.lung-Unique")
@@ -1418,8 +1446,22 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
 #aiming for a cutoff which minimizes enrichments across cell types
 tempSource <- c("Blake2018-DE.iPSC-endoderm-day1-Unique",
                 "Blake2018-DE.iPSC-endoderm-day2-Unique",
-                "Blake2018-DE.iPSC-endoderm-day3-Unique",
-                "Blake2020-DE.heart-Unique",
+                "Blake2018-DE.iPSC-endoderm-day3-Unique")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=FDR.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+#aiming for a cutoff which minimizes enrichments across cell types
+tempSource <- c("Blake2020-DE.heart-Unique",
                 "Blake2020-DE.kidney-Unique",
                 "Blake2020-DE.liver-Unique",
                 "Blake2020-DE.lung-Unique")
@@ -1465,8 +1507,8 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
 Best Pairwise DE FDR Cutoffs
 
 * Stages of Differentiation: 0.01
-* Stages of Osteogenesis: 0.05 or 0.20 or 0.30 > 0.01 or 0.10
-* Stages of Osteogenesis (Time 2 only): 0.01 or 0.05 or 0.20 > 0.10
+* Stages of Osteogenesis: 0.05 or 0.20 or 0.30 > 0.10 > 0.01
+* Stages of Osteogenesis (Time 2 only): 0.01 or 0.05 or 0.20 > 0.10 or 0.50
 * OVERALL: 0.01 (0.05 is slightly better for osteogenesis)
 * (0.001 not included because it reduces DE gene count substantially)
 

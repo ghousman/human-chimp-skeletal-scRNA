@@ -376,16 +376,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreecb981e7d39c2a148d453ee5d9c6102d1a3e4471ctargetblankcb981e7a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/cb981e7d39c2a148d453ee5d9c6102d1a3e4471c" target="_blank">cb981e7</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreede2afe484d8dd8020aabbe827591a36112cc1a85targetblankde2afe4a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/de2afe484d8dd8020aabbe827591a36112cc1a85" target="_blank">de2afe4</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreecb981e7d39c2a148d453ee5d9c6102d1a3e4471ctargetblankcb981e7a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreede2afe484d8dd8020aabbe827591a36112cc1a85targetblankde2afe4a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/cb981e7d39c2a148d453ee5d9c6102d1a3e4471c" target="_blank">cb981e7</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/de2afe484d8dd8020aabbe827591a36112cc1a85" target="_blank">de2afe4</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -446,23 +446,11 @@ Untracked files:
     Untracked:  output/v2/data-qc-postfilter-subsets.reg-batchviz.pdf
 
 Unstaged changes:
-    Deleted:    analysis/10x-plot-cormotif-cnts-thresh.Rmd
-    Deleted:    analysis/10x-plot-cormotif-cnts.Rmd
     Modified:   analysis/index.Rmd
-    Deleted:    code/CormotifCounts.R
-    Modified:   code/DEdream.R
-    Modified:   code/DEdream.sh
 
 Staged changes:
-    Modified1:  analysis/10x-data-6-cormotif-tot-cnts.Rmd
-    Modified2:  analysis/10x-data-6-cormotif-tot-cnts_v1.Rmd
-    New:        analysis/10x-data-6-cormotif-tot-cnts_v2.Rmd
-    New:        analysis/10x-plot-cormotif-cnts-thresh_v1.Rmd
-    New:        analysis/10x-plot-cormotif-cnts-thresh_v2.Rmd
-    New:        analysis/10x-plot-cormotif-cnts_v1.Rmd
-    New:        analysis/10x-plot-cormotif-cnts_v2.Rmd
-    New:        code/CormotifCounts_v1.R
-    New:        code/CormotifCounts_v2.R
+    Modified:   analysis/10x-plot-cormotif-cnts-thresh_v2.Rmd
+    Modified:   analysis/10x-plot-diffexp-thresh.Rmd
 
 </code></pre>
 <p>
@@ -501,6 +489,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/analysis/index.Rmd" target="_blank">de2afe4</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+<td>
+cormotif v2
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/ghousman/human-chimp-skeletal-scRNA/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/index.html" target="_blank">de2afe4</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+<td>
+cormotif v2
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -827,7 +849,7 @@ Start workflowr project.
 <ul>
 <li><p><a href="10x-data-5-diffexp.html">Pairwise DE tests</a> &amp; <a href="10x-plot-diffexp.html">Visualized results</a></p></li>
 <li><p><a href="10x-data-6-cormotif-cnts_v2.html">DE tests using Cormotif</a> &amp; <a href="10x-plot-cormotif-cnts_v2.html">Visualized results</a></p></li>
-<li><p>Examined gene set enrichments to determine optimal <a href="10x-plot-diffexp-thresh.html">FDR</a> &amp; <a href="10x-plot-cormotif-cnts-thresh_v2.html">posterior probability</a> cutoffs</p></li>
+<li><p>Examined gene set enrichments to determine optimal <a href="10x-plot-diffexp-thresh.html">FDR cutoff</a> (FDR &lt; 0.01) and <a href="10x-plot-cormotif-cnts-thresh_v2.html">posterior probability cutoff</a> (posterior probability &gt; 0.65)</p></li>
 </ul></li>
 <li><p><a href="10x-data-7-variance.html">Examined variance in gene expression</a></p></li>
 </ul>

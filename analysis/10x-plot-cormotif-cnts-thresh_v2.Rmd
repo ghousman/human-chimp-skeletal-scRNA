@@ -467,6 +467,39 @@ while (x <= length(cutoffs)) {
                                          DEgenes=tempDE,
                                          NonDEGenes=nonDEgenes))
     
+    #All to Time 0
+    #tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$Time.0==0)]
+    #nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    #DEenrich <- rbind(DEenrich,
+    #                  genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+    #                                     InternalDataSource="All Time 0",
+    #                                     ExternalDataSource=genesExternal[[1]],
+    #                                     GenesOfInterest=genesExternal[[2]],
+    #                                     DEgenes=tempDE,
+    #                                     NonDEGenes=nonDEgenes))
+    
+    #All to Time 1
+    #tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$Time.1==0)]
+    #nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    #DEenrich <- rbind(DEenrich,
+    #                  genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+    #                                     InternalDataSource="All Time 1",
+    #                                     ExternalDataSource=genesExternal[[1]],
+    #                                     GenesOfInterest=genesExternal[[2]],
+    #                                     DEgenes=tempDE,
+    #                                     NonDEGenes=nonDEgenes))
+    
+    #All to Time 2
+    #tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$Time.2==0)]
+    #nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    #DEenrich <- rbind(DEenrich,
+    #                  genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+    #                                     InternalDataSource="All Time 2",
+    #                                     ExternalDataSource=genesExternal[[1]],
+    #                                     GenesOfInterest=genesExternal[[2]],
+    #                                     DEgenes=tempDE,
+    #                                     NonDEGenes=nonDEgenes))
+  
   }
   x=x+1
   
@@ -510,8 +543,22 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
 #aiming for a cutoff which minimizes enrichments across cell types
 tempSource <- c("Blake2018-DE.iPSC-endoderm-day1-Unique",
                 "Blake2018-DE.iPSC-endoderm-day2-Unique",
-                "Blake2018-DE.iPSC-endoderm-day3-Unique",
-                "Blake2020-DE.heart-Unique",
+                "Blake2018-DE.iPSC-endoderm-day3-Unique")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+#aiming for a cutoff which minimizes enrichments across cell types
+tempSource <- c("Blake2020-DE.heart-Unique",
                 "Blake2020-DE.kidney-Unique",
                 "Blake2020-DE.liver-Unique",
                 "Blake2020-DE.lung-Unique")
@@ -757,7 +804,7 @@ x=1
 while (x <= length(cutoffs)) {
   
   for (genesExternal in listsExternal) {
-
+  
     #Shared across all ostadhoc classifications
     tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==1 &
                                              dataUpset[[x]]$osteoblast==1 &
@@ -782,7 +829,7 @@ while (x <= length(cutoffs)) {
     nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
     DEenrich <- rbind(DEenrich,
                       genesetEnrich.data(InternalDataCutoff=cutoffs[x],
-                                         InternalDataSource="Shared in Pre/Obl/Emb/Min",
+                                         InternalDataSource="Shared in\nPre/Obl/Emb/Min",
                                          ExternalDataSource=genesExternal[[1]],
                                          GenesOfInterest=genesExternal[[2]],
                                          DEgenes=tempDE,
@@ -797,27 +844,12 @@ while (x <= length(cutoffs)) {
     nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
     DEenrich <- rbind(DEenrich,
                       genesetEnrich.data(InternalDataCutoff=cutoffs[x],
-                                         InternalDataSource="Shared in Obl/Emb/Min/Mat",
+                                         InternalDataSource="Shared in\nObl/Emb/Min/Mat",
                                          ExternalDataSource=genesExternal[[1]],
                                          GenesOfInterest=genesExternal[[2]],
                                          DEgenes=tempDE,
                                          NonDEGenes=nonDEgenes))
-    
-    #Shared across emb+min+mat
-    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &
-                                             dataUpset[[x]]$osteoblast==0 &
-                                             dataUpset[[x]]$embedding.osteoblast==1 &
-                                             dataUpset[[x]]$mineralizing.osteoblast==1 &
-                                             dataUpset[[x]]$maturing.osteocyte==1)]
-    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
-    DEenrich <- rbind(DEenrich,
-                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
-                                         InternalDataSource="Shared in Emb/Min/Mat",
-                                         ExternalDataSource=genesExternal[[1]],
-                                         GenesOfInterest=genesExternal[[2]],
-                                         DEgenes=tempDE,
-                                         NonDEGenes=nonDEgenes))
-    
+  
     #Shared across emb+min
     tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &
                                              dataUpset[[x]]$osteoblast==0 &
@@ -833,21 +865,6 @@ while (x <= length(cutoffs)) {
                                          DEgenes=tempDE,
                                          NonDEGenes=nonDEgenes))
     
-    #Unique to embedding osteoblasts
-    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &
-                                             dataUpset[[x]]$osteoblast==0 &
-                                             dataUpset[[x]]$embedding.osteoblast==1 &
-                                             dataUpset[[x]]$mineralizing.osteoblast==0 &
-                                             dataUpset[[x]]$maturing.osteocyte==0)]
-    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
-    DEenrich <- rbind(DEenrich,
-                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
-                                         InternalDataSource="Unique to Emb",
-                                         ExternalDataSource=genesExternal[[1]],
-                                         GenesOfInterest=genesExternal[[2]],
-                                         DEgenes=tempDE,
-                                         NonDEGenes=nonDEgenes))
-    
     #Unique to mineralizing osteoblasts
     tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &
                                              dataUpset[[x]]$osteoblast==0 &
@@ -857,11 +874,81 @@ while (x <= length(cutoffs)) {
     nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
     DEenrich <- rbind(DEenrich,
                       genesetEnrich.data(InternalDataCutoff=cutoffs[x],
-                                         InternalDataSource="Unique to Min",
+                                         InternalDataSource="Unique to\nMineralizing Osteoblasts",
                                          ExternalDataSource=genesExternal[[1]],
                                          GenesOfInterest=genesExternal[[2]],
                                          DEgenes=tempDE,
                                          NonDEGenes=nonDEgenes))
+    
+    #Shared across all ostadhoc classifications
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==1 &
+                                             dataUpset[[x]]$osteoblast==1 &
+                                             dataUpset[[x]]$embedding.osteoblast==1 &
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &
+                                             dataUpset[[x]]$maturing.osteocyte==1)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in All",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #All preosteoblasts
+    #tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==1)]
+    #nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    #DEenrich <- rbind(DEenrich,
+    #                  genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+    #                                     InternalDataSource="All Preostoblasts",
+    #                                     ExternalDataSource=genesExternal[[1]],
+    #                                     GenesOfInterest=genesExternal[[2]],
+    #                                     DEgenes=tempDE,
+    #                                     NonDEGenes=nonDEgenes))
+    
+    #All osteoblasts
+    #tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$osteoblast==1)]
+    #nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    #DEenrich <- rbind(DEenrich,
+    #                  genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+    #                                     InternalDataSource="All Osteoblasts",
+    #                                     ExternalDataSource=genesExternal[[1]],
+    #                                     GenesOfInterest=genesExternal[[2]],
+    #                                     DEgenes=tempDE,
+    #                                     NonDEGenes=nonDEgenes))
+    
+    #All embedding osteoblasts
+    #tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$embedding.osteoblast==1)]
+    #nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    #DEenrich <- rbind(DEenrich,
+    #                  genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+    #                                     InternalDataSource="All Embedding Osteoblasts",
+    #                                     ExternalDataSource=genesExternal[[1]],
+    #                                     GenesOfInterest=genesExternal[[2]],
+    #                                     DEgenes=tempDE,
+    #                                     NonDEGenes=nonDEgenes))
+    
+    #All mineralizing osteoblasts
+    #tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$mineralizing.osteoblast==1)]
+    #nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    #DEenrich <- rbind(DEenrich,
+    #                  genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+    #                                     InternalDataSource="All Mineralizing Osteoblasts",
+    #                                     ExternalDataSource=genesExternal[[1]],
+    #                                     GenesOfInterest=genesExternal[[2]],
+    #                                     DEgenes=tempDE,
+    #                                     NonDEGenes=nonDEgenes))
+    
+    #All maturing osteocytes
+    #tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$maturing.osteocyte==1)]
+    #nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    #DEenrich <- rbind(DEenrich,
+    #                  genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+    #                                     InternalDataSource="All Maturing Osteocytes",
+    #                                     ExternalDataSource=genesExternal[[1]],
+    #                                     GenesOfInterest=genesExternal[[2]],
+    #                                     DEgenes=tempDE,
+    #                                     NonDEGenes=nonDEgenes))
     
   }
   
@@ -907,8 +994,22 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
 #aiming for a cutoff which minimizes enrichments across cell types
 tempSource <- c("Blake2018-DE.iPSC-endoderm-day1-Unique",
                 "Blake2018-DE.iPSC-endoderm-day2-Unique",
-                "Blake2018-DE.iPSC-endoderm-day3-Unique",
-                "Blake2020-DE.heart-Unique",
+                "Blake2018-DE.iPSC-endoderm-day3-Unique")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+#aiming for a cutoff which minimizes enrichments across cell types
+tempSource <- c("Blake2020-DE.heart-Unique",
                 "Blake2020-DE.kidney-Unique",
                 "Blake2020-DE.liver-Unique",
                 "Blake2020-DE.lung-Unique")
@@ -1157,10 +1258,10 @@ while (x <= length(cutoffs)) {
 
     #Shared across all ostadhoc classifications
     tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==1 &
-                                             dataUpset[[x]]$osteoblast==1 &
-                                             dataUpset[[x]]$embedding.osteoblast==1 &
-                                             dataUpset[[x]]$mineralizing.osteoblast==1 &
-                                             dataUpset[[x]]$maturing.osteocyte==1)]
+                                        dataUpset[[x]]$osteoblast==1 &
+                                        dataUpset[[x]]$embedding.osteoblast==1 &
+                                        dataUpset[[x]]$mineralizing.osteoblast==1 &
+                                        dataUpset[[x]]$maturing.osteocyte==1)]
     nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
     DEenrich <- rbind(DEenrich,
                       genesetEnrich.data(InternalDataCutoff=cutoffs[x],
@@ -1172,14 +1273,14 @@ while (x <= length(cutoffs)) {
     
     #Shared across pre+obl+emb+min
     tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==1 &
-                                             dataUpset[[x]]$osteoblast==1 &
-                                             dataUpset[[x]]$embedding.osteoblast==1 &
-                                             dataUpset[[x]]$mineralizing.osteoblast==1 &
-                                             dataUpset[[x]]$maturing.osteocyte==0)]
+                                        dataUpset[[x]]$osteoblast==1 &
+                                        dataUpset[[x]]$embedding.osteoblast==1 &
+                                        dataUpset[[x]]$mineralizing.osteoblast==1 &
+                                        dataUpset[[x]]$maturing.osteocyte==0)]
     nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
     DEenrich <- rbind(DEenrich,
                       genesetEnrich.data(InternalDataCutoff=cutoffs[x],
-                                         InternalDataSource="Shared in Pre/Obl/Emb/Min",
+                                         InternalDataSource="Shared in\nPre/Obl/Emb/Min",
                                          ExternalDataSource=genesExternal[[1]],
                                          GenesOfInterest=genesExternal[[2]],
                                          DEgenes=tempDE,
@@ -1187,40 +1288,25 @@ while (x <= length(cutoffs)) {
     
     #Shared across obl+emb+min+mat
     tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &
-                                             dataUpset[[x]]$osteoblast==1 &
-                                             dataUpset[[x]]$embedding.osteoblast==1 &
-                                             dataUpset[[x]]$mineralizing.osteoblast==1 &
-                                             dataUpset[[x]]$maturing.osteocyte==1)]
+                                        dataUpset[[x]]$osteoblast==1 &
+                                        dataUpset[[x]]$embedding.osteoblast==1 &
+                                        dataUpset[[x]]$mineralizing.osteoblast==1 &
+                                        dataUpset[[x]]$maturing.osteocyte==1)]
     nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
     DEenrich <- rbind(DEenrich,
                       genesetEnrich.data(InternalDataCutoff=cutoffs[x],
-                                         InternalDataSource="Shared in Obl/Emb/Min/Mat",
+                                         InternalDataSource="Shared in\nObl/Emb/Min/Mat",
                                          ExternalDataSource=genesExternal[[1]],
                                          GenesOfInterest=genesExternal[[2]],
                                          DEgenes=tempDE,
                                          NonDEGenes=nonDEgenes))
-    
-    #Shared across emb+min+mat
-    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &
-                                             dataUpset[[x]]$osteoblast==0 &
-                                             dataUpset[[x]]$embedding.osteoblast==1 &
-                                             dataUpset[[x]]$mineralizing.osteoblast==1 &
-                                             dataUpset[[x]]$maturing.osteocyte==1)]
-    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
-    DEenrich <- rbind(DEenrich,
-                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
-                                         InternalDataSource="Shared in Emb/Min/Mat",
-                                         ExternalDataSource=genesExternal[[1]],
-                                         GenesOfInterest=genesExternal[[2]],
-                                         DEgenes=tempDE,
-                                         NonDEGenes=nonDEgenes))
-    
+  
     #Shared across emb+min
     tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &
-                                             dataUpset[[x]]$osteoblast==0 &
-                                             dataUpset[[x]]$embedding.osteoblast==1 &
-                                             dataUpset[[x]]$mineralizing.osteoblast==1 &
-                                             dataUpset[[x]]$maturing.osteocyte==0)]
+                                        dataUpset[[x]]$osteoblast==0 &
+                                        dataUpset[[x]]$embedding.osteoblast==1 &
+                                        dataUpset[[x]]$mineralizing.osteoblast==1 &
+                                        dataUpset[[x]]$maturing.osteocyte==0)]
     nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
     DEenrich <- rbind(DEenrich,
                       genesetEnrich.data(InternalDataCutoff=cutoffs[x],
@@ -1230,36 +1316,91 @@ while (x <= length(cutoffs)) {
                                          DEgenes=tempDE,
                                          NonDEGenes=nonDEgenes))
     
-    #Unique to embedding osteoblasts
-    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &
-                                             dataUpset[[x]]$osteoblast==0 &
-                                             dataUpset[[x]]$embedding.osteoblast==1 &
-                                             dataUpset[[x]]$mineralizing.osteoblast==0 &
-                                             dataUpset[[x]]$maturing.osteocyte==0)]
-    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
-    DEenrich <- rbind(DEenrich,
-                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
-                                         InternalDataSource="Unique to Emb",
-                                         ExternalDataSource=genesExternal[[1]],
-                                         GenesOfInterest=genesExternal[[2]],
-                                         DEgenes=tempDE,
-                                         NonDEGenes=nonDEgenes))
-    
     #Unique to mineralizing osteoblasts
     tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &
-                                             dataUpset[[x]]$osteoblast==0 &
-                                             dataUpset[[x]]$embedding.osteoblast==0 &
-                                             dataUpset[[x]]$mineralizing.osteoblast==1 &
-                                             dataUpset[[x]]$maturing.osteocyte==0)]
+                                        dataUpset[[x]]$osteoblast==0 &
+                                        dataUpset[[x]]$embedding.osteoblast==0 &
+                                        dataUpset[[x]]$mineralizing.osteoblast==1 &
+                                        dataUpset[[x]]$maturing.osteocyte==0)]
     nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
     DEenrich <- rbind(DEenrich,
                       genesetEnrich.data(InternalDataCutoff=cutoffs[x],
-                                         InternalDataSource="Unique to Min",
+                                         InternalDataSource="Unique to\nMineralizing Osteoblasts",
                                          ExternalDataSource=genesExternal[[1]],
                                          GenesOfInterest=genesExternal[[2]],
                                          DEgenes=tempDE,
                                          NonDEGenes=nonDEgenes))
     
+    #Shared across all ostadhoc classifications
+    tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==1 &
+                                        dataUpset[[x]]$osteoblast==1 &
+                                        dataUpset[[x]]$embedding.osteoblast==1 &
+                                        dataUpset[[x]]$mineralizing.osteoblast==1 &
+                                        dataUpset[[x]]$maturing.osteocyte==1)]
+    nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich <- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource="Shared in All",
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #All preosteoblasts
+    #tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==1)]
+    #nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    #DEenrich <- rbind(DEenrich,
+    #                  genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+    #                                     InternalDataSource="All Preostoblasts",
+    #                                     ExternalDataSource=genesExternal[[1]],
+    #                                     GenesOfInterest=genesExternal[[2]],
+    #                                     DEgenes=tempDE,
+    #                                     NonDEGenes=nonDEgenes))
+    
+    #All osteoblasts
+    #tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$osteoblast==1)]
+    #nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    #DEenrich <- rbind(DEenrich,
+    #                  genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+    #                                     InternalDataSource="All Osteoblasts",
+    #                                     ExternalDataSource=genesExternal[[1]],
+    #                                     GenesOfInterest=genesExternal[[2]],
+    #                                     DEgenes=tempDE,
+    #                                     NonDEGenes=nonDEgenes))
+    
+    #All embedding osteoblasts
+    #tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$embedding.osteoblast==1)]
+    #nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    #DEenrich <- rbind(DEenrich,
+    #                  genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+    #                                     InternalDataSource="All Embedding Osteoblasts",
+    #                                     ExternalDataSource=genesExternal[[1]],
+    #                                     GenesOfInterest=genesExternal[[2]],
+    #                                     DEgenes=tempDE,
+    #                                     NonDEGenes=nonDEgenes))
+    
+    #All mineralizing osteoblasts
+    #tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$mineralizing.osteoblast==1)]
+    #nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    #DEenrich <- rbind(DEenrich,
+    #                  genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+    #                                     InternalDataSource="All Mineralizing Osteoblasts",
+    #                                     ExternalDataSource=genesExternal[[1]],
+    #                                     GenesOfInterest=genesExternal[[2]],
+    #                                     DEgenes=tempDE,
+    #                                     NonDEGenes=nonDEgenes))
+    
+    #All maturing osteocytes
+    #tempDE <- rownames(dataUpset[[x]])[which(dataUpset[[x]]$maturing.osteocyte==1)]
+    #nonDEgenes <- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    #DEenrich <- rbind(DEenrich,
+    #                  genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+    #                                     InternalDataSource="All Maturing Osteocytes",
+    #                                     ExternalDataSource=genesExternal[[1]],
+    #                                     GenesOfInterest=genesExternal[[2]],
+    #                                     DEgenes=tempDE,
+    #                                     NonDEGenes=nonDEgenes))
+      
   }
   
   x=x+1
@@ -1350,7 +1491,7 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
 
 Best Cormotif Posterior Probability Cutoffs
 
-* Stages of Differentiation: 0.55 or 0.65 or 0.975
+* Stages of Differentiation: 0.55 or 0.65
 * Stages of Osteogenesis: 0.65 or 0.75 or 0.80 or 0.85 or 0.925 or 0.95 or 0.975
 * Stages of Osteogenesis (Time 2 only): 0.50 or 0.55 or 0.65 or 0.70 or 0.75
 * OVERALL: 0.65

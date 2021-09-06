@@ -76,7 +76,7 @@ If you are running the files in this repository to recreate the analyses, runnin
 
     + [DE tests using Cormotif](10x-data-6-cormotif-cnts_v2.html) & [Visualized results](10x-plot-cormotif-cnts_v2.html)
     
-    + Examined gene set enrichments to determine optimal [FDR](10x-plot-diffexp-thresh.html) & [posterior probability](10x-plot-cormotif-cnts-thresh_v2.html) cutoffs
+    + Examined gene set enrichments to determine optimal [FDR cutoff](10x-plot-diffexp-thresh.html) (FDR < 0.01) and [posterior probability cutoff](10x-plot-cormotif-cnts-thresh_v2.html) (posterior probability > 0.65)
     
 * [Examined variance in gene expression](10x-data-7-variance.html)
 
