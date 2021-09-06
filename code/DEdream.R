@@ -83,6 +83,8 @@ rm(genes,genes.mito,genes.ribo)
 #Define Limma Voom (Dream) Function
 runDREAM <- function(dataSub, data.dir, cell.assign, cell.subset, genes.no.mito.ribo, data.type, filter.arg, filter.type, filter.param, fml) {
 
+  print("okay1")
+
   #make count matrix and metadata for edgeR object
   if (data.type=="pseudo") {
     counts <- c()
@@ -118,8 +120,12 @@ runDREAM <- function(dataSub, data.dir, cell.assign, cell.subset, genes.no.mito.
     metadata <- metadata[colnames(counts),]
   }
 
+  print("okay2")
+
   #remove mitochodrial and ribosomal genes
   counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
+
+  print("okay3")
 
   #make edgeR object
   dge <- DGEList(counts)
@@ -127,6 +133,8 @@ runDREAM <- function(dataSub, data.dir, cell.assign, cell.subset, genes.no.mito.
   meta_dge <- cbind(meta_dge, metadata)
   dge$samples <- meta_dge
   rm(dataSub,counts,metadata,meta_dge)
+
+  print("okay4")
 
   #filter genes
   if (filter.arg==TRUE){
@@ -145,9 +153,13 @@ runDREAM <- function(dataSub, data.dir, cell.assign, cell.subset, genes.no.mito.
     }
   }
 
+  print("okay5")
+
   #normalize data
   dge <- calcNormFactors(dge, method="TMM")
   summary(dge$samples$norm.factors)
+
+  print("okay6")
 
   #prep design matrix variables
   dge$samples$Individual.Replicate <- as.factor(dge$samples$Individual.Replicate)
@@ -159,6 +171,8 @@ runDREAM <- function(dataSub, data.dir, cell.assign, cell.subset, genes.no.mito.
     dge$samples$Phase <- as.factor(dge$samples$Phase)
     dge$samples$Sample <- as.factor(dge$samples$Sample)
   }
+
+  print("okay7")
 
   #design matrix
   if (fml=="formula1") {
@@ -209,16 +223,26 @@ runDREAM <- function(dataSub, data.dir, cell.assign, cell.subset, genes.no.mito.
     model <- "~Species+percent.mt+Phase+(1|Individual.Replicate)"
     formula <- ~Species+percent.mt+Phase+(1|Individual.Replicate)
   }
+  if (fml=="formula7") {
+    model <- "~Species"
+    formula <- ~Species
+  }
+
+  print("okay8")
 
   #estimate weights using linear mixed model of dream (voom)
-  vobjDream = voomWithDreamWeights(counts=dge, formula=formula, data=dge$samples)
+  vobjDream = variancePartition::voomWithDreamWeights(counts=dge, formula=formula, data=dge$samples)
 
   #define contrasts
   #L = getContrast(vobjDream, formula, dge$samples, coefficient="SpeciesHuman")
   #plotContrasts(L)
 
+  print("okay9")
+
   #fit dream model on each gene
   fitmm = dream(vobjDream, formula, dge$samples)
+
+  print("okay10")
 
   #assess differential expression output for particular contrast
   tt <- topTable(fitmm, n=Inf, coef='SpeciesHuman', adjust.method="BH", p.value=1)
@@ -227,9 +251,13 @@ runDREAM <- function(dataSub, data.dir, cell.assign, cell.subset, genes.no.mito.
   print(table(tt$adj.P.Val<0.01))
   print(summary(decideTests(fitmm, adjust.method=fdr, p.value=0.01)))
 
+  print("okay11")
+
   #rename final column of toptable to enable rbind()
   #column name is "B" for mineralizing osteoblasts in ostadhocX and ostadhocX.T2
   colnames(tt)[6] <- "z.std"
+
+  print("okay12")
 
   #add details to output
   tt$data <- rep(data.dir, dim(tt)[1])
@@ -372,7 +400,8 @@ for (i in subset.list) {
       if(cell.assign=="ostadhocX.T2")      { dataSub <- subset(data,subset=OstAdHoc.Assign.x.4gene.thresh0==cell.subset & Stage=="Time 2") }
     }
 
-    #de analysis
+    #de analysis - PROBLEM!
+
     DEgene <- runDREAM(dataSub=dataSub,
                        data.dir=data.dir,
                        cell.assign=cell.assign,

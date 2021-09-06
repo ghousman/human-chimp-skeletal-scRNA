@@ -8,7 +8,7 @@ sbatch <<EOT
 #SBATCH --partition=bigmem2
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=4
-#SBATCH --mem-per-cpu=20000
+#SBATCH --mem-per-cpu=24000
 
 module load R/3.6.1
 R CMD BATCH --no-save --no-restore '--args name="$1" data.source="$2" data.type="$3" filter.arg=$4 filter.type="$5" filter.param=$6 fml="$7" lfc=FALSE fdr="BH" assign="$8"' DEdream.R DEdream_$1_$8.out

@@ -1,0 +1,2340 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="Genevieve Housman" />
+
+
+<title>10x-plot-cormotif-cnts-thresh-v1</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">human-chimp-skeletal-scRNA</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">10x-plot-cormotif-cnts-thresh-v1</h1>
+<h4 class="author">Genevieve Housman</h4>
+<h4 class="date">September 2021</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2021-09-05
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong> <code>human-chimp-skeletal-scRNA/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown is untracked by Git. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20190719code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20190719)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20190719code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20190719)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtree1c012e52cf0c550665750d98f5bce1a68e06adfftargetblank1c012e5a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/1c012e52cf0c550665750d98f5bce1a68e06adff" target="_blank">1c012e5</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtree1c012e52cf0c550665750d98f5bce1a68e06adfftargetblank1c012e5a" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/1c012e52cf0c550665750d98f5bce1a68e06adff" target="_blank">1c012e5</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
+
+Untracked files:
+    Untracked:  analysis/10x-data-6-cormotif-tot-cnts_v1.Rmd
+    Untracked:  analysis/10x-data-6-cormotif-tot-cnts_v2.Rmd
+    Untracked:  analysis/10x-plot-cormotif-cnts-thresh_v1.Rmd
+    Untracked:  analysis/10x-plot-cormotif-cnts-thresh_v2.Rmd
+    Untracked:  analysis/10x-plot-cormotif-cnts_v1.Rmd
+    Untracked:  analysis/10x-plot-cormotif-cnts_v2.Rmd
+    Untracked:  code/CormotifCounts_v1.R
+    Untracked:  code/CormotifCounts_v2.R
+    Untracked:  data/HumanPrimaryCellAtlasData-SingleR
+    Untracked:  data/HumanPrimaryCellAtlasDetails-SingleR.csv
+    Untracked:  data/HumanPrimaryCellAtlasLabels-SingleR.csv
+    Untracked:  data/cell_atlas_ref_panel
+    Untracked:  data/cellranger-data-full/
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-cluster8.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-adhoc.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-adhoc4.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-adhoc6.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-cluster.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-cluster4a.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-cluster4b.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-cluster6a.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-cluster8.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4gene.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4gene.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4gene8.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4gene8.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4geneX.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4geneX.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4geneX8.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4geneX8.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.50.6.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.50.T2.6.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.50.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.50.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.75.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-stage.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-stage4.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-stage6.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.sc-cluster6b.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/corrmatrix.ost
+    Untracked:  data/gom-data/v2/gom10.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom3.100genes.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom3.100genes.log.indv-cell.int19k.reg-tot.rds
+    Untracked:  data/gom-data/v2/gom3.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom3.log.indv-cell.int19k.reg-tot.rds
+    Untracked:  data/gom-data/v2/gom4.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom5.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom6.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom7.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom8.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  data/gom-data/v2/gom9.log.indv-cell.int19k.reg-t2.rds
+    Untracked:  output/data-qc-post-subsets-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-int19k-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-int19k.reg-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-intNo0-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-intNo0.reg-batchviz.pdf
+    Untracked:  output/data-qc-postfilterC-subsets-merge-batchviz.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-batchviz.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-intNo0.reg-batchviz.pdf
+    Untracked:  output/data-qc-postfilterL-subsets-merge-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-int-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-int19k-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-int19k.reg-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets-merge-batchviz.pdf
+    Untracked:  output/v2/data-qc-postfilter-subsets.reg-batchviz.pdf
+
+Unstaged changes:
+    Deleted:    analysis/10x-data-6-cormotif-tot-cnts.Rmd
+    Deleted:    analysis/10x-plot-cormotif-cnts-thresh.Rmd
+    Deleted:    analysis/10x-plot-cormotif-cnts.Rmd
+    Deleted:    code/CormotifCounts.R
+    Modified:   code/DEdream.R
+    Modified:   code/DEdream.sh
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with <code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<div id="x-data-cellranger-analysis---correlation-motifs-different-thresholds" class="section level1">
+<h1>10X Data Cellranger Analysis - Correlation Motifs (different thresholds)</h1>
+<p>View results of correlation motifs tests between humans and chimpanzees using different posterior probability thresholds.</p>
+<ul>
+<li>within stages of differentiation</li>
+<li>within stages of osteogenesis</li>
+<li>within stages of osteogenesis (T2 only)</li>
+</ul>
+<pre class="r"><code>#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(grid)
+library(gbm)
+library(colorspace)
+library(RColorBrewer)
+library(edgeR)
+library(scran)
+library(SingleCellExperiment)
+library(purrr)
+library(UpSetR)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(Rgraphviz)
+library(enrichplot)
+library(viridis)
+library(VennDiagram)
+library(ComplexHeatmap)
+library(Cormotif)</code></pre>
+<div id="load-external-gene-datasets" class="section level2">
+<h2>Load External Gene Datasets</h2>
+<p>Several external gene datasets were manually compiled from papers to test for enrichment in interesting DE gene sets.</p>
+<p>Genes previously identified as human and chimpanzee differences:</p>
+<ul>
+<li>Blake et al. 2018 Genome Biology (Supplementary Table S5A-D)
+<ul>
+<li>DE genes in human and chimpanzee iPSC-derived endoderm day 0 (n = 3267 DE genes at FDR &lt; 1% out of 10304 genes)</li>
+<li>DE genes in human and chimpanzee iPSC-derived endoderm day 1 (n = 3239 DE genes at FDR &lt; 1% out of 10304 genes)</li>
+<li>DE genes in human and chimpanzee iPSC-derived endoderm day 2 (n = 3477 DE genes at FDR &lt; 1% out of 10304 genes)</li>
+<li>DE genes in human and chimpanzee iPSC-derived endoderm day 3 (n = 3820 DE genes at FDR &lt; 1% out of 10304 genes)</li>
+<li>Note: only included genes with a known gene symbol (retreived from <a href="https://www.biotools.fr/human/ensembl_symbol_converter" class="uri">https://www.biotools.fr/human/ensembl_symbol_converter</a>)</li>
+<li>Note: only considered DE genes unique to each cell type</li>
+</ul></li>
+<li>Blake et al. 2020 Genome Research (Supplemental Table S4)
+<ul>
+<li>DE genes in human and chimpanzee heart tissue (n = 2195 DE genes at FDR &lt; 1% out of 12184 genes)</li>
+<li>DE genes in human and chimpanzee kidney tissue (n = 799 DE genes at FDR &lt; 1% out of 12184 genes)</li>
+<li>DE genes in human and chimpanzee liver tissue (n = 1364 DE genes at FDR &lt; 1% out of 12184 genes)</li>
+<li>DE genes in human and chimpanzee lung tissue (n = 805 DE genes at FDR &lt; 1% out of 12184 genes)</li>
+<li>Note: only included genes with a known gene symbol (retreived from <a href="https://www.biotools.fr/human/ensembl_symbol_converter" class="uri">https://www.biotools.fr/human/ensembl_symbol_converter</a>)</li>
+<li>Note: only considered DE genes unique to each tissue type</li>
+</ul></li>
+<li>Gokhman et al. 2021 Nature Genetics (Supplementary Table 5)
+<ul>
+<li>DE genes in parental iPSC lines (n = 7655)</li>
+<li>DE genes in hybrid iPSC lines (n = 6009)</li>
+<li>DE genes in parental CNCC lines (n = 2223)</li>
+<li>DE genes in hybrid CNCC lines (n = 3612)</li>
+<li>Note: only considered DE genes unique to each cell type</li>
+</ul></li>
+<li>Gokhman et al. 2020 Nature Communications (Supplementary Data 2)
+<ul>
+<li>DMRs identified between chimpanzees and archaic/modern humans in bone tissues (n = 2031 DMRs)</li>
+<li>AMH-derived methylation patterns in bone tissues (n = 873 DMRs linked with 588 DMGs)</li>
+<li>(human hypermethylated promotor regions: expect higher gene expression in chimps as compared to humans)</li>
+<li>(chimp hypermethylated promotor regions: expect higher gene expression in humans as compared to chimps)</li>
+<li>Note: only DMRs that overlapped promotor regions of genes were included</li>
+<li>Note: hyper/hypomethylation determined by comparing average AMH methylation levels with average chimp methylation levels</li>
+</ul></li>
+</ul>
+<p>General skeleton-related and skeletal phenotype-related genes:</p>
+<ul>
+<li>Hsu et al. 2019 Journal of Bone and Mineral Research (Table 1)
+<ul>
+<li>hip geometry GWAS loci (n = 10)</li>
+</ul></li>
+<li>Styrkarsdottir et al. 2019 Nature Communications (Table 1)
+<ul>
+<li>DXA bone area GWAS loci (n = 21 associated with 20 genes)</li>
+</ul></li>
+<li>Yengo et al. 2018 Human Molecular Genetics
+<ul>
+<li>height GWAS loci (n = 3290) (data provided at <a href="https://portals.broadinstitute.org/collaboration/giant/index.php/GIANT_consortium_data_files" class="uri">https://portals.broadinstitute.org/collaboration/giant/index.php/GIANT_consortium_data_files</a>)</li>
+<li>height GWAS loci with associated eQTLs (n = 610) (list not provided)</li>
+<li>Note: only used unique gene symbols associated with height GWAS loci (n = 1500)</li>
+</ul></li>
+</ul>
+<p>Genes associated with skeletal diseases (OA + OP):</p>
+<ul>
+<li>Steinberg et al. 2020 bioRxiv (Supplementary Table 2)
+<ul>
+<li>genes with cross-omics (DE RNA + protein) evidence for involvement in OA progression (n = 409)</li>
+</ul></li>
+<li>Morris et al. 2019 Nature Genetics (Supplemental Table 2)
+<ul>
+<li>OP GWAS loci (n = 1103 conditionally independent signals associated with 863 genes)</li>
+</ul></li>
+</ul>
+<pre class="r"><code>#Define function for testing significant enrichment of gene sets
+
+genesetEnrich &lt;- function(GenesOfInterest, DEgenes, NonDEGenes){
+  
+  #fill contingency table
+  DE.Interest       &lt;- length(intersect(GenesOfInterest, DEgenes))
+  NonDE.Interest    &lt;- length(intersect(GenesOfInterest, NonDEGenes))
+  DE.NotInterest    &lt;- length(DEgenes) - DE.Interest
+  NonDE.NotInterest &lt;- length(NonDEGenes) - NonDE.Interest
+  
+  ContingencyTable &lt;- matrix(c(DE.Interest,
+                               NonDE.Interest,
+                               DE.NotInterest,
+                               NonDE.NotInterest),
+                             nrow=2,
+                             ncol=2,
+                             byrow=TRUE)
+  colnames(ContingencyTable) &lt;- c(&quot;DE Genes&quot;,&quot;Non DE Genes&quot;)
+  rownames(ContingencyTable) &lt;- c(&quot;Genes of Interest&quot;,&quot;Not Genes of Interest&quot;)
+  
+  #perform test
+  print(ContingencyTable)
+  print(fisher.test(ContingencyTable, alternative=&quot;greater&quot;))
+
+}
+
+genesetEnrich.data &lt;- function(InternalDataCutoff, InternalDataSource, ExternalDataSource, GenesOfInterest, DEgenes, NonDEGenes){
+  
+  #fill contingency table
+  DE.Interest       &lt;- length(intersect(GenesOfInterest, DEgenes))
+  NonDE.Interest    &lt;- length(intersect(GenesOfInterest, NonDEGenes))
+  DE.NotInterest    &lt;- length(DEgenes) - DE.Interest
+  NonDE.NotInterest &lt;- length(NonDEGenes) - NonDE.Interest
+  
+  ContingencyTable &lt;- matrix(c(DE.Interest,
+                               NonDE.Interest,
+                               DE.NotInterest,
+                               NonDE.NotInterest),
+                             nrow=2,
+                             ncol=2,
+                             byrow=TRUE)
+  colnames(ContingencyTable) &lt;- c(&quot;DE Genes&quot;,&quot;Non DE Genes&quot;)
+  rownames(ContingencyTable) &lt;- c(&quot;Genes of Interest&quot;,&quot;Not Genes of Interest&quot;)
+  
+  #perform test and output data
+  data &lt;- data.frame(&quot;Post.Prob.Cutoff&quot;=InternalDataCutoff,
+                     &quot;Source.DEGenes&quot;=InternalDataSource,
+                     &quot;Source.GenesOfInterest&quot;=ExternalDataSource,
+                     &quot;DE.Interest&quot;=DE.Interest,
+                     &quot;NonDE.Interest&quot;=NonDE.Interest,
+                     &quot;DE.NotInterest&quot;=DE.NotInterest,
+                     &quot;NonDE.NotInterest&quot;=NonDE.NotInterest,
+                     &quot;p.value&quot;=fisher.test(ContingencyTable, alternative=&quot;greater&quot;)$p.value,
+                     &quot;odds.ratio&quot;=fisher.test(ContingencyTable, alternative=&quot;greater&quot;)$estimate,
+                     row.names=NULL)
+  return(data)
+
+}</code></pre>
+<pre class="r"><code>#Load external datasets (manually currated from papers)
+gallegoromero2015    &lt;- read.csv(&quot;./data/external-gene-sets/GallegoRomero2015eLife.csv&quot;)
+blake2018            &lt;- read.csv(&quot;./data/external-gene-sets/Blake2018GenBio.csv&quot;)
+blake2020            &lt;- read.csv(&quot;./data/external-gene-sets/Blake2020GenRes.csv&quot;)
+gokhman2021          &lt;- read.csv(&quot;./data/external-gene-sets/Gokhman2021NatGen.csv&quot;)
+gokhman2020          &lt;- read.csv(&quot;./data/external-gene-sets/Gokhman2020NatComm.csv&quot;)
+gokhman2020.skeleton &lt;- read.csv(&quot;./data/external-gene-sets/Gokhman2020NatComm_skeleton.csv&quot;)
+hsu2019              &lt;- read.csv(&quot;./data/external-gene-sets/Hsu2019JBoneMinRes.csv&quot;)
+styrkarsdottir2019   &lt;- read.csv(&quot;./data/external-gene-sets/Styrkarsdottir2019NatComm.csv&quot;)
+yengo2018            &lt;- read.csv(&quot;./data/external-gene-sets/Yengo2018HumMolGen.csv&quot;)
+steinberg2020        &lt;- read.csv(&quot;./data/external-gene-sets/Steinberg2020biorxiv.csv&quot;)
+morris2019           &lt;- read.csv(&quot;./data/external-gene-sets/Morris2019NatGen.csv&quot;)
+#cibrianuhalte2017    &lt;- read.csv(&quot;./data/external-gene-sets/CibrianUhalte2017HumMolGen.csv&quot;)
+#tachmazidou2019      &lt;- read.csv(&quot;./data/external-gene-sets/Tachmazidou2019NatGen_AH.csv&quot;)</code></pre>
+</div>
+<div id="stages-of-differentiation-at-collection" class="section level2">
+<h2>Stages of Differentiation at Collection</h2>
+<pre class="r"><code>#load data
+cormotifData &lt;- readRDS(&quot;./data/cormotif-data/cormotif.cnts.pseudo-stage.data.filterC.log.indv-cell.intNo0.reg-tot.rds&quot;)
+
+#plot BIC/AIC comparisons
+plotIC(cormotifData)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#plot the probability that each motif is differentially expressed in each comparison
+HAtop &lt;- HeatmapAnnotation(Stage=c(&quot;Time 0&quot;,&quot;Time 1&quot;,&quot;Time 2&quot;),
+                           col=list(Stage=c(&quot;Time 0&quot;=&quot;pink&quot;,&quot;Time 1&quot;=&quot;mediumorchid&quot;,&quot;Time 2&quot;=&quot;dodgerblue&quot;)),
+                           gp=gpar(col=&quot;black&quot;),
+                           gap=unit(5,&quot;points&quot;),
+                           annotation_name_side=&quot;left&quot;)
+HAside = rowAnnotation(No.Genes=anno_barplot(floor(cormotifData$bestmotif$motif.p * nrow(cormotifData$bestmotif$p.post))),
+                       width=unit(3,&quot;cm&quot;),
+                       border=FALSE)
+Heatmap(cormotifData$bestmotif$motif.q,
+        col=gray(seq(from=1,to=0,by=-0.1)),
+        name=&quot;DE Prob.&quot;,
+        rect_gp=gpar(col=&quot;black&quot;,lwd=.3),
+        top_annotation=HAtop,
+        right_annotation=HAside,
+        column_title=&quot;Comparisons across Species&quot;,
+        row_title=&quot;Motif&quot;,
+        column_dend_reorder=FALSE,
+        row_dend_reorder=TRUE,
+        heatmap_legend_param=list(at=c(0,0.2,0.4,0.6,0.8,1)))</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Define different posterior probability thresholds (0.50, 0.60, 0.70, 0.75, 0.80, 0.85, 0.90, 0.925, 0.95, 0.975, 0.99).</p>
+<ul>
+<li>0.50 cutoff is used in Wei et al. 2015 and Blake et al. 2018</li>
+<li>0.95 is closer to an FDR &lt; 0.05</li>
+<li>0.99 is closer to an FDR &lt; 0.01</li>
+</ul>
+<pre class="r"><code>cutoffs &lt;- c(0.50, 0.60, 0.70, 0.75, 0.80, 0.85, 0.90, 0.925, 0.95, 0.975, 0.99)</code></pre>
+<pre class="r"><code>#obtain DE pattern at different posterior distribution cutoffs and reformat for plotting
+dataUpset &lt;- list()
+dataPlot &lt;- list()
+x=1
+
+while (x &lt;= length(cutoffs)) {
+  
+  dataUpsetTEMP &lt;- as.data.frame(cormotifData$bestmotif$p.post)
+  dataUpsetTEMP[dataUpsetTEMP&gt;cutoffs[x]] &lt;- 1
+  dataUpsetTEMP[dataUpsetTEMP&lt;=cutoffs[x]] &lt;- 0
+  dataUpset[[x]] &lt;- dataUpsetTEMP
+  
+  dataPlotTEMP &lt;- data.frame(&quot;cell.subset&quot;=c(rep(&quot;Time.0&quot;,length(which(dataUpsetTEMP$Time.0==1))),
+                                             rep(&quot;Time.1&quot;,length(which(dataUpsetTEMP$Time.1==1))),
+                                             rep(&quot;Time.2&quot;,length(which(dataUpsetTEMP$Time.2==1)))),
+                             &quot;gene&quot;=c(rownames(dataUpsetTEMP)[which(dataUpsetTEMP$Time.0==1)],
+                                      rownames(dataUpsetTEMP)[which(dataUpsetTEMP$Time.1==1)],
+                                      rownames(dataUpsetTEMP)[which(dataUpsetTEMP$Time.2==1)]),
+                             &quot;post.p&quot;=c(cormotifData$bestmotif$p.post[which(dataUpsetTEMP$Time.0==1),&quot;Time.0&quot;],
+                                        cormotifData$bestmotif$p.post[which(dataUpsetTEMP$Time.1==1),&quot;Time.1&quot;],
+                                        cormotifData$bestmotif$p.post[which(dataUpsetTEMP$Time.2==1),&quot;Time.2&quot;]),
+                             row.names=NULL)
+  dataPlotTEMP$cell.subset &lt;- factor(dataPlotTEMP$cell.subset,
+                                     levels=c(&quot;Time.0&quot;,&quot;Time.1&quot;,&quot;Time.2&quot;),
+                                     labels=c(&quot;Time 0&quot;,&quot;Time 1&quot;,&quot;Time 2&quot;))
+  dataPlot[[x]] &lt;- dataPlotTEMP
+  
+  x=x+1
+  
+}</code></pre>
+<p>Plot number of DE genes for each cutoff.</p>
+<pre class="r"><code>x=1
+
+while (x &lt;= length(cutoffs)) {
+  
+  #cutoff
+  print(paste0(&quot;Posterior Probability Cutoff: &quot;,cutoffs[x]))
+
+  #number of DE genes
+  print(ggplot(dataPlot[[x]], aes(x=cell.subset, fill=cell.subset)) +
+          geom_bar() +
+          ylab(&#39;Number of DE Genes&#39;) +
+          xlab(&#39;&#39;) +
+          scale_fill_manual(name=&quot;Stage&quot;,
+                            values=c(&quot;pink&quot;,&quot;mediumorchid&quot;,&quot;dodgerblue&quot;)) +
+          theme_classic() +
+          theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10)))
+  
+  #total number of DE genes identified
+  print(table(dataPlot[[x]]$cell.subset))
+  
+  #make upset plot of DE genes
+  print(upset(dataUpset[[x]],
+              keep.order=TRUE,
+              empty.intersections=&quot;on&quot;,
+              intersections=list(list(&quot;Time.0&quot;),
+                                 list(&quot;Time.1&quot;),
+                                 list(&quot;Time.2&quot;),
+                                 list(&quot;Time.0&quot;,&quot;Time.1&quot;),
+                                 list(&quot;Time.1&quot;,&quot;Time.2&quot;),
+                                 list(&quot;Time.0&quot;,&quot;Time.2&quot;),
+                                 list(&quot;Time.0&quot;,&quot;Time.1&quot;,&quot;Time.2&quot;)),
+              text.scale=2))
+
+  x=x+1
+  
+}</code></pre>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.5&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+Time 0 Time 1 Time 2 
+  8070   5135   4813 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.6&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+Time 0 Time 1 Time 2 
+  7396   4699   4381 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.7&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-5.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+Time 0 Time 1 Time 2 
+  6529   4261   3868 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-6.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.75&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-7.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+Time 0 Time 1 Time 2 
+  6087   4035   3587 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-8.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.8&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-9.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+Time 0 Time 1 Time 2 
+  5666   3791   3349 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-10.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.85&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-11.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+Time 0 Time 1 Time 2 
+  5197   3512   3052 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-12.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.9&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-13.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+Time 0 Time 1 Time 2 
+  4696   3175   2665 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-14.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.925&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-15.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+Time 0 Time 1 Time 2 
+  4362   2951   2460 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-16.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.95&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-17.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+Time 0 Time 1 Time 2 
+  3958   2695   2200 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-18.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.975&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-19.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+Time 0 Time 1 Time 2 
+  3374   2306   1792 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-20.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.99&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-21.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+Time 0 Time 1 Time 2 
+  2731   1889   1345 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-7-22.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Test for significant enrichment of external gene sets in DE gene sets using Fisher’s exact test. Make enrichment plot:</p>
+<pre class="r"><code>#Enrichment of external gene sets in DE gene sets
+
+listsExternal &lt;- list(
+
+  list(&quot;Blake2018-DE.iPSCs-Unique&quot;,blake2018$gene[which(blake2018$DE.Day0==1 &amp;
+                                                        blake2018$DE.Day1==0 &amp;
+                                                                blake2018$DE.Day2==0 &amp;
+                                                                blake2018$DE.Day3==0)]),              #iPSCs-Unique
+  list(&quot;Blake2018-DE.iPSC-endoderm-day1-Unique&quot;,blake2018$gene[which(blake2018$DE.Day0==0 &amp;
+                                                                     blake2018$DE.Day1==1 &amp;
+                                                                             blake2018$DE.Day2==0 &amp;
+                                                                           blake2018$DE.Day3==0)]), #iPSC-endoderm day1-Unique
+  list(&quot;Blake2018-DE.iPSC-endoderm-day2-Unique&quot;,blake2018$gene[which(blake2018$DE.Day0==0 &amp;
+                                                                     blake2018$DE.Day1==0 &amp;
+                                                                             blake2018$DE.Day2==1 &amp;
+                                                                           blake2018$DE.Day3==0)]), #iPSC-endoderm day2-Unique
+  list(&quot;Blake2018-DE.iPSC-endoderm-day3-Unique&quot;,blake2018$gene[which(blake2018$DE.Day0==0 &amp;
+                                                                     blake2018$DE.Day1==0 &amp;
+                                                                             blake2018$DE.Day2==0 &amp;
+                                                                           blake2018$DE.Day3==1)]), #iPSC-endoderm day3-Unique
+
+  list(&quot;Blake2020-DE.heart-Unique&quot;,blake2020$gene[which(blake2020$DE.HvC_Heart==1 &amp;
+                                                        blake2020$DE.HvC_Kidney==0 &amp;
+                                                        blake2020$DE.HvC_Liver==0 &amp;
+                                                        blake2020$DE.HvC_Lung==0)]),   #heart-Unique
+  list(&quot;Blake2020-DE.kidney-Unique&quot;,blake2020$gene[which(blake2020$DE.HvC_Heart==0 &amp;
+                                                         blake2020$DE.HvC_Kidney==1 &amp;
+                                                         blake2020$DE.HvC_Liver==0 &amp;
+                                                         blake2020$DE.HvC_Lung==0)]), #kidney-Unique
+  list(&quot;Blake2020-DE.liver-Unique&quot;,blake2020$gene[which(blake2020$DE.HvC_Heart==0 &amp;
+                                                        blake2020$DE.HvC_Kidney==0 &amp;
+                                                        blake2020$DE.HvC_Liver==1 &amp;
+                                                        blake2020$DE.HvC_Lung==0)]),   #liver-Unique
+  list(&quot;Blake2020-DE.lung-Unique&quot;,blake2020$gene[which(blake2020$DE.HvC_Heart==0 &amp;
+                                                       blake2020$DE.HvC_Kidney==0 &amp;
+                                                       blake2020$DE.HvC_Liver==0 &amp;
+                                                       blake2020$DE.HvC_Lung==1)]),     #lung-Unique
+
+  list(&quot;Gokhman2021-DE.Parental.iPSCs-Unique&quot;,gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==1 &amp;
+                                                                            gokhman2021$DE.Parental.CNCCs==0)]), #parental.iPSCs-Unique
+  list(&quot;Gokhman2021-DE.Hybrid.iPSCs-Unique&quot;,  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==1 &amp;
+                                                                            gokhman2021$DE.Hybrid.CNCCs==0)]),   #hybrid.iPSCs-Unique
+  list(&quot;Gokhman2021-DE.Parental.CNCCs-Unique&quot;,gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==0 &amp;
+                                                                            gokhman2021$DE.Parental.CNCCs==1)]), #parental.CNCCs-Unique
+  list(&quot;Gokhman2021-DE.Hybrid.CNCCs-Unique&quot;,  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==0 &amp;
+                                                                            gokhman2021$DE.Hybrid.CNCCs==1)]),   #hybrid.CNCCs-Unique
+  
+  list(&quot;Gokhman2020-DMR.bone&quot;,gokhman2020$Gene[which(gokhman2020$Chimp.DMR.Promotor==1 |
+                                                     gokhman2020$Human.DMR.Promotor==1)]), #all human-chimp DMRs
+
+  list(&quot;Hsu2019-GWAS.hip.geometry&quot;,hsu2019$Nearby.gene[which(hsu2019$GWAS.hip.geometry==1)]),                             #hip geometry GWAS
+  list(&quot;Styrkarsdottir2019-GWAS.bone.area&quot;,styrkarsdottir2019$Closest.Gene[which(styrkarsdottir2019$GWAS.bone.area==1)]), #bone area GWAS
+  list(&quot;Yengo2018-GWAS.height&quot;,yengo2018$gene[which(yengo2018$GWAS.Height==1)]),                                          #height GWAS
+
+  list(&quot;Steinberg2020-GWAS.OA&quot;,steinberg2020$GeneName[which(steinberg2020$OA.omics==1)]), #OA GWAS
+  list(&quot;Morris2020-GWAS.OP&quot;,morris2019$unique.gene[which(morris2019$GWAS.BMD==1)])        #OP GWAS
+
+)
+
+DEenrich &lt;- data.frame(&quot;Post.Prob.Cutoff&quot;=double(),
+                       &quot;Source.DEGenes&quot;=character(),
+                       &quot;Source.GenesOfInterest&quot;=character(),
+                       &quot;DE.Interest&quot;=integer(),
+                       &quot;NonDE.Interest&quot;=integer(),
+                       &quot;DE.NotInterest&quot;=integer(),
+                       &quot;NonDE.NotInterest&quot;=integer(),
+                       &quot;p.value&quot;=double(),
+                       &quot;odds.ratio&quot;=double())
+x=1
+
+while (x &lt;= length(cutoffs)) {
+  
+  for (genesExternal in listsExternal) {
+  
+    #Shared across All Stages
+    tempDE &lt;- rownames(dataUpset[[x]])[which(dataUpset[[x]]$Time.0==1 &amp;
+                                             dataUpset[[x]]$Time.1==1 &amp;
+                                             dataUpset[[x]]$Time.2==1)]
+    nonDEgenes &lt;- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich &lt;- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource=&quot;Shared in All&quot;,
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+  
+    #Shared across Time 0 &amp; Time 1
+    tempDE &lt;- rownames(dataUpset[[x]])[which(dataUpset[[x]]$Time.0==1 &amp;
+                                             dataUpset[[x]]$Time.1==1 &amp;
+                                             dataUpset[[x]]$Time.2==0)]
+    nonDEgenes &lt;- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich &lt;- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource=&quot;Shared in Time 0 &amp; Time 1&quot;,
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+  
+    #Shared across Time 1 &amp; Time 2
+    tempDE &lt;- rownames(dataUpset[[x]])[which(dataUpset[[x]]$Time.0==0 &amp;
+                                             dataUpset[[x]]$Time.1==1 &amp;
+                                             dataUpset[[x]]$Time.2==1)]
+    nonDEgenes &lt;- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich &lt;- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource=&quot;Shared in Time 1 &amp; Time 2&quot;,
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to Time 0
+    tempDE &lt;- rownames(dataUpset[[x]])[which(dataUpset[[x]]$Time.0==1 &amp;
+                                             dataUpset[[x]]$Time.1==0 &amp;
+                                             dataUpset[[x]]$Time.2==0)]
+    nonDEgenes &lt;- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich &lt;- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource=&quot;Unique to Time 0&quot;,
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+  
+    #Unique to Time 1
+    tempDE &lt;- rownames(dataUpset[[x]])[which(dataUpset[[x]]$Time.0==0 &amp;
+                                             dataUpset[[x]]$Time.1==1 &amp;
+                                             dataUpset[[x]]$Time.2==0)]
+    nonDEgenes &lt;- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich &lt;- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource=&quot;Unique to Time 1&quot;,
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+  
+    #Unique to Time 2
+    tempDE &lt;- rownames(dataUpset[[x]])[which(dataUpset[[x]]$Time.0==0 &amp;
+                                             dataUpset[[x]]$Time.1==0 &amp;
+                                             dataUpset[[x]]$Time.2==1)]
+    nonDEgenes &lt;- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich &lt;- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource=&quot;Unique to Time 2&quot;,
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+  }
+  x=x+1
+  
+}
+
+#Reformat Data
+DEenrich$Source.DEGenes &lt;- as.factor(DEenrich$Source.DEGenes)
+DEenrich$Source.GenesOfInterest &lt;- as.factor(DEenrich$Source.GenesOfInterest)
+
+#Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
+DEenrich$GeneRatio &lt;- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
+
+#Add p-value color variable
+DEenrich$p.value.color &lt;- &quot;nonsignificant&quot;
+DEenrich$p.value.color[which(DEenrich$p.value&lt;0.05)] &lt;- &quot;significant&quot;
+DEenrich$p.value.color &lt;- as.factor(DEenrich$p.value.color)</code></pre>
+<p>Check how the gene ratio and p value change across posterior probability cutoffs for different external gene datasets.</p>
+<pre class="r"><code>#aiming for a cutoff at which only Unique to Time 0 are enriched
+tempSource &lt;- c(&quot;Blake2018-DE.iPSCs-Unique&quot;,
+                &quot;Gokhman2021-DE.Parental.iPSCs-Unique&quot;,
+                &quot;Gokhman2021-DE.Hybrid.iPSCs-Unique&quot;)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name=&quot;P-Value&quot;,
+                    values=c(&quot;black&quot;,&quot;red&quot;)) +
+  geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-9-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#aiming for a cutoff which minimizes enrichments across cell types
+tempSource &lt;- c(&quot;Blake2018-DE.iPSC-endoderm-day1-Unique&quot;,
+                &quot;Blake2018-DE.iPSC-endoderm-day2-Unique&quot;,
+                &quot;Blake2018-DE.iPSC-endoderm-day3-Unique&quot;,
+                &quot;Blake2020-DE.heart-Unique&quot;,
+                &quot;Blake2020-DE.kidney-Unique&quot;,
+                &quot;Blake2020-DE.liver-Unique&quot;,
+                &quot;Blake2020-DE.lung-Unique&quot;)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name=&quot;P-Value&quot;,
+                    values=c(&quot;black&quot;,&quot;red&quot;)) +
+  geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-9-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-9-5.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-9-6.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#no prior expectations
+tempSource &lt;- c(&quot;Gokhman2021-DE.Parental.CNCCs-Unique&quot;,
+                &quot;Gokhman2021-DE.Hybrid.CNCCs-Unique&quot;,
+                &quot;Gokhman2020-DMR.bone&quot;,
+                &quot;Hsu2019-GWAS.hip.geometry&quot;,
+                &quot;Styrkarsdottir2019-GWAS.bone.area&quot;,
+                &quot;Yengo2018-GWAS.height&quot;,
+                &quot;Steinberg2020-GWAS.OA&quot;,
+                &quot;Morris2020-GWAS.OP&quot;)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name=&quot;P-Value&quot;,
+                    values=c(&quot;black&quot;,&quot;red&quot;)) +
+  geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-9-7.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-9-8.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-9-9.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="osteogenic-ad-hoc-classification-of-cells-scaled-integrated-data-thresh0-4gene-flexible" class="section level2">
+<h2>Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene flexible)</h2>
+<p>Note: Too few DE genes shared across pre+obl+emb+min and obl+emb+min, so these were not examined further. Instead, DE genes shared across obl+emb+min+mat and emb+min+mat were considered.</p>
+<pre class="r"><code>#load data
+cormotifData &lt;- readRDS(&quot;./data/cormotif-data/cormotif.cnts.pseudo-ostadhoc4gene.data.filterC.log.indv-cell.intNo0.reg-tot.rds&quot;)
+
+#plot BIC/AIC comparisons
+plotIC(cormotifData)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#plot the probability that each motif is differentially expressed in each comparison
+HAtop &lt;- HeatmapAnnotation(AdHoc=c(&quot;preosteoblast&quot;,&quot;osteoblast&quot;,&quot;embedding.osteoblast&quot;,&quot;mineralizing.osteoblast&quot;,&quot;maturing.osteocyte&quot;),
+                           col=list(AdHoc=c(&quot;preosteoblast&quot;=&quot;lightblue1&quot;,
+                                            &quot;osteoblast&quot;=&quot;deepskyblue&quot;,
+                                            &quot;embedding.osteoblast&quot;=&quot;dodgerblue2&quot;,
+                                            &quot;mineralizing.osteoblast&quot;=&quot;royalblue3&quot;,
+                                            &quot;maturing.osteocyte&quot;=&quot;royalblue4&quot;)),
+                           gp=gpar(col=&quot;black&quot;),
+                           gap=unit(5,&quot;points&quot;),
+                           annotation_name_side=&quot;left&quot;)
+HAside = rowAnnotation(No.Genes=anno_barplot(floor(cormotifData$bestmotif$motif.p * nrow(cormotifData$bestmotif$p.post))),
+                       width=unit(3,&quot;cm&quot;),
+                       border=FALSE)
+Heatmap(cormotifData$bestmotif$motif.q,
+        col=gray(seq(from=1,to=0,by=-0.1)),
+        name=&quot;DE Prob.&quot;,
+        rect_gp=gpar(col=&quot;black&quot;,lwd=.3),
+        top_annotation=HAtop,
+        right_annotation=HAside,
+        column_title=&quot;Comparisons across Osteogenic Ad Hoc&quot;,
+        row_title=&quot;Motif&quot;,
+        column_dend_reorder=FALSE,
+        row_dend_reorder=TRUE,
+        heatmap_legend_param=list(at=c(0,0.2,0.4,0.6,0.8,1)))</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-10-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Define different posterior probability thresholds (0.50, 0.60, 0.70, 0.75, 0.80, 0.85, 0.90, 0.925, 0.95, 0.975, 0.99).</p>
+<ul>
+<li>0.50 cutoff is used in Wei et al. 2015 and Blake et al. 2018</li>
+<li>0.95 is closer to an FDR &lt; 0.05</li>
+<li>0.99 is closer to an FDR &lt; 0.01</li>
+</ul>
+<pre class="r"><code>cutoffs &lt;- c(0.50, 0.60, 0.70, 0.75, 0.80, 0.85, 0.90, 0.925, 0.95, 0.975, 0.99)</code></pre>
+<pre class="r"><code>#obtain DE pattern at different posterior distribution cutoffs and reformat for plotting
+dataUpset &lt;- list()
+dataPlot &lt;- list()
+x=1
+
+while (x &lt;= length(cutoffs)) {
+  
+  dataUpsetTEMP &lt;- as.data.frame(cormotifData$bestmotif$p.post)
+  dataUpsetTEMP[dataUpsetTEMP&gt;cutoffs[x]] &lt;- 1
+  dataUpsetTEMP[dataUpsetTEMP&lt;=cutoffs[x]] &lt;- 0
+  dataUpset[[x]] &lt;- dataUpsetTEMP
+
+  dataPlotTEMP &lt;- data.frame(&quot;cell.subset&quot;=c(rep(&quot;preosteoblast&quot;,length(which(dataUpsetTEMP$preosteoblast==1))),
+                                             rep(&quot;osteoblast&quot;,length(which(dataUpsetTEMP$osteoblast==1))),
+                                             rep(&quot;embedding.osteoblast&quot;,length(which(dataUpsetTEMP$embedding.osteoblast==1))),
+                                             rep(&quot;mineralizing.osteoblast&quot;,length(which(dataUpsetTEMP$mineralizing.osteoblast==1))),
+                                             rep(&quot;maturing.osteocyte&quot;,length(which(dataUpsetTEMP$maturing.osteocyte==1)))),
+                             &quot;gene&quot;=c(rownames(dataUpsetTEMP)[which(dataUpsetTEMP$preosteoblast==1)],
+                                      rownames(dataUpsetTEMP)[which(dataUpsetTEMP$osteoblast==1)],
+                                      rownames(dataUpsetTEMP)[which(dataUpsetTEMP$embedding.osteoblast==1)],
+                                      rownames(dataUpsetTEMP)[which(dataUpsetTEMP$mineralizing.osteoblast==1)],
+                                      rownames(dataUpsetTEMP)[which(dataUpsetTEMP$maturing.osteocyte==1)]),
+                             &quot;post.p&quot;=c(cormotifData$bestmotif$p.post[which(dataUpsetTEMP$preosteoblast==1),&quot;preosteoblast&quot;],
+                                        cormotifData$bestmotif$p.post[which(dataUpsetTEMP$osteoblast==1),&quot;osteoblast&quot;],
+                                        cormotifData$bestmotif$p.post[which(dataUpsetTEMP$embedding.osteoblast==1),&quot;embedding.osteoblast&quot;],
+                                        cormotifData$bestmotif$p.post[which(dataUpsetTEMP$mineralizing.osteoblast==1),&quot;mineralizing.osteoblast&quot;],
+                                        cormotifData$bestmotif$p.post[which(dataUpsetTEMP$maturing.osteocyte==1),&quot;maturing.osteocyte&quot;]),
+                             row.names=NULL)
+  dataPlotTEMP$cell.subset &lt;- factor(dataPlotTEMP$cell.subset,
+                                     levels=c(&quot;preosteoblast&quot;,&quot;osteoblast&quot;,&quot;embedding.osteoblast&quot;,&quot;mineralizing.osteoblast&quot;,&quot;maturing.osteocyte&quot;),
+                                     labels=c(&quot;preosteoblast&quot;,&quot;osteoblast&quot;,&quot;embedding\nosteoblast&quot;,&quot;mineralizing\nosteoblast&quot;,&quot;maturing\nosteocyte&quot;))
+  dataPlot[[x]] &lt;- dataPlotTEMP
+  
+  x=x+1
+  
+}</code></pre>
+<p>Plot number of DE genes for each cutoff.</p>
+<pre class="r"><code>x=1
+
+while (x &lt;= length(cutoffs)) {
+  
+  #cutoff
+  print(paste0(&quot;Posterior Probability Cutoff: &quot;,cutoffs[x]))
+
+  #number of DE genes
+  print(ggplot(dataPlot[[x]], aes(x=cell.subset, fill=cell.subset)) +
+          geom_bar() +
+          ylab(&#39;Number of DE Genes&#39;) +
+          xlab(&#39;&#39;) +
+          scale_fill_manual(name=&quot;Osteogenic Stage&quot;,
+                            labels=c(&quot;preosteoblast&quot;,&quot;osteoblast&quot;,&quot;embedding osteoblast&quot;,&quot;mineralizing osteoblast&quot;,&quot;maturing osteocyte&quot;),
+                            values=c(&quot;lightblue1&quot;,&quot;deepskyblue&quot;,&quot;dodgerblue2&quot;,&quot;royalblue3&quot;,&quot;royalblue4&quot;)) +
+          theme_classic() +
+          theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10)))
+  
+  #total number of DE genes identified
+  print(table(dataPlot[[x]]$cell.subset))
+  
+  #make upset plot of DE genes
+  print(upset(dataUpset[[x]],
+          text.scale=2))
+
+  x=x+1
+  
+}</code></pre>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.5&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    3554                     3554                     3555 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    3557                     3554 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.6&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    3426                     3424                     3427 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    3428                     3428 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.7&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-5.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    3266                     3268                     3266 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    3272                     3265 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-6.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.75&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-7.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    3183                     3181                     3182 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    3187                     3181 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-8.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.8&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-9.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    3110                     3111                     3111 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    3113                     3111 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-10.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.85&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-11.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    2985                     2987                     2983 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    2990                     2986 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-12.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.9&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-13.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    2847                     2846                     2845 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    2849                     2845 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-14.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.925&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-15.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    2767                     2767                     2768 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    2771                     2766 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-16.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.95&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-17.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    2654                     2657                     2654 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    2664                     2654 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-18.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.975&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-19.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    2473                     2478                     2478 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    2487                     2477 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-20.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.99&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-21.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    2247                     2246                     2247 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    2262                     2243 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-13-22.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Test for significant enrichment of external gene sets in DE gene sets using Fisher’s exact test. Make enrichment plot:</p>
+<pre class="r"><code>#Enrichment of external gene sets in DE gene sets
+
+listsExternal &lt;- list(
+
+  list(&quot;Blake2018-DE.iPSCs-Unique&quot;,blake2018$gene[which(blake2018$DE.Day0==1 &amp;
+                                                        blake2018$DE.Day1==0 &amp;
+                                                                blake2018$DE.Day2==0 &amp;
+                                                                blake2018$DE.Day3==0)]),              #iPSCs-Unique
+  list(&quot;Blake2018-DE.iPSC-endoderm-day1-Unique&quot;,blake2018$gene[which(blake2018$DE.Day0==0 &amp;
+                                                                     blake2018$DE.Day1==1 &amp;
+                                                                             blake2018$DE.Day2==0 &amp;
+                                                                           blake2018$DE.Day3==0)]), #iPSC-endoderm day1-Unique
+  list(&quot;Blake2018-DE.iPSC-endoderm-day2-Unique&quot;,blake2018$gene[which(blake2018$DE.Day0==0 &amp;
+                                                                     blake2018$DE.Day1==0 &amp;
+                                                                             blake2018$DE.Day2==1 &amp;
+                                                                           blake2018$DE.Day3==0)]), #iPSC-endoderm day2-Unique
+  list(&quot;Blake2018-DE.iPSC-endoderm-day3-Unique&quot;,blake2018$gene[which(blake2018$DE.Day0==0 &amp;
+                                                                     blake2018$DE.Day1==0 &amp;
+                                                                             blake2018$DE.Day2==0 &amp;
+                                                                           blake2018$DE.Day3==1)]), #iPSC-endoderm day3-Unique
+
+  list(&quot;Blake2020-DE.heart-Unique&quot;,blake2020$gene[which(blake2020$DE.HvC_Heart==1 &amp;
+                                                        blake2020$DE.HvC_Kidney==0 &amp;
+                                                        blake2020$DE.HvC_Liver==0 &amp;
+                                                        blake2020$DE.HvC_Lung==0)]),   #heart-Unique
+  list(&quot;Blake2020-DE.kidney-Unique&quot;,blake2020$gene[which(blake2020$DE.HvC_Heart==0 &amp;
+                                                         blake2020$DE.HvC_Kidney==1 &amp;
+                                                         blake2020$DE.HvC_Liver==0 &amp;
+                                                         blake2020$DE.HvC_Lung==0)]), #kidney-Unique
+  list(&quot;Blake2020-DE.liver-Unique&quot;,blake2020$gene[which(blake2020$DE.HvC_Heart==0 &amp;
+                                                        blake2020$DE.HvC_Kidney==0 &amp;
+                                                        blake2020$DE.HvC_Liver==1 &amp;
+                                                        blake2020$DE.HvC_Lung==0)]),   #liver-Unique
+  list(&quot;Blake2020-DE.lung-Unique&quot;,blake2020$gene[which(blake2020$DE.HvC_Heart==0 &amp;
+                                                       blake2020$DE.HvC_Kidney==0 &amp;
+                                                       blake2020$DE.HvC_Liver==0 &amp;
+                                                       blake2020$DE.HvC_Lung==1)]),     #lung-Unique
+
+  list(&quot;Gokhman2021-DE.Parental.iPSCs-Unique&quot;,gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==1 &amp;
+                                                                            gokhman2021$DE.Parental.CNCCs==0)]), #parental.iPSCs-Unique
+  list(&quot;Gokhman2021-DE.Hybrid.iPSCs-Unique&quot;,  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==1 &amp;
+                                                                            gokhman2021$DE.Hybrid.CNCCs==0)]),   #hybrid.iPSCs-Unique
+  list(&quot;Gokhman2021-DE.Parental.CNCCs-Unique&quot;,gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==0 &amp;
+                                                                            gokhman2021$DE.Parental.CNCCs==1)]), #parental.CNCCs-Unique
+  list(&quot;Gokhman2021-DE.Hybrid.CNCCs-Unique&quot;,  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==0 &amp;
+                                                                            gokhman2021$DE.Hybrid.CNCCs==1)]),   #hybrid.CNCCs-Unique
+  
+  list(&quot;Gokhman2020-DMR.bone&quot;,gokhman2020$Gene[which(gokhman2020$Chimp.DMR.Promotor==1 |
+                                                     gokhman2020$Human.DMR.Promotor==1)]), #all human-chimp DMRs
+
+  list(&quot;Hsu2019-GWAS.hip.geometry&quot;,hsu2019$Nearby.gene[which(hsu2019$GWAS.hip.geometry==1)]),                             #hip geometry GWAS
+  list(&quot;Styrkarsdottir2019-GWAS.bone.area&quot;,styrkarsdottir2019$Closest.Gene[which(styrkarsdottir2019$GWAS.bone.area==1)]), #bone area GWAS
+  list(&quot;Yengo2018-GWAS.height&quot;,yengo2018$gene[which(yengo2018$GWAS.Height==1)]),                                          #height GWAS
+
+  list(&quot;Steinberg2020-GWAS.OA&quot;,steinberg2020$GeneName[which(steinberg2020$OA.omics==1)]), #OA GWAS
+  list(&quot;Morris2020-GWAS.OP&quot;,morris2019$unique.gene[which(morris2019$GWAS.BMD==1)])        #OP GWAS
+
+)
+
+DEenrich &lt;- data.frame(&quot;Post.Prob.Cutoff&quot;=double(),
+                       &quot;Source.DEGenes&quot;=character(),
+                       &quot;Source.GenesOfInterest&quot;=character(),
+                       &quot;DE.Interest&quot;=integer(),
+                       &quot;NonDE.Interest&quot;=integer(),
+                       &quot;DE.NotInterest&quot;=integer(),
+                       &quot;NonDE.NotInterest&quot;=integer(),
+                       &quot;p.value&quot;=double(),
+                       &quot;odds.ratio&quot;=double())
+x=1
+
+while (x &lt;= length(cutoffs)) {
+  
+  for (genesExternal in listsExternal) {
+
+    #Shared across all ostadhoc classifications
+    tempDE &lt;- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==1 &amp;
+                                             dataUpset[[x]]$osteoblast==1 &amp;
+                                             dataUpset[[x]]$embedding.osteoblast==1 &amp;
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &amp;
+                                             dataUpset[[x]]$maturing.osteocyte==1)]
+    nonDEgenes &lt;- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich &lt;- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource=&quot;Shared in All&quot;,
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared across pre+obl+emb+min
+    tempDE &lt;- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==1 &amp;
+                                             dataUpset[[x]]$osteoblast==1 &amp;
+                                             dataUpset[[x]]$embedding.osteoblast==1 &amp;
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &amp;
+                                             dataUpset[[x]]$maturing.osteocyte==0)]
+    nonDEgenes &lt;- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich &lt;- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource=&quot;Shared in Pre/Obl/Emb/Min&quot;,
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared across obl+emb+min+mat
+    tempDE &lt;- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &amp;
+                                             dataUpset[[x]]$osteoblast==1 &amp;
+                                             dataUpset[[x]]$embedding.osteoblast==1 &amp;
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &amp;
+                                             dataUpset[[x]]$maturing.osteocyte==1)]
+    nonDEgenes &lt;- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich &lt;- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource=&quot;Shared in Obl/Emb/Min/Mat&quot;,
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared across emb+min+mat
+    tempDE &lt;- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &amp;
+                                             dataUpset[[x]]$osteoblast==0 &amp;
+                                             dataUpset[[x]]$embedding.osteoblast==1 &amp;
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &amp;
+                                             dataUpset[[x]]$maturing.osteocyte==1)]
+    nonDEgenes &lt;- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich &lt;- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource=&quot;Shared in Emb/Min/Mat&quot;,
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared across emb+min
+    tempDE &lt;- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &amp;
+                                             dataUpset[[x]]$osteoblast==0 &amp;
+                                             dataUpset[[x]]$embedding.osteoblast==1 &amp;
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &amp;
+                                             dataUpset[[x]]$maturing.osteocyte==0)]
+    nonDEgenes &lt;- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich &lt;- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource=&quot;Shared in Emb/Min&quot;,
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to embedding osteoblasts
+    tempDE &lt;- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &amp;
+                                             dataUpset[[x]]$osteoblast==0 &amp;
+                                             dataUpset[[x]]$embedding.osteoblast==1 &amp;
+                                             dataUpset[[x]]$mineralizing.osteoblast==0 &amp;
+                                             dataUpset[[x]]$maturing.osteocyte==0)]
+    nonDEgenes &lt;- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich &lt;- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource=&quot;Unique to Emb&quot;,
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to mineralizing osteoblasts
+    tempDE &lt;- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &amp;
+                                             dataUpset[[x]]$osteoblast==0 &amp;
+                                             dataUpset[[x]]$embedding.osteoblast==0 &amp;
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &amp;
+                                             dataUpset[[x]]$maturing.osteocyte==0)]
+    nonDEgenes &lt;- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich &lt;- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource=&quot;Unique to Min&quot;,
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+  }
+  
+  x=x+1
+  
+}
+
+#Reformat Data
+DEenrich$Source.DEGenes &lt;- as.factor(DEenrich$Source.DEGenes)
+DEenrich$Source.GenesOfInterest &lt;- as.factor(DEenrich$Source.GenesOfInterest)
+
+#Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
+DEenrich$GeneRatio &lt;- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
+
+#Add p-value color variable
+DEenrich$p.value.color &lt;- &quot;nonsignificant&quot;
+DEenrich$p.value.color[which(DEenrich$p.value&lt;0.05)] &lt;- &quot;significant&quot;
+DEenrich$p.value.color &lt;- as.factor(DEenrich$p.value.color)</code></pre>
+<p>Check how the gene ratio and p value change across posterior probability cutoffs for different external gene datasets.</p>
+<pre class="r"><code>#aiming for a cutoff which minimizes enrichments across cell types
+tempSource &lt;- c(&quot;Blake2018-DE.iPSCs-Unique&quot;,
+                &quot;Gokhman2021-DE.Parental.iPSCs-Unique&quot;,
+                &quot;Gokhman2021-DE.Hybrid.iPSCs-Unique&quot;)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name=&quot;P-Value&quot;,
+                    values=c(&quot;black&quot;,&quot;red&quot;)) +
+  geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-15-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-15-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#aiming for a cutoff which minimizes enrichments across cell types
+tempSource &lt;- c(&quot;Blake2018-DE.iPSC-endoderm-day1-Unique&quot;,
+                &quot;Blake2018-DE.iPSC-endoderm-day2-Unique&quot;,
+                &quot;Blake2018-DE.iPSC-endoderm-day3-Unique&quot;,
+                &quot;Blake2020-DE.heart-Unique&quot;,
+                &quot;Blake2020-DE.kidney-Unique&quot;,
+                &quot;Blake2020-DE.liver-Unique&quot;,
+                &quot;Blake2020-DE.lung-Unique&quot;)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name=&quot;P-Value&quot;,
+                    values=c(&quot;black&quot;,&quot;red&quot;)) +
+  geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-15-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-15-5.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-15-6.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#no prior expectations
+tempSource &lt;- c(&quot;Gokhman2021-DE.Parental.CNCCs-Unique&quot;,
+                &quot;Gokhman2021-DE.Hybrid.CNCCs-Unique&quot;,
+                &quot;Gokhman2020-DMR.bone&quot;,
+                &quot;Hsu2019-GWAS.hip.geometry&quot;,
+                &quot;Styrkarsdottir2019-GWAS.bone.area&quot;,
+                &quot;Yengo2018-GWAS.height&quot;,
+                &quot;Steinberg2020-GWAS.OA&quot;,
+                &quot;Morris2020-GWAS.OP&quot;)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name=&quot;P-Value&quot;,
+                    values=c(&quot;black&quot;,&quot;red&quot;)) +
+  geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-15-7.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-15-8.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-15-9.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="osteogenic-ad-hoc-classification-of-cells-scaled-integrated-data-thresh0-4gene-flexible-time-2-only" class="section level2">
+<h2>Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene flexible, Time 2 only)</h2>
+<p>Note: Too few DE genes shared across obl+emb+min+mat, so these were not examined further. Instead, DE genes shared across pre+obl+emb+min+mat and unique to min were considered.</p>
+<pre class="r"><code>#load data
+cormotifData &lt;- readRDS(&quot;./data/cormotif-data/cormotif.cnts.pseudo-ostadhoc4gene.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds&quot;)
+
+#plot BIC/AIC comparisons
+plotIC(cormotifData)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#plot the probability that each motif is differentially expressed in each comparison
+HAtop &lt;- HeatmapAnnotation(AdHoc=c(&quot;preosteoblast&quot;,&quot;osteoblast&quot;,&quot;embedding.osteoblast&quot;,&quot;mineralizing.osteoblast&quot;,&quot;maturing.osteocyte&quot;),
+                           col=list(AdHoc=c(&quot;preosteoblast&quot;=&quot;lightblue1&quot;,
+                                            &quot;osteoblast&quot;=&quot;deepskyblue&quot;,
+                                            &quot;embedding.osteoblast&quot;=&quot;dodgerblue2&quot;,
+                                            &quot;mineralizing.osteoblast&quot;=&quot;royalblue3&quot;,
+                                            &quot;maturing.osteocyte&quot;=&quot;royalblue4&quot;)),
+                           gp=gpar(col=&quot;black&quot;),
+                           gap=unit(5,&quot;points&quot;),
+                           annotation_name_side=&quot;left&quot;)
+HAside = rowAnnotation(No.Genes=anno_barplot(floor(cormotifData$bestmotif$motif.p * nrow(cormotifData$bestmotif$p.post))),
+                       width=unit(3,&quot;cm&quot;),
+                       border=FALSE)
+Heatmap(cormotifData$bestmotif$motif.q,
+        col=gray(seq(from=1,to=0,by=-0.1)),
+        name=&quot;DE Prob.&quot;,
+        rect_gp=gpar(col=&quot;black&quot;,lwd=.3),
+        top_annotation=HAtop,
+        right_annotation=HAside,
+        column_title=&quot;Comparisons across Osteogenic Ad Hoc&quot;,
+        row_title=&quot;Motif&quot;,
+        column_dend_reorder=FALSE,
+        row_dend_reorder=TRUE,
+        heatmap_legend_param=list(at=c(0,0.2,0.4,0.6,0.8,1)))</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-16-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Define different posterior probability thresholds (0.50, 0.60, 0.70, 0.75, 0.80, 0.85, 0.90, 0.925, 0.95, 0.975, 0.99).</p>
+<ul>
+<li>0.50 cutoff is used in Wei et al. 2015 and Blake et al. 2018</li>
+<li>0.95 is closer to an FDR &lt; 0.05</li>
+<li>0.99 is closer to an FDR &lt; 0.01</li>
+</ul>
+<pre class="r"><code>cutoffs &lt;- c(0.50, 0.60, 0.70, 0.75, 0.80, 0.85, 0.90, 0.925, 0.95, 0.975, 0.99)</code></pre>
+<pre class="r"><code>#obtain DE pattern at different posterior distribution cutoffs and reformat for plotting
+dataUpset &lt;- list()
+dataPlot &lt;- list()
+x=1
+
+while (x &lt;= length(cutoffs)) {
+  
+  dataUpsetTEMP &lt;- as.data.frame(cormotifData$bestmotif$p.post)
+  dataUpsetTEMP[dataUpsetTEMP&gt;cutoffs[x]] &lt;- 1
+  dataUpsetTEMP[dataUpsetTEMP&lt;=cutoffs[x]] &lt;- 0
+  dataUpset[[x]] &lt;- dataUpsetTEMP
+
+  dataPlotTEMP &lt;- data.frame(&quot;cell.subset&quot;=c(rep(&quot;preosteoblast&quot;,length(which(dataUpsetTEMP$preosteoblast==1))),
+                                             rep(&quot;osteoblast&quot;,length(which(dataUpsetTEMP$osteoblast==1))),
+                                             rep(&quot;embedding.osteoblast&quot;,length(which(dataUpsetTEMP$embedding.osteoblast==1))),
+                                             rep(&quot;mineralizing.osteoblast&quot;,length(which(dataUpsetTEMP$mineralizing.osteoblast==1))),
+                                             rep(&quot;maturing.osteocyte&quot;,length(which(dataUpsetTEMP$maturing.osteocyte==1)))),
+                             &quot;gene&quot;=c(rownames(dataUpsetTEMP)[which(dataUpsetTEMP$preosteoblast==1)],
+                                      rownames(dataUpsetTEMP)[which(dataUpsetTEMP$osteoblast==1)],
+                                      rownames(dataUpsetTEMP)[which(dataUpsetTEMP$embedding.osteoblast==1)],
+                                      rownames(dataUpsetTEMP)[which(dataUpsetTEMP$mineralizing.osteoblast==1)],
+                                      rownames(dataUpsetTEMP)[which(dataUpsetTEMP$maturing.osteocyte==1)]),
+                             &quot;post.p&quot;=c(cormotifData$bestmotif$p.post[which(dataUpsetTEMP$preosteoblast==1),&quot;preosteoblast&quot;],
+                                        cormotifData$bestmotif$p.post[which(dataUpsetTEMP$osteoblast==1),&quot;osteoblast&quot;],
+                                        cormotifData$bestmotif$p.post[which(dataUpsetTEMP$embedding.osteoblast==1),&quot;embedding.osteoblast&quot;],
+                                        cormotifData$bestmotif$p.post[which(dataUpsetTEMP$mineralizing.osteoblast==1),&quot;mineralizing.osteoblast&quot;],
+                                        cormotifData$bestmotif$p.post[which(dataUpsetTEMP$maturing.osteocyte==1),&quot;maturing.osteocyte&quot;]),
+                             row.names=NULL)
+  dataPlotTEMP$cell.subset &lt;- factor(dataPlotTEMP$cell.subset,
+                                     levels=c(&quot;preosteoblast&quot;,&quot;osteoblast&quot;,&quot;embedding.osteoblast&quot;,&quot;mineralizing.osteoblast&quot;,&quot;maturing.osteocyte&quot;),
+                                     labels=c(&quot;preosteoblast&quot;,&quot;osteoblast&quot;,&quot;embedding\nosteoblast&quot;,&quot;mineralizing\nosteoblast&quot;,&quot;maturing\nosteocyte&quot;))
+  dataPlot[[x]] &lt;- dataPlotTEMP
+  
+  x=x+1
+  
+}</code></pre>
+<p>Plot number of DE genes for each cutoff.</p>
+<pre class="r"><code>x=1
+
+while (x &lt;= length(cutoffs)) {
+  
+  #cutoff
+  print(paste0(&quot;Posterior Probability Cutoff: &quot;,cutoffs[x]))
+
+  #number of DE genes
+  print(ggplot(dataPlot[[x]], aes(x=cell.subset, fill=cell.subset)) +
+          geom_bar() +
+          ylab(&#39;Number of DE Genes&#39;) +
+          xlab(&#39;&#39;) +
+          scale_fill_manual(name=&quot;Osteogenic Stage&quot;,
+                            labels=c(&quot;preosteoblast&quot;,&quot;osteoblast&quot;,&quot;embedding osteoblast&quot;,&quot;mineralizing osteoblast&quot;,&quot;maturing osteocyte&quot;),
+                            values=c(&quot;lightblue1&quot;,&quot;deepskyblue&quot;,&quot;dodgerblue2&quot;,&quot;royalblue3&quot;,&quot;royalblue4&quot;)) +
+          theme_classic() +
+          theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10)))
+  
+  #total number of DE genes identified
+  print(table(dataPlot[[x]]$cell.subset))
+  
+  #make upset plot of DE genes
+  print(upset(dataUpset[[x]],
+          text.scale=2))
+
+  x=x+1
+  
+}</code></pre>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.5&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    3279                     3277                     3278 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    3388                     3276 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.6&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    3114                     3115                     3115 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    3224                     3109 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.7&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-5.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    2941                     2940                     2939 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    3043                     2935 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-6.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.75&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-7.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    2853                     2854                     2853 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    2924                     2851 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-8.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.8&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-9.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    2758                     2758                     2752 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    2849                     2749 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-10.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.85&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-11.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    2649                     2647                     2645 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    2725                     2642 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-12.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.9&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-13.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    2537                     2536                     2535 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    2607                     2528 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-14.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.925&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-15.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    2454                     2454                     2453 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    2534                     2435 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-16.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.95&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-17.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    2350                     2350                     2347 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    2417                     2329 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-18.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.975&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-19.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    2181                     2182                     2173 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    2247                     2148 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-20.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>[1] &quot;Posterior Probability Cutoff: 0.99&quot;</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-21.png" width="672" style="display: block; margin: auto;" /></p>
+<pre><code>
+           preosteoblast               osteoblast    embedding\nosteoblast 
+                    1970                     1975                     1964 
+mineralizing\nosteoblast      maturing\nosteocyte 
+                    2038                     1863 </code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-19-22.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Test for significant enrichment of external gene sets in DE gene sets using Fisher’s exact test. Make enrichment plot:</p>
+<pre class="r"><code>#Enrichment of external gene sets in DE gene sets
+
+listsExternal &lt;- list(
+
+  list(&quot;Blake2018-DE.iPSCs-Unique&quot;,blake2018$gene[which(blake2018$DE.Day0==1 &amp;
+                                                        blake2018$DE.Day1==0 &amp;
+                                                                blake2018$DE.Day2==0 &amp;
+                                                                blake2018$DE.Day3==0)]),              #iPSCs-Unique
+  list(&quot;Blake2018-DE.iPSC-endoderm-day1-Unique&quot;,blake2018$gene[which(blake2018$DE.Day0==0 &amp;
+                                                                     blake2018$DE.Day1==1 &amp;
+                                                                             blake2018$DE.Day2==0 &amp;
+                                                                           blake2018$DE.Day3==0)]), #iPSC-endoderm day1-Unique
+  list(&quot;Blake2018-DE.iPSC-endoderm-day2-Unique&quot;,blake2018$gene[which(blake2018$DE.Day0==0 &amp;
+                                                                     blake2018$DE.Day1==0 &amp;
+                                                                             blake2018$DE.Day2==1 &amp;
+                                                                           blake2018$DE.Day3==0)]), #iPSC-endoderm day2-Unique
+  list(&quot;Blake2018-DE.iPSC-endoderm-day3-Unique&quot;,blake2018$gene[which(blake2018$DE.Day0==0 &amp;
+                                                                     blake2018$DE.Day1==0 &amp;
+                                                                             blake2018$DE.Day2==0 &amp;
+                                                                           blake2018$DE.Day3==1)]), #iPSC-endoderm day3-Unique
+
+  list(&quot;Blake2020-DE.heart-Unique&quot;,blake2020$gene[which(blake2020$DE.HvC_Heart==1 &amp;
+                                                        blake2020$DE.HvC_Kidney==0 &amp;
+                                                        blake2020$DE.HvC_Liver==0 &amp;
+                                                        blake2020$DE.HvC_Lung==0)]),   #heart-Unique
+  list(&quot;Blake2020-DE.kidney-Unique&quot;,blake2020$gene[which(blake2020$DE.HvC_Heart==0 &amp;
+                                                         blake2020$DE.HvC_Kidney==1 &amp;
+                                                         blake2020$DE.HvC_Liver==0 &amp;
+                                                         blake2020$DE.HvC_Lung==0)]), #kidney-Unique
+  list(&quot;Blake2020-DE.liver-Unique&quot;,blake2020$gene[which(blake2020$DE.HvC_Heart==0 &amp;
+                                                        blake2020$DE.HvC_Kidney==0 &amp;
+                                                        blake2020$DE.HvC_Liver==1 &amp;
+                                                        blake2020$DE.HvC_Lung==0)]),   #liver-Unique
+  list(&quot;Blake2020-DE.lung-Unique&quot;,blake2020$gene[which(blake2020$DE.HvC_Heart==0 &amp;
+                                                       blake2020$DE.HvC_Kidney==0 &amp;
+                                                       blake2020$DE.HvC_Liver==0 &amp;
+                                                       blake2020$DE.HvC_Lung==1)]),     #lung-Unique
+
+  list(&quot;Gokhman2021-DE.Parental.iPSCs-Unique&quot;,gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==1 &amp;
+                                                                            gokhman2021$DE.Parental.CNCCs==0)]), #parental.iPSCs-Unique
+  list(&quot;Gokhman2021-DE.Hybrid.iPSCs-Unique&quot;,  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==1 &amp;
+                                                                            gokhman2021$DE.Hybrid.CNCCs==0)]),   #hybrid.iPSCs-Unique
+  list(&quot;Gokhman2021-DE.Parental.CNCCs-Unique&quot;,gokhman2021$Gene.Symbol[which(gokhman2021$DE.Parental.iPSCs==0 &amp;
+                                                                            gokhman2021$DE.Parental.CNCCs==1)]), #parental.CNCCs-Unique
+  list(&quot;Gokhman2021-DE.Hybrid.CNCCs-Unique&quot;,  gokhman2021$Gene.Symbol[which(gokhman2021$DE.Hybrid.iPSCs==0 &amp;
+                                                                            gokhman2021$DE.Hybrid.CNCCs==1)]),   #hybrid.CNCCs-Unique
+  
+  list(&quot;Gokhman2020-DMR.bone&quot;,gokhman2020$Gene[which(gokhman2020$Chimp.DMR.Promotor==1 |
+                                                     gokhman2020$Human.DMR.Promotor==1)]), #all human-chimp DMRs
+
+  list(&quot;Hsu2019-GWAS.hip.geometry&quot;,hsu2019$Nearby.gene[which(hsu2019$GWAS.hip.geometry==1)]),                             #hip geometry GWAS
+  list(&quot;Styrkarsdottir2019-GWAS.bone.area&quot;,styrkarsdottir2019$Closest.Gene[which(styrkarsdottir2019$GWAS.bone.area==1)]), #bone area GWAS
+  list(&quot;Yengo2018-GWAS.height&quot;,yengo2018$gene[which(yengo2018$GWAS.Height==1)]),                                          #height GWAS
+
+  list(&quot;Steinberg2020-GWAS.OA&quot;,steinberg2020$GeneName[which(steinberg2020$OA.omics==1)]), #OA GWAS
+  list(&quot;Morris2020-GWAS.OP&quot;,morris2019$unique.gene[which(morris2019$GWAS.BMD==1)])        #OP GWAS
+
+)
+
+DEenrich &lt;- data.frame(&quot;Post.Prob.Cutoff&quot;=double(),
+                       &quot;Source.DEGenes&quot;=character(),
+                       &quot;Source.GenesOfInterest&quot;=character(),
+                       &quot;DE.Interest&quot;=integer(),
+                       &quot;NonDE.Interest&quot;=integer(),
+                       &quot;DE.NotInterest&quot;=integer(),
+                       &quot;NonDE.NotInterest&quot;=integer(),
+                       &quot;p.value&quot;=double(),
+                       &quot;odds.ratio&quot;=double())
+x=1
+
+while (x &lt;= length(cutoffs)) {
+  
+  for (genesExternal in listsExternal) {
+
+    #Shared across all ostadhoc classifications
+    tempDE &lt;- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==1 &amp;
+                                             dataUpset[[x]]$osteoblast==1 &amp;
+                                             dataUpset[[x]]$embedding.osteoblast==1 &amp;
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &amp;
+                                             dataUpset[[x]]$maturing.osteocyte==1)]
+    nonDEgenes &lt;- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich &lt;- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource=&quot;Shared in All&quot;,
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared across pre+obl+emb+min
+    tempDE &lt;- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==1 &amp;
+                                             dataUpset[[x]]$osteoblast==1 &amp;
+                                             dataUpset[[x]]$embedding.osteoblast==1 &amp;
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &amp;
+                                             dataUpset[[x]]$maturing.osteocyte==0)]
+    nonDEgenes &lt;- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich &lt;- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource=&quot;Shared in Pre/Obl/Emb/Min&quot;,
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared across obl+emb+min+mat
+    tempDE &lt;- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &amp;
+                                             dataUpset[[x]]$osteoblast==1 &amp;
+                                             dataUpset[[x]]$embedding.osteoblast==1 &amp;
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &amp;
+                                             dataUpset[[x]]$maturing.osteocyte==1)]
+    nonDEgenes &lt;- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich &lt;- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource=&quot;Shared in Obl/Emb/Min/Mat&quot;,
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared across emb+min+mat
+    tempDE &lt;- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &amp;
+                                             dataUpset[[x]]$osteoblast==0 &amp;
+                                             dataUpset[[x]]$embedding.osteoblast==1 &amp;
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &amp;
+                                             dataUpset[[x]]$maturing.osteocyte==1)]
+    nonDEgenes &lt;- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich &lt;- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource=&quot;Shared in Emb/Min/Mat&quot;,
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Shared across emb+min
+    tempDE &lt;- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &amp;
+                                             dataUpset[[x]]$osteoblast==0 &amp;
+                                             dataUpset[[x]]$embedding.osteoblast==1 &amp;
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &amp;
+                                             dataUpset[[x]]$maturing.osteocyte==0)]
+    nonDEgenes &lt;- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich &lt;- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource=&quot;Shared in Emb/Min&quot;,
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to embedding osteoblasts
+    tempDE &lt;- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &amp;
+                                             dataUpset[[x]]$osteoblast==0 &amp;
+                                             dataUpset[[x]]$embedding.osteoblast==1 &amp;
+                                             dataUpset[[x]]$mineralizing.osteoblast==0 &amp;
+                                             dataUpset[[x]]$maturing.osteocyte==0)]
+    nonDEgenes &lt;- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich &lt;- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource=&quot;Unique to Emb&quot;,
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+    #Unique to mineralizing osteoblasts
+    tempDE &lt;- rownames(dataUpset[[x]])[which(dataUpset[[x]]$preosteoblast==0 &amp;
+                                             dataUpset[[x]]$osteoblast==0 &amp;
+                                             dataUpset[[x]]$embedding.osteoblast==0 &amp;
+                                             dataUpset[[x]]$mineralizing.osteoblast==1 &amp;
+                                             dataUpset[[x]]$maturing.osteocyte==0)]
+    nonDEgenes &lt;- rownames(dataUpset[[x]])[which(!(rownames(dataUpset[[x]]) %in% tempDE))]
+    DEenrich &lt;- rbind(DEenrich,
+                      genesetEnrich.data(InternalDataCutoff=cutoffs[x],
+                                         InternalDataSource=&quot;Unique to Min&quot;,
+                                         ExternalDataSource=genesExternal[[1]],
+                                         GenesOfInterest=genesExternal[[2]],
+                                         DEgenes=tempDE,
+                                         NonDEGenes=nonDEgenes))
+    
+  }
+  
+  x=x+1
+  
+}
+
+#Reformat Data
+DEenrich$Source.DEGenes &lt;- as.factor(DEenrich$Source.DEGenes)
+DEenrich$Source.GenesOfInterest &lt;- as.factor(DEenrich$Source.GenesOfInterest)
+
+#Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
+DEenrich$GeneRatio &lt;- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
+
+#Add p-value color variable
+DEenrich$p.value.color &lt;- &quot;nonsignificant&quot;
+DEenrich$p.value.color[which(DEenrich$p.value&lt;0.05)] &lt;- &quot;significant&quot;
+DEenrich$p.value.color &lt;- as.factor(DEenrich$p.value.color)</code></pre>
+<p>Check how the gene ratio and p value change across posterior probability cutoffs for different external gene datasets.</p>
+<pre class="r"><code>#aiming for a cutoff which minimizes enrichments across cell types
+tempSource &lt;- c(&quot;Blake2018-DE.iPSCs-Unique&quot;,
+                &quot;Gokhman2021-DE.Parental.iPSCs-Unique&quot;,
+                &quot;Gokhman2021-DE.Hybrid.iPSCs-Unique&quot;)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name=&quot;P-Value&quot;,
+                    values=c(&quot;black&quot;,&quot;red&quot;)) +
+  geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-21-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-21-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-21-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#aiming for a cutoff which minimizes enrichments across cell types
+tempSource &lt;- c(&quot;Blake2018-DE.iPSC-endoderm-day1-Unique&quot;,
+                &quot;Blake2018-DE.iPSC-endoderm-day2-Unique&quot;,
+                &quot;Blake2018-DE.iPSC-endoderm-day3-Unique&quot;,
+                &quot;Blake2020-DE.heart-Unique&quot;,
+                &quot;Blake2020-DE.kidney-Unique&quot;,
+                &quot;Blake2020-DE.liver-Unique&quot;,
+                &quot;Blake2020-DE.lung-Unique&quot;)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name=&quot;P-Value&quot;,
+                    values=c(&quot;black&quot;,&quot;red&quot;)) +
+  geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-21-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-21-5.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-21-6.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#no prior expectations
+tempSource &lt;- c(&quot;Gokhman2021-DE.Parental.CNCCs-Unique&quot;,
+                &quot;Gokhman2021-DE.Hybrid.CNCCs-Unique&quot;,
+                &quot;Gokhman2020-DMR.bone&quot;,
+                &quot;Hsu2019-GWAS.hip.geometry&quot;,
+                &quot;Styrkarsdottir2019-GWAS.bone.area&quot;,
+                &quot;Yengo2018-GWAS.height&quot;,
+                &quot;Steinberg2020-GWAS.OA&quot;,
+                &quot;Morris2020-GWAS.OP&quot;)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name=&quot;P-Value&quot;,
+                    values=c(&quot;black&quot;,&quot;red&quot;)) +
+  geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-21-7.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-21-8.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<p><img src="figure/10x-plot-cormotif-cnts-thresh_v1.Rmd/unnamed-chunk-21-9.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="conclusions" class="section level2">
+<h2>Conclusions</h2>
+<p>Best Cormotif Posterior Probability Cutoffs</p>
+<ul>
+<li>Stages of Differentiation: 0.60 &gt; 0.50 or 0.75 &gt; 0.70 or 0.99</li>
+<li>Stages of Osteogenesis: 0.50 or 0.60 or 0.75 or 0.90 or 0.925 or 0.95</li>
+<li>Stages of Osteogenesis (Time 2 only): 0.50 or 0.60 or 0.70 or 0.80 or 0.85</li>
+<li>OVERALL: 0.60</li>
+</ul>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.6.1 (2019-07-05)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Scientific Linux 7.4 (Nitrogen)
+
+Matrix products: default
+BLAS/LAPACK: /software/openblas-0.2.19-el7-x86_64/lib/libopenblas_haswellp-r0.2.19.so
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+ [1] parallel  stats4    grid      stats     graphics  grDevices utils    
+ [8] datasets  methods   base     
+
+other attached packages:
+ [1] Cormotif_1.30.0             affy_1.62.0                
+ [3] ComplexHeatmap_2.0.0        VennDiagram_1.6.20         
+ [5] futile.logger_1.4.3         viridis_0.5.1              
+ [7] viridisLite_0.3.0           enrichplot_1.4.0           
+ [9] Rgraphviz_2.28.0            graph_1.62.0               
+[11] org.Hs.eg.db_3.8.2          AnnotationDbi_1.46.0       
+[13] clusterProfiler_3.12.0      UpSetR_1.4.0               
+[15] purrr_0.3.4                 scran_1.12.1               
+[17] SingleCellExperiment_1.6.0  SummarizedExperiment_1.14.1
+[19] DelayedArray_0.10.0         BiocParallel_1.18.0        
+[21] matrixStats_0.57.0          Biobase_2.44.0             
+[23] GenomicRanges_1.36.0        GenomeInfoDb_1.20.0        
+[25] IRanges_2.18.1              S4Vectors_0.22.1           
+[27] BiocGenerics_0.30.0         edgeR_3.26.5               
+[29] limma_3.40.6                RColorBrewer_1.1-2         
+[31] colorspace_2.0-0            gbm_2.1.5                  
+[33] ggplot2_3.3.2               stringr_1.4.0              
+[35] stringi_1.4.3               dplyr_1.0.2                
+[37] Seurat_3.1.3               
+
+loaded via a namespace (and not attached):
+  [1] reticulate_1.16          tidyselect_1.1.0        
+  [3] RSQLite_2.1.1            htmlwidgets_1.5.2       
+  [5] Rtsne_0.15               munsell_0.5.0           
+  [7] preprocessCore_1.46.0    codetools_0.2-16        
+  [9] ica_1.0-2                statmod_1.4.32          
+ [11] future_1.14.0            withr_2.3.0             
+ [13] GOSemSim_2.10.0          knitr_1.23              
+ [15] ROCR_1.0-7               DOSE_3.10.2             
+ [17] gbRd_0.4-11              listenv_0.7.0           
+ [19] labeling_0.4.2           Rdpack_0.11-0           
+ [21] git2r_0.26.1             urltools_1.7.3          
+ [23] GenomeInfoDbData_1.2.1   polyclip_1.10-0         
+ [25] bit64_0.9-7              farver_2.0.3            
+ [27] rprojroot_2.0.2          vctrs_0.3.5             
+ [29] generics_0.1.0           lambda.r_1.2.3          
+ [31] xfun_0.8                 R6_2.5.0                
+ [33] clue_0.3-58              ggbeeswarm_0.6.0        
+ [35] rsvd_1.0.1               locfit_1.5-9.1          
+ [37] gridGraphics_0.4-1       bitops_1.0-6            
+ [39] fgsea_1.15.1             promises_1.1.1          
+ [41] scales_1.1.1             ggraph_1.0.2            
+ [43] beeswarm_0.2.3           gtable_0.3.0            
+ [45] npsurv_0.4-0             globals_0.12.4          
+ [47] workflowr_1.6.2          rlang_0.4.9             
+ [49] GlobalOptions_0.1.2      splines_3.6.1           
+ [51] lazyeval_0.2.2           europepmc_0.3           
+ [53] BiocManager_1.30.4       yaml_2.2.1              
+ [55] reshape2_1.4.3           httpuv_1.5.1            
+ [57] qvalue_2.16.0            tools_3.6.1             
+ [59] ggplotify_0.0.3          affyio_1.54.0           
+ [61] ellipsis_0.3.1           gplots_3.0.1.1          
+ [63] dynamicTreeCut_1.63-1    ggridges_0.5.1          
+ [65] Rcpp_1.0.5               plyr_1.8.4              
+ [67] progress_1.2.2           zlibbioc_1.30.0         
+ [69] RCurl_1.98-1.1           prettyunits_1.1.1       
+ [71] GetoptLong_1.0.5         pbapply_1.4-0           
+ [73] cowplot_1.1.0            zoo_1.8-6               
+ [75] ggrepel_0.8.2            cluster_2.1.0           
+ [77] fs_1.3.1                 magrittr_2.0.1          
+ [79] futile.options_1.0.1     data.table_1.13.2       
+ [81] DO.db_2.9                circlize_0.4.12         
+ [83] lmtest_0.9-37            triebeard_0.3.0         
+ [85] RANN_2.6.1               fitdistrplus_1.0-14     
+ [87] hms_0.5.3                lsei_1.2-0              
+ [89] evaluate_0.14            shape_1.4.4             
+ [91] gridExtra_2.3            compiler_3.6.1          
+ [93] scater_1.12.2            tibble_3.0.4            
+ [95] KernSmooth_2.23-15       crayon_1.3.4            
+ [97] htmltools_0.5.0          later_1.1.0.1           
+ [99] tidyr_1.1.2              RcppParallel_5.0.2      
+[101] DBI_1.1.0                formatR_1.7             
+[103] tweenr_1.0.1             MASS_7.3-51.4           
+[105] rappdirs_0.3.1           Matrix_1.2-18           
+[107] gdata_2.18.0             metap_1.1               
+[109] igraph_1.2.4.1           pkgconfig_2.0.3         
+[111] rvcheck_0.1.3            plotly_4.9.2.1          
+[113] xml2_1.3.2               vipor_0.4.5             
+[115] dqrng_0.2.1              XVector_0.24.0          
+[117] bibtex_0.4.2             digest_0.6.27           
+[119] sctransform_0.2.0        RcppAnnoy_0.0.12        
+[121] tsne_0.1-3               rmarkdown_1.13          
+[123] leiden_0.3.1             fastmatch_1.1-0         
+[125] uwot_0.1.5               DelayedMatrixStats_1.6.1
+[127] gtools_3.8.1             rjson_0.2.20            
+[129] lifecycle_0.2.0          nlme_3.1-140            
+[131] jsonlite_1.7.1           BiocNeighbors_1.2.0     
+[133] pillar_1.4.7             lattice_0.20-38         
+[135] httr_1.4.2               survival_2.44-1.1       
+[137] GO.db_3.8.2              glue_1.4.2              
+[139] png_0.1-7                bit_1.1-14              
+[141] ggforce_0.2.2            blob_1.2.0              
+[143] BiocSingular_1.0.0       caTools_1.17.1.2        
+[145] memoise_1.1.0            irlba_2.3.3             
+[147] future.apply_1.3.0       ape_5.4-1               </code></pre>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
