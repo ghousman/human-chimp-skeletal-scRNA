@@ -1,0 +1,145 @@
+"","Source.DEGenes","Source.GenesOfInterest","DE.Interest","NonDE.Interest","DE.NotInterest","NonDE.NotInterest","p.value","odds.ratio","GeneRatio"
+"1","Shared in All","Blake2018-DE.iPSCs-Unique",1,348,24,10139,0.57047540347952,1.21393431078338,0.04
+"2","Shared in Pre/Obl/Emb/Min","Blake2018-DE.iPSCs-Unique",0,349,22,10141,1,0,0
+"3","Shared in Obl/Emb/Min","Blake2018-DE.iPSCs-Unique",1,348,16,10147,0.436973815322623,1.82216650112177,0.0588235294117647
+"4","Unique to Preosteoblasts","Blake2018-DE.iPSCs-Unique",1,348,32,10131,0.672390676711504,0.909759694369797,0.0303030303030303
+"5","Unique to Osteoblasts","Blake2018-DE.iPSCs-Unique",0,349,73,10090,1,0,0
+"6","Unique to Embedding Osteoblasts","Blake2018-DE.iPSCs-Unique",1,348,25,10138,0.58476968060221,1.16526773151948,0.0384615384615385
+"7","Unique to Mineralizing Osteoblasts","Blake2018-DE.iPSCs-Unique",7,342,222,9941,0.641740449546139,0.91654155124451,0.0305676855895196
+"8","Unique to Maturing Osteocytes","Blake2018-DE.iPSCs-Unique",1,348,35,10128,0.704048337845066,0.831539615895825,0.0277777777777778
+"9","Shared in All","Blake2018-DE.iPSC-endoderm-day1-Unique",0,242,25,10245,1,0,0
+"10","Shared in Pre/Obl/Emb/Min","Blake2018-DE.iPSC-endoderm-day1-Unique",0,242,22,10248,1,0,0
+"11","Shared in Obl/Emb/Min","Blake2018-DE.iPSC-endoderm-day1-Unique",1,241,16,10254,0.327156572103943,2.65874259924546,0.0588235294117647
+"12","Unique to Preosteoblasts","Blake2018-DE.iPSC-endoderm-day1-Unique",0,242,33,10237,1,0,0
+"13","Unique to Osteoblasts","Blake2018-DE.iPSC-endoderm-day1-Unique",1,241,72,10198,0.818431167269553,0.587735245257993,0.0136986301369863
+"14","Unique to Embedding Osteoblasts","Blake2018-DE.iPSC-endoderm-day1-Unique",0,242,26,10244,1,0,0
+"15","Unique to Mineralizing Osteoblasts","Blake2018-DE.iPSC-endoderm-day1-Unique",6,236,223,10047,0.432657825088996,1.14541904347103,0.0262008733624454
+"16","Unique to Maturing Osteocytes","Blake2018-DE.iPSC-endoderm-day1-Unique",0,242,36,10234,1,0,0
+"17","Shared in All","Blake2018-DE.iPSC-endoderm-day2-Unique",0,270,25,10217,1,0,0
+"18","Shared in Pre/Obl/Emb/Min","Blake2018-DE.iPSC-endoderm-day2-Unique",0,270,22,10220,1,0,0
+"19","Shared in Obl/Emb/Min","Blake2018-DE.iPSC-endoderm-day2-Unique",0,270,17,10225,1,0,0
+"20","Unique to Preosteoblasts","Blake2018-DE.iPSC-endoderm-day2-Unique",1,269,32,10210,0.576840033277697,1.18608329502155,0.0303030303030303
+"21","Unique to Osteoblasts","Blake2018-DE.iPSC-endoderm-day2-Unique",2,268,71,10171,0.563241242462356,1.06902128766075,0.0273972602739726
+"22","Unique to Embedding Osteoblasts","Blake2018-DE.iPSC-endoderm-day2-Unique",0,270,26,10216,1,0,0
+"23","Unique to Mineralizing Osteoblasts","Blake2018-DE.iPSC-endoderm-day2-Unique",1,269,228,10014,0.99758281536977,0.16328239228152,0.00436681222707424
+"24","Unique to Maturing Osteocytes","Blake2018-DE.iPSC-endoderm-day2-Unique",0,270,36,10206,1,0,0
+"25","Shared in All","Blake2018-DE.iPSC-endoderm-day3-Unique",2,700,23,9787,0.5047405448016,1.21575045118496,0.08
+"26","Shared in Pre/Obl/Emb/Min","Blake2018-DE.iPSC-endoderm-day3-Unique",2,700,20,9790,0.437416394211861,1.39850786828457,0.0909090909090909
+"27","Shared in Obl/Emb/Min","Blake2018-DE.iPSC-endoderm-day3-Unique",0,702,17,9793,1,0,0
+"28","Unique to Preosteoblasts","Blake2018-DE.iPSC-endoderm-day3-Unique",3,699,30,9780,0.380178328228079,1.39907808734719,0.0909090909090909
+"29","Unique to Osteoblasts","Blake2018-DE.iPSC-endoderm-day3-Unique",3,699,70,9740,0.874157774990709,0.597180365502709,0.0410958904109589
+"30","Unique to Embedding Osteoblasts","Blake2018-DE.iPSC-endoderm-day3-Unique",1,701,25,9785,0.834570642430309,0.558348164523623,0.0384615384615385
+"31","Unique to Mineralizing Osteoblasts","Blake2018-DE.iPSC-endoderm-day3-Unique",20,682,209,9601,0.131509777670571,1.34709931247067,0.0873362445414847
+"32","Unique to Maturing Osteocytes","Blake2018-DE.iPSC-endoderm-day3-Unique",2,700,34,9776,0.703463085050826,0.821519444624911,0.0555555555555556
+"33","Shared in All","Blake2020-DE.heart-Unique",0,1108,25,9379,1,0,0
+"34","Shared in Pre/Obl/Emb/Min","Blake2020-DE.heart-Unique",3,1105,19,9385,0.413607171266481,1.34098734688632,0.136363636363636
+"35","Shared in Obl/Emb/Min","Blake2020-DE.heart-Unique",1,1107,16,9388,0.84968552135668,0.530061357214772,0.0588235294117647
+"36","Unique to Preosteoblasts","Blake2020-DE.heart-Unique",2,1106,31,9373,0.876563111872771,0.546778849728686,0.0606060606060606
+"37","Unique to Osteoblasts","Blake2020-DE.heart-Unique",9,1099,64,9340,0.362097772369539,1.19509807579331,0.123287671232877
+"38","Unique to Embedding Osteoblasts","Blake2020-DE.heart-Unique",5,1103,21,9383,0.131886551000463,2.02527584309474,0.192307692307692
+"39","Unique to Mineralizing Osteoblasts","Blake2020-DE.heart-Unique",27,1081,202,9202,0.296649239505971,1.13777468326869,0.117903930131004
+"40","Unique to Maturing Osteocytes","Blake2020-DE.heart-Unique",1,1107,35,9369,0.98199025106252,0.241830808570978,0.0277777777777778
+"41","Shared in All","Blake2020-DE.kidney-Unique",0,142,25,10345,1,0,0
+"42","Shared in Pre/Obl/Emb/Min","Blake2020-DE.kidney-Unique",1,141,21,10349,0.258819425049167,3.49429204503361,0.0454545454545455
+"43","Shared in Obl/Emb/Min","Blake2020-DE.kidney-Unique",1,141,16,10354,0.206565919925325,4.58837716137743,0.0588235294117647
+"44","Unique to Preosteoblasts","Blake2020-DE.kidney-Unique",1,141,32,10338,0.362055332754565,2.29093567576914,0.0303030303030303
+"45","Unique to Osteoblasts","Blake2020-DE.kidney-Unique",5,137,68,10302,0.00301493379741746,5.52697881279979,0.0684931506849315
+"46","Unique to Embedding Osteoblasts","Blake2020-DE.kidney-Unique",3,139,23,10347,0.0049975572211498,9.7026295116842,0.115384615384615
+"47","Unique to Mineralizing Osteoblasts","Blake2020-DE.kidney-Unique",2,140,227,10143,0.819574138290454,0.638346422454449,0.00873362445414847
+"48","Unique to Maturing Osteocytes","Blake2020-DE.kidney-Unique",0,142,36,10334,1,0,0
+"49","Shared in All","Blake2020-DE.liver-Unique",0,426,25,10061,1,0,0
+"50","Shared in Pre/Obl/Emb/Min","Blake2020-DE.liver-Unique",0,426,22,10064,1,0,0
+"51","Shared in Obl/Emb/Min","Blake2020-DE.liver-Unique",0,426,17,10069,1,0,0
+"52","Unique to Preosteoblasts","Blake2020-DE.liver-Unique",0,426,33,10053,1,0,0
+"53","Unique to Osteoblasts","Blake2020-DE.liver-Unique",2,424,71,10015,0.80175272712656,0.665376822262999,0.0273972602739726
+"54","Unique to Embedding Osteoblasts","Blake2020-DE.liver-Unique",3,423,23,10063,0.0863391864238308,3.1023940916146,0.115384615384615
+"55","Unique to Mineralizing Osteoblasts","Blake2020-DE.liver-Unique",12,414,217,9869,0.219273496536851,1.31819871991608,0.0524017467248908
+"56","Unique to Maturing Osteocytes","Blake2020-DE.liver-Unique",1,425,35,10051,0.775038526086387,0.675714719882884,0.0277777777777778
+"57","Shared in All","Blake2020-DE.lung-Unique",1,172,24,10315,0.339881563647404,2.49844047790814,0.04
+"58","Shared in Pre/Obl/Emb/Min","Blake2020-DE.lung-Unique",0,173,22,10317,1,0,0
+"59","Shared in Obl/Emb/Min","Blake2020-DE.lung-Unique",0,173,17,10322,1,0,0
+"60","Unique to Preosteoblasts","Blake2020-DE.lung-Unique",0,173,33,10306,1,0,0
+"61","Unique to Osteoblasts","Blake2020-DE.lung-Unique",3,170,70,10269,0.118746081311816,2.58835531611497,0.0410958904109589
+"62","Unique to Embedding Osteoblasts","Blake2020-DE.lung-Unique",1,172,25,10314,0.35077128325158,2.39819863824461,0.0384615384615385
+"63","Unique to Mineralizing Osteoblasts","Blake2020-DE.lung-Unique",4,169,225,10114,0.523134603157805,1.06389227012818,0.0174672489082969
+"64","Unique to Maturing Osteocytes","Blake2020-DE.lung-Unique",0,173,36,10303,1,0,0
+"65","Shared in All","Gokhman2021-DE.Parental.iPSCs-Unique",9,4030,16,6457,0.670375530729177,0.901249764788077,0.36
+"66","Shared in Pre/Obl/Emb/Min","Gokhman2021-DE.Parental.iPSCs-Unique",4,4035,18,6455,0.988911576427425,0.355532095997455,0.181818181818182
+"67","Shared in Obl/Emb/Min","Gokhman2021-DE.Parental.iPSCs-Unique",2,4037,15,6458,0.996963604421058,0.213317014248369,0.117647058823529
+"68","Unique to Preosteoblasts","Gokhman2021-DE.Parental.iPSCs-Unique",12,4027,21,6452,0.659211635663357,0.915530309753295,0.363636363636364
+"69","Unique to Osteoblasts","Gokhman2021-DE.Parental.iPSCs-Unique",31,4008,42,6431,0.275089269023135,1.18427665834229,0.424657534246575
+"70","Unique to Embedding Osteoblasts","Gokhman2021-DE.Parental.iPSCs-Unique",10,4029,16,6457,0.572170034119332,1.00164423166376,0.384615384615385
+"71","Unique to Mineralizing Osteoblasts","Gokhman2021-DE.Parental.iPSCs-Unique",88,3951,141,6332,0.524704098773657,1.0002424114798,0.384279475982533
+"72","Unique to Maturing Osteocytes","Gokhman2021-DE.Parental.iPSCs-Unique",10,4029,26,6447,0.934329475407457,0.615468925631505,0.277777777777778
+"73","Shared in All","Gokhman2021-DE.Hybrid.iPSCs-Unique",6,2372,19,8115,0.511820979004979,1.08037054194739,0.24
+"74","Shared in Pre/Obl/Emb/Min","Gokhman2021-DE.Hybrid.iPSCs-Unique",3,2375,19,8115,0.903900444012114,0.539544058883197,0.136363636363636
+"75","Shared in Obl/Emb/Min","Gokhman2021-DE.Hybrid.iPSCs-Unique",2,2376,15,8119,0.923868961006251,0.455656512483333,0.117647058823529
+"76","Unique to Preosteoblasts","Gokhman2021-DE.Hybrid.iPSCs-Unique",5,2373,28,8106,0.896723007378292,0.61002547451945,0.151515151515152
+"77","Unique to Osteoblasts","Gokhman2021-DE.Hybrid.iPSCs-Unique",12,2366,61,8073,0.9248192719871,0.671263496274453,0.164383561643836
+"78","Unique to Embedding Osteoblasts","Gokhman2021-DE.Hybrid.iPSCs-Unique",6,2372,20,8114,0.554031317934389,1.02622161128318,0.230769230769231
+"79","Unique to Mineralizing Osteoblasts","Gokhman2021-DE.Hybrid.iPSCs-Unique",55,2323,174,7960,0.329321872163213,1.08312460874251,0.240174672489083
+"80","Unique to Maturing Osteocytes","Gokhman2021-DE.Hybrid.iPSCs-Unique",8,2370,28,8106,0.587669158367602,0.977211374679566,0.222222222222222
+"81","Shared in All","Gokhman2021-DE.Parental.CNCCs-Unique",3,385,22,10102,0.0629629076560407,3.57723060660514,0.12
+"82","Shared in Pre/Obl/Emb/Min","Gokhman2021-DE.Parental.CNCCs-Unique",0,388,22,10102,1,0,0
+"83","Shared in Obl/Emb/Min","Gokhman2021-DE.Parental.CNCCs-Unique",2,386,15,10109,0.128484702977657,3.49110936183745,0.117647058823529
+"84","Unique to Preosteoblasts","Gokhman2021-DE.Parental.CNCCs-Unique",4,384,29,10095,0.0321368502790922,3.62515319815172,0.121212121212121
+"85","Unique to Osteoblasts","Gokhman2021-DE.Parental.CNCCs-Unique",7,381,66,10058,0.0178011449156578,2.7994290696095,0.0958904109589041
+"86","Unique to Embedding Osteoblasts","Gokhman2021-DE.Parental.CNCCs-Unique",1,387,25,10099,0.624317512659058,1.04383817990847,0.0384615384615385
+"87","Unique to Mineralizing Osteoblasts","Gokhman2021-DE.Parental.CNCCs-Unique",8,380,221,9903,0.613869658436658,0.943372142676112,0.0349344978165939
+"88","Unique to Maturing Osteocytes","Gokhman2021-DE.Parental.CNCCs-Unique",0,388,36,10088,1,0,0
+"89","Shared in All","Gokhman2021-DE.Hybrid.CNCCs-Unique",1,936,24,9551,0.903368017119902,0.425193609516495,0.04
+"90","Shared in Pre/Obl/Emb/Min","Gokhman2021-DE.Hybrid.CNCCs-Unique",1,936,21,9554,0.872050024516555,0.486093000939288,0.0454545454545455
+"91","Shared in Obl/Emb/Min","Gokhman2021-DE.Hybrid.CNCCs-Unique",0,937,17,9558,1,0,0
+"92","Unique to Preosteoblasts","Gokhman2021-DE.Hybrid.CNCCs-Unique",3,934,30,9545,0.573960487616203,1.02194994357153,0.0909090909090909
+"93","Unique to Osteoblasts","Gokhman2021-DE.Hybrid.CNCCs-Unique",10,927,63,9512,0.112322437246047,1.62863660850002,0.136986301369863
+"94","Unique to Embedding Osteoblasts","Gokhman2021-DE.Hybrid.CNCCs-Unique",1,936,25,9550,0.912001960855827,0.408143871834393,0.0384615384615385
+"95","Unique to Mineralizing Osteoblasts","Gokhman2021-DE.Hybrid.CNCCs-Unique",20,917,209,9366,0.573036705486488,0.977393006385558,0.0873362445414847
+"96","Unique to Maturing Osteocytes","Gokhman2021-DE.Hybrid.CNCCs-Unique",3,934,33,9542,0.634127166771213,0.92875515004386,0.0833333333333333
+"97","Shared in All","Gokhman2020-DMR.bone",2,231,23,10256,0.105239433150251,3.85985389594022,0.08
+"98","Shared in Pre/Obl/Emb/Min","Gokhman2020-DMR.bone",0,233,22,10257,1,0,0
+"99","Shared in Obl/Emb/Min","Gokhman2020-DMR.bone",0,233,17,10262,1,0,0
+"100","Unique to Preosteoblasts","Gokhman2020-DMR.bone",1,232,32,10247,0.523276615182794,1.38018223140498,0.0303030303030303
+"101","Unique to Osteoblasts","Gokhman2020-DMR.bone",0,233,73,10206,1,0,0
+"102","Unique to Embedding Osteoblasts","Gokhman2020-DMR.bone",0,233,26,10253,1,0,0
+"103","Unique to Mineralizing Osteoblasts","Gokhman2020-DMR.bone",7,226,222,10057,0.245861476076838,1.40308074988705,0.0305676855895196
+"104","Unique to Maturing Osteocytes","Gokhman2020-DMR.bone",1,232,35,10244,0.554377447739597,1.26154286342763,0.0277777777777778
+"105","Shared in All","Hsu2019-GWAS.hip.geometry",0,6,25,10481,1,0,0
+"106","Shared in Pre/Obl/Emb/Min","Hsu2019-GWAS.hip.geometry",0,6,22,10484,1,0,0
+"107","Shared in Obl/Emb/Min","Hsu2019-GWAS.hip.geometry",0,6,17,10489,1,0,0
+"108","Unique to Preosteoblasts","Hsu2019-GWAS.hip.geometry",0,6,33,10473,1,0,0
+"109","Unique to Osteoblasts","Hsu2019-GWAS.hip.geometry",0,6,73,10433,1,0,0
+"110","Unique to Embedding Osteoblasts","Hsu2019-GWAS.hip.geometry",0,6,26,10480,1,0,0
+"111","Unique to Mineralizing Osteoblasts","Hsu2019-GWAS.hip.geometry",0,6,229,10277,1,0,0
+"112","Unique to Maturing Osteocytes","Hsu2019-GWAS.hip.geometry",0,6,36,10470,1,0,0
+"113","Shared in All","Styrkarsdottir2019-GWAS.bone.area",0,4,25,10483,1,0,0
+"114","Shared in Pre/Obl/Emb/Min","Styrkarsdottir2019-GWAS.bone.area",0,4,22,10486,1,0,0
+"115","Shared in Obl/Emb/Min","Styrkarsdottir2019-GWAS.bone.area",0,4,17,10491,1,0,0
+"116","Unique to Preosteoblasts","Styrkarsdottir2019-GWAS.bone.area",0,4,33,10475,1,0,0
+"117","Unique to Osteoblasts","Styrkarsdottir2019-GWAS.bone.area",0,4,73,10435,1,0,0
+"118","Unique to Embedding Osteoblasts","Styrkarsdottir2019-GWAS.bone.area",0,4,26,10482,1,0,0
+"119","Unique to Mineralizing Osteoblasts","Styrkarsdottir2019-GWAS.bone.area",0,4,229,10279,1,0,0
+"120","Unique to Maturing Osteocytes","Styrkarsdottir2019-GWAS.bone.area",0,4,36,10472,1,0,0
+"121","Shared in All","Yengo2018-GWAS.height",1,1040,24,9447,0.926481342938861,0.37850934259823,0.04
+"122","Shared in Pre/Obl/Emb/Min","Yengo2018-GWAS.height",1,1040,21,9450,0.899404125896136,0.432716921445467,0.0454545454545455
+"123","Shared in Obl/Emb/Min","Yengo2018-GWAS.height",1,1040,16,9455,0.830386673089928,0.5682337184793,0.0588235294117647
+"124","Unique to Preosteoblasts","Yengo2018-GWAS.height",3,1038,30,9441,0.647957779759282,0.909538344508377,0.0909090909090909
+"125","Unique to Osteoblasts","Yengo2018-GWAS.height",2,1039,71,9400,0.995632741689352,0.254869161948962,0.0273972602739726
+"126","Unique to Embedding Osteoblasts","Yengo2018-GWAS.height",3,1038,23,9448,0.482926433476981,1.18721140455813,0.115384615384615
+"127","Unique to Mineralizing Osteoblasts","Yengo2018-GWAS.height",20,1021,209,9262,0.756939702830208,0.868077498836458,0.0873362445414847
+"128","Unique to Maturing Osteocytes","Yengo2018-GWAS.height",1,1040,35,9436,0.976734639857948,0.25925049425371,0.0277777777777778
+"129","Shared in All","Steinberg2020-GWAS.OA",1,347,24,10140,0.569416313341143,1.21755231946879,0.04
+"130","Shared in Pre/Obl/Emb/Min","Steinberg2020-GWAS.OA",0,348,22,10142,1,0,0
+"131","Shared in Obl/Emb/Min","Steinberg2020-GWAS.OA",0,348,17,10147,1,0,0
+"132","Unique to Preosteoblasts","Steinberg2020-GWAS.OA",0,348,33,10131,1,0,0
+"133","Unique to Osteoblasts","Steinberg2020-GWAS.OA",3,345,70,10094,0.43681441301108,1.25388104202841,0.0410958904109589
+"134","Unique to Embedding Osteoblasts","Steinberg2020-GWAS.OA",0,348,26,10138,1,0,0
+"135","Unique to Mineralizing Osteoblasts","Steinberg2020-GWAS.OA",10,338,219,9945,0.228244448229243,1.34346490003445,0.0436681222707424
+"136","Unique to Maturing Osteocytes","Steinberg2020-GWAS.OA",1,347,35,10129,0.702996376960629,0.834018154657768,0.0277777777777778
+"137","Shared in All","Morris2020-GWAS.OP",1,476,24,10011,0.687240483778242,0.87632216907601,0.04
+"138","Shared in Pre/Obl/Emb/Min","Morris2020-GWAS.OP",0,477,22,10013,1,0,0
+"139","Shared in Obl/Emb/Min","Morris2020-GWAS.OP",1,476,16,10019,0.546186873762694,1.31547919931396,0.0588235294117647
+"140","Unique to Preosteoblasts","Morris2020-GWAS.OP",3,474,30,10005,0.187270384298505,2.110509065981,0.0909090909090909
+"141","Unique to Osteoblasts","Morris2020-GWAS.OP",0,477,73,9962,1,0,0
+"142","Unique to Embedding Osteoblasts","Morris2020-GWAS.OP",0,477,26,10009,1,0,0
+"143","Unique to Mineralizing Osteoblasts","Morris2020-GWAS.OP",11,466,218,9817,0.467391494714144,1.06301257354837,0.0480349344978166
+"144","Unique to Maturing Osteocytes","Morris2020-GWAS.OP",0,477,36,9999,1,0,0

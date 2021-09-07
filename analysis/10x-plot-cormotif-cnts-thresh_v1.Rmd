@@ -477,7 +477,7 @@ DEenrich$Source.DEGenes <- as.factor(DEenrich$Source.DEGenes)
 DEenrich$Source.GenesOfInterest <- as.factor(DEenrich$Source.GenesOfInterest)
 
 #Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
-DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
+DEenrich$GeneRatio <- DEenrich$DE.Interest / (DEenrich$DE.Interest + DEenrich$DE.NotInterest)
 
 #Add p-value color variable
 DEenrich$p.value.color <- "nonsignificant"
@@ -510,8 +510,22 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
 #aiming for a cutoff which minimizes enrichments across cell types
 tempSource <- c("Blake2018-DE.iPSC-endoderm-day1-Unique",
                 "Blake2018-DE.iPSC-endoderm-day2-Unique",
-                "Blake2018-DE.iPSC-endoderm-day3-Unique",
-                "Blake2020-DE.heart-Unique",
+                "Blake2018-DE.iPSC-endoderm-day3-Unique")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=p.value, color=p.value.color)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes) +
+  scale_color_manual(name="P-Value",
+                    values=c("black","red")) +
+  geom_hline(yintercept=0.05, color="black")
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
+  geom_point() +
+  facet_grid(Source.GenesOfInterest ~ Source.DEGenes)
+
+#aiming for a cutoff which minimizes enrichments across cell types
+tempSource <- c("Blake2020-DE.heart-Unique",
                 "Blake2020-DE.kidney-Unique",
                 "Blake2020-DE.liver-Unique",
                 "Blake2020-DE.lung-Unique")
@@ -874,7 +888,7 @@ DEenrich$Source.DEGenes <- as.factor(DEenrich$Source.DEGenes)
 DEenrich$Source.GenesOfInterest <- as.factor(DEenrich$Source.GenesOfInterest)
 
 #Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
-DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
+DEenrich$GeneRatio <- DEenrich$DE.Interest / (DEenrich$DE.Interest + DEenrich$DE.NotInterest)
 
 #Add p-value color variable
 DEenrich$p.value.color <- "nonsignificant"
@@ -1271,7 +1285,7 @@ DEenrich$Source.DEGenes <- as.factor(DEenrich$Source.DEGenes)
 DEenrich$Source.GenesOfInterest <- as.factor(DEenrich$Source.GenesOfInterest)
 
 #Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
-DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
+DEenrich$GeneRatio <- DEenrich$DE.Interest / (DEenrich$DE.Interest + DEenrich$DE.NotInterest)
 
 #Add p-value color variable
 DEenrich$p.value.color <- "nonsignificant"

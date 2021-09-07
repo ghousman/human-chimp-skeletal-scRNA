@@ -491,18 +491,18 @@ upset(combined,
                          list("Time.0","Time.1","Time.2")),
       text.scale=2)
 dev.off()
-v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="Time 0") %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="Time 1") %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="Time 2") %>% dplyr::select(gene))),
-                  category.names = c("Time 0","Time 1","Time 2"),
-                  filename=NULL,
-                  scaled=TRUE,
-                  euler.d=TRUE,
-                  col=c("pink","mediumorchid","dodgerblue"),
-                  fill=c("pink","mediumorchid","dodgerblue"),
-                  fontfamily="sans",
-                  cat.fontfamily="sans")
-grid.draw(v)
+#v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="Time 0") %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="Time 1") %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="Time 2") %>% dplyr::select(gene))),
+#                  category.names = c("Time 0","Time 1","Time 2"),
+#                  filename=NULL,
+#                  scaled=TRUE,
+#                  euler.d=TRUE,
+#                  col=c("pink","mediumorchid","dodgerblue"),
+#                  fill=c("pink","mediumorchid","dodgerblue"),
+#                  fontfamily="sans",
+#                  cat.fontfamily="sans")
+#grid.draw(v)
 
 # Examine absoute logFC of DE genes
 ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
@@ -659,18 +659,18 @@ upset(combined,
                          list("iPSC.c1","MSC.c1","Osteogenic.c1")),
       text.scale=2)
 dev.off()
-v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="iPSC.c1") %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="MSC.c1") %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c1") %>% dplyr::select(gene))),
-                  category.names = c("iPSC.c1","MSC.c1","Osteogenic.c1"),
-                  filename=NULL,
-                  scaled=TRUE,
-                  euler.d=TRUE,
-                  col=c("pink","mediumorchid","dodgerblue"),
-                  fill=c("pink","mediumorchid","dodgerblue"),
-                  fontfamily="sans",
-                  cat.fontfamily="sans")
-grid.draw(v)
+#v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="iPSC.c1") %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="MSC.c1") %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c1") %>% dplyr::select(gene))),
+#                  category.names = c("iPSC.c1","MSC.c1","Osteogenic.c1"),
+#                  filename=NULL,
+#                  scaled=TRUE,
+#                  euler.d=TRUE,
+#                  col=c("pink","mediumorchid","dodgerblue"),
+#                  fill=c("pink","mediumorchid","dodgerblue"),
+#                  fontfamily="sans",
+#                  cat.fontfamily="sans")
+#grid.draw(v)
 
 # Examine absoute logFC of DE genes
 ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
@@ -736,18 +736,18 @@ upset(combined,
                          list("iPSC","MSC","Osteogenic")),
       text.scale=2)
 dev.off()
-v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="iPSC") %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="MSC") %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="Osteogenic") %>% dplyr::select(gene))),
-                  category.names = c("iPSC","MSC","Osteogenic"),
-                  filename=NULL,
-                  scaled=TRUE,
-                  euler.d=TRUE,
-                  col=c("pink","mediumorchid","dodgerblue"),
-                  fill=c("pink","mediumorchid","dodgerblue"),
-                  fontfamily="sans",
-                  cat.fontfamily="sans")
-grid.draw(v)
+#v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="iPSC") %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="MSC") %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="Osteogenic") %>% dplyr::select(gene))),
+#                  category.names = c("iPSC","MSC","Osteogenic"),
+#                  filename=NULL,
+#                  scaled=TRUE,
+#                  euler.d=TRUE,
+#                  col=c("pink","mediumorchid","dodgerblue"),
+#                  fill=c("pink","mediumorchid","dodgerblue"),
+#                  fontfamily="sans",
+#                  cat.fontfamily="sans")
+#grid.draw(v)
 
 # Examine absoute logFC of DE genes
 ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
@@ -810,19 +810,19 @@ upset(combined,
       keep.order=TRUE,
       empty.intersections="on")
 dev.off()
-v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="Osteogenic.c1") %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c2") %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c3") %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c4") %>% dplyr::select(gene))),
-                  category.names = c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c4"),
-                  filename=NULL,
-                  scaled=TRUE,
-                  euler.d=TRUE,
-                  col=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4"),
-                  fill=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4"),
-                  fontfamily="sans",
-                  cat.fontfamily="sans")
-grid.draw(v)
+#v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="Osteogenic.c1") %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c2") %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c3") %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c4") %>% dplyr::select(gene))),
+#                  category.names = c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c4"),
+#                  filename=NULL,
+#                  scaled=TRUE,
+#                  euler.d=TRUE,
+#                  col=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4"),
+#                  fill=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4"),
+#                  fontfamily="sans",
+#                  cat.fontfamily="sans")
+#grid.draw(v)
 
 # Examine absoute logFC of DE genes
 ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
@@ -964,19 +964,19 @@ upset(combined,
       keep.order=TRUE,
       empty.intersections="on")
 dev.off()
-v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="Osteogenic.c1") %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c2") %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c3") %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c4") %>% dplyr::select(gene))),
-                  category.names = c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c4"),
-                  filename=NULL,
-                  scaled=TRUE,
-                  euler.d=TRUE,
-                  col=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4"),
-                  fill=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4"),
-                  fontfamily="sans",
-                  cat.fontfamily="sans")
-grid.draw(v)
+#v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="Osteogenic.c1") %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c2") %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c3") %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="Osteogenic.c4") %>% dplyr::select(gene))),
+#                  category.names = c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c4"),
+#                  filename=NULL,
+#                  scaled=TRUE,
+#                  euler.d=TRUE,
+#                  col=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4"),
+#                  fill=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4"),
+#                  fontfamily="sans",
+#                  cat.fontfamily="sans")
+#grid.draw(v)
 
 # Examine absoute logFC of DE genes
 ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
@@ -1144,20 +1144,20 @@ upset(combined,
                          list("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte")),
       text.scale=2)
 dev.off()
-v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="preosteoblast")            %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="osteoblast")               %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="embedding\nosteoblast")    %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="mineralizing\nosteoblast") %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="maturing\nosteocyte")      %>% dplyr::select(gene))),
-                  category.names = c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
-                  filename=NULL,
-                  scaled=TRUE,
-                  euler.d=TRUE,
-                  col=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
-                  fill=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
-                  fontfamily="sans",
-                  cat.fontfamily="sans")
-grid.draw(v)
+#v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="preosteoblast")            %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="osteoblast")               %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="embedding\nosteoblast")    %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="mineralizing\nosteoblast") %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="maturing\nosteocyte")      %>% dplyr::select(gene))),
+#                  category.names = c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+#                  filename=NULL,
+#                  scaled=TRUE,
+#                  euler.d=TRUE,
+#                  col=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
+#                  fill=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
+#                  fontfamily="sans",
+#                  cat.fontfamily="sans")
+#grid.draw(v)
 
 # Examine absoute logFC of DE genes
 ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
@@ -1300,20 +1300,20 @@ upset(combined,
                          list("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte")),
       text.scale=2)
 dev.off()
-v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="preosteoblast")            %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="osteoblast")               %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="embedding\nosteoblast")    %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="mineralizing\nosteoblast") %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="maturing\nosteocyte")      %>% dplyr::select(gene))),
-                  category.names = c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
-                  filename=NULL,
-                  scaled=TRUE,
-                  euler.d=TRUE,
-                  col=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
-                  fill=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
-                  fontfamily="sans",
-                  cat.fontfamily="sans")
-grid.draw(v)
+#v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="preosteoblast")            %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="osteoblast")               %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="embedding\nosteoblast")    %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="mineralizing\nosteoblast") %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="maturing\nosteocyte")      %>% dplyr::select(gene))),
+#                  category.names = c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+#                  filename=NULL,
+#                  scaled=TRUE,
+#                  euler.d=TRUE,
+#                  col=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
+#                  fill=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
+#                  fontfamily="sans",
+#                  cat.fontfamily="sans")
+#grid.draw(v)
 
 # Examine absoute logFC of DE genes
 ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
@@ -1405,20 +1405,20 @@ upset(combined,
                          list("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte")),
       text.scale=2)
 dev.off()
-v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="preosteoblast")            %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="osteoblast")               %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="embedding\nosteoblast")    %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="mineralizing\nosteoblast") %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="maturing\nosteocyte")      %>% dplyr::select(gene))),
-                  category.names = c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
-                  filename=NULL,
-                  scaled=TRUE,
-                  euler.d=TRUE,
-                  col=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
-                  fill=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
-                  fontfamily="sans",
-                  cat.fontfamily="sans")
-grid.draw(v)
+#v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="preosteoblast")            %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="osteoblast")               %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="embedding\nosteoblast")    %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="mineralizing\nosteoblast") %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="maturing\nosteocyte")      %>% dplyr::select(gene))),
+#                  category.names = c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+#                  filename=NULL,
+#                  scaled=TRUE,
+#                  euler.d=TRUE,
+#                  col=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
+#                  fill=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
+#                  fontfamily="sans",
+#                  cat.fontfamily="sans")
+#grid.draw(v)
 
 # Examine absoute logFC of DE genes
 ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
@@ -1556,20 +1556,20 @@ upset(combined,
                          list("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast")),
       text.scale=2)
 dev.off()
-v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="preosteoblast")            %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="osteoblast")               %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="embedding\nosteoblast")    %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="mineralizing\nosteoblast") %>% dplyr::select(gene)),
-                       pull(DEgenes %>% filter(cell.subset=="maturing\nosteocyte")      %>% dplyr::select(gene))),
-                  category.names = c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
-                  filename=NULL,
-                  scaled=TRUE,
-                  euler.d=TRUE,
-                  col=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
-                  fill=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
-                  fontfamily="sans",
-                  cat.fontfamily="sans")
-grid.draw(v)
+#v <- venn.diagram(list(pull(DEgenes %>% filter(cell.subset=="preosteoblast")            %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="osteoblast")               %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="embedding\nosteoblast")    %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="mineralizing\nosteoblast") %>% dplyr::select(gene)),
+#                       pull(DEgenes %>% filter(cell.subset=="maturing\nosteocyte")      %>% dplyr::select(gene))),
+#                  category.names = c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+#                  filename=NULL,
+#                  scaled=TRUE,
+#                  euler.d=TRUE,
+#                  col=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
+#                  fill=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4"),
+#                  fontfamily="sans",
+#                  cat.fontfamily="sans")
+#grid.draw(v)
 
 # Examine absoute logFC of DE genes
 ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
@@ -1894,7 +1894,7 @@ dev.off()
 
 Assess GO functional enrichment of interesting DE genes.
 
-```{r}
+```{r, eval=FALSE}
 
 #Shared across Stages (FDR<0.01, tested in all classifications)
 goTot <- goEnrich(totGenes=tests, deGenes=unique(shareX.stg$gene), ontology="ALL")
@@ -2257,10 +2257,11 @@ DEenrich$Source.DEGenes <- as.factor(DEenrich$Source.DEGenes)
 DEenrich$Source.GenesOfInterest <- as.factor(DEenrich$Source.GenesOfInterest)
 
 #Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
-DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
+DEenrich$GeneRatio <- DEenrich$DE.Interest / (DEenrich$DE.Interest + DEenrich$DE.NotInterest)
 
-#Calculate Ratio of Overlapping DE Genes vs. Total Genes (do not do this)
-#DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$NonDE.Interest,DEenrich$DE.NotInterest,DEenrich$NonDE.NotInterest)
+```
+
+```{r}
 
 #Plot Enrichments
 ggplot(DEenrich, aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=DE.Interest)) +
@@ -2270,8 +2271,70 @@ ggplot(DEenrich, aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          xlim(0,0.017) +
+          xlim(0,0.6) +
           scale_y_discrete(limits=rev)
+
+```
+
+```{r}
+
+tempSource <- c("Blake2018-DE.iPSCs-Unique",
+                "Gokhman2021-DE.Parental.iPSCs-Unique",
+                "Gokhman2021-DE.Hybrid.iPSCs-Unique",
+                "Blake2018-DE.iPSC-endoderm-day1-Unique",
+                "Blake2018-DE.iPSC-endoderm-day2-Unique",
+                "Blake2018-DE.iPSC-endoderm-day3-Unique",
+                "Blake2020-DE.heart-Unique",
+                "Blake2020-DE.kidney-Unique",
+                "Blake2020-DE.liver-Unique",
+                "Blake2020-DE.lung-Unique")
+index <- which(DEenrich$Source.GenesOfInterest %in% tempSource)
+ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=DE.Interest)) +
+          geom_point() +
+          facet_grid(~Source.DEGenes) +
+          scale_size_area(max_size=10) +
+          scale_color_viridis(option="C", limits=c(0,0.05)) +
+          theme_bw() +
+          labs(x="Gene Ratio", y="") +
+          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.6)) +
+          scale_y_discrete(limits=rev)
+
+tempSource <- c("Gokhman2021-DE.Parental.CNCCs-Unique",
+                "Gokhman2021-DE.Hybrid.CNCCs-Unique",
+                "Gokhman2020-DMR.bone",
+                "Hsu2019-GWAS.hip.geometry",
+                "Styrkarsdottir2019-GWAS.bone.area",
+                "Yengo2018-GWAS.height",
+                "Steinberg2020-GWAS.OA",
+                "Morris2020-GWAS.OP")
+index <- which(DEenrich$Source.GenesOfInterest %in% tempSource)
+ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=DE.Interest)) +
+          geom_point() +
+          facet_grid(~Source.DEGenes) +
+          scale_size_area(max_size=10) +
+          scale_color_viridis(option="C", limits=c(0,0.05)) +
+          theme_bw() +
+          labs(x="Gene Ratio", y="") +
+          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.2)) +
+          scale_y_discrete(limits=rev)
+
+```
+
+Print p-values for significant enrichments:
+
+```{r}
+
+tbl <- DEenrich[which(DEenrich$p.value<0.05),c(1:3,7,9)]
+tbl[order(tbl$p.value),]
+
+```
+
+Save enrichment results:
+
+```{r}
+
+#Save enrichment results
+write.csv(DEenrich,"./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.stage.enrichment.csv")
 
 ```
 
@@ -2450,7 +2513,7 @@ length(uniqX.stg.t2$gene)
 
 Assess GO functional enrichment of interesting DE genes.
 
-```{r}
+```{r, eval=FALSE}
 
 #Shared across Clusters (FDR<0.01, tested in all classifications)
 goTot <- goEnrich(totGenes=tests, deGenes=unique(shareX.stg$gene), ontology="ALL")
@@ -2633,10 +2696,11 @@ DEenrich$Source.DEGenes <- as.factor(DEenrich$Source.DEGenes)
 DEenrich$Source.GenesOfInterest <- as.factor(DEenrich$Source.GenesOfInterest)
 
 #Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
-DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
+DEenrich$GeneRatio <- DEenrich$DE.Interest / (DEenrich$DE.Interest + DEenrich$DE.NotInterest)
 
-#Calculate Ratio of Overlapping DE Genes vs. Total Genes (do not do this)
-#DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$NonDE.Interest,DEenrich$DE.NotInterest,DEenrich$NonDE.NotInterest)
+```
+
+```{r}
 
 #Plot Enrichments
 ggplot(DEenrich, aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=DE.Interest)) +
@@ -2646,8 +2710,70 @@ ggplot(DEenrich, aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          xlim(0,0.017) +
+          xlim(0,0.6) +
           scale_y_discrete(limits=rev)
+
+```
+
+```{r}
+
+tempSource <- c("Blake2018-DE.iPSCs-Unique",
+                "Gokhman2021-DE.Parental.iPSCs-Unique",
+                "Gokhman2021-DE.Hybrid.iPSCs-Unique",
+                "Blake2018-DE.iPSC-endoderm-day1-Unique",
+                "Blake2018-DE.iPSC-endoderm-day2-Unique",
+                "Blake2018-DE.iPSC-endoderm-day3-Unique",
+                "Blake2020-DE.heart-Unique",
+                "Blake2020-DE.kidney-Unique",
+                "Blake2020-DE.liver-Unique",
+                "Blake2020-DE.lung-Unique")
+index <- which(DEenrich$Source.GenesOfInterest %in% tempSource)
+ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=DE.Interest)) +
+          geom_point() +
+          facet_grid(~Source.DEGenes) +
+          scale_size_area(max_size=10) +
+          scale_color_viridis(option="C", limits=c(0,0.05)) +
+          theme_bw() +
+          labs(x="Gene Ratio", y="") +
+          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.6)) +
+          scale_y_discrete(limits=rev)
+
+tempSource <- c("Gokhman2021-DE.Parental.CNCCs-Unique",
+                "Gokhman2021-DE.Hybrid.CNCCs-Unique",
+                "Gokhman2020-DMR.bone",
+                "Hsu2019-GWAS.hip.geometry",
+                "Styrkarsdottir2019-GWAS.bone.area",
+                "Yengo2018-GWAS.height",
+                "Steinberg2020-GWAS.OA",
+                "Morris2020-GWAS.OP")
+index <- which(DEenrich$Source.GenesOfInterest %in% tempSource)
+ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=DE.Interest)) +
+          geom_point() +
+          facet_grid(~Source.DEGenes) +
+          scale_size_area(max_size=10) +
+          scale_color_viridis(option="C", limits=c(0,0.05)) +
+          theme_bw() +
+          labs(x="Gene Ratio", y="") +
+          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.2)) +
+          scale_y_discrete(limits=rev)
+
+```
+
+Print p-values for significant enrichments:
+
+```{r}
+
+tbl <- DEenrich[which(DEenrich$p.value<0.05),c(1:3,7,9)]
+tbl[order(tbl$p.value),]
+
+```
+
+Save enrichment results:
+
+```{r}
+
+#Save enrichment results
+write.csv(DEenrich,"./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.cluster.enrichment.csv")
 
 ```
 
@@ -2777,7 +2903,7 @@ length(uniqX.stg.t2$gene)
 
 Assess GO functional enrichment of interesting DE genes.
 
-```{r}
+```{r, eval=FALSE}
 
 #Shared across Ad Hoc (FDR<0.01, tested in all classifications)
 goTot <- goEnrich(totGenes=tests, deGenes=unique(shareX.stg$gene), ontology="ALL")
@@ -2960,10 +3086,11 @@ DEenrich$Source.DEGenes <- as.factor(DEenrich$Source.DEGenes)
 DEenrich$Source.GenesOfInterest <- as.factor(DEenrich$Source.GenesOfInterest)
 
 #Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
-DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
+DEenrich$GeneRatio <- DEenrich$DE.Interest / (DEenrich$DE.Interest + DEenrich$DE.NotInterest)
 
-#Calculate Ratio of Overlapping DE Genes vs. Total Genes (do not do this)
-#DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$NonDE.Interest,DEenrich$DE.NotInterest,DEenrich$NonDE.NotInterest)
+```
+
+```{r}
 
 #Plot Enrichments
 ggplot(DEenrich, aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=DE.Interest)) +
@@ -2973,8 +3100,70 @@ ggplot(DEenrich, aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          xlim(0,0.017) +
+          xlim(0,0.6) +
           scale_y_discrete(limits=rev)
+
+```
+
+```{r}
+
+tempSource <- c("Blake2018-DE.iPSCs-Unique",
+                "Gokhman2021-DE.Parental.iPSCs-Unique",
+                "Gokhman2021-DE.Hybrid.iPSCs-Unique",
+                "Blake2018-DE.iPSC-endoderm-day1-Unique",
+                "Blake2018-DE.iPSC-endoderm-day2-Unique",
+                "Blake2018-DE.iPSC-endoderm-day3-Unique",
+                "Blake2020-DE.heart-Unique",
+                "Blake2020-DE.kidney-Unique",
+                "Blake2020-DE.liver-Unique",
+                "Blake2020-DE.lung-Unique")
+index <- which(DEenrich$Source.GenesOfInterest %in% tempSource)
+ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=DE.Interest)) +
+          geom_point() +
+          facet_grid(~Source.DEGenes) +
+          scale_size_area(max_size=10) +
+          scale_color_viridis(option="C", limits=c(0,0.05)) +
+          theme_bw() +
+          labs(x="Gene Ratio", y="") +
+          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.6)) +
+          scale_y_discrete(limits=rev)
+
+tempSource <- c("Gokhman2021-DE.Parental.CNCCs-Unique",
+                "Gokhman2021-DE.Hybrid.CNCCs-Unique",
+                "Gokhman2020-DMR.bone",
+                "Hsu2019-GWAS.hip.geometry",
+                "Styrkarsdottir2019-GWAS.bone.area",
+                "Yengo2018-GWAS.height",
+                "Steinberg2020-GWAS.OA",
+                "Morris2020-GWAS.OP")
+index <- which(DEenrich$Source.GenesOfInterest %in% tempSource)
+ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=DE.Interest)) +
+          geom_point() +
+          facet_grid(~Source.DEGenes) +
+          scale_size_area(max_size=10) +
+          scale_color_viridis(option="C", limits=c(0,0.05)) +
+          theme_bw() +
+          labs(x="Gene Ratio", y="") +
+          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.2)) +
+          scale_y_discrete(limits=rev)
+
+```
+
+Print p-values for significant enrichments:
+
+```{r}
+
+tbl <- DEenrich[which(DEenrich$p.value<0.05),c(1:3,7,9)]
+tbl[order(tbl$p.value),]
+
+```
+
+Save enrichment results:
+
+```{r}
+
+#Save enrichment results
+write.csv(DEenrich,"./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.adhoc.enrichment.csv")
 
 ```
 
@@ -3099,7 +3288,7 @@ length(UniqX.50o4$gene)
 
 Assess GO functional enrichment of interesting DE genes.
 
-```{r}
+```{r, eval=FALSE}
 
 #Shared across Osteogenic Clusters (FDR<0.01, tested in all classifications) - no enrichments
 #goTot <- goEnrich(totGenes=tests, deGenes=unique(shareX.o1o3o4)$gene, ontology="ALL")
@@ -3250,10 +3439,11 @@ DEenrich$Source.DEGenes <- as.factor(DEenrich$Source.DEGenes)
 DEenrich$Source.GenesOfInterest <- as.factor(DEenrich$Source.GenesOfInterest)
 
 #Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
-DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
+DEenrich$GeneRatio <- DEenrich$DE.Interest / (DEenrich$DE.Interest + DEenrich$DE.NotInterest)
 
-#Calculate Ratio of Overlapping DE Genes vs. Total Genes (do not do this)
-#DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$NonDE.Interest,DEenrich$DE.NotInterest,DEenrich$NonDE.NotInterest)
+```
+
+```{r}
 
 #Plot Enrichments
 ggplot(DEenrich, aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=DE.Interest)) +
@@ -3263,8 +3453,70 @@ ggplot(DEenrich, aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          xlim(0,0.017) +
+          xlim(0,0.6) +
           scale_y_discrete(limits=rev)
+
+```
+
+```{r}
+
+tempSource <- c("Blake2018-DE.iPSCs-Unique",
+                "Gokhman2021-DE.Parental.iPSCs-Unique",
+                "Gokhman2021-DE.Hybrid.iPSCs-Unique",
+                "Blake2018-DE.iPSC-endoderm-day1-Unique",
+                "Blake2018-DE.iPSC-endoderm-day2-Unique",
+                "Blake2018-DE.iPSC-endoderm-day3-Unique",
+                "Blake2020-DE.heart-Unique",
+                "Blake2020-DE.kidney-Unique",
+                "Blake2020-DE.liver-Unique",
+                "Blake2020-DE.lung-Unique")
+index <- which(DEenrich$Source.GenesOfInterest %in% tempSource)
+ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=DE.Interest)) +
+          geom_point() +
+          facet_grid(~Source.DEGenes) +
+          scale_size_area(max_size=10) +
+          scale_color_viridis(option="C", limits=c(0,0.05)) +
+          theme_bw() +
+          labs(x="Gene Ratio", y="") +
+          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.6)) +
+          scale_y_discrete(limits=rev)
+
+tempSource <- c("Gokhman2021-DE.Parental.CNCCs-Unique",
+                "Gokhman2021-DE.Hybrid.CNCCs-Unique",
+                "Gokhman2020-DMR.bone",
+                "Hsu2019-GWAS.hip.geometry",
+                "Styrkarsdottir2019-GWAS.bone.area",
+                "Yengo2018-GWAS.height",
+                "Steinberg2020-GWAS.OA",
+                "Morris2020-GWAS.OP")
+index <- which(DEenrich$Source.GenesOfInterest %in% tempSource)
+ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=DE.Interest)) +
+          geom_point() +
+          facet_grid(~Source.DEGenes) +
+          scale_size_area(max_size=10) +
+          scale_color_viridis(option="C", limits=c(0,0.05)) +
+          theme_bw() +
+          labs(x="Gene Ratio", y="") +
+          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.2)) +
+          scale_y_discrete(limits=rev)
+
+```
+
+Print p-values for significant enrichments:
+
+```{r}
+
+tbl <- DEenrich[which(DEenrich$p.value<0.05),c(1:3,7,9)]
+tbl[order(tbl$p.value),]
+
+```
+
+Save enrichment results:
+
+```{r}
+
+#Save enrichment results
+write.csv(DEenrich,"./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.50.enrichment.csv")
 
 ```
 
@@ -3656,7 +3908,7 @@ dev.off()
 
 Assess GO functional enrichment of interesting DE genes.
 
-```{r}
+```{r, eval=FALSE}
 
 #Shared across All OstAdHoc Classifications (FDR<0.01, tested in all classifications)
 goTot <- goEnrich(totGenes=tests, deGenes=unique(shareX.oad)$gene, ontology="ALL")
@@ -4052,10 +4304,11 @@ DEenrich$Source.DEGenes <- as.factor(DEenrich$Source.DEGenes)
 DEenrich$Source.GenesOfInterest <- as.factor(DEenrich$Source.GenesOfInterest)
 
 #Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
-DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
+DEenrich$GeneRatio <- DEenrich$DE.Interest / (DEenrich$DE.Interest + DEenrich$DE.NotInterest)
 
-#Calculate Ratio of Overlapping DE Genes vs. Total Genes (do not do this)
-#DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$NonDE.Interest,DEenrich$DE.NotInterest,DEenrich$NonDE.NotInterest)
+```
+
+```{r}
 
 #Plot Enrichments
 ggplot(DEenrich, aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=DE.Interest)) +
@@ -4065,8 +4318,70 @@ ggplot(DEenrich, aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          xlim(0,0.017) +
+          xlim(0,0.6) +
           scale_y_discrete(limits=rev)
+
+```
+
+```{r}
+
+tempSource <- c("Blake2018-DE.iPSCs-Unique",
+                "Gokhman2021-DE.Parental.iPSCs-Unique",
+                "Gokhman2021-DE.Hybrid.iPSCs-Unique",
+                "Blake2018-DE.iPSC-endoderm-day1-Unique",
+                "Blake2018-DE.iPSC-endoderm-day2-Unique",
+                "Blake2018-DE.iPSC-endoderm-day3-Unique",
+                "Blake2020-DE.heart-Unique",
+                "Blake2020-DE.kidney-Unique",
+                "Blake2020-DE.liver-Unique",
+                "Blake2020-DE.lung-Unique")
+index <- which(DEenrich$Source.GenesOfInterest %in% tempSource)
+ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=DE.Interest)) +
+          geom_point() +
+          facet_grid(~Source.DEGenes) +
+          scale_size_area(max_size=10) +
+          scale_color_viridis(option="C", limits=c(0,0.05)) +
+          theme_bw() +
+          labs(x="Gene Ratio", y="") +
+          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.6)) +
+          scale_y_discrete(limits=rev)
+
+tempSource <- c("Gokhman2021-DE.Parental.CNCCs-Unique",
+                "Gokhman2021-DE.Hybrid.CNCCs-Unique",
+                "Gokhman2020-DMR.bone",
+                "Hsu2019-GWAS.hip.geometry",
+                "Styrkarsdottir2019-GWAS.bone.area",
+                "Yengo2018-GWAS.height",
+                "Steinberg2020-GWAS.OA",
+                "Morris2020-GWAS.OP")
+index <- which(DEenrich$Source.GenesOfInterest %in% tempSource)
+ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=DE.Interest)) +
+          geom_point() +
+          facet_grid(~Source.DEGenes) +
+          scale_size_area(max_size=10) +
+          scale_color_viridis(option="C", limits=c(0,0.05)) +
+          theme_bw() +
+          labs(x="Gene Ratio", y="") +
+          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.2)) +
+          scale_y_discrete(limits=rev)
+
+```
+
+Print p-values for significant enrichments:
+
+```{r}
+
+tbl <- DEenrich[which(DEenrich$p.value<0.05),c(1:3,7,9)]
+tbl[order(tbl$p.value),]
+
+```
+
+Save enrichment results:
+
+```{r}
+
+#Save enrichment results
+write.csv(DEenrich,"./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.enrichment.csv")
 
 ```
 

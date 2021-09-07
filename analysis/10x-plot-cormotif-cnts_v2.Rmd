@@ -746,10 +746,7 @@ DEenrich$Source.DEGenes <- as.factor(DEenrich$Source.DEGenes)
 DEenrich$Source.GenesOfInterest <- as.factor(DEenrich$Source.GenesOfInterest)
 
 #Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
-DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
-
-#Calculate Ratio of Overlapping DE Genes vs. Total Genes (do not do this)
-#DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$NonDE.Interest,DEenrich$DE.NotInterest,DEenrich$NonDE.NotInterest)
+DEenrich$GeneRatio <- DEenrich$DE.Interest / (DEenrich$DE.Interest + DEenrich$DE.NotInterest)
 
 ```
 
@@ -763,7 +760,7 @@ ggplot(DEenrich, aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          xlim(0,0.017) +
+          xlim(0,0.5) +
           scale_y_discrete(limits=rev)
 
 ```
@@ -794,7 +791,7 @@ ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.valu
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.004)) +
+          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.5)) +
           scale_y_discrete(limits=rev)
 
 tempGenes <- c("Shared in All",
@@ -819,7 +816,7 @@ ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.valu
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.001)) +
+          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.2)) +
           scale_y_discrete(limits=rev)
 
 ```
@@ -847,7 +844,7 @@ ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.valu
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          xlim(0,0.017) +
+          xlim(0,0.5) +
           scale_y_discrete(limits=rev)
 
 tempGenes <- c("All Time 0",
@@ -869,7 +866,7 @@ ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.valu
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          xlim(0,0.017) +
+          xlim(0,0.2) +
           scale_y_discrete(limits=rev)
 
 ```
@@ -1389,10 +1386,7 @@ DEenrich$Source.DEGenes <- as.factor(DEenrich$Source.DEGenes)
 DEenrich$Source.GenesOfInterest <- as.factor(DEenrich$Source.GenesOfInterest)
 
 #Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
-DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
-
-#Calculate Ratio of Overlapping DE Genes vs. Total Genes (do not do this)
-#DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$NonDE.Interest,DEenrich$DE.NotInterest,DEenrich$NonDE.NotInterest)
+DEenrich$GeneRatio <- DEenrich$DE.Interest / (DEenrich$DE.Interest + DEenrich$DE.NotInterest)
 
 ```
 
@@ -1406,7 +1400,7 @@ ggplot(DEenrich, aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          xlim(0,0.017) +
+          xlim(0,1) +
           scale_y_discrete(limits=rev)
 
 ```
@@ -1430,7 +1424,7 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          xlim(0,0.017) +
+          xlim(0,01) +
           scale_y_discrete(limits=rev)
 
 tempSource <- c("Gokhman2021-DE.Parental.CNCCs-Unique",
@@ -1448,7 +1442,7 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          xlim(0,0.017) +
+          xlim(0,0.3) +
           scale_y_discrete(limits=rev)
 
 ```
@@ -1845,10 +1839,7 @@ DEenrich$Source.DEGenes <- as.factor(DEenrich$Source.DEGenes)
 DEenrich$Source.GenesOfInterest <- as.factor(DEenrich$Source.GenesOfInterest)
 
 #Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
-DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
-
-#Calculate Ratio of Overlapping DE Genes vs. Total Genes (do not do this)
-#DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$NonDE.Interest,DEenrich$DE.NotInterest,DEenrich$NonDE.NotInterest)
+DEenrich$GeneRatio <- DEenrich$DE.Interest / (DEenrich$DE.Interest + DEenrich$DE.NotInterest)
 
 ```
 
@@ -1862,7 +1853,7 @@ ggplot(DEenrich, aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          xlim(0,0.017) +
+          xlim(0,0.5) +
           scale_y_discrete(limits=rev)
 
 ```
@@ -1886,7 +1877,7 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          xlim(0,0.017) +
+          xlim(0,0.5) +
           scale_y_discrete(limits=rev)
 
 tempSource <- c("Gokhman2021-DE.Parental.CNCCs-Unique",
@@ -1904,7 +1895,7 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          xlim(0,0.017) +
+          xlim(0,0.3) +
           scale_y_discrete(limits=rev)
 
 ```
@@ -2329,10 +2320,7 @@ DEenrich$Source.DEGenes <- as.factor(DEenrich$Source.DEGenes)
 DEenrich$Source.GenesOfInterest <- as.factor(DEenrich$Source.GenesOfInterest)
 
 #Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
-DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
-
-#Calculate Ratio of Overlapping DE Genes vs. Total Genes (do not do this)
-#DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$NonDE.Interest,DEenrich$DE.NotInterest,DEenrich$NonDE.NotInterest)
+DEenrich$GeneRatio <- DEenrich$DE.Interest / (DEenrich$DE.Interest + DEenrich$DE.NotInterest)
 
 ```
 
@@ -2346,7 +2334,7 @@ ggplot(DEenrich, aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          xlim(0,0.017) +
+          xlim(0,0.5) +
           scale_y_discrete(limits=rev)
 
 ```
@@ -2370,7 +2358,7 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          xlim(0,0.017) +
+          xlim(0,0.5) +
           scale_y_discrete(limits=rev)
 
 tempSource <- c("Gokhman2021-DE.Parental.CNCCs-Unique",
@@ -2388,7 +2376,7 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          xlim(0,0.017) +
+          xlim(0,0.2) +
           scale_y_discrete(limits=rev)
 
 ```
@@ -2941,10 +2929,7 @@ DEenrich$Source.DEGenes <- as.factor(DEenrich$Source.DEGenes)
 DEenrich$Source.GenesOfInterest <- as.factor(DEenrich$Source.GenesOfInterest)
 
 #Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
-DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
-
-#Calculate Ratio of Overlapping DE Genes vs. Total Genes (do not do this)
-#DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$NonDE.Interest,DEenrich$DE.NotInterest,DEenrich$NonDE.NotInterest)
+DEenrich$GeneRatio <- DEenrich$DE.Interest / (DEenrich$DE.Interest + DEenrich$DE.NotInterest)
 
 ```
 
@@ -2958,7 +2943,7 @@ ggplot(DEenrich, aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          xlim(0,0.017) +
+          xlim(0,0.1) +
           scale_y_discrete(limits=rev)
 
 ```
@@ -2984,7 +2969,7 @@ ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.valu
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.004)) +
+          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.6)) +
           scale_y_discrete(limits=rev)
 
 tempGenes <- "Shared in All"
@@ -3004,7 +2989,7 @@ ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.valu
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.001)) +
+          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.2)) +
           scale_y_discrete(limits=rev)
 
 ```
@@ -3033,7 +3018,7 @@ ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.valu
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.004)) +
+          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,1)) +
           scale_y_discrete(limits=rev)
 
 tempGenes <- c("Shared in\nPre/Obl/Emb/Min",
@@ -3056,7 +3041,7 @@ ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.valu
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.001)) +
+          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,1)) +
           scale_y_discrete(limits=rev)
 
 ```
@@ -3675,10 +3660,7 @@ DEenrich$Source.DEGenes <- as.factor(DEenrich$Source.DEGenes)
 DEenrich$Source.GenesOfInterest <- as.factor(DEenrich$Source.GenesOfInterest)
 
 #Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
-DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
-
-#Calculate Ratio of Overlapping DE Genes vs. Total Genes (do not do this)
-#DEenrich$GeneRatio <- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$NonDE.Interest,DEenrich$DE.NotInterest,DEenrich$NonDE.NotInterest)
+DEenrich$GeneRatio <- DEenrich$DE.Interest / (DEenrich$DE.Interest + DEenrich$DE.NotInterest)
 
 ```
 
@@ -3692,7 +3674,7 @@ ggplot(DEenrich, aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.value, size=
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          xlim(0,0.017) +
+          xlim(0,1) +
           scale_y_discrete(limits=rev)
 
 ```
@@ -3718,7 +3700,7 @@ ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.valu
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.004)) +
+          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,1)) +
           scale_y_discrete(limits=rev)
 
 tempGenes <- "Shared in All"
@@ -3738,7 +3720,7 @@ ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.valu
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.001)) +
+          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,1)) +
           scale_y_discrete(limits=rev)
 
 ```
@@ -3767,7 +3749,7 @@ ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.valu
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.004)) +
+          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,1)) +
           scale_y_discrete(limits=rev)
 
 tempGenes <- c("Shared in\nPre/Obl/Emb/Min",
@@ -3790,7 +3772,7 @@ ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.valu
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,0.001)) +
+          scale_x_continuous(guide=guide_axis(angle=30), limits=c(0,1)) +
           scale_y_discrete(limits=rev)
 
 ```
@@ -3820,7 +3802,7 @@ ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.valu
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          xlim(0,0.017) +
+          xlim(0,1) +
           scale_y_discrete(limits=rev)
 
 tempGenes <- c("All Preostoblasts",
@@ -3844,7 +3826,7 @@ ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.valu
           scale_color_viridis(option="C", limits=c(0,0.05)) +
           theme_bw() +
           labs(x="Gene Ratio", y="") +
-          xlim(0,0.017) +
+          xlim(0,1) +
           scale_y_discrete(limits=rev)
 
 ```

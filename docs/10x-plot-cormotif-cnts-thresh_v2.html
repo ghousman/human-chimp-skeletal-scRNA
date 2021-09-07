@@ -536,16 +536,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreede2afe484d8dd8020aabbe827591a36112cc1a85targetblankde2afe4a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/de2afe484d8dd8020aabbe827591a36112cc1a85" target="_blank">de2afe4</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtree7fa17e693a3e8238a3d607166efdf3c0bc59648etargetblank7fa17e6a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/7fa17e693a3e8238a3d607166efdf3c0bc59648e" target="_blank">7fa17e6</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreede2afe484d8dd8020aabbe827591a36112cc1a85targetblankde2afe4a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtree7fa17e693a3e8238a3d607166efdf3c0bc59648etargetblank7fa17e6a" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/de2afe484d8dd8020aabbe827591a36112cc1a85" target="_blank">de2afe4</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/7fa17e693a3e8238a3d607166efdf3c0bc59648e" target="_blank">7fa17e6</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -577,6 +577,11 @@ Untracked files:
     Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/corrmatrix.ost
+    Untracked:  data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.adhoc.enrichment.csv
+    Untracked:  data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.cluster.enrichment.csv
+    Untracked:  data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.enrichment.csv
+    Untracked:  data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.50.enrichment.csv
+    Untracked:  data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.stage.enrichment.csv
     Untracked:  data/gom-data/v2/gom10.log.indv-cell.int19k.reg-t2.rds
     Untracked:  data/gom-data/v2/gom3.100genes.log.indv-cell.int19k.reg-t2.rds
     Untracked:  data/gom-data/v2/gom3.100genes.log.indv-cell.int19k.reg-tot.rds
@@ -606,7 +611,16 @@ Untracked files:
     Untracked:  output/v2/data-qc-postfilter-subsets.reg-batchviz.pdf
 
 Unstaged changes:
+    Modified:   analysis/10x-plot-cormotif-cnts-thresh_v1.Rmd
     Modified:   analysis/10x-plot-cormotif-cnts-thresh_v2.Rmd
+    Modified:   analysis/10x-plot-cormotif-cnts_v2.Rmd
+    Modified:   analysis/10x-plot-diffexp.Rmd
+    Modified:   data/cormotif-data/cormotif.cnts.v2.pseudo-adhoc.data.filterC.log.indv-cell.intNo0.reg-tot.enrichment.csv
+    Modified:   data/cormotif-data/cormotif.cnts.v2.pseudo-cluster.data.filterC.log.indv-cell.intNo0.reg-tot.enrichment.csv
+    Modified:   data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4gene.T2.data.filterC.log.indv-cell.intNo0.reg-tot.enrichment.csv
+    Modified:   data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4gene.data.filterC.log.indv-cell.intNo0.reg-tot.enrichment.csv
+    Modified:   data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.50.data.filterC.log.indv-cell.intNo0.reg-tot.enrichment.csv
+    Modified:   data/cormotif-data/cormotif.cnts.v2.pseudo-stage.data.filterC.log.indv-cell.intNo0.reg-tot.enrichment.csv
 
 </code></pre>
 <p>
@@ -645,6 +659,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/analysis/10x-plot-cormotif-cnts-thresh_v2.Rmd" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+<td>
+updated threshold code
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/ghousman/human-chimp-skeletal-scRNA/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/10x-plot-cormotif-cnts-thresh_v2.html" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+<td>
+updated threshold code
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -2272,7 +2320,7 @@ DEenrich$Source.DEGenes &lt;- as.factor(DEenrich$Source.DEGenes)
 DEenrich$Source.GenesOfInterest &lt;- as.factor(DEenrich$Source.GenesOfInterest)
 
 #Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
-DEenrich$GeneRatio &lt;- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
+DEenrich$GeneRatio &lt;- DEenrich$DE.Interest / (DEenrich$DE.Interest + DEenrich$DE.NotInterest)
 
 #Add p-value color variable
 DEenrich$p.value.color &lt;- &quot;nonsignificant&quot;
@@ -2330,6 +2378,7 @@ Genevieve Housman
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<pre><code>Warning: Removed 18 rows containing missing values (geom_point).</code></pre>
 <p><img src="figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-9-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-2">
@@ -2444,6 +2493,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-9-4.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-9-4.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -2460,6 +2520,7 @@ Genevieve Housman
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<pre><code>Warning: Removed 18 rows containing missing values (geom_point).</code></pre>
 <p><img src="figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-9-5.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-5">
@@ -2483,6 +2544,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-9-5.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-9-5.png" target="_blank">de2afe4</a>
@@ -2524,6 +2596,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-9-6.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-9-6.png" target="_blank">de2afe4</a>
@@ -2575,6 +2658,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-9-7.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-9-7.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -2591,6 +2685,7 @@ Genevieve Housman
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<pre><code>Warning: Removed 24 rows containing missing values (geom_point).</code></pre>
 <p><img src="figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-9-8.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-8">
@@ -2614,6 +2709,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-9-8.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-9-8.png" target="_blank">de2afe4</a>
@@ -2657,6 +2763,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-9-9.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-9-9.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -2686,14 +2803,126 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
                     values=c(&quot;black&quot;,&quot;red&quot;)) +
   geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
 <p><img src="figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-9-10.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-10">
+Past versions of unnamed-chunk-9-10.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-10" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-9-10.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<pre><code>Warning: Removed 48 rows containing missing values (geom_point).</code></pre>
 <p><img src="figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-9-11.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-11">
+Past versions of unnamed-chunk-9-11.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-11" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-9-11.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
 <p><img src="figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-9-12.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-12">
+Past versions of unnamed-chunk-9-12.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-12" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-9-12.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="osteogenic-ad-hoc-classification-of-cells-scaled-integrated-data-thresh0-4gene-flexible" class="section level2">
 <h2>Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene flexible)</h2>
@@ -4172,7 +4401,7 @@ DEenrich$Source.DEGenes &lt;- as.factor(DEenrich$Source.DEGenes)
 DEenrich$Source.GenesOfInterest &lt;- as.factor(DEenrich$Source.GenesOfInterest)
 
 #Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
-DEenrich$GeneRatio &lt;- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
+DEenrich$GeneRatio &lt;- DEenrich$DE.Interest / (DEenrich$DE.Interest + DEenrich$DE.NotInterest)
 
 #Add p-value color variable
 DEenrich$p.value.color &lt;- &quot;nonsignificant&quot;
@@ -4214,6 +4443,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-1.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-1.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -4230,6 +4470,7 @@ Genevieve Housman
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<pre><code>Warning: Removed 51 rows containing missing values (geom_point).</code></pre>
 <p><img src="figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-15-2">
@@ -4253,6 +4494,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-2.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-2.png" target="_blank">de2afe4</a>
@@ -4294,6 +4546,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-3.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-3.png" target="_blank">de2afe4</a>
@@ -4344,6 +4607,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-4.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-4.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -4360,6 +4634,7 @@ Genevieve Housman
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<pre><code>Warning: Removed 51 rows containing missing values (geom_point).</code></pre>
 <p><img src="figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-5.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-15-5">
@@ -4383,6 +4658,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-5.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-5.png" target="_blank">de2afe4</a>
@@ -4424,6 +4710,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-6.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-6.png" target="_blank">de2afe4</a>
@@ -4475,6 +4772,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-7.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-7.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -4491,6 +4799,7 @@ Genevieve Housman
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<pre><code>Warning: Removed 68 rows containing missing values (geom_point).</code></pre>
 <p><img src="figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-8.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-15-8">
@@ -4514,6 +4823,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-8.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-8.png" target="_blank">de2afe4</a>
@@ -4557,6 +4877,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-9.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-9.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -4586,14 +4917,126 @@ ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=
                     values=c(&quot;black&quot;,&quot;red&quot;)) +
   geom_hline(yintercept=0.05, color=&quot;black&quot;)</code></pre>
 <p><img src="figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-10.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-15-10">
+Past versions of unnamed-chunk-15-10.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-15-10" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-10.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<pre><code>Warning: Removed 136 rows containing missing values (geom_point).</code></pre>
 <p><img src="figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-11.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-15-11">
+Past versions of unnamed-chunk-15-11.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-15-11" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-11.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=DE.Interest)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
 <p><img src="figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-12.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-15-12">
+Past versions of unnamed-chunk-15-12.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-15-12" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-15-12.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="osteogenic-ad-hoc-classification-of-cells-scaled-integrated-data-thresh0-4gene-flexible-time-2-only" class="section level2">
 <h2>Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene flexible, Time 2 only)</h2>
@@ -6072,7 +6515,7 @@ DEenrich$Source.DEGenes &lt;- as.factor(DEenrich$Source.DEGenes)
 DEenrich$Source.GenesOfInterest &lt;- as.factor(DEenrich$Source.GenesOfInterest)
 
 #Calculate Ratio of Overlapping DE Genes vs. Total DE Genes
-DEenrich$GeneRatio &lt;- DEenrich$DE.Interest / sum(DEenrich$DE.Interest,DEenrich$DE.NotInterest)
+DEenrich$GeneRatio &lt;- DEenrich$DE.Interest / (DEenrich$DE.Interest + DEenrich$DE.NotInterest)
 
 #Add p-value color variable
 DEenrich$p.value.color &lt;- &quot;nonsignificant&quot;
@@ -6114,6 +6557,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-21-1.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-21-1.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -6130,6 +6584,7 @@ Genevieve Housman
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<pre><code>Warning: Removed 66 rows containing missing values (geom_point).</code></pre>
 <p><img src="figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-21-2.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-21-2">
@@ -6153,6 +6608,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-21-2.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-21-2.png" target="_blank">de2afe4</a>
@@ -6194,6 +6660,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-21-3.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-21-3.png" target="_blank">de2afe4</a>
@@ -6248,6 +6725,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-21-4.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-21-4.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -6264,6 +6752,7 @@ Genevieve Housman
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<pre><code>Warning: Removed 154 rows containing missing values (geom_point).</code></pre>
 <p><img src="figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-21-5.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-21-5">
@@ -6287,6 +6776,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-21-5.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-21-5.png" target="_blank">de2afe4</a>
@@ -6328,6 +6828,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-21-6.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-21-6.png" target="_blank">de2afe4</a>
@@ -6383,6 +6894,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-21-7.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-21-7.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -6399,6 +6921,7 @@ Genevieve Housman
 <pre class="r"><code>ggplot(DEenrich[which(DEenrich$Source.GenesOfInterest %in% tempSource),], aes(x=Post.Prob.Cutoff, y=GeneRatio)) +
   geom_point() +
   facet_grid(Source.GenesOfInterest ~ Source.DEGenes)</code></pre>
+<pre><code>Warning: Removed 176 rows containing missing values (geom_point).</code></pre>
 <p><img src="figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-21-8.png" width="672" style="display: block; margin: auto;" /></p>
 <p>
 <button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-21-8">
@@ -6422,6 +6945,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-21-8.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-21-8.png" target="_blank">de2afe4</a>
@@ -6463,6 +6997,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/7fa17e693a3e8238a3d607166efdf3c0bc59648e/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-21-9.png" target="_blank">7fa17e6</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts-thresh_v2.Rmd/unnamed-chunk-21-9.png" target="_blank">de2afe4</a>
