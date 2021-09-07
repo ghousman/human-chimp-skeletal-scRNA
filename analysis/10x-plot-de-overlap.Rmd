@@ -1,0 +1,335 @@
+---
+title: "10x-plot-de-overlap"
+author: "Genevieve Housman"
+date: "September 2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 10X Data Cellranger Analysis - Examine DE Gene Overlaps
+
+```{r, message=FALSE}
+
+#Load libraries
+library(Seurat)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(ggplot2)
+library(grid)
+library(gbm)
+library(colorspace)
+library(RColorBrewer)
+library(edgeR)
+library(scran)
+library(SingleCellExperiment)
+library(purrr)
+library(UpSetR)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(Rgraphviz)
+library(enrichplot)
+library(viridis)
+library(VennDiagram)
+library(ComplexHeatmap)
+library(Cormotif)
+
+```
+
+## Load data
+
+### Pairwise DE Genes - stages of differentiation
+
+```{r}
+
+DEdata.stg <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.stage.rds")
+colnames(DEdata.stg)[5] <- "FDR"
+DEdata.stg <- as_tibble(DEdata.stg)
+
+DEdataSig.stg <- DEdata.stg %>% filter(FDR<=0.01)
+
+table(DEdataSig.stg$cell.subset)
+
+#Pairwise DE genes Unique to Time 2
+comboGenes <- reduce(list(data.frame(gene=DEdataSig.stg %>% filter(cell.subset=="Time 0") %>% dplyr::select(gene), "Time.0"=1),
+                          data.frame(gene=DEdataSig.stg %>% filter(cell.subset=="Time 1") %>% dplyr::select(gene), "Time.1"=1),
+                          data.frame(gene=DEdataSig.stg %>% filter(cell.subset=="Time 2") %>% dplyr::select(gene), "Time.2"=1)
+                          ), full_join)
+comboGenes[is.na(comboGenes)] <- 0
+uniq.stg.t2 <- DEdataSig.stg %>% 
+                 filter(cell.subset=="Time 2",
+                        gene %in%
+                          pull(comboGenes %>%
+                                 filter(Time.0==0,
+                                        Time.1==0,
+                                        Time.2==1) %>%
+                                 dplyr::select(gene))) %>% 
+                 arrange(gene)
+#length(uniq.stg.t2$gene)
+
+#Pairwise DE genes Unique to Time 2 and tested in all cell classifications
+comboTests <- reduce(list(data.frame(gene=DEdata.stg %>% filter(cell.subset=="Time 0") %>% dplyr::select(gene), "Time.0"=1),
+                          data.frame(gene=DEdata.stg %>% filter(cell.subset=="Time 1") %>% dplyr::select(gene), "Time.1"=1),
+                          data.frame(gene=DEdata.stg %>% filter(cell.subset=="Time 2") %>% dplyr::select(gene), "Time.2"=1)
+                          ), full_join)
+comboTests[is.na(comboTests)] <- 0
+tests <- pull(comboTests %>%
+                filter(Time.0==1,
+                       Time.1==1,
+                       Time.2==1) %>%
+                dplyr::select(gene))
+uniqX.stg.t2 <- uniq.stg.t2[which(uniq.stg.t2$gene %in% tests),]
+#length(uniqX.stg.t2$gene)
+
+```
+
+### Pairwise DE Genes - stages of osteogenesis
+
+```{r}
+
+#pairwise de genes - stages of osteogenesis
+
+DEdata.ost <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.rds")
+
+colnames(DEdata.ost)[5] <- "FDR"
+DEdata.ost <- as_tibble(DEdata.ost)
+
+DEdataSig.ost <- DEdata.ost %>% filter(FDR<=0.01)
+
+table(DEdataSig.ost$cell.subset)
+
+#Total Pairwise DE genes across All OstAdHoc Classifications
+total.oad <- unique(DEdataSig.ost$gene)
+#length(total.oad)
+
+#Total Pairwise DE genes across All OstAdHoc Classifications and tested in all cell classifications
+comboTests <- reduce(list(data.frame(gene=DEdata.ost %>% filter(cell.subset=="preosteoblast") %>% dplyr::select(gene), "preosteoblast"=1),
+                          data.frame(gene=DEdata.ost %>% filter(cell.subset=="osteoblast") %>% dplyr::select(gene), "osteoblast"=1),
+                          data.frame(gene=DEdata.ost %>% filter(cell.subset=="embedding osteoblast") %>% dplyr::select(gene), "embedding osteoblast"=1),
+                          data.frame(gene=DEdata.ost %>% filter(cell.subset=="mineralizing osteoblast") %>% dplyr::select(gene), "mineralizing osteoblast"=1),
+                          data.frame(gene=DEdata.ost %>% filter(cell.subset=="maturing osteocyte") %>% dplyr::select(gene), "maturing osteocyte"=1)
+                          ), full_join)
+comboTests[is.na(comboTests)] <- 0
+tests <- pull(comboTests %>%
+                filter(preosteoblast==1,
+                       osteoblast==1,
+                       embedding.osteoblast==1,
+                       mineralizing.osteoblast==1,
+                       maturing.osteocyte==1) %>%
+                dplyr::select(gene))
+
+totalX.oad <- total.oad[which(total.oad %in% tests)]
+#length(totalX.oad)
+
+```
+
+### Cormotif DE Genes - stages of differentiation
+
+```{r}
+
+#cormotif de genes - stages of differentiation
+
+cormotifData.stg <- readRDS("./data/cormotif-data/cormotif.cnts.v2.pseudo-stage.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+
+dataUpset.stg <- as.data.frame(cormotifData.stg$bestmotif$p.post)
+dataUpset.stg[dataUpset.stg>0.65] <- 1
+dataUpset.stg[dataUpset.stg<=0.65] <- 0
+
+dataPlot <- data.frame("cell.subset"=c(rep("Time.0",length(which(dataUpset.stg$Time.0==1))),
+                                       rep("Time.1",length(which(dataUpset.stg$Time.1==1))),
+                                       rep("Time.2",length(which(dataUpset.stg$Time.2==1)))),
+                       "gene"=c(rownames(dataUpset.stg)[which(dataUpset.stg$Time.0==1)],
+                                rownames(dataUpset.stg)[which(dataUpset.stg$Time.1==1)],
+                                rownames(dataUpset.stg)[which(dataUpset.stg$Time.2==1)]),
+                       "post.p"=c(cormotifData.stg$bestmotif$p.post[which(dataUpset.stg$Time.0==1),"Time.0"],
+                                  cormotifData.stg$bestmotif$p.post[which(dataUpset.stg$Time.1==1),"Time.1"],
+                                  cormotifData.stg$bestmotif$p.post[which(dataUpset.stg$Time.2==1),"Time.2"]),
+                       row.names=NULL)
+
+dataPlot$cell.subset <- factor(dataPlot$cell.subset,
+                               levels=c("Time.0","Time.1","Time.2"),
+                               labels=c("Time 0","Time 1","Time 2"))
+
+table(dataPlot$cell.subset)
+
+```
+
+### Cormotif DE Genes - stages of osteogenesis
+
+``` {r}
+
+#cormotif de genes - stages of osteogenesis
+
+cormotifData.ost <- readRDS("./data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4gene.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+
+dataUpset.ost <- as.data.frame(cormotifData.ost$bestmotif$p.post)
+dataUpset.ost[dataUpset.ost>0.65] <- 1
+dataUpset.ost[dataUpset.ost<=0.65] <- 0
+
+dataPlot <- data.frame("cell.subset"=c(rep("preosteoblast",length(which(dataUpset.ost$preosteoblast==1))),
+                                       rep("osteoblast",length(which(dataUpset.ost$osteoblast==1))),
+                                       rep("embedding.osteoblast",length(which(dataUpset.ost$embedding.osteoblast==1))),
+                                       rep("mineralizing.osteoblast",length(which(dataUpset.ost$mineralizing.osteoblast==1))),
+                                       rep("maturing.osteocyte",length(which(dataUpset.ost$maturing.osteocyte==1)))),
+                       "gene"=c(rownames(dataUpset.ost)[which(dataUpset.ost$preosteoblast==1)],
+                                rownames(dataUpset.ost)[which(dataUpset.ost$osteoblast==1)],
+                                rownames(dataUpset.ost)[which(dataUpset.ost$embedding.osteoblast==1)],
+                                rownames(dataUpset.ost)[which(dataUpset.ost$mineralizing.osteoblast==1)],
+                                rownames(dataUpset.ost)[which(dataUpset.ost$maturing.osteocyte==1)]),
+                       "post.p"=c(cormotifData.ost$bestmotif$p.post[which(dataUpset.ost$preosteoblast==1),"preosteoblast"],
+                                  cormotifData.ost$bestmotif$p.post[which(dataUpset.ost$osteoblast==1),"osteoblast"],
+                                  cormotifData.ost$bestmotif$p.post[which(dataUpset.ost$embedding.osteoblast==1),"embedding.osteoblast"],
+                                  cormotifData.ost$bestmotif$p.post[which(dataUpset.ost$mineralizing.osteoblast==1),"mineralizing.osteoblast"],
+                                  cormotifData.ost$bestmotif$p.post[which(dataUpset.ost$maturing.osteocyte==1),"maturing.osteocyte"]),
+                       row.names=NULL)
+
+dataPlot$cell.subset <- factor(dataPlot$cell.subset,
+                               levels=c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                               labels=c("preosteoblast","osteoblast","embedding\nosteoblast","mineralizing\nosteoblast","maturing\nosteocyte"))
+
+table(dataPlot$cell.subset)
+
+```
+
+## Define DE gene sets to compare
+
+```{r}
+
+#pairwise - stage
+ps1 <- uniq.stg.t2$gene
+ps2 <- uniqX.stg.t2$gene #tested in all cell classifications
+
+#pairwise - ostadhoc
+po1 <- total.oad
+po2 <- totalX.oad #tested in all cell classifications
+
+#cormotif - stage
+cs1 <- rownames(dataUpset.stg)[which(dataUpset.stg$Time.2==1)]
+
+
+#cormotif - ostadhoc
+co1 <- rownames(dataUpset.ost)[which(dataUpset.ost$preosteoblast==1 &
+                                     dataUpset.ost$osteoblast==1 &
+                                     dataUpset.ost$embedding.osteoblast==1 &
+                                     dataUpset.ost$mineralizing.osteoblast==1 &
+                                     dataUpset.ost$maturing.osteocyte==1)]
+
+```
+
+### Pairwise DE Genes - stages of differentiation
+
+```{r, echo=FALSE}
+
+print(paste0("Total Pairwise DE Genes for Time 2: ",length(ps1)))
+print(paste0("Total Pairwise DE Genes for Time 2: ",length(ps2)," (tested in all cell classifications)"))
+
+```
+
+### Pairwise DE Genes - stages of osteogenesis
+
+```{r, echo=FALSE}
+
+print(paste0("Total Pairwise DE Genes across Osteogenic Stages: ",length(po1)))
+print(paste0("Total Pairwise DE Genes across Osteogenic Stages: ",length(po2)," (tested in all cell classifications)"))
+
+```
+
+### Cormotif DE Genes - stages of osteogenesis
+
+```{r, echo=FALSE}
+
+print(paste0("Total Cormotif DE Genes for Time 2: ",length(cs1)))
+
+```
+
+### Cormotif DE Genes - stages of osteogenesis
+
+```{r, echo=FALSE}
+
+print(paste0("Total Cormotif DE Genes across Osteogenic Stages: ",length(co1)))
+
+```
+
+## Determine how pairwise DE genes and Cormotif DE genes overlap.
+
+### Stages of differentiation
+
+```{r, echo=FALSE}
+
+print(paste0("Time 2: ",length(intersect(ps1, cs1)),"DE genes overlap (pairwise vs cormotif)"))
+print("Time 2 DE Genes in Pairwise Analysis Only:")
+setdiff(ps1, cs1)
+
+```
+
+### Stages of differentiation (tested in all cell classifications)
+
+```{r, echo=FALSE}
+
+print(paste0("Time 2: ",length(intersect(ps2, cs1)),"DE genes overlap (pairwise vs cormotif) (tested in all cell classifications)"))
+print("All Time 2 DE Genes in Pairwise Analysis overlap Cormotif Analysis")
+
+```
+
+### Stages of osteogenesis
+
+```{r, echo=FALSE}
+
+print(paste0("Osteogenic: ",length(intersect(po1, co1)),"DE genes overlap (pairwise vs cormotif)"))
+print(paste0("Osteogenic DE Genes in Pairwise Analysis Only:",length(setdiff(po1, co1))))
+setdiff(po1, co1)
+
+```
+
+### Stages of osteogenesis (tested in all cell classifications)
+
+```{r, echo=FALSE}
+
+print(paste0("Osteogenic: ",length(intersect(po2, co1)),"DE genes overlap (pairwise vs cormotif) (tested in all cell classifications)"))
+print("Osteogenic DE Genes in Pairwise Analysis Only (tested in all cell classifications):")
+setdiff(po2, co1)
+
+```
+
+## Determine how DE genes identified in stages of differentiation (Time 2) and DE genes identified in stages of osteogenesis overlap.
+
+### Pairwise Analyses
+
+```{r, echo=FALSE}
+
+print(paste0("Pairwise Analysis: ",length(intersect(ps1, po1)),"DE genes overlap"))
+print(paste0("Time 2 DE Genes Only:",length(setdiff(ps1, po1))))
+setdiff(ps1, po1)
+print(paste0("Osteogenic DE Genes Only:",length(setdiff(po1, ps1))))
+setdiff(po1, ps1)
+
+```
+
+### Pairwise Analyses (tested in all cell classifications)
+
+```{r, echo=FALSE}
+
+print(paste0("Pairwise Analysis: ",length(intersect(ps2, po2)),"DE genes overlap (tested in all cell classifications)"))
+print(paste0("Time 2 DE Genes Only (tested in all cell classifications):",length(setdiff(ps2, po2))))
+setdiff(ps2, po2)
+print(paste0("Osteogenic DE Genes Only (tested in all cell classifications):",length(setdiff(po2, ps2))))
+setdiff(po2, ps2)
+
+```
+
+### Cormotif Analyses
+
+```{r, echo=FALSE}
+
+print(paste0("Cormotif Analysis: ",length(intersect(cs1, co1)),"DE genes overlap"))
+print(paste0("Time 2 DE Genes Only: ",length(setdiff(cs1, co1))))
+setdiff(cs1, co1)
+print(paste0("Osteogenic DE Genes Only: ",length(setdiff(co1, cs1))))
+setdiff(co1, cs1)
+
+```
