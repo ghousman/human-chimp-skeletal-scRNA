@@ -1,0 +1,207 @@
+---
+title: "10x-plot-cormotif-cnts-v2-logfc"
+author: "Genevieve Housman"
+date: "September 2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 10X Data Cellranger Analysis - Correlation Motifs (logFC Plots)
+
+Plot log fold-change values (from pairwise DE tests) for DE genes identified using Cormotif.
+
+```{r, message=FALSE}
+
+#Load libraries
+library(ggplot2)
+library(grid)
+library(ggsignif)
+
+```
+
+
+## Stages of Differentiation
+
+Load pairwise DE data:
+
+```{r}
+
+DEdata <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.stage.rds")
+colnames(DEdata)[5] <- "FDR"
+DEdata <- as_tibble(DEdata)
+
+```
+
+Load Cormotif data:
+
+```{r}
+
+cormotifData <- readRDS("./data/cormotif-data/cormotif.cnts.v2.pseudo-stage.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+
+dataUpset <- as.data.frame(cormotifData$bestmotif$p.post)
+dataUpset[dataUpset>0.65] <- 1
+dataUpset[dataUpset<=0.65] <- 0
+
+```
+
+Isolate Cormotif DE genes of interest (not all Cormotif DE genes are present in pairwise DE data):
+
+```{r}
+
+t0 <- rownames(dataUpset)[which(dataUpset$Time.0==1)]
+t1 <- rownames(dataUpset)[which(dataUpset$Time.1==1)]
+t2 <- rownames(dataUpset)[which(dataUpset$Time.2==1)]
+
+DEgenes.t0 <-
+  DEdata %>%
+  dplyr::filter(cell.subset=="Time 0") %>%
+  dplyr::filter(gene %in% t0)  %>%
+  dplyr::select(cell.subset,gene,logFC)
+
+DEgenes.t1 <-
+  DEdata %>%
+  dplyr::filter(cell.subset=="Time 1") %>%
+  dplyr::filter(gene %in% t1)  %>%
+  dplyr::select(cell.subset,gene,logFC)
+
+DEgenes.t2 <-
+  DEdata %>%
+  dplyr::filter(cell.subset=="Time 2") %>%
+  dplyr::filter(gene %in% t2)  %>%
+  dplyr::select(cell.subset,gene,logFC)
+
+DEgenes <- rbind(DEgenes.t0,DEgenes.t1,DEgenes.t2)
+
+```
+
+Examine logFC:
+
+```{r}
+
+# Examine absoute logFC of DE genes
+ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
+  geom_boxplot() +
+  ylab('Absolute Log2 Fold Change in DE Genes') +
+  xlab('') +
+  scale_fill_manual(name="Stage",
+                    labels=c("Time 0","Time 1","Time 2"),
+                    values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10)) +
+  geom_signif(comparisons = list(c("Time 0","Time 1"),
+                                 c("Time 1","Time 2")), 
+              test="t.test",
+              test.args=list(alternative="two.sided"),
+              map_signif_level=TRUE)
+
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 0")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 1")])) #p<2.2e-16
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 1")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="Time 2")])) #p=4.2e-05
+
+```
+
+## Stages of Osteogenesis
+
+Load pairwise DE data:
+
+```{r}
+
+DEdata <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.rds")
+colnames(DEdata)[5] <- "FDR"
+DEdata <- as_tibble(DEdata)
+
+```
+
+Load Cormotif data:
+
+```{r}
+
+cormotifData <- readRDS("./data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4gene.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+
+dataUpset <- as.data.frame(cormotifData$bestmotif$p.post)
+dataUpset[dataUpset>0.65] <- 1
+dataUpset[dataUpset<=0.65] <- 0
+
+```
+
+Isolate Cormotif DE genes of interest (not all Cormotif DE genes are present in pairwise DE data):
+
+```{r}
+
+pre <- rownames(dataUpset)[which(dataUpset$preosteoblast==1)]
+obl <- rownames(dataUpset)[which(dataUpset$osteoblast==1)]
+emb <- rownames(dataUpset)[which(dataUpset$embedding.osteoblast==1)]
+min <- rownames(dataUpset)[which(dataUpset$mineralizing.osteoblast==1)]
+mat <- rownames(dataUpset)[which(dataUpset$maturing.osteocyte==1)]
+
+DEgenes.pre <-
+  DEdata %>%
+  dplyr::filter(cell.subset=="preosteoblast") %>%
+  dplyr::filter(gene %in% pre)  %>%
+  dplyr::select(cell.subset,gene,logFC)
+
+DEgenes.obl <-
+  DEdata %>%
+  dplyr::filter(cell.subset=="osteoblast") %>%
+  dplyr::filter(gene %in% obl)  %>%
+  dplyr::select(cell.subset,gene,logFC)
+
+DEgenes.emb <-
+  DEdata %>%
+  dplyr::filter(cell.subset=="embedding osteoblast") %>%
+  dplyr::filter(gene %in% emb)  %>%
+  dplyr::select(cell.subset,gene,logFC)
+
+DEgenes.min <-
+  DEdata %>%
+  dplyr::filter(cell.subset=="mineralizing osteoblast") %>%
+  dplyr::filter(gene %in% min)  %>%
+  dplyr::select(cell.subset,gene,logFC)
+
+DEgenes.mat <-
+  DEdata %>%
+  dplyr::filter(cell.subset=="maturing osteocyte") %>%
+  dplyr::filter(gene %in% mat)  %>%
+  dplyr::select(cell.subset,gene,logFC)
+
+DEgenes <- rbind(DEgenes.pre,DEgenes.obl,DEgenes.emb,DEgenes.min,DEgenes.mat)
+
+DEgenes$cell.subset <- factor(DEgenes$cell.subset,
+                              levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                              labels=c("preosteoblast","osteoblast","embedding\nosteoblast","mineralizing\nosteoblast","maturing\nosteocyte"))
+
+```
+
+Examine logFC:
+
+```{r}
+
+# Examine absoute logFC of DE genes
+ggplot(DEgenes, aes(x=cell.subset, y=abs(logFC), fill=cell.subset)) +
+  geom_boxplot() +
+  ylab('Absolute Log2 Fold Change in DE Genes') +
+  xlab('') +
+  scale_fill_manual(name="Osteogenic Stage",
+                    labels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                    values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10)) +
+  geom_signif(comparisons = list(c("preosteoblast","osteoblast"),
+                                 c("osteoblast","embedding\nosteoblast"),
+                                 c("embedding\nosteoblast","mineralizing\nosteoblast"),
+                                 c("mineralizing\nosteoblast","maturing\nosteocyte")), 
+              test="t.test",
+              test.args=list(alternative="two.sided"),
+              map_signif_level=TRUE)
+
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="preosteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="osteoblast")]))                       #p=0.004671
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="osteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="embedding\nosteoblast")]))               #p=0.053300
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="embedding\nosteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="mineralizing\nosteoblast")])) #p=0.003007
+t.test(abs(DEgenes$logFC[which(DEgenes$cell.subset=="mineralizing\nosteoblast")]),abs(DEgenes$logFC[which(DEgenes$cell.subset=="maturing\nosteocyte")]))   #p=0.005436
+
+```
+

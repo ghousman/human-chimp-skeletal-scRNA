@@ -1903,6 +1903,8 @@ goEnPlot(goTot,title="Shared in All")
 #goEnPlot.spec(goTot,title="Shared in All",ontology="BP")
 #goEnPlot.spec(goTot,title="Shared in All",ontology="CC")
 #goEnPlot.spec(goTot,title="Shared in All",ontology="MF")
+x <- goTot@result
+x
 
 #Shared across Time 0 & Time 1 (FDR<0.01, tested in all classifications)
 goTot <- goEnrich(totGenes=tests, deGenes=unique(shareX.stg.t01$gene), ontology="ALL")
@@ -1911,6 +1913,8 @@ goEnPlot(goTot,title="Shared in Time 0 & Time 1")
 #goEnPlot.spec(goTot,title="Shared in Time 0 & Time 1",ontology="BP")
 #goEnPlot.spec(goTot,title="Shared in Time 0 & Time 1",ontology="CC")
 #goEnPlot.spec(goTot,title="Shared in Time 0 & Time 1",ontology="MF")
+x <- goTot@result
+x
 
 #Shared across Time 1 & Time 2 (FDR<0.01, tested in all classifications) - no enrichments
 #goTot <- goEnrich(totGenes=tests, deGenes=unique(shareX.stg.t12$gene), ontology="ALL")
@@ -1919,6 +1923,8 @@ goEnPlot(goTot,title="Shared in Time 0 & Time 1")
 #goEnPlot.spec(goTot,title="Shared in Time 1 & Time 2",ontology="BP")
 #goEnPlot.spec(goTot,title="Shared in Time 1 & Time 2",ontology="CC")
 #goEnPlot.spec(goTot,title="Shared in Time 1 & Time 2",ontology="MF")
+#x <- goTot@result
+#x
 
 #Unique to Time 0 (FDR<0.01, tested in all classifications)
 goTot <- goEnrich(totGenes=tests, deGenes=uniqX.stg.t0$gene, ontology="ALL")
@@ -1927,6 +1933,8 @@ goEnPlot(goTot,title="Unique to Time 0")
 #goEnPlot.spec(goTot,title="Unique to Time 0",ontology="BP")
 #goEnPlot.spec(goTot,title="Unique to Time 0",ontology="CC")
 #goEnPlot.spec(goTot,title="Unique to Time 0",ontology="MF")
+x <- goTot@result
+x
 
 #Unique to Time 1 (FDR<0.01, tested in all classifications) - no enrichments
 #goTot <- goEnrich(totGenes=tests, deGenes=uniqX.stg.t1$gene, ontology="ALL")
@@ -1935,6 +1943,8 @@ goEnPlot(goTot,title="Unique to Time 0")
 #goEnPlot.spec(goTot,title="Unique to Time 1",ontology="BP")
 #goEnPlot.spec(goTot,title="Unique to Time 1",ontology="CC")
 #goEnPlot.spec(goTot,title="Unique to Time 1",ontology="MF")
+#x <- goTot@result
+#x
 
 #Unique to Time 2 (FDR<0.01, tested in all classifications)
 goTot <- goEnrich(totGenes=tests, deGenes=uniqX.stg.t2$gene, ontology="ALL")
@@ -1943,6 +1953,8 @@ goEnPlot(goTot,title="Unique to Time 2")
 #goEnPlot.spec(goTot,title="Unique to Time 2",ontology="BP")
 #goEnPlot.spec(goTot,title="Unique to Time 2",ontology="CC")
 #goEnPlot.spec(goTot,title="Unique to Time 2",ontology="MF")
+x <- goTot@result
+x
 
 ```
 
@@ -2522,6 +2534,8 @@ goEnPlot(goTot,title="Shared in All")
 #goEnPlot.spec(goTot,title="Shared in All",ontology="BP")
 #goEnPlot.spec(goTot,title="Shared in All",ontology="CC")
 #goEnPlot.spec(goTot,title="Shared in All",ontology="MF")
+x <- goTot@result
+x
 
 #Shared in iPSC.c1 and MSC.c1 (FDR<0.01, tested in all classifications)
 goTot <- goEnrich(totGenes=tests, deGenes=unique(shareX.stg.t01$gene), ontology="ALL")
@@ -2530,6 +2544,8 @@ goEnPlot(goTot,title="Shared in iPSC.c1 & MSC.c1")
 #goEnPlot.spec(goTot,title="Shared in iPSC.c1 & MSC.c1",ontology="BP")
 #goEnPlot.spec(goTot,title="Shared in iPSC.c1 & MSC.c1",ontology="CC")
 #goEnPlot.spec(goTot,title="Shared in iPSC.c1 & MSC.c1",ontology="MF")
+x <- goTot@result
+x
 
 #Shared in MSC.c1 and Osteogenic.c1 (FDR<0.01, tested in all classifications) - no enrichments
 #goTot <- goEnrich(totGenes=tests, deGenes=unique(shareX.stg.t12$gene), ontology="ALL")
@@ -2538,6 +2554,8 @@ goEnPlot(goTot,title="Shared in iPSC.c1 & MSC.c1")
 #goEnPlot.spec(goTot,title="Shared in MSC.c1 & Osteo.c1",ontology="BP")
 #goEnPlot.spec(goTot,title="Shared in MSC.c1 & Osteo.c1",ontology="CC")
 #goEnPlot.spec(goTot,title="Shared in MSC.c1 & Osteo.c1",ontology="MF")
+#x <- goTot@result
+#x
 
 #Unique to iPSC.c1 (FDR<0.01, tested in all classifications)
 goTot <- goEnrich(totGenes=tests, deGenes=uniqX.stg.t0$gene, ontology="ALL")
@@ -2546,6 +2564,8 @@ goEnPlot(goTot,title="Unique to iPSC.c1")
 #goEnPlot.spec(goTot,title="Unique to iPSC.c1",ontology="BP")
 #goEnPlot.spec(goTot,title="Unique to iPSC.c1",ontology="CC")
 #goEnPlot.spec(goTot,title="Unique to iPSC.c1",ontology="MF")
+x <- goTot@result
+x
 
 #Unique to MSC.c1 (FDR<0.01, tested in all classifications) - no enrichments
 #goTot <- goEnrich(totGenes=tests, deGenes=uniqX.stg.t1$gene, ontology="ALL")
@@ -2554,6 +2574,8 @@ goEnPlot(goTot,title="Unique to iPSC.c1")
 #goEnPlot.spec(goTot,title="Unique to MSC.c1",ontology="BP")
 #goEnPlot.spec(goTot,title="Unique to MSC.c1",ontology="CC")
 #goEnPlot.spec(goTot,title="Unique to MSC.c1",ontology="MF")
+#x <- goTot@result
+#x
 
 #Unique to Osteogenic.c1 (FDR<0.01, tested in all classifications)
 goTot <- goEnrich(totGenes=tests, deGenes=uniqX.stg.t2$gene, ontology="ALL")
@@ -2562,6 +2584,8 @@ goEnPlot(goTot,title="Unique to Osteogenic.c1")
 #goEnPlot.spec(goTot,title="Unique to Osteogenic.c1",ontology="BP")
 #goEnPlot.spec(goTot,title="Unique to Osteogenic.c1",ontology="CC")
 #goEnPlot.spec(goTot,title="Unique to Osteogenic.c1",ontology="MF")
+x <- goTot@result
+x
 
 ```
 
@@ -2912,6 +2936,8 @@ goEnPlot(goTot,title="Shared in All")
 #goEnPlot.spec(goTot,title="Shared in All",ontology="BP")
 #goEnPlot.spec(goTot,title="Shared in All",ontology="CC")
 #goEnPlot.spec(goTot,title="Shared in All",ontology="MF")
+x <- goTot@result
+x
 
 #Shared in iPSC and MSC (FDR<0.01, tested in all classifications)
 goTot <- goEnrich(totGenes=tests, deGenes=unique(shareX.stg.t01$gene), ontology="ALL")
@@ -2920,6 +2946,8 @@ goEnPlot(goTot,title="Shared in iPSC & MSC")
 #goEnPlot.spec(goTot,title="Shared in iPSC & MSC",ontology="BP")
 #goEnPlot.spec(goTot,title="Shared in iPSC & MSC",ontology="CC")
 #goEnPlot.spec(goTot,title="Shared in iPSC & MSC",ontology="MF")
+x <- goTot@result
+x
 
 #Shared in MSC and Osteogenic (FDR<0.01, tested in all classifications)
 #goTot <- goEnrich(totGenes=tests, deGenes=unique(shareX.stg.t12$gene), ontology="ALL")
@@ -2928,6 +2956,8 @@ goEnPlot(goTot,title="Shared in iPSC & MSC")
 #goEnPlot.spec(goTot,title="Shared in MSC & Osteo",ontology="BP")
 #goEnPlot.spec(goTot,title="Shared in MSC & Osteo",ontology="CC")
 #goEnPlot.spec(goTot,title="Shared in MSC & Osteo",ontology="MF")
+#x <- goTot@result
+#x
 
 #Unique to iPSC (FDR<0.01, tested in all classifications)
 goTot <- goEnrich(totGenes=tests, deGenes=uniqX.stg.t0$gene, ontology="ALL")
@@ -2936,6 +2966,8 @@ goEnPlot(goTot,title="Unique to iPSC")
 #goEnPlot.spec(goTot,title="Unique to iPSC",ontology="BP")
 #goEnPlot.spec(goTot,title="Unique to iPSC",ontology="CC")
 #goEnPlot.spec(goTot,title="Unique to iPSC",ontology="MF")
+x <- goTot@result
+x
 
 #Unique to MSC (FDR<0.01, tested in all classifications) - no enrichments
 #goTot <- goEnrich(totGenes=tests, deGenes=uniqX.stg.t1$gene, ontology="ALL")
@@ -2944,6 +2976,8 @@ goEnPlot(goTot,title="Unique to iPSC")
 #goEnPlot.spec(goTot,title="Unique to MSC",ontology="BP")
 #goEnPlot.spec(goTot,title="Unique to MSC",ontology="CC")
 #goEnPlot.spec(goTot,title="Unique to MSC",ontology="MF")
+#x <- goTot@result
+#x
 
 #Unique to Osteogenic (FDR<0.01, tested in all classifications)
 goTot <- goEnrich(totGenes=tests, deGenes=uniqX.stg.t2$gene, ontology="ALL")
@@ -2952,6 +2986,8 @@ goEnPlot(goTot,title="Unique to Osteogenic")
 #goEnPlot.spec(goTot,title="Unique to Osteogenic",ontology="BP")
 #goEnPlot.spec(goTot,title="Unique to Osteogenic",ontology="CC")
 #goEnPlot.spec(goTot,title="Unique to Osteogenic",ontology="MF")
+x <- goTot@result
+x
 
 ```
 
@@ -3297,6 +3333,8 @@ Assess GO functional enrichment of interesting DE genes.
 #goEnPlot.spec(goTot,title="Shared in Osteo.c1c3c4",ontology="BP")
 #goEnPlot.spec(goTot,title="Shared in Osteo.c1c3c4",ontology="CC")
 #goEnPlot.spec(goTot,title="Shared in Osteo.c1c3c4",ontology="MF")
+#x <- goTot@result
+#x
 
 #Unique to Osteogenic.c1 (FDR<0.01, tested in all classifications) - no enrichments
 #goTot <- goEnrich(totGenes=tests, deGenes=UniqX.50o1$gene, ontology="ALL")
@@ -3305,6 +3343,8 @@ Assess GO functional enrichment of interesting DE genes.
 #goEnPlot.spec(goTot,title="Unique to Osteogenic.c1",ontology="BP")
 #goEnPlot.spec(goTot,title="Unique to Osteogenic.c1",ontology="CC")
 #goEnPlot.spec(goTot,title="Unique to Osteogenic.c1",ontology="MF")
+#x <- goTot@result
+#x
 
 #Unique to Osteogenic.c3 (FDR<0.01, tested in all classifications)
 goTot <- goEnrich(totGenes=tests, deGenes=UniqX.50o3$gene, ontology="ALL")
@@ -3313,6 +3353,8 @@ goEnPlot(goTot,title="Unique to Osteogenic.c3")
 #goEnPlot.spec(goTot,title="Unique to Osteogenic.c3",ontology="BP")
 #goEnPlot.spec(goTot,title="Unique to Osteogenic.c3",ontology="CC")
 #goEnPlot.spec(goTot,title="Unique to Osteogenic.c3",ontology="MF")
+x <- goTot@result
+x
 
 #Unique to Osteogenic.c4 (FDR<0.01, tested in all classifications)
 goTot <- goEnrich(totGenes=tests, deGenes=UniqX.50o4$gene, ontology="ALL")
@@ -3321,6 +3363,8 @@ goEnPlot(goTot,title="Osteogenic.c4")
 #goEnPlot.spec(goTot,title="Unique to Osteogenic.c4",ontology="BP")
 #goEnPlot.spec(goTot,title="Unique to Osteogenic.c4",ontology="CC")
 #goEnPlot.spec(goTot,title="Unique to Osteogenic.c4",ontology="MF")
+x <- goTot@result
+x
 
 ```
 
@@ -3917,6 +3961,8 @@ goEnPlot(goTot,title="Shared in All")
 #goEnPlot.spec(goTot,title="Shared in All",ontology="BP")
 #goEnPlot.spec(goTot,title="Shared in All",ontology="CC")
 #goEnPlot.spec(goTot,title="Shared in All",ontology="MF")
+x <- goTot@result
+x
 
 #Shared in Pre, Obl, Emb, and Min (FDR<0.01, tested in all classifications)
 goTot <- goEnrich(totGenes=tests, deGenes=unique(shareX.oad.poem)$gene, ontology="ALL")
@@ -3925,6 +3971,8 @@ goEnPlot(goTot,title="Shared in Pre/Obl/Emb/Min")
 #goEnPlot.spec(goTot,title="Shared in Pre/Obl/Emb/Min",ontology="BP")
 #goEnPlot.spec(goTot,title="Shared in Pre/Obl/Emb/Min",ontology="CC")
 #goEnPlot.spec(goTot,title="Shared in Pre/Obl/Emb/Min",ontology="MF")
+x <- goTot@result
+x
 
 #Shared in Obl, Emb, and Min (FDR<0.01, tested in all classifications)
 goTot <- goEnrich(totGenes=tests, deGenes=unique(shareX.oad.oem)$gene, ontology="ALL")
@@ -3933,6 +3981,8 @@ goEnPlot(goTot,title="Shared in Obl/Emb/Min")
 #goEnPlot.spec(goTot,title="Shared in Obl/Emb/Min",ontology="BP")
 #goEnPlot.spec(goTot,title="Shared in Obl/Emb/Min",ontology="CC")
 #goEnPlot.spec(goTot,title="Shared in Obl/Emb/Min",ontology="MF")
+x <- goTot@result
+x
 
 #Unique to Preosteoblasts (FDR<0.01, tested in all classifications)
 goTot <- goEnrich(totGenes=tests, deGenes=uniqX.oad.pre$gene, ontology="ALL")
@@ -3942,6 +3992,8 @@ goEnPlot(goTot,title="Unique to Preosteoblasts")
 #goEnPlot.spec(goTot,title="Unique to Preosteoblasts",ontology="BP")
 #goEnPlot.spec(goTot,title="Unique to Preosteoblasts",ontology="CC")
 #goEnPlot.spec(goTot,title="Unique to Preosteoblasts",ontology="MF")
+x <- goTot@result
+x
 
 #Unique to Osteoblasts (FDR<0.01, tested in all classifications)
 goTot <- goEnrich(totGenes=tests, deGenes=uniqX.oad.obl$gene, ontology="ALL")
@@ -3950,6 +4002,8 @@ goEnPlot(goTot,title="Unique to Osteoblasts")
 #goEnPlot.spec(goTot,title="Unique to Osteoblasts",ontology="BP")
 #goEnPlot.spec(goTot,title="Unique to Osteoblasts",ontology="CC")
 #goEnPlot.spec(goTot,title="Unique to Osteoblasts",ontology="MF")
+x <- goTot@result
+x
 
 #Unique to Embedding Osteoblasts (FDR<0.01, tested in all classifications) - no enrichment
 #goTot <- goEnrich(totGenes=tests, deGenes=uniqX.oad.emb$gene, ontology="ALL")
@@ -3958,6 +4012,8 @@ goEnPlot(goTot,title="Unique to Osteoblasts")
 #goEnPlot.spec(goTot,title="Unique to Embedding Osteoblasts",ontology="BP")
 #goEnPlot.spec(goTot,title="Unique to Embedding Osteoblasts",ontology="CC")
 #goEnPlot.spec(goTot,title="Unique to Embedding Osteoblasts",ontology="MF")
+x <- goTot@result
+x
 
 #Unique to Mineralizing Osteoblasts (FDR<0.01, tested in all classifications)
 goTot <- goEnrich(totGenes=tests, deGenes=uniqX.oad.min$gene, ontology="ALL")
@@ -3966,6 +4022,8 @@ goEnPlot(goTot,title="Unique to Mineralizing Osteoblasts")
 #goEnPlot.spec(goTot,title="Unique to Mineralizing Osteoblasts",ontology="BP")
 #goEnPlot.spec(goTot,title="Unique to Mineralizing Osteoblasts",ontology="CC")
 #goEnPlot.spec(goTot,title="Unique to Mineralizing Osteoblasts",ontology="MF")
+x <- goTot@result
+x
 
 #Unique to Maturing Osteocytes (FDR<0.01, tested in all classifications) - no enrichment
 #goTot <- goEnrich(totGenes=tests, deGenes=uniqX.oad.mat$gene, ontology="ALL")
@@ -3974,6 +4032,8 @@ goEnPlot(goTot,title="Unique to Mineralizing Osteoblasts")
 #goEnPlot.spec(goTot,title="Unique to Maturing Osteocytes",ontology="BP")
 #goEnPlot.spec(goTot,title="Unique to Maturing Osteocytes",ontology="CC")
 #goEnPlot.spec(goTot,title="Unique to Maturing Osteocytes",ontology="MF")
+#x <- goTot@result
+#x
 
 ```
 

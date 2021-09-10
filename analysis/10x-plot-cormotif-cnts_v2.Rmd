@@ -82,13 +82,18 @@ goEnPlot <- function(goTot, title) {
 
 #Define function to plot GO functional enrichment results (specific ontology only)
 goEnPlot.spec <- function(goTot, title, ontology) {
-  print(ggplot(goTot[which(goTot$ONTOLOGY==ontology),], aes(x=GeneRatio, y=Description, color=p.adjust, size=Count)) +
+  #goTEMP <- goTot[which(goTot$ONTOLOGY==ontology),]
+  print(ggplot(subset(goTot, 'ONTOLOGY'==ontology), aes(x=GeneRatio, y=Description, color=p.adjust, size=Count)) +
           geom_point() +
           theme(axis.text.x=element_text(angle=-40, hjust=0)) +
           scale_size_area(max_size=6) +
           scale_color_viridis(option="C") +
           theme_bw() +
           labs(title=title, x="Gene Ratio", y=""))
+}
+
+parse.fraction <- function(x) {
+  sapply(x, function(y) {eval(parse(text=y))})
 }
 
 ```
@@ -517,6 +522,8 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Shared in All")
+x <- goTot@result
+x
 
 #Shared across t0+t1
 subGenes <- rownames(dataUpset)[which(dataUpset$Time.0==1 &
@@ -526,6 +533,8 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Shared in Time 0 & Time 1")
+x <- goTot@result
+x
 
 #Shared across t1+t2
 subGenes <- rownames(dataUpset)[which(dataUpset$Time.0==0 &
@@ -535,6 +544,8 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Shared in Time 1 & Time 2")
+x <- goTot@result
+x
 
 #Unique to Time 0
 subGenes <- rownames(dataUpset)[which(dataUpset$Time.0==1 &
@@ -544,6 +555,8 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Unique to Time 0")
+x <- goTot@result
+x
 
 #Unique to Time 1
 subGenes <- rownames(dataUpset)[which(dataUpset$Time.0==0 &
@@ -553,6 +566,8 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Unique to Time 1")
+x <- goTot@result
+x
 
 #Unique to Time 2
 #subGenes <- rownames(dataUpset)[which(dataUpset$Time.0==0 &
@@ -562,6 +577,8 @@ goEnPlot(goTot,title="Unique to Time 1")
 #goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 #goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 #goEnPlot(goTot,title="Unique to Time 2")
+#x <- goTot@result
+#x
 
 ```
 
@@ -1184,6 +1201,8 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Shared in All")
+x <- goTot@result
+x
 
 #Shared across ipsc.c1+msc.c1
 subGenes <- rownames(dataUpset)[which(dataUpset$iPSC.c1==1 &
@@ -1193,6 +1212,8 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Shared in iPSC.c1 0 & MSC.c1")
+x <- goTot@result
+x
 
 #Shared across msc.c1+osteo.c1
 subGenes <- rownames(dataUpset)[which(dataUpset$iPSC.c1==0 &
@@ -1202,6 +1223,8 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Shared in MSC.c1 & Osteo.c1")
+x <- goTot@result
+x
 
 #Unique to ipsc.c1
 subGenes <- rownames(dataUpset)[which(dataUpset$iPSC.c1==1 &
@@ -1211,6 +1234,8 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Unique to iPSC.c1")
+x <- goTot@result
+x
 
 #Unique to msc.c1
 subGenes <- rownames(dataUpset)[which(dataUpset$iPSC.c1==0 &
@@ -1220,6 +1245,8 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Unique to MSC.c1")
+x <- goTot@result
+x
 
 #Unique to osteo.c1
 subGenes <- rownames(dataUpset)[which(dataUpset$iPSC.c1==0 &
@@ -1229,6 +1256,8 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Unique to Osteo.c1")
+x <- goTot@result
+x
 
 ```
 
@@ -1637,6 +1666,8 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Shared in All")
+x <- goTot@result
+x
 
 #Shared across ips+msc
 #subGenes <- rownames(dataUpset)[which(dataUpset$iPSC==1 &
@@ -1646,6 +1677,8 @@ goEnPlot(goTot,title="Shared in All")
 #goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 #goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 #goEnPlot(goTot,title="Shared in iPSC & MSC")
+#x <- goTot@result
+#x
 
 #Shared across msc+ost
 subGenes <- rownames(dataUpset)[which(dataUpset$iPSC==0 &
@@ -1655,6 +1688,8 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Shared in MSC & Osteo")
+x <- goTot@result
+x
 
 #Unique to ips
 subGenes <- rownames(dataUpset)[which(dataUpset$iPSC==1 &
@@ -1664,15 +1699,19 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Unique to iPSC")
+x <- goTot@result
+x
 
 #Unique to msc
-subGenes <- rownames(dataUpset)[which(dataUpset$iPSC==0 &
-                                      dataUpset$MSC==1 &
-                                      dataUpset$Osteogenic==0)]
-totGenes <- rownames(dataUpset)
-goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
-goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
-goEnPlot(goTot,title="Unique to MSC")
+#subGenes <- rownames(dataUpset)[which(dataUpset$iPSC==0 &
+#                                      dataUpset$MSC==1 &
+#                                      dataUpset$Osteogenic==0)]
+#totGenes <- rownames(dataUpset)
+#goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+#goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+#goEnPlot(goTot,title="Unique to MSC")
+#x <- goTot@result
+#x
 
 #Unique to ost
 subGenes <- rownames(dataUpset)[which(dataUpset$iPSC==0 &
@@ -1682,6 +1721,8 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Unique to Osteo")
+x <- goTot@result
+x
 
 ```
 
@@ -2097,6 +2138,8 @@ Assess GO functional enrichment of interesting DE genes.
 #goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 #goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 #goEnPlot(goTot,title="Shared in All")
+#x <- goTot@result
+#x
 
 #Shared across O.c1 + O.c3 + O.c4
 subGenes <- rownames(dataUpset)[which(dataUpset$Osteogenic.c1==1 &
@@ -2107,6 +2150,8 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Shared in Osteo.c1 & c3 & c4")
+x <- goTot@result
+x
 
 #Shared across O.c1 + O.c3
 subGenes <- rownames(dataUpset)[which(dataUpset$Osteogenic.c1==1 &
@@ -2117,6 +2162,8 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Shared in Osteo.c1 & c3")
+x <- goTot@result
+x
 
 #Unique to O.c1
 #subGenes <- rownames(dataUpset)[which(dataUpset$Osteogenic.c1==1 &
@@ -2127,6 +2174,8 @@ goEnPlot(goTot,title="Shared in Osteo.c1 & c3")
 #goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 #goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 #goEnPlot(goTot,title="Unique to Osteo.c1")
+#x <- goTot@result
+#x
 
 #Unique to O.c2
 #subGenes <- rownames(dataUpset)[which(dataUpset$Osteogenic.c1==0 &
@@ -2137,6 +2186,8 @@ goEnPlot(goTot,title="Shared in Osteo.c1 & c3")
 #goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 #goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 #goEnPlot(goTot,title="Unique to Osteo.c2")
+#x <- goTot@result
+#x
 
 #Unique to O.c3
 #subGenes <- rownames(dataUpset)[which(dataUpset$Osteogenic.c1==0 &
@@ -2147,6 +2198,8 @@ goEnPlot(goTot,title="Shared in Osteo.c1 & c3")
 #goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 #goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 #goEnPlot(goTot,title="Unique to Osteo.c3")
+#x <- goTot@result
+#x
 
 #Unique to O.c4
 subGenes <- rownames(dataUpset)[which(dataUpset$Osteogenic.c1==0 &
@@ -2157,6 +2210,8 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Unique to Osteo.c4")
+x <- goTot@result
+x
 
 ```
 
@@ -2666,6 +2721,12 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Shared in All")
+#goTot@result$GeneRatio <- parse.fraction(goTot@result$GeneRatio)
+#goEnPlot.spec(goTot,title="Shared in All",ontology="BP")
+#goEnPlot.spec(goTot,title="Shared in All",ontology="CC")
+#goEnPlot.spec(goTot,title="Shared in All",ontology="MF")
+x <- goTot@result
+x
 
 #Shared across pre+obl+emb+min
 subGenes <- rownames(dataUpset)[which(dataUpset$preosteoblast==1 &
@@ -2677,6 +2738,8 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Shared in pre+obl+emb+min")
+x <- goTot@result
+x
 
 #Shared across obl+emb+min+mat
 subGenes <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
@@ -2688,6 +2751,8 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Shared in obl+emb+min+mat")
+x <- goTot@result
+x
 
 #Shared across emb+min
 subGenes <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
@@ -2699,6 +2764,8 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Shared in emb+min")
+x <- goTot@result
+x
 
 #Unique to Mineralizing Osteoblasts
 subGenes <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
@@ -2710,6 +2777,11 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Unique to Min")
+#goEnPlot.spec(goTot,title="Unique to Mineralizing Osteoblasts",ontology="BP")
+#goEnPlot.spec(goTot,title="Unique to Mineralizing Osteoblasts",ontology="CC")
+#goEnPlot.spec(goTot,title="Unique to Mineralizing Osteoblasts",ontology="MF")
+x <- goTot@result
+x
 
 ```
 
@@ -3397,6 +3469,8 @@ totGenes <- rownames(dataUpset)
 goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 goEnPlot(goTot,title="Shared in All")
+x <- goTot@result
+x
 
 #Shared across pre+obl+emb+min
 #subGenes <- rownames(dataUpset)[which(dataUpset$preosteoblast==1 &
@@ -3408,6 +3482,8 @@ goEnPlot(goTot,title="Shared in All")
 #goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 #goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 #goEnPlot(goTot,title="Shared in pre+obl+emb+min")
+#x <- goTot@result
+#x
 
 #Shared across obl+emb+min+mat
 #subGenes <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
@@ -3419,6 +3495,8 @@ goEnPlot(goTot,title="Shared in All")
 #goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 #goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 #goEnPlot(goTot,title="Shared in obl+emb+min+mat")
+#x <- goTot@result
+#x
 
 #Shared across emb+min
 #subGenes <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
@@ -3430,6 +3508,8 @@ goEnPlot(goTot,title="Shared in All")
 #goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 #goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 #goEnPlot(goTot,title="Shared in emb+min")
+#x <- goTot@result
+#x
 
 #Unique to Mineralizing Osteoblasts
 #subGenes <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
@@ -3441,6 +3521,8 @@ goEnPlot(goTot,title="Shared in All")
 #goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
 #goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
 #goEnPlot(goTot,title="Unique to Min")
+#x <- goTot@result
+#x
 
 ```
 
