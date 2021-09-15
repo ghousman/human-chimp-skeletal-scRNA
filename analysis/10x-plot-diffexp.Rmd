@@ -2350,6 +2350,38 @@ write.csv(DEenrich,"./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.stage
 
 ```
 
+Determine whether EVC2, NFIX, XYLT1, ACAN, COL2A1, and SOX9 overlap with DE genes:
+
+```{r}
+
+geneList <- c("EVC2","NFIX","XYLT1","ACAN","COL2A1","SOX9")
+
+#Shared in All Stages (tested in all classifications)
+print("Shared in All Stages, tested in all classifications")
+print(intersect(geneList,unique(shareX.stg$gene)))
+
+#Shared in Time 0 & Time 1 (tested in all classifications)
+print("Shared in Time 0 & Time 1 (tested in all classifications)")
+print(intersect(geneList,unique(shareX.stg.t01$gene)))
+
+#Shared in Time 1 & Time 2 (tested in all classifications)
+print("Shared in Time 1 & Time 2, tested in all classifications")
+print(intersect(geneList,unique(shareX.stg.t12$gene)))
+
+#Unique to Time 0 (tested in all classifications)
+print("Unique to Time 0 (tested in all classifications)")
+print(intersect(geneList,uniqX.stg.t0$gene))
+
+#Unique to Time 1 (tested in all classifications)
+print("Unique to Time 1 (tested in all classifications)")
+print(intersect(geneList,uniqX.stg.t1$gene))
+
+#Unique to Time 2 (tested in all classifications)
+print("Unique to Time 2 (tested in all classifications)")
+print(intersect(geneList,uniqX.stg.t2$gene))
+
+```
+
 Determine which skeletal-phenotype-related genes overlap with DE genes:
 
 ```{r}
@@ -4442,6 +4474,46 @@ Save enrichment results:
 
 #Save enrichment results
 write.csv(DEenrich,"./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.enrichment.csv")
+
+```
+
+Determine whether EVC2, NFIX, XYLT1, ACAN, COL2A1, and SOX9 overlap with DE genes:
+
+```{r}
+
+geneList <- c("EVC2","NFIX","XYLT1","ACAN","COL2A1","SOX9")
+
+#Shared across all ostadhoc classifications, tested in all classifications
+print("Shared across all ostadhoc classifications, tested in all classifications")
+print(intersect(geneList,unique(shareX.oad$gene)))
+
+#Shared across pre+obl+emb+min, tested in all classifications
+print("Shared across pre+obl+emb+min, tested in all classifications")
+print(intersect(geneList,unique(shareX.oad.poem$gene)))
+
+#Shared across obl+emb+min, tested in all classifications
+print("Shared across obl+emb+min, tested in all classifications")
+print(intersect(geneList,unique(shareX.oad.oem$gene)))
+
+#Unique to preosteoblasts, tested in all classifications
+print("Unique to preosteoblasts, tested in all classifications")
+print(intersect(geneList,uniqX.oad.pre$gene))
+
+#Unique to osteoblasts, tested in all classifications
+print("Unique to osteoblasts, tested in all classifications")
+print(intersect(geneList,uniqX.oad.obl$gene))
+
+#Unique to embedding osteoblasts, tested in all classifications
+print("Unique to embedding osteoblasts, tested in all classifications")
+print(intersect(geneList,uniqX.oad.emb$gene))
+
+#Unique to mineralizing osteoblasts, tested in all classifications
+print("Unique to mineralizing osteoblasts, tested in all classifications")
+print(intersect(geneList,uniqX.oad.min$gene))
+
+#Unique to maturing osteocytes, tested in all classifications
+print("Unique to maturing osteocytes, tested in all classifications")
+print(intersect(geneList,uniqX.oad.mat$gene))
 
 ```
 

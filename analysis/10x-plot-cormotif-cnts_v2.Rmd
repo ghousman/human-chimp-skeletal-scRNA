@@ -906,6 +906,56 @@ write.csv(DEenrich,"./data/cormotif-data/cormotif.cnts.v2.pseudo-stage.data.filt
 
 ```
 
+Determine whether EVC2, NFIX, XYLT1, ACAN, COL2A1, and SOX9 overlap with DE genes:
+
+```{r}
+
+geneList <- c("EVC2","NFIX","XYLT1","ACAN","COL2A1","SOX9")
+
+#Shared in All Stages (tested in all classifications)
+print("Shared in All Stages, tested in all classifications")
+tempDE <- rownames(dataUpset)[which(dataUpset$Time.0==1 &
+                                    dataUpset$Time.1==1 &
+                                    dataUpset$Time.2==1)]
+print(intersect(geneList,tempDE))
+
+#Shared in Time 0 & Time 1 (tested in all classifications)
+print("Shared in Time 0 & Time 1 (tested in all classifications)")
+tempDE <- rownames(dataUpset)[which(dataUpset$Time.0==1 &
+                                    dataUpset$Time.1==1 &
+                                    dataUpset$Time.2==0)]
+print(intersect(geneList,tempDE))
+
+#Shared in Time 1 & Time 2 (tested in all classifications)
+print("Shared in Time 1 & Time 2, tested in all classifications")
+tempDE <- rownames(dataUpset)[which(dataUpset$Time.0==0 &
+                                    dataUpset$Time.1==1 &
+                                    dataUpset$Time.2==1)]
+print(intersect(geneList,tempDE))
+
+#Unique to Time 0 (tested in all classifications)
+print("Unique to Time 0 (tested in all classifications)")
+tempDE <- rownames(dataUpset)[which(dataUpset$Time.0==1 &
+                                    dataUpset$Time.1==0 &
+                                    dataUpset$Time.2==0)]
+print(intersect(geneList,tempDE))
+
+#Unique to Time 1 (tested in all classifications)
+print("Unique to Time 1 (tested in all classifications)")
+tempDE <- rownames(dataUpset)[which(dataUpset$Time.0==0 &
+                                    dataUpset$Time.1==1 &
+                                    dataUpset$Time.2==0)]
+print(intersect(geneList,tempDE))
+
+#Unique to Time 2 (tested in all classifications)
+print("Unique to Time 2 (tested in all classifications)")
+tempDE <- rownames(dataUpset)[which(dataUpset$Time.0==0 &
+                                    dataUpset$Time.1==0 &
+                                    dataUpset$Time.2==1)]
+print(intersect(geneList,tempDE))
+
+```
+
 Determine which skeletal-phenotype-related genes overlap with DE genes:
 
 ```{r}
@@ -3187,6 +3237,86 @@ Save enrichment results:
 
 #Save enrichment results
 write.csv(DEenrich,"./data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4gene.data.filterC.log.indv-cell.intNo0.reg-tot.enrichment.csv")
+
+```
+
+Determine whether EVC2, NFIX, XYLT1, ACAN, COL2A1, and SOX9 overlap with DE genes:
+
+```{r}
+
+geneList <- c("EVC2","NFIX","XYLT1","ACAN","COL2A1","SOX9")
+
+#Shared across all ostadhoc classifications, tested in all classifications
+print("Shared across all ostadhoc classifications, tested in all classifications")
+tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==1 &
+                                    dataUpset$osteoblast==1 &
+                                    dataUpset$embedding.osteoblast==1 &
+                                    dataUpset$mineralizing.osteoblast==1 &
+                                    dataUpset$maturing.osteocyte==1)]
+print(intersect(geneList,tempDE))
+
+#Shared across pre+obl+emb+min, tested in all classifications
+print("Shared across pre+obl+emb+min, tested in all classifications")
+tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==1 &
+                                    dataUpset$osteoblast==1 &
+                                    dataUpset$embedding.osteoblast==1 &
+                                    dataUpset$mineralizing.osteoblast==1 &
+                                    dataUpset$maturing.osteocyte==0)]
+print(intersect(geneList,tempDE))
+
+#Shared across obl+emb+min, tested in all classifications
+print("Shared across obl+emb+min, tested in all classifications")
+tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
+                                    dataUpset$osteoblast==1 &
+                                    dataUpset$embedding.osteoblast==1 &
+                                    dataUpset$mineralizing.osteoblast==1 &
+                                    dataUpset$maturing.osteocyte==0)]
+print(intersect(geneList,tempDE))
+
+#Unique to preosteoblasts, tested in all classifications
+print("Unique to preosteoblasts, tested in all classifications")
+tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==1 &
+                                    dataUpset$osteoblast==0 &
+                                    dataUpset$embedding.osteoblast==0 &
+                                    dataUpset$mineralizing.osteoblast==0 &
+                                    dataUpset$maturing.osteocyte==0)]
+print(intersect(geneList,tempDE))
+
+#Unique to osteoblasts, tested in all classifications
+print("Unique to osteoblasts, tested in all classifications")
+tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
+                                    dataUpset$osteoblast==1 &
+                                    dataUpset$embedding.osteoblast==0 &
+                                    dataUpset$mineralizing.osteoblast==0 &
+                                    dataUpset$maturing.osteocyte==0)]
+print(intersect(geneList,tempDE))
+
+#Unique to embedding osteoblasts, tested in all classifications
+print("Unique to embedding osteoblasts, tested in all classifications")
+tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
+                                    dataUpset$osteoblast==0 &
+                                    dataUpset$embedding.osteoblast==1 &
+                                    dataUpset$mineralizing.osteoblast==0 &
+                                    dataUpset$maturing.osteocyte==0)]
+print(intersect(geneList,tempDE))
+
+#Unique to mineralizing osteoblasts, tested in all classifications
+print("Unique to mineralizing osteoblasts, tested in all classifications")
+tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
+                                    dataUpset$osteoblast==0 &
+                                    dataUpset$embedding.osteoblast==0 &
+                                    dataUpset$mineralizing.osteoblast==1 &
+                                    dataUpset$maturing.osteocyte==0)]
+print(intersect(geneList,tempDE))
+
+#Unique to maturing osteocytes, tested in all classifications
+print("Unique to maturing osteocytes, tested in all classifications")
+tempDE <- rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
+                                    dataUpset$osteoblast==0 &
+                                    dataUpset$embedding.osteoblast==0 &
+                                    dataUpset$mineralizing.osteoblast==0 &
+                                    dataUpset$maturing.osteocyte==1)]
+print(intersect(geneList,tempDE))
 
 ```
 
