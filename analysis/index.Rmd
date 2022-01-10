@@ -74,13 +74,13 @@ If you are running the files in this repository to recreate the analyses, runnin
 
     + [Pairwise DE tests](10x-data-5-diffexp.html) & [Visualized results](10x-plot-diffexp.html)
 
-    + [Cormotif DE tests](10x-data-6-cormotif-cnts_v2.html) & [Visualized results](10x-plot-cormotif-cnts_v2.html)
+    + [Cormotif DE tests](10x-data-6-cormotif-tot-cnts_v2.html) & [Visualized results](10x-plot-cormotif-cnts_v2.html)
     
     + Examined gene set enrichments to determine optimal [FDR cutoff](10x-plot-diffexp-thresh.html) (FDR < 0.01) and [posterior probability cutoff](10x-plot-cormotif-cnts-thresh_v2.html) (posterior probability > 0.65)
     
     + [Evaluated overlap of Pairwise DE genes and Cormotif DE genes](10x-plot-de-overlap.html)
     
-* [Examined variance in gene expression](10x-data-7-variance.html)
+* [Examined variance in gene expression](10x-data-7-variance-tot.html)
 
 ## Enrichment analyses
 
@@ -100,8 +100,10 @@ If you are running the files in this repository to recreate the analyses, runnin
 
 * [Viewed 10x sequencing data metrics](10x-view-data-metrics.html)
 
-* [Viewed species assignments](10x-view-species assignments.html)
+* [Viewed species assignments](10x-view-species-assignments.html)
 
-* [Viewed 10x data subset by stage of differentiation](10x-data-subsets.html)
+* [Viewed 10x data subset by stage of differentiation](10x-view-data-subsets.html)
 
-* [Analyzed technical replicate correlations](10x-plot-replicate-correlations.html)
+* [Analyzed technical replicate correlations](10x-plot-replicate-correlation-tot.html)
+
+* [Analyses performed in response to paper revisions](paper-revisions.html)
