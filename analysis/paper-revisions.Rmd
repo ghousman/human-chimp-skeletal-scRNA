@@ -1,0 +1,3055 @@
+---
+title: "paper-revisions"
+author: "Genevieve Housman"
+date: "January 2022"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Paper Revisions
+
+```{r,eval=FALSE}
+library(Seurat)
+library(dplyr)
+library(reshape2)
+library(fastTopics)
+library(pheatmap)
+library(ggplot2)
+library(gridExtra)
+library(stringr)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(viridis)
+library(CountClust)
+```
+
+```{r,eval=FALSE}
+
+#Load data
+#data integrated across individuals - total (conservative cell filter + non-zero genes + regress out UMI/mito)
+scrna <- "./data/cellranger-data-full/data.filterC.log.indv-cell.intNo0.reg-tot.assign.rds"
+data <- readRDS(scrna)
+
+#Define individual-replicate sets
+data@meta.data$Individual.Replicate <- paste0(data@meta.data$Individual,".",data@meta.data$Replicate)
+
+```
+
+## Why do human and chimp cells reach different osteogenic endpoints?
+
+```{r,eval=FALSE}
+
+#more human osteogenic cells were identified in Time 1 than human osteogenic cells
+
+CombinePlots(plots=list((DimPlot(subset(data,subset=Species=="Human"),
+                                 group.by="Stage",
+                                 split.by="OstAdHoc.Assign.4gene.thresh0",
+                                 reduction="umap",
+                                 cols=c("pink","mediumorchid","dodgerblue")) +
+                           labs(x="UMAP1",y="UMAP2")),
+                        (DimPlot(subset(data,subset=Species=="Chimp"),
+                                 group.by="Stage",
+                                 split.by="OstAdHoc.Assign.4gene.thresh0",
+                                 reduction="umap",
+                                 cols=c("pink","mediumorchid","dodgerblue")) +
+                           labs(x="UMAP1",y="UMAP2"))), ncol=1)
+ggplot(data@meta.data[which(data@meta.data$OstAdHoc.Assign.4gene.thresh0!="not osteogenic"),],
+       aes(x=OstAdHoc.Assign.4gene.thresh0, fill=OstAdHoc.Assign.4gene.thresh0)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4","grey90","grey90","grey90")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12),
+        axis.text.x=element_text(angle=90))
+ggplot(data@meta.data[which(data@meta.data$OstAdHoc.Assign.4gene.thresh0!="not osteogenic"),],
+       aes(x=OstAdHoc.Assign.4gene.thresh0, fill=OstAdHoc.Assign.4gene.thresh0)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4","grey90","grey90","grey90")) +
+  facet_grid(~Individual.Replicate)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12),
+        axis.text.x=element_text(angle=90))
+
+CombinePlots(plots=list((DimPlot(subset(data,subset=Stage=="Time 1" & Species=="Human"),
+                                group.by="OstAdHoc.Assign.4gene.thresh0",
+                                split.by="OstAdHoc.Assign.4gene.thresh0",
+                                reduction="umap",
+                                cols=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4","grey90","grey90","grey90")) +
+                          labs(x="UMAP1",y="UMAP2")),
+                        (DimPlot(subset(data,subset=Stage=="Time 1" & Species=="Chimp"),
+                                group.by="OstAdHoc.Assign.4gene.thresh0",
+                                split.by="OstAdHoc.Assign.4gene.thresh0",
+                                reduction="umap",
+                                cols=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4","grey90","grey90","grey90")) +
+                          labs(x="UMAP1",y="UMAP2"))), ncol=1)
+ggplot(data@meta.data[which(data@meta.data$Stage=="Time 1" & data@meta.data$OstAdHoc.Assign.4gene.thresh0!="not osteogenic"),],
+       aes(x=OstAdHoc.Assign.4gene.thresh0, fill=OstAdHoc.Assign.4gene.thresh0)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4","grey90","grey90","grey90")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12),
+        axis.text.x=element_text(angle=90))
+ggplot(data@meta.data[which(data@meta.data$Stage=="Time 1" & data@meta.data$OstAdHoc.Assign.4gene.thresh0!="not osteogenic"),],
+       aes(x=OstAdHoc.Assign.4gene.thresh0, fill=OstAdHoc.Assign.4gene.thresh0)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4","grey90","grey90","grey90")) +
+  facet_grid(~Individual.Replicate)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12),
+        axis.text.x=element_text(angle=90))
+
+CombinePlots(plots=list((DimPlot(subset(data,subset=Stage=="Time 2" & Species=="Human"),
+                                group.by="OstAdHoc.Assign.4gene.thresh0",
+                                split.by="OstAdHoc.Assign.4gene.thresh0",
+                                reduction="umap",
+                                cols=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4","grey90","grey90","grey90")) +
+                          labs(x="UMAP1",y="UMAP2")),
+                        (DimPlot(subset(data,subset=Stage=="Time 2" & Species=="Chimp"),
+                                group.by="OstAdHoc.Assign.4gene.thresh0",
+                                split.by="OstAdHoc.Assign.4gene.thresh0",
+                                reduction="umap",
+                                cols=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4","grey90","grey90","grey90")) +
+                          labs(x="UMAP1",y="UMAP2"))), ncol=1)
+ggplot(data@meta.data[which(data@meta.data$Stage=="Time 2" & data@meta.data$OstAdHoc.Assign.4gene.thresh0!="not osteogenic"),],
+       aes(x=OstAdHoc.Assign.4gene.thresh0, fill=OstAdHoc.Assign.4gene.thresh0)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4","grey90","grey90","grey90")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12),
+        axis.text.x=element_text(angle=90))
+ggplot(data@meta.data[which(data@meta.data$Stage=="Time 2" & data@meta.data$OstAdHoc.Assign.4gene.thresh0!="not osteogenic"),],
+       aes(x=OstAdHoc.Assign.4gene.thresh0, fill=OstAdHoc.Assign.4gene.thresh0)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4","grey90","grey90","grey90")) +
+  facet_grid(~Individual.Replicate)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12),
+        axis.text.x=element_text(angle=90))
+
+```
+
+## Examine higher gene expression variation in chimps than in humans
+
+```{r,eval=FALSE}
+
+# Compile log2 normalized gene expression data
+#make count matrix and metadata for edgeR object - pseudobulk
+cell.subset <- c("Time 0","Time 1","Time 2")
+counts <- c()
+metadata <- c()
+labels <- c()
+for(j in cell.subset) {
+  dataSub <- subset(data,subset=Stage==j)
+  for (i in unique(dataSub@meta.data$Individual.Replicate)) {
+    x.lab <- paste0(i,"_",j)
+    w <- which(dataSub@meta.data$Individual.Replicate==i)
+    if (length(w)>0) {
+      x.spp <- dataSub@meta.data$Species[w][1]
+      x.col <- dataSub@meta.data$Collection[w][1]
+      x.ind <- dataSub@meta.data$Individual[w][1]
+      x.rep <- dataSub@meta.data$Replicate[w][1]
+      x.idr <- dataSub@meta.data$Individual.Replicate[w][1]
+      x.stg <- dataSub@meta.data$Stage[w][1]
+      if (length(w)==1) {
+        x.cnt <- dataSub@assays$RNA@counts[,w]
+      } else {
+        x.cnt <- Matrix::rowSums(dataSub@assays$RNA@counts[,w])
+      }
+      counts <- cbind(counts, x.cnt)
+      metadata <- rbind(metadata, c(x.lab, x.spp, x.col, x.ind, x.rep, x.idr, x.stg))
+      labels <- c(labels, x.lab)
+    }
+  }
+}
+colnames(counts) <- labels
+rownames(metadata) <- labels
+colnames(metadata) <- c("Sample","Species","Collection","Individual","Replicate","Individual.Replicate","Stage")
+metadata <- as.data.frame(metadata)
+
+#remove mitochodrial and ribosomal genes
+counts <- counts[which(rownames(counts) %in% genes.no.mito.ribo),]
+#make edgeR object
+dge <- DGEList(counts)
+meta_dge <- dge$samples[,c("lib.size","norm.factors")]
+meta_dge <- cbind(meta_dge, metadata)
+dge$samples <- meta_dge
+rm(counts,metadata,meta_dge)
+#filter genes
+keep <- rowMeans(edgeR::cpm(dge,log=TRUE,prior.count=0.25))>0
+dge$counts <- dge$counts[keep,]
+#normalize data
+dge <- calcNormFactors(dge, method="TMM")
+#log2 transformed cpm
+tmm <- edgeR::cpm(dge,normalized.lib.sizes=TRUE,log=TRUE,prior.count=0.25)
+
+rm(cell.subset,labels,i,j,w,keep,dataSub)
+rm(x.cnt,x.lab,x.spp,x.col,x.ind,x.rep,x.idr,x.stg)
+
+# Compile group labels of each species
+groupFactor <- factor(paste(dge$samples$Species,sapply(dge$samples$Stage,function(x)sub(" ","",x)),sep = "."),
+                      levels=c("Human.Time0","Human.Time1","Human.Time2","Chimp.Time0","Chimp.Time1","Chimp.Time2"))
+
+# Calculate log2cpm variances within species
+HC.var <- data.frame(matrix(nrow=dim(tmm)[1],ncol=0))
+HC.var["gene"] <- rownames(tmm)
+HC.var["Human.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human.Time0")],1, var))
+HC.var["Human.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human.Time1")],1, var))
+HC.var["Human.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Human.Time2")],1, var))
+HC.var["Chimp.Time0"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp.Time0")],1, var))
+HC.var["Chimp.Time1"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp.Time1")],1, var))
+HC.var["Chimp.Time2"] <- as.data.frame(apply(tmm[,which(groupFactor=="Chimp.Time2")],1, var))
+HC.var.melt <- melt(HC.var,id.vars="gene",measure.vars=c("Human.Time0","Human.Time1","Human.Time2","Chimp.Time0","Chimp.Time1","Chimp.Time2"))
+HC.var.melt$species <- sapply(HC.var.melt$variable,function(x)str_split(x,"[.]")[[1]][1])
+HC.var.melt$stage <- sapply(HC.var.melt$variable,function(x)str_split(x,"[.]")[[1]][2])
+
+ggplot(HC.var.melt, aes(x=species, y=log2(value), fill=stage)) +
+  geom_boxplot(width=0.8, outlier.shape=NA) +
+  xlab("Species") +
+  ylab('Log2 Variance in Gene Expression') +
+  ylim(c(-10,5)) +
+  scale_fill_manual(name="Stage", labels=c("Time 0","Time 1","Time 2"), values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=12), legend.text=element_text(size=12))
+t.test(HC.var$Human.Time0,HC.var$Human.Time1) #p<2.2e-16
+t.test(HC.var$Human.Time1,HC.var$Human.Time2) #p=1.4e-13
+t.test(HC.var$Chimp.Time0,HC.var$Chimp.Time1) #p<2.2e-16
+t.test(HC.var$Chimp.Time1,HC.var$Chimp.Time2) #p<2.2e-16
+
+ggplot(HC.var.melt, aes(x=stage, y=log2(value), fill=species)) +
+  geom_boxplot(width=0.8, outlier.shape=NA) +
+  xlab("Stage of Differentiation") +
+  ylab('Log2 Variance in Gene Expression') +
+  ylim(c(-10,5)) +
+  scale_fill_manual(name="Species", labels=c("Chimp","Human"), values=c("grey40","grey90")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=12), legend.text=element_text(size=12))
+t.test(HC.var$Human.Time0,HC.var$Chimp.Time0) #p<2.2e-16 (humans have significantly more variation)
+t.test(HC.var$Human.Time1,HC.var$Chimp.Time1) #p=4.2e-07 (chimps have significantly more variation)
+t.test(HC.var$Chimp.Time0,HC.var$Chimp.Time2) #p<2.2e-16 (chimps have significantly more variation)
+
+```
+
+## Examine the higher technical variation in chimp osteogenic replicates
+
+```{r,eval=FALSE}
+
+#Time 2 chimpanzee replicate correlations
+rep1 <- subset(data, subset=(Species=="Chimp" & Stage=="Time 2" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Chimp" & Stage=="Time 2" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.8719403
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="dodgerblue", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+#Randomly subset data and check correlations
+n=100
+rep.cors <- c()
+i=1
+
+while (i <= 10) {
+  print(i)
+  
+  rep1 <- subset(data, subset=(Species=="Chimp" & Stage=="Time 2" & Pair=="H1+C1" & Replicate=="1"))
+  cell.sub <- rownames(rep1@meta.data)[sample(1:length(rownames(rep1@meta.data)), n, replace=FALSE)]
+  rep1 <- subset(rep1, cells=cell.sub)
+  Idents(rep1) <- "rep1"
+  avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+  avg.rep1$gene <- rownames(avg.rep1)
+  
+  rep2 <- subset(data, subset=(Species=="Chimp" & Stage=="Time 2" & Pair=="H1+C1" & Replicate=="2"))
+  cell.sub <- rownames(rep2@meta.data)[sample(1:length(rownames(rep2@meta.data)), n, replace=FALSE)]
+  rep2 <- subset(rep2, cells=cell.sub)
+  Idents(rep2) <- "rep2"
+  avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+  avg.rep2$gene <- rownames(avg.rep2)
+  
+  rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+  rep.cors <- c(rep.cors,cor(rep.avg$rep1, rep.avg$rep2, method="pearson"))
+  
+  rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg,cell.sub)
+  
+  i=i+1
+  
+}
+
+#Preosteoblasts (chimp)
+rep1 <- subset(data, subset=(Species=="Chimp" & OstAdHoc.Assign.4gene.thresh0=="preosteoblast" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Chimp" & OstAdHoc.Assign.4gene.thresh0=="preosteoblast" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.8345675
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="lightblue1", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+#Osteoblasts (chimp)
+rep1 <- subset(data, subset=(Species=="Chimp" & OstAdHoc.Assign.4gene.thresh0=="osteoblast" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Chimp" & OstAdHoc.Assign.4gene.thresh0=="osteoblast" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.8721406
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="deepskyblue", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+#Embedding osteoblasts (chimp)
+rep1 <- subset(data, subset=(Species=="Chimp" & OstAdHoc.Assign.4gene.thresh0=="embedding osteoblast" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Chimp" & OstAdHoc.Assign.4gene.thresh0=="embedding osteoblast" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.8625412
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="dodgerblue2", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+#Mineralizing osteoblasts (chimp)
+rep1 <- subset(data, subset=(Species=="Chimp" & OstAdHoc.Assign.4gene.thresh0=="mineralizing osteoblast" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Chimp" & OstAdHoc.Assign.4gene.thresh0=="mineralizing osteoblast" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.8747518
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="royalblue3", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+#Maturing osteocytes
+rep1 <- subset(data, subset=(Species=="Chimp" & OstAdHoc.Assign.4gene.thresh0=="maturing osteocyte" & Pair=="H1+C1" & Replicate=="1"))
+Idents(rep1) <- "rep1"
+avg.rep1 <- log1p(AverageExpression(rep1, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep1$gene <- rownames(avg.rep1)
+
+rep2 <- subset(data, subset=(Species=="Chimp" & OstAdHoc.Assign.4gene.thresh0=="maturing osteocyte" & Pair=="H1+C1" & Replicate=="2"))
+Idents(rep2) <- "rep2"
+avg.rep2 <- log1p(AverageExpression(rep2, assays="RNA", slot="data", verbose=FALSE)$RNA)
+avg.rep2$gene <- rownames(avg.rep2)
+
+rep.avg <- merge(avg.rep1, avg.rep2, by="gene")
+cor(rep.avg$rep1, rep.avg$rep2, method="pearson") #pearson correlation = 0.8809453
+
+ggplot(rep.avg, aes(rep1, rep2)) +
+  geom_point(size=1) +
+  geom_smooth(method=lm, se=FALSE, col="royalblue4", size=2) +
+  labs(x="Average Gene Expression in Replicate 1 (Chimp)",y="Average Gene Expression in Replicate 2 (Chimp)") +
+  theme_classic()
+
+rm(rep1,rep2,avg.rep1,avg.rep2,rep.avg)
+
+```
+
+## Examine the higher dropouts in human osteogenic cells
+
+```{r,eval=FALSE}
+
+#stages of differentiation
+ggplot(data@meta.data,
+       aes(x=Stage, fill=Stage)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("pink","mediumorchid","dodgerblue")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12),
+        axis.text.x=element_text(angle=90))
+ggplot(data@meta.data,
+       aes(x=Stage, fill=Stage)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("pink","mediumorchid","dodgerblue")) +
+  facet_grid(~Individual.Replicate)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12),
+        axis.text.x=element_text(angle=90))
+
+table(data@meta.data$Species[which(data@meta.data$Stage=="Time 2")])
+table(data@meta.data$Individual.Replicate[which(data@meta.data$Stage=="Time 2")])
+
+ggplot(data@meta.data[which(data@meta.data$Stage=="Time 0"),],
+       aes(x=Individual.Replicate, fill=Individual.Replicate)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  ylim(0,4000) +
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+ggplot(data@meta.data[which(data@meta.data$Stage=="Time 1"),],
+       aes(x=Individual.Replicate, fill=Individual.Replicate)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  ylim(0,4000) +
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+ggplot(data@meta.data[which(data@meta.data$Stage=="Time 2"),],
+       aes(x=Individual.Replicate, fill=Individual.Replicate)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  ylim(0,4000) +
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+
+#stages of osteogenesis
+ggplot(data@meta.data[which(data@meta.data$OstAdHoc.Assign.4gene.thresh0!="not osteogenic"),],
+       aes(x=OstAdHoc.Assign.4gene.thresh0, fill=OstAdHoc.Assign.4gene.thresh0)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4","grey90","grey90","grey90")) +
+  facet_grid(~Species)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12),
+        axis.text.x=element_text(angle=90))
+ggplot(data@meta.data[which(data@meta.data$OstAdHoc.Assign.4gene.thresh0!="not osteogenic"),],
+       aes(x=OstAdHoc.Assign.4gene.thresh0, fill=OstAdHoc.Assign.4gene.thresh0)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  scale_fill_manual(name="", values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4","grey90","grey90","grey90")) +
+  facet_grid(~Individual.Replicate)+
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12),
+        axis.text.x=element_text(angle=90))
+
+table(data@meta.data$Species[which(data@meta.data$OstAdHoc.Assign.4gene.thresh0!="not osteogenic")])
+table(data@meta.data$Individual.Replicate[which(data@meta.data$OstAdHoc.Assign.4gene.thresh0!="not osteogenic")])
+
+ggplot(data@meta.data[which(data@meta.data$OstAdHoc.Assign.4gene.thresh0!="not osteogenic"),],
+       aes(x=Individual.Replicate, fill=Individual.Replicate)) +
+  geom_bar(position="dodge") +
+  labs(y="Number of Cells", x="") +
+  ylim(0,4000) +
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        legend.text=element_text(size=12),
+        strip.text.x=element_text(size=12))
+
+#marker gene expression of osteogenic ad hoc cells
+VlnPlot(subset(data,subset=OstAdHoc.Assign.4gene.thresh0!="not osteogenic"),
+        features=c("COL1A1","COL1A2","ALPL","RUNX2","BGLAP","PHEX","MEPE"),
+        group.by="OstAdHoc.Assign.4gene.thresh0",
+        cols=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4","grey90","grey90","grey90"),
+        pt.size=0)
+
+```
+
+## Additional exploration of topic modeling results
+
+### Define topic model functions
+
+```{r,eval=FALSE}
+
+plot_structure_plot <- function(omega, labels){
+     annotation <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=labels)
+     rownames(omega) <- annotation$sample_id
+     StructureGGplot(omega=omega, annotation=annotation, order_sample=TRUE,
+                     axis_tick=list(axis_ticks_length = .1,
+                                    axis_ticks_lwd_y = .1,
+                                    axis_ticks_lwd_x = .1,
+                                    axis_label_size = 7,
+                                    axis_label_face = "bold"))
+     }
+
+make_topic_plots <- function(omega, labels, angle, ncol) {
+  i=1
+  omega <- as.data.frame(omega)
+  colNames <- names(omega)
+  omega <- cbind(omega,labels)
+  names(omega)
+  p <- list()
+  for (k in colNames) {
+    p[[i]] <- ggplot(data=omega, mapping=aes(x=labels)) +
+      geom_violin(mapping=aes_string(y=k),width=1,fill="lightgrey",color="lightgrey") +
+      geom_boxplot(mapping=aes_string(y=k),width=0.1,outlier.shape=NA, alpha=0.2) +
+      labs(y=paste0("Topic ",k,"\nMembership"), x=paste0("")) +
+      theme_classic() +
+      theme(axis.text.x=element_text(angle=angle, hjust=0.5, vjust=0))
+    i=i+1
+  }
+  do.call(grid.arrange,c(p,ncol=ncol))
+}
+
+annotate_clusters <- function(theta_mat){
+  top_features <- ExtractTopFeatures(theta_mat, top_features=100, method="poisson", options="min")
+  gene_vector <- do.call(rbind, lapply(1:dim(top_features[[1]])[1], function(x) rownames(theta_mat)[top_features[[1]][x,]]))
+  scores_vector <- do.call(rbind, lapply(1:dim(top_features[[1]])[1], function(x) top_features[[2]][x,]))
+  return(list(gene_vector, scores_vector))
+}
+
+#Define functions to assess GO functional enrichment
+goEnrich <- function(totGenes, deGenes, ontology) {
+  ref.df <- bitr(totGenes, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+  gene.df <- bitr(deGenes, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+  ego <- enrichGO(gene          = gene.df$ENSEMBL,
+                  OrgDb         = org.Hs.eg.db,
+                  universe      = ref.df$ENSEMBL,
+                  keyType       = 'ENSEMBL',
+                  ont           = ontology,
+                  pAdjustMethod = "BH",
+                  pvalueCutoff  = 0.01,
+                  qvalueCutoff  = 0.05,
+                  readable      = TRUE)
+  return(ego)
+}
+
+```
+
+### Run additional k for topic model
+
+```{bash, eval=FALSE}
+#easties to run these scripts on the cluster
+cd /project2/gilad/ghousman/skeletal-human-chimp/human-chimp-skeletal-scRNA/code/
+sbatch ./fastTopicsBC.sh 2 tot
+#sbatch ./fastTopicsBC.sh 3 tot
+#sbatch ./fastTopicsBC.sh 4 tot
+#sbatch ./fastTopicsBC.sh 5 tot
+#sbatch ./fastTopicsBC.sh 6 tot
+#sbatch ./fastTopicsBC.sh 7 tot
+sbatch ./fastTopicsBC.sh 8 tot
+sbatch ./fastTopicsBC.sh 9 tot
+sbatch ./fastTopicsBC.sh 10 tot
+sbatch ./fastTopicsBC.sh 15 tot
+sbatch ./fastTopicsBC.sh 20 tot
+sbatch ./fastTopicsBC.sh 30 tot
+```
+
+### Analyze additional k for topic model
+
+```{r,eval=FALSE}
+
+#Get total genes (for functional enrichment analyses)
+counts <- as.matrix(data@assays$RNA@counts) #do not use integrated data
+counts <- counts[rowSums(counts>0)>0,]      #remove genes with 0 counts across cells
+geneTot <- rownames(counts)
+rm(counts)
+
+#k=3
+fit <- readRDS(paste0("./data/gom-data/topics3.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds"))
+#Compute omega (weights, cells x k) and theta (topics, genes x k) (need to add up to 1)
+l <- fit$L
+f <- fit$F
+omega <- sweep(l, MARGIN=2, colSums(f), `*`)
+scale <- rowSums(omega)
+omega <- omega / scale
+theta <- f/colSums(f)
+#Reorder k and define color
+omega <- omega[,c(3,1,2)]
+colclust <- c("pink","mediumorchid","dodgerblue")
+#Create labels - stages
+labels <- sapply(strsplit(rownames(omega),"_"), `[`, 1)
+celltype1 <- labels
+celltype1[celltype1 %in% c("C1.I","C1r2.I","C2.I","C3.I","C4.I","C5.I","C6.I")] <- "Chimp\nTime0"
+celltype1[celltype1 %in% c("C1.M","C1r2.M","C2.M","C3.M","C4.M","C5.M","C6.M")] <- "Chimp\nTime1"
+celltype1[celltype1 %in% c("C1.O","C1r2.O","C2.O","C3.O","C4.O","C5.O","C6.O")] <- "Chimp\nTime2"
+celltype1[celltype1 %in% c("H1.I","H1r2.I","H2.I","H3.I","H4.I","H5.I","H6.I")] <- "Human\nTime0"
+celltype1[celltype1 %in% c("H1.M","H1r2.M","H2.M","H3.M","H4.M","H5.M","H6.M")] <- "Human\nTime1"
+celltype1[celltype1 %in% c("H1.O","H1r2.O","H2.O","H3.O","H4.O","H5.O","H6.O")] <- "Human\nTime2"
+annotation1 <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=as.factor(celltype1))
+#Structure plots and plot of topic membership
+rownames(omega) <- annotation1$sample_id
+print(CountClust::StructureGGplot(omega=omega,
+                                  annotation=annotation1,
+                                  palette=colclust,
+                                  yaxis_label="Samples",
+                                  order_sample=TRUE,
+                                  axis_tick=list(axis_ticks_length=0.1,
+                                                 axis_ticks_lwd_y=0.1,
+                                                 axis_ticks_lwd_x=0.1,
+                                                 axis_label_size=7,
+                                                 axis_label_face="bold")))
+make_topic_plots(omega=omega, labels=celltype1, angle=0, ncol=1)
+#Test for functional enrichment of top 100 markers for each topic, report only the positive ones
+genes <- annotate_clusters(theta_mat=theta)
+genes[[1]][,1:10]
+x <- data.frame(ONTOLOGY=character(),
+                ID=character(),
+                Description=character(),
+                GeneRatio=character(),
+                BgRatio=character(),
+                pvalue=numeric(),
+                p.adjust=numeric(),
+                qvalue=numeric(),
+                geneID=character(),
+                Count=integer(),
+                Resolution=character(),
+                Topic=character())
+#topic k3
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][3,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "3-Topic Analysis"
+x.tmp$Topic <- "Topic k3"
+x <- rbind(x,x.tmp)
+#topic k1
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][1,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "3-Topic Analysis"
+x.tmp$Topic <- "Topic k1"
+x <- rbind(x,x.tmp)
+#topic k2
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][2,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "3-Topic Analysis"
+x.tmp$Topic <- "Topic k2"
+x <- rbind(x,x.tmp)
+#save data
+write.csv(x,"./data/gom-data/topics3.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv")
+#clear data
+rm(genes,goTot,x,x.tmp)
+
+#k=4
+fit <- readRDS(paste0("./data/gom-data/topics4.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds"))
+#Compute omega (weights, cells x k) and theta (topics, genes x k) (need to add up to 1)
+l <- fit$L
+f <- fit$F
+omega <- sweep(l, MARGIN=2, colSums(f), `*`)
+scale <- rowSums(omega)
+omega <- omega / scale
+theta <- f/colSums(f)
+#Reorder k and define color
+omega <- omega[,c(4,2,3,1)]
+colclust <- c("pink","mediumorchid","orchid4","dodgerblue")
+#Create labels - stages
+labels <- sapply(strsplit(rownames(omega),"_"), `[`, 1)
+celltype1 <- labels
+celltype1[celltype1 %in% c("C1.I","C1r2.I","C2.I","C3.I","C4.I","C5.I","C6.I")] <- "Chimp\nTime0"
+celltype1[celltype1 %in% c("C1.M","C1r2.M","C2.M","C3.M","C4.M","C5.M","C6.M")] <- "Chimp\nTime1"
+celltype1[celltype1 %in% c("C1.O","C1r2.O","C2.O","C3.O","C4.O","C5.O","C6.O")] <- "Chimp\nTime2"
+celltype1[celltype1 %in% c("H1.I","H1r2.I","H2.I","H3.I","H4.I","H5.I","H6.I")] <- "Human\nTime0"
+celltype1[celltype1 %in% c("H1.M","H1r2.M","H2.M","H3.M","H4.M","H5.M","H6.M")] <- "Human\nTime1"
+celltype1[celltype1 %in% c("H1.O","H1r2.O","H2.O","H3.O","H4.O","H5.O","H6.O")] <- "Human\nTime2"
+annotation1 <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=as.factor(celltype1))
+#Structure plots and plot of topic membership
+rownames(omega) <- annotation1$sample_id
+print(CountClust::StructureGGplot(omega=omega,
+                                  annotation=annotation1,
+                                  palette=colclust,
+                                  yaxis_label="Samples",
+                                  order_sample=TRUE,
+                                  axis_tick=list(axis_ticks_length=0.1,
+                                                 axis_ticks_lwd_y=0.1,
+                                                 axis_ticks_lwd_x=0.1,
+                                                 axis_label_size=7,
+                                                 axis_label_face="bold")))
+make_topic_plots(omega=omega, labels=celltype1, angle=0, ncol=1)
+#Test for functional enrichment of top 100 markers for each topic, report only the positive ones
+genes <- annotate_clusters(theta_mat=theta)
+genes[[1]][,1:10]
+x <- data.frame(ONTOLOGY=character(),
+                ID=character(),
+                Description=character(),
+                GeneRatio=character(),
+                BgRatio=character(),
+                pvalue=numeric(),
+                p.adjust=numeric(),
+                qvalue=numeric(),
+                geneID=character(),
+                Count=integer(),
+                Resolution=character(),
+                Topic=character())
+#topic k4
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][4,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "4-Topic Analysis"
+x.tmp$Topic <- "Topic k4"
+x <- rbind(x,x.tmp)
+#topic k2
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][2,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "4-Topic Analysis"
+x.tmp$Topic <- "Topic k2"
+x <- rbind(x,x.tmp)
+#topic k3
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][3,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "4-Topic Analysis"
+x.tmp$Topic <- "Topic k3"
+x <- rbind(x,x.tmp)
+#topic k1
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][1,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "4-Topic Analysis"
+x.tmp$Topic <- "Topic k1"
+x <- rbind(x,x.tmp)
+#save data
+write.csv(x,"./data/gom-data/topics4.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv")
+#clear data
+rm(genes,goTot,x,x.tmp)
+
+#k=5
+fit <- readRDS(paste0("./data/gom-data/topics5.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds"))
+#Compute omega (weights, cells x k) and theta (topics, genes x k) (need to add up to 1)
+l <- fit$L
+f <- fit$F
+omega <- sweep(l, MARGIN=2, colSums(f), `*`)
+scale <- rowSums(omega)
+omega <- omega / scale
+theta <- f/colSums(f)
+#Reorder k and define color
+omega <- omega[,c(4,3,2,5,1)]
+colclust <- c("pink","pink4","mediumorchid","orchid4","dodgerblue")
+#Create labels - stages
+labels <- sapply(strsplit(rownames(omega),"_"), `[`, 1)
+celltype1 <- labels
+celltype1[celltype1 %in% c("C1.I","C1r2.I","C2.I","C3.I","C4.I","C5.I","C6.I")] <- "Chimp\nTime0"
+celltype1[celltype1 %in% c("C1.M","C1r2.M","C2.M","C3.M","C4.M","C5.M","C6.M")] <- "Chimp\nTime1"
+celltype1[celltype1 %in% c("C1.O","C1r2.O","C2.O","C3.O","C4.O","C5.O","C6.O")] <- "Chimp\nTime2"
+celltype1[celltype1 %in% c("H1.I","H1r2.I","H2.I","H3.I","H4.I","H5.I","H6.I")] <- "Human\nTime0"
+celltype1[celltype1 %in% c("H1.M","H1r2.M","H2.M","H3.M","H4.M","H5.M","H6.M")] <- "Human\nTime1"
+celltype1[celltype1 %in% c("H1.O","H1r2.O","H2.O","H3.O","H4.O","H5.O","H6.O")] <- "Human\nTime2"
+annotation1 <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=as.factor(celltype1))
+#Structure plots and plot of topic membership
+rownames(omega) <- annotation1$sample_id
+print(CountClust::StructureGGplot(omega=omega,
+                                  annotation=annotation1,
+                                  palette=colclust,
+                                  yaxis_label="Samples",
+                                  order_sample=TRUE,
+                                  axis_tick=list(axis_ticks_length=0.1,
+                                                 axis_ticks_lwd_y=0.1,
+                                                 axis_ticks_lwd_x=0.1,
+                                                 axis_label_size=7,
+                                                 axis_label_face="bold")))
+make_topic_plots(omega=omega, labels=celltype1, angle=0, ncol=1)
+#Test for functional enrichment of top 100 markers for each topic, report only the positive ones
+genes <- annotate_clusters(theta_mat=theta)
+genes[[1]][,1:10]
+x <- data.frame(ONTOLOGY=character(),
+                ID=character(),
+                Description=character(),
+                GeneRatio=character(),
+                BgRatio=character(),
+                pvalue=numeric(),
+                p.adjust=numeric(),
+                qvalue=numeric(),
+                geneID=character(),
+                Count=integer(),
+                Resolution=character(),
+                Topic=character())
+#topic k4
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][4,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "5-Topic Analysis"
+x.tmp$Topic <- "Topic k4"
+x <- rbind(x,x.tmp)
+#topic k3
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][3,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "5-Topic Analysis"
+x.tmp$Topic <- "Topic k3"
+x <- rbind(x,x.tmp)
+#topic k2
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][2,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "5-Topic Analysis"
+x.tmp$Topic <- "Topic k2"
+x <- rbind(x,x.tmp)
+#topic k5
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][5,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "5-Topic Analysis"
+x.tmp$Topic <- "Topic k5"
+x <- rbind(x,x.tmp)
+#topic k1
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][1,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "5-Topic Analysis"
+x.tmp$Topic <- "Topic k1"
+x <- rbind(x,x.tmp)
+#save data
+write.csv(x,"./data/gom-data/topics5.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv")
+#clear data
+rm(genes,goTot,x,x.tmp)
+
+#k=6
+fit <- readRDS(paste0("./data/gom-data/topics6.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds"))
+#Compute omega (weights, cells x k) and theta (topics, genes x k) (need to add up to 1)
+l <- fit$L
+f <- fit$F
+omega <- sweep(l, MARGIN=2, colSums(f), `*`)
+scale <- rowSums(omega)
+omega <- omega / scale
+theta <- f/colSums(f)
+#Reorder k and define color
+omega <- omega[,c(3,2,5,6,4,1)]
+colclust <- c("pink","pink4","mediumorchid","orchid4","dodgerblue","grey")
+#Create labels - stages
+labels <- sapply(strsplit(rownames(omega),"_"), `[`, 1)
+celltype1 <- labels
+celltype1[celltype1 %in% c("C1.I","C1r2.I","C2.I","C3.I","C4.I","C5.I","C6.I")] <- "Chimp\nTime0"
+celltype1[celltype1 %in% c("C1.M","C1r2.M","C2.M","C3.M","C4.M","C5.M","C6.M")] <- "Chimp\nTime1"
+celltype1[celltype1 %in% c("C1.O","C1r2.O","C2.O","C3.O","C4.O","C5.O","C6.O")] <- "Chimp\nTime2"
+celltype1[celltype1 %in% c("H1.I","H1r2.I","H2.I","H3.I","H4.I","H5.I","H6.I")] <- "Human\nTime0"
+celltype1[celltype1 %in% c("H1.M","H1r2.M","H2.M","H3.M","H4.M","H5.M","H6.M")] <- "Human\nTime1"
+celltype1[celltype1 %in% c("H1.O","H1r2.O","H2.O","H3.O","H4.O","H5.O","H6.O")] <- "Human\nTime2"
+annotation1 <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=as.factor(celltype1))
+#Structure plots and plot of topic membership
+rownames(omega) <- annotation1$sample_id
+print(CountClust::StructureGGplot(omega=omega,
+                                  annotation=annotation1,
+                                  palette=colclust,
+                                  yaxis_label="Samples",
+                                  order_sample=TRUE,
+                                  axis_tick=list(axis_ticks_length=0.1,
+                                                 axis_ticks_lwd_y=0.1,
+                                                 axis_ticks_lwd_x=0.1,
+                                                 axis_label_size=7,
+                                                 axis_label_face="bold")))
+make_topic_plots(omega=omega, labels=celltype1, angle=0, ncol=1)
+#Test for functional enrichment of top 100 markers for each topic, report only the positive ones
+genes <- annotate_clusters(theta_mat=theta)
+genes[[1]][,1:10]
+x <- data.frame(ONTOLOGY=character(),
+                ID=character(),
+                Description=character(),
+                GeneRatio=character(),
+                BgRatio=character(),
+                pvalue=numeric(),
+                p.adjust=numeric(),
+                qvalue=numeric(),
+                geneID=character(),
+                Count=integer(),
+                Resolution=character(),
+                Topic=character())
+#topic k3
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][3,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "6-Topic Analysis"
+x.tmp$Topic <- "Topic k3"
+x <- rbind(x,x.tmp)
+#topic k2
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][2,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "6-Topic Analysis"
+x.tmp$Topic <- "Topic k2"
+x <- rbind(x,x.tmp)
+#topic k5
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][5,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "6-Topic Analysis"
+x.tmp$Topic <- "Topic k5"
+x <- rbind(x,x.tmp)
+#topic k6
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][6,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "6-Topic Analysis"
+x.tmp$Topic <- "Topic k6"
+x <- rbind(x,x.tmp)
+#topic k4
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][4,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "6-Topic Analysis"
+x.tmp$Topic <- "Topic k4"
+x <- rbind(x,x.tmp)
+#topic k1
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][1,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "6-Topic Analysis"
+x.tmp$Topic <- "Topic k1"
+x <- rbind(x,x.tmp)
+#save data
+write.csv(x,"./data/gom-data/topics6.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv")
+#clear data
+rm(genes,goTot,x,x.tmp)
+
+#k=7
+fit <- readRDS(paste0("./data/gom-data/topics7.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds"))
+#Compute omega (weights, cells x k) and theta (topics, genes x k) (need to add up to 1)
+l <- fit$L
+f <- fit$F
+omega <- sweep(l, MARGIN=2, colSums(f), `*`)
+scale <- rowSums(omega)
+omega <- omega / scale
+theta <- f/colSums(f)
+#Reorder k and define color
+omega <- omega[,c(6,7,4,2,5,3,1)]
+colclust <- c("pink","pink4","mediumorchid","orchid4","dodgerblue1","dodgerblue4","grey")
+#Create labels - stages
+labels <- sapply(strsplit(rownames(omega),"_"), `[`, 1)
+celltype1 <- labels
+celltype1[celltype1 %in% c("C1.I","C1r2.I","C2.I","C3.I","C4.I","C5.I","C6.I")] <- "Chimp\nTime0"
+celltype1[celltype1 %in% c("C1.M","C1r2.M","C2.M","C3.M","C4.M","C5.M","C6.M")] <- "Chimp\nTime1"
+celltype1[celltype1 %in% c("C1.O","C1r2.O","C2.O","C3.O","C4.O","C5.O","C6.O")] <- "Chimp\nTime2"
+celltype1[celltype1 %in% c("H1.I","H1r2.I","H2.I","H3.I","H4.I","H5.I","H6.I")] <- "Human\nTime0"
+celltype1[celltype1 %in% c("H1.M","H1r2.M","H2.M","H3.M","H4.M","H5.M","H6.M")] <- "Human\nTime1"
+celltype1[celltype1 %in% c("H1.O","H1r2.O","H2.O","H3.O","H4.O","H5.O","H6.O")] <- "Human\nTime2"
+annotation1 <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=as.factor(celltype1))
+#Structure plots and plot of topic membership
+rownames(omega) <- annotation1$sample_id
+print(CountClust::StructureGGplot(omega=omega,
+                                  annotation=annotation1,
+                                  palette=colclust,
+                                  yaxis_label="Samples",
+                                  order_sample=TRUE,
+                                  axis_tick=list(axis_ticks_length=0.1,
+                                                 axis_ticks_lwd_y=0.1,
+                                                 axis_ticks_lwd_x=0.1,
+                                                 axis_label_size=7,
+                                                 axis_label_face="bold")))
+make_topic_plots(omega=omega, labels=celltype1, angle=0, ncol=1)
+#Test for functional enrichment of top 100 markers for each topic, report only the positive ones
+genes <- annotate_clusters(theta_mat=theta)
+genes[[1]][,1:10]
+x <- data.frame(ONTOLOGY=character(),
+                ID=character(),
+                Description=character(),
+                GeneRatio=character(),
+                BgRatio=character(),
+                pvalue=numeric(),
+                p.adjust=numeric(),
+                qvalue=numeric(),
+                geneID=character(),
+                Count=integer(),
+                Resolution=character(),
+                Topic=character())
+#topic k6
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][6,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "7-Topic Analysis"
+x.tmp$Topic <- "Topic k6"
+x <- rbind(x,x.tmp)
+#topic k7
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][7,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "7-Topic Analysis"
+x.tmp$Topic <- "Topic k7"
+x <- rbind(x,x.tmp)
+#topic k4
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][4,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "7-Topic Analysis"
+x.tmp$Topic <- "Topic k4"
+x <- rbind(x,x.tmp)
+#topic k2
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][2,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "7-Topic Analysis"
+x.tmp$Topic <- "Topic k2"
+x <- rbind(x,x.tmp)
+#topic k5
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][5,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "7-Topic Analysis"
+x.tmp$Topic <- "Topic k5"
+x <- rbind(x,x.tmp)
+#topic k3
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][3,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "7-Topic Analysis"
+x.tmp$Topic <- "Topic k3"
+x <- rbind(x,x.tmp)
+#topic k1
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][1,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "7-Topic Analysis"
+x.tmp$Topic <- "Topic k1"
+x <- rbind(x,x.tmp)
+#save data
+write.csv(x,"./data/gom-data/topics7.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv")
+#clear data
+rm(genes,goTot,x,x.tmp)
+
+#k=8
+fit <- readRDS(paste0("./data/gom-data/topics8.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds"))
+#Compute omega (weights, cells x k) and theta (topics, genes x k) (need to add up to 1)
+l <- fit$L
+f <- fit$F
+omega <- sweep(l, MARGIN=2, colSums(f), `*`)
+scale <- rowSums(omega)
+omega <- omega / scale
+theta <- f/colSums(f)
+#Reorder k and define color
+omega <- omega[,c(5,7,6,3,8,1,2,4)]
+colclust <- c("pink","pink4","mediumorchid","orchid4","darkorchid4","dodgerblue1","dodgerblue4","grey")
+#Create labels - stages
+labels <- sapply(strsplit(rownames(omega),"_"), `[`, 1)
+celltype1 <- labels
+celltype1[celltype1 %in% c("C1.I","C1r2.I","C2.I","C3.I","C4.I","C5.I","C6.I")] <- "Chimp\nTime0"
+celltype1[celltype1 %in% c("C1.M","C1r2.M","C2.M","C3.M","C4.M","C5.M","C6.M")] <- "Chimp\nTime1"
+celltype1[celltype1 %in% c("C1.O","C1r2.O","C2.O","C3.O","C4.O","C5.O","C6.O")] <- "Chimp\nTime2"
+celltype1[celltype1 %in% c("H1.I","H1r2.I","H2.I","H3.I","H4.I","H5.I","H6.I")] <- "Human\nTime0"
+celltype1[celltype1 %in% c("H1.M","H1r2.M","H2.M","H3.M","H4.M","H5.M","H6.M")] <- "Human\nTime1"
+celltype1[celltype1 %in% c("H1.O","H1r2.O","H2.O","H3.O","H4.O","H5.O","H6.O")] <- "Human\nTime2"
+annotation1 <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=as.factor(celltype1))
+#Structure plots and plot of topic membership
+rownames(omega) <- annotation1$sample_id
+print(CountClust::StructureGGplot(omega=omega,
+                                  annotation=annotation1,
+                                  palette=colclust,
+                                  yaxis_label="Samples",
+                                  order_sample=TRUE,
+                                  axis_tick=list(axis_ticks_length=0.1,
+                                                 axis_ticks_lwd_y=0.1,
+                                                 axis_ticks_lwd_x=0.1,
+                                                 axis_label_size=7,
+                                                 axis_label_face="bold")))
+make_topic_plots(omega=omega, labels=celltype1, angle=0, ncol=2)
+#Test for functional enrichment of top 100 markers for each topic, report only the positive ones
+genes <- annotate_clusters(theta_mat=theta)
+genes[[1]][,1:10]
+x <- data.frame(ONTOLOGY=character(),
+                ID=character(),
+                Description=character(),
+                GeneRatio=character(),
+                BgRatio=character(),
+                pvalue=numeric(),
+                p.adjust=numeric(),
+                qvalue=numeric(),
+                geneID=character(),
+                Count=integer(),
+                Resolution=character(),
+                Topic=character())
+#topic k5
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][5,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "8-Topic Analysis"
+x.tmp$Topic <- "Topic k5"
+x <- rbind(x,x.tmp)
+#topic k7
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][7,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "8-Topic Analysis"
+x.tmp$Topic <- "Topic k7"
+x <- rbind(x,x.tmp)
+#topic k6
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][6,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "8-Topic Analysis"
+x.tmp$Topic <- "Topic k6"
+x <- rbind(x,x.tmp)
+#topic k3
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][3,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "8-Topic Analysis"
+x.tmp$Topic <- "Topic k3"
+x <- rbind(x,x.tmp)
+#topic k8
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][8,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "8-Topic Analysis"
+x.tmp$Topic <- "Topic k8"
+x <- rbind(x,x.tmp)
+#topic k1
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][1,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "8-Topic Analysis"
+x.tmp$Topic <- "Topic k1"
+x <- rbind(x,x.tmp)
+#topic k2
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][2,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "8-Topic Analysis"
+x.tmp$Topic <- "Topic k2"
+x <- rbind(x,x.tmp)
+#topic k4
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][4,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "8-Topic Analysis"
+x.tmp$Topic <- "Topic k4"
+x <- rbind(x,x.tmp)
+#save data
+write.csv(x,"./data/gom-data/topics8.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv")
+#clear data
+rm(genes,goTot,x,x.tmp)
+
+#k=9
+fit <- readRDS(paste0("./data/gom-data/topics9.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds"))
+#Compute omega (weights, cells x k) and theta (topics, genes x k) (need to add up to 1)
+l <- fit$L
+f <- fit$F
+omega <- sweep(l, MARGIN=2, colSums(f), `*`)
+scale <- rowSums(omega)
+omega <- omega / scale
+theta <- f/colSums(f)
+#Reorder k and define color
+omega <- omega[,c(2,6,3,7,5,9,8,1,4)]
+colclust <- c("pink","pink3","pink4","mediumorchid","orchid4","darkorchid4","dodgerblue1","dodgerblue4","grey")
+#Create labels - stages
+labels <- sapply(strsplit(rownames(omega),"_"), `[`, 1)
+celltype1 <- labels
+celltype1[celltype1 %in% c("C1.I","C1r2.I","C2.I","C3.I","C4.I","C5.I","C6.I")] <- "Chimp\nTime0"
+celltype1[celltype1 %in% c("C1.M","C1r2.M","C2.M","C3.M","C4.M","C5.M","C6.M")] <- "Chimp\nTime1"
+celltype1[celltype1 %in% c("C1.O","C1r2.O","C2.O","C3.O","C4.O","C5.O","C6.O")] <- "Chimp\nTime2"
+celltype1[celltype1 %in% c("H1.I","H1r2.I","H2.I","H3.I","H4.I","H5.I","H6.I")] <- "Human\nTime0"
+celltype1[celltype1 %in% c("H1.M","H1r2.M","H2.M","H3.M","H4.M","H5.M","H6.M")] <- "Human\nTime1"
+celltype1[celltype1 %in% c("H1.O","H1r2.O","H2.O","H3.O","H4.O","H5.O","H6.O")] <- "Human\nTime2"
+annotation1 <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=as.factor(celltype1))
+#Structure plots and plot of topic membership
+rownames(omega) <- annotation1$sample_id
+print(CountClust::StructureGGplot(omega=omega,
+                                  annotation=annotation1,
+                                  palette=colclust,
+                                  yaxis_label="Samples",
+                                  order_sample=TRUE,
+                                  axis_tick=list(axis_ticks_length=0.1,
+                                                 axis_ticks_lwd_y=0.1,
+                                                 axis_ticks_lwd_x=0.1,
+                                                 axis_label_size=7,
+                                                 axis_label_face="bold")))
+make_topic_plots(omega=omega, labels=celltype1, angle=0, ncol=2)
+#Test for functional enrichment of top 100 markers for each topic, report only the positive ones
+genes <- annotate_clusters(theta_mat=theta)
+genes[[1]][,1:10]
+x <- data.frame(ONTOLOGY=character(),
+                ID=character(),
+                Description=character(),
+                GeneRatio=character(),
+                BgRatio=character(),
+                pvalue=numeric(),
+                p.adjust=numeric(),
+                qvalue=numeric(),
+                geneID=character(),
+                Count=integer(),
+                Resolution=character(),
+                Topic=character())
+#topic k2
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][2,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "9-Topic Analysis"
+x.tmp$Topic <- "Topic k2"
+x <- rbind(x,x.tmp)
+#topic k6
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][6,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "9-Topic Analysis"
+x.tmp$Topic <- "Topic k6"
+x <- rbind(x,x.tmp)
+#topic k3
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][3,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "9-Topic Analysis"
+x.tmp$Topic <- "Topic k3"
+x <- rbind(x,x.tmp)
+#topic k7
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][7,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "9-Topic Analysis"
+x.tmp$Topic <- "Topic k7"
+x <- rbind(x,x.tmp)
+#topic k5
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][5,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "9-Topic Analysis"
+x.tmp$Topic <- "Topic k5"
+x <- rbind(x,x.tmp)
+#topic k9
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][9,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "9-Topic Analysis"
+x.tmp$Topic <- "Topic k9"
+x <- rbind(x,x.tmp)
+#topic k8
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][8,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "9-Topic Analysis"
+x.tmp$Topic <- "Topic k8"
+x <- rbind(x,x.tmp)
+#topic k1
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][1,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "9-Topic Analysis"
+x.tmp$Topic <- "Topic k1"
+x <- rbind(x,x.tmp)
+#topic k4
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][4,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "9-Topic Analysis"
+x.tmp$Topic <- "Topic k4"
+x <- rbind(x,x.tmp)
+#save data
+write.csv(x,"./data/gom-data/topics9.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv")
+#clear data
+rm(genes,goTot,x,x.tmp)
+
+#k=10
+fit <- readRDS(paste0("./data/gom-data/topics10.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds"))
+#Compute omega (weights, cells x k) and theta (topics, genes x k) (need to add up to 1)
+l <- fit$L
+f <- fit$F
+omega <- sweep(l, MARGIN=2, colSums(f), `*`)
+scale <- rowSums(omega)
+omega <- omega / scale
+theta <- f/colSums(f)
+#Reorder k and define color
+omega <- omega[,c(3,6,4,10,9,1,7,2,5,8)]
+colclust <- c("pink","pink3","pink4","mediumorchid","orchid4","darkorchid4","dodgerblue1","dodgerblue4","grey","black")
+#Create labels - stages
+labels <- sapply(strsplit(rownames(omega),"_"), `[`, 1)
+celltype1 <- labels
+celltype1[celltype1 %in% c("C1.I","C1r2.I","C2.I","C3.I","C4.I","C5.I","C6.I")] <- "Chimp\nTime0"
+celltype1[celltype1 %in% c("C1.M","C1r2.M","C2.M","C3.M","C4.M","C5.M","C6.M")] <- "Chimp\nTime1"
+celltype1[celltype1 %in% c("C1.O","C1r2.O","C2.O","C3.O","C4.O","C5.O","C6.O")] <- "Chimp\nTime2"
+celltype1[celltype1 %in% c("H1.I","H1r2.I","H2.I","H3.I","H4.I","H5.I","H6.I")] <- "Human\nTime0"
+celltype1[celltype1 %in% c("H1.M","H1r2.M","H2.M","H3.M","H4.M","H5.M","H6.M")] <- "Human\nTime1"
+celltype1[celltype1 %in% c("H1.O","H1r2.O","H2.O","H3.O","H4.O","H5.O","H6.O")] <- "Human\nTime2"
+annotation1 <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=as.factor(celltype1))
+#Structure plots and plot of topic membership
+rownames(omega) <- annotation1$sample_id
+print(CountClust::StructureGGplot(omega=omega,
+                                  annotation=annotation1,
+                                  palette=colclust,
+                                  yaxis_label="Samples",
+                                  order_sample=TRUE,
+                                  axis_tick=list(axis_ticks_length=0.1,
+                                                 axis_ticks_lwd_y=0.1,
+                                                 axis_ticks_lwd_x=0.1,
+                                                 axis_label_size=7,
+                                                 axis_label_face="bold")))
+make_topic_plots(omega=omega, labels=celltype1, angle=0, ncol=2)
+#Test for functional enrichment of top 100 markers for each topic, report only the positive ones
+genes <- annotate_clusters(theta_mat=theta)
+genes[[1]][,1:10]
+x <- data.frame(ONTOLOGY=character(),
+                ID=character(),
+                Description=character(),
+                GeneRatio=character(),
+                BgRatio=character(),
+                pvalue=numeric(),
+                p.adjust=numeric(),
+                qvalue=numeric(),
+                geneID=character(),
+                Count=integer(),
+                Resolution=character(),
+                Topic=character())
+#topic k3
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][3,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "10-Topic Analysis"
+x.tmp$Topic <- "Topic k3"
+x <- rbind(x,x.tmp)
+#topic k6
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][6,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "10-Topic Analysis"
+x.tmp$Topic <- "Topic k6"
+x <- rbind(x,x.tmp)
+#topic k4
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][4,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "10-Topic Analysis"
+x.tmp$Topic <- "Topic k4"
+x <- rbind(x,x.tmp)
+#topic k10
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][10,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "10-Topic Analysis"
+x.tmp$Topic <- "Topic k10"
+x <- rbind(x,x.tmp)
+#topic k9
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][9,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "10-Topic Analysis"
+x.tmp$Topic <- "Topic k9"
+x <- rbind(x,x.tmp)
+#topic k1
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][1,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "10-Topic Analysis"
+x.tmp$Topic <- "Topic k1"
+x <- rbind(x,x.tmp)
+#topic k7
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][7,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "10-Topic Analysis"
+x.tmp$Topic <- "Topic k7"
+x <- rbind(x,x.tmp)
+#topic k2
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][2,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "10-Topic Analysis"
+x.tmp$Topic <- "Topic k2"
+x <- rbind(x,x.tmp)
+#topic k5
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][5,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "10-Topic Analysis"
+x.tmp$Topic <- "Topic k5"
+x <- rbind(x,x.tmp)
+#topic k8
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][8,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "10-Topic Analysis"
+x.tmp$Topic <- "Topic k8"
+x <- rbind(x,x.tmp)
+#save data
+write.csv(x,"./data/gom-data/topics10.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv")
+#clear data
+rm(genes,goTot,x,x.tmp)
+
+#k=15
+fit <- readRDS(paste0("./data/gom-data/topics15.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds"))
+#Compute omega (weights, cells x k) and theta (topics, genes x k) (need to add up to 1)
+l <- fit$L
+f <- fit$F
+omega <- sweep(l, MARGIN=2, colSums(f), `*`)
+scale <- rowSums(omega)
+omega <- omega / scale
+theta <- f/colSums(f)
+#Reorder k and define color
+omega <- omega[,c(2,14,4,11,5,1,9,12,8,6,3,13,7,15,10)]
+colclust <- c("pink","pink3","pink4",
+              "mediumorchid","orchid3","orchid4","darkorchid3","darkorchid4",
+              "dodgerblue1","dodgerblue3","dodgerblue4","royalblue3","royalblue4",
+              "grey","black")
+#Create labels - stages
+labels <- sapply(strsplit(rownames(omega),"_"), `[`, 1)
+celltype1 <- labels
+celltype1[celltype1 %in% c("C1.I","C1r2.I","C2.I","C3.I","C4.I","C5.I","C6.I")] <- "Chimp\nTime0"
+celltype1[celltype1 %in% c("C1.M","C1r2.M","C2.M","C3.M","C4.M","C5.M","C6.M")] <- "Chimp\nTime1"
+celltype1[celltype1 %in% c("C1.O","C1r2.O","C2.O","C3.O","C4.O","C5.O","C6.O")] <- "Chimp\nTime2"
+celltype1[celltype1 %in% c("H1.I","H1r2.I","H2.I","H3.I","H4.I","H5.I","H6.I")] <- "Human\nTime0"
+celltype1[celltype1 %in% c("H1.M","H1r2.M","H2.M","H3.M","H4.M","H5.M","H6.M")] <- "Human\nTime1"
+celltype1[celltype1 %in% c("H1.O","H1r2.O","H2.O","H3.O","H4.O","H5.O","H6.O")] <- "Human\nTime2"
+annotation1 <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=as.factor(celltype1))
+#Structure plots and plot of topic membership
+rownames(omega) <- annotation1$sample_id
+print(CountClust::StructureGGplot(omega=omega,
+                                  annotation=annotation1,
+                                  palette=colclust,
+                                  yaxis_label="Samples",
+                                  order_sample=TRUE,
+                                  axis_tick=list(axis_ticks_length=0.1,
+                                                 axis_ticks_lwd_y=0.1,
+                                                 axis_ticks_lwd_x=0.1,
+                                                 axis_label_size=7,
+                                                 axis_label_face="bold")))
+make_topic_plots(omega=omega, labels=celltype1, angle=0, ncol=3)
+#Test for functional enrichment of top 100 markers for each topic, report only the positive ones
+genes <- annotate_clusters(theta_mat=theta)
+genes[[1]][,1:10]
+x <- data.frame(ONTOLOGY=character(),
+                ID=character(),
+                Description=character(),
+                GeneRatio=character(),
+                BgRatio=character(),
+                pvalue=numeric(),
+                p.adjust=numeric(),
+                qvalue=numeric(),
+                geneID=character(),
+                Count=integer(),
+                Resolution=character(),
+                Topic=character())
+#topic k2
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][2,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "15-Topic Analysis"
+x.tmp$Topic <- "Topic k2"
+x <- rbind(x,x.tmp)
+#topic k14
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][14,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "15-Topic Analysis"
+x.tmp$Topic <- "Topic k14"
+x <- rbind(x,x.tmp)
+#topic k4
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][4,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "15-Topic Analysis"
+x.tmp$Topic <- "Topic k4"
+x <- rbind(x,x.tmp)
+#topic k11
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][11,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "15-Topic Analysis"
+x.tmp$Topic <- "Topic k11"
+x <- rbind(x,x.tmp)
+#topic k5
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][5,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "15-Topic Analysis"
+x.tmp$Topic <- "Topic k5"
+x <- rbind(x,x.tmp)
+#topic k1
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][1,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "15-Topic Analysis"
+x.tmp$Topic <- "Topic k1"
+x <- rbind(x,x.tmp)
+#topic k9
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][9,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "15-Topic Analysis"
+x.tmp$Topic <- "Topic k9"
+x <- rbind(x,x.tmp)
+#topic k12
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][12,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "15-Topic Analysis"
+x.tmp$Topic <- "Topic k12"
+x <- rbind(x,x.tmp)
+#topic k8
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][8,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "15-Topic Analysis"
+x.tmp$Topic <- "Topic k8"
+x <- rbind(x,x.tmp)
+#topic k6
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][6,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "15-Topic Analysis"
+x.tmp$Topic <- "Topic k6"
+x <- rbind(x,x.tmp)
+#topic k3
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][3,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "15-Topic Analysis"
+x.tmp$Topic <- "Topic k3"
+x <- rbind(x,x.tmp)
+#topic k13
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][13,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "15-Topic Analysis"
+x.tmp$Topic <- "Topic k13"
+x <- rbind(x,x.tmp)
+#topic k7
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][7,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "15-Topic Analysis"
+x.tmp$Topic <- "Topic k7"
+x <- rbind(x,x.tmp)
+#topic k15
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][15,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "15-Topic Analysis"
+x.tmp$Topic <- "Topic k15"
+x <- rbind(x,x.tmp)
+#topic k10
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][10,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "15-Topic Analysis"
+x.tmp$Topic <- "Topic k10"
+x <- rbind(x,x.tmp)
+#save data
+write.csv(x,"./data/gom-data/topics15.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv")
+#clear data
+rm(genes,goTot,x,x.tmp)
+
+#k=20
+fit <- readRDS(paste0("./data/gom-data/topics20.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds"))
+#Compute omega (weights, cells x k) and theta (topics, genes x k) (need to add up to 1)
+l <- fit$L
+f <- fit$F
+omega <- sweep(l, MARGIN=2, colSums(f), `*`)
+scale <- rowSums(omega)
+omega <- omega / scale
+theta <- f/colSums(f)
+#Reorder k and define color
+omega <- omega[,c(8,12,19,15,6,10,7,17,2,16,11,13,1,14,4,20,5,9,3,18)]
+colclust <- c("pink","rosybrown","pink3","pink4",
+              "mediumorchid","mediumorchid3","orchid2","orchid3","orchid4","darkorchid3","darkorchid4",
+              "dodgerblue1","dodgerblue4","royalblue1","royalblue3","royalblue4","midnightblue",
+              "grey","grey40","black")
+#Create labels - stages
+labels <- sapply(strsplit(rownames(omega),"_"), `[`, 1)
+celltype1 <- labels
+celltype1[celltype1 %in% c("C1.I","C1r2.I","C2.I","C3.I","C4.I","C5.I","C6.I")] <- "Chimp\nTime0"
+celltype1[celltype1 %in% c("C1.M","C1r2.M","C2.M","C3.M","C4.M","C5.M","C6.M")] <- "Chimp\nTime1"
+celltype1[celltype1 %in% c("C1.O","C1r2.O","C2.O","C3.O","C4.O","C5.O","C6.O")] <- "Chimp\nTime2"
+celltype1[celltype1 %in% c("H1.I","H1r2.I","H2.I","H3.I","H4.I","H5.I","H6.I")] <- "Human\nTime0"
+celltype1[celltype1 %in% c("H1.M","H1r2.M","H2.M","H3.M","H4.M","H5.M","H6.M")] <- "Human\nTime1"
+celltype1[celltype1 %in% c("H1.O","H1r2.O","H2.O","H3.O","H4.O","H5.O","H6.O")] <- "Human\nTime2"
+annotation1 <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=as.factor(celltype1))
+#Structure plots and plot of topic membership
+rownames(omega) <- annotation1$sample_id
+print(CountClust::StructureGGplot(omega=omega,
+                                  annotation=annotation1,
+                                  palette=colclust,
+                                  yaxis_label="Samples",
+                                  order_sample=TRUE,
+                                  axis_tick=list(axis_ticks_length=0.1,
+                                                 axis_ticks_lwd_y=0.1,
+                                                 axis_ticks_lwd_x=0.1,
+                                                 axis_label_size=7,
+                                                 axis_label_face="bold")))
+make_topic_plots(omega=omega, labels=celltype1, angle=0, ncol=4)
+#Test for functional enrichment of top 100 markers for each topic, report only the positive ones
+genes <- annotate_clusters(theta_mat=theta)
+genes[[1]][,1:10]
+x <- data.frame(ONTOLOGY=character(),
+                ID=character(),
+                Description=character(),
+                GeneRatio=character(),
+                BgRatio=character(),
+                pvalue=numeric(),
+                p.adjust=numeric(),
+                qvalue=numeric(),
+                geneID=character(),
+                Count=integer(),
+                Resolution=character(),
+                Topic=character())
+#topic k8
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][8,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "20-Topic Analysis"
+x.tmp$Topic <- "Topic k8"
+x <- rbind(x,x.tmp)
+#topic k12
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][12,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "20-Topic Analysis"
+x.tmp$Topic <- "Topic k12"
+x <- rbind(x,x.tmp)
+#topic k19
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][19,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "20-Topic Analysis"
+x.tmp$Topic <- "Topic k19"
+x <- rbind(x,x.tmp)
+#topic k15
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][15,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "20-Topic Analysis"
+x.tmp$Topic <- "Topic k15"
+x <- rbind(x,x.tmp)
+#topic k6
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][6,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "20-Topic Analysis"
+x.tmp$Topic <- "Topic k6"
+x <- rbind(x,x.tmp)
+#topic k10
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][10,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "20-Topic Analysis"
+x.tmp$Topic <- "Topic k10"
+x <- rbind(x,x.tmp)
+#topic k7
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][7,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "20-Topic Analysis"
+x.tmp$Topic <- "Topic k7"
+x <- rbind(x,x.tmp)
+#topic k17
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][17,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "20-Topic Analysis"
+x.tmp$Topic <- "Topic k17"
+x <- rbind(x,x.tmp)
+#topic k2
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][2,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "20-Topic Analysis"
+x.tmp$Topic <- "Topic k2"
+x <- rbind(x,x.tmp)
+#topic k16
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][16,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "20-Topic Analysis"
+x.tmp$Topic <- "Topic k16"
+x <- rbind(x,x.tmp)
+#topic k11
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][11,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "20-Topic Analysis"
+x.tmp$Topic <- "Topic k11"
+x <- rbind(x,x.tmp)
+#topic k13
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][13,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "20-Topic Analysis"
+x.tmp$Topic <- "Topic k13"
+x <- rbind(x,x.tmp)
+#topic k1
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][1,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "20-Topic Analysis"
+x.tmp$Topic <- "Topic k1"
+x <- rbind(x,x.tmp)
+#topic k14
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][14,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "20-Topic Analysis"
+x.tmp$Topic <- "Topic k14"
+x <- rbind(x,x.tmp)
+#topic k4
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][4,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "20-Topic Analysis"
+x.tmp$Topic <- "Topic k4"
+x <- rbind(x,x.tmp)
+#topic k20
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][20,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "20-Topic Analysis"
+x.tmp$Topic <- "Topic k20"
+x <- rbind(x,x.tmp)
+#topic k5
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][5,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "20-Topic Analysis"
+x.tmp$Topic <- "Topic k5"
+x <- rbind(x,x.tmp)
+#topic k9
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][9,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "20-Topic Analysis"
+x.tmp$Topic <- "Topic k9"
+x <- rbind(x,x.tmp)
+#topic k3
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][3,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "20-Topic Analysis"
+x.tmp$Topic <- "Topic k3"
+x <- rbind(x,x.tmp)
+#topic k18
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][18,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "20-Topic Analysis"
+x.tmp$Topic <- "Topic k18"
+x <- rbind(x,x.tmp)
+#save data
+write.csv(x,"./data/gom-data/topics20.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv")
+#clear data
+rm(genes,goTot,x,x.tmp)
+
+#k=30
+fit <- readRDS(paste0("./data/gom-data/topics30.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds"))
+#Compute omega (weights, cells x k) and theta (topics, genes x k) (need to add up to 1)
+l <- fit$L
+f <- fit$F
+omega <- sweep(l, MARGIN=2, colSums(f), `*`)
+scale <- rowSums(omega)
+omega <- omega / scale
+theta <- f/colSums(f)
+#Reorder k and define color
+omega <- omega[,c(29,24,26,18,
+                  28,4,7,12,19,5,8,1,11,6,
+                  16,27,10,13,2,20,22,21,25,15,
+                  30,23,9,3,14,17)]
+colclust <- c("pink","rosybrown","pink3","pink4",
+              "mediumorchid","mediumorchid2","mediumorchid3",
+              "orchid2","orchid3","orchid4",
+              "darkorchid1","darkorchid2","darkorchid3","darkorchid4",
+              "dodgerblue1","dodgerblue2","dodgerblue3","dodgerblue4",
+              "royalblue1","royalblue2","royalblue3","royalblue4",
+              "mediumblue","midnightblue",
+              "grey","grey60","grey50","grey40","grey30","black")
+#Create labels - stages
+labels <- sapply(strsplit(rownames(omega),"_"), `[`, 1)
+celltype1 <- labels
+celltype1[celltype1 %in% c("C1.I","C1r2.I","C2.I","C3.I","C4.I","C5.I","C6.I")] <- "Chimp\nTime0"
+celltype1[celltype1 %in% c("C1.M","C1r2.M","C2.M","C3.M","C4.M","C5.M","C6.M")] <- "Chimp\nTime1"
+celltype1[celltype1 %in% c("C1.O","C1r2.O","C2.O","C3.O","C4.O","C5.O","C6.O")] <- "Chimp\nTime2"
+celltype1[celltype1 %in% c("H1.I","H1r2.I","H2.I","H3.I","H4.I","H5.I","H6.I")] <- "Human\nTime0"
+celltype1[celltype1 %in% c("H1.M","H1r2.M","H2.M","H3.M","H4.M","H5.M","H6.M")] <- "Human\nTime1"
+celltype1[celltype1 %in% c("H1.O","H1r2.O","H2.O","H3.O","H4.O","H5.O","H6.O")] <- "Human\nTime2"
+annotation1 <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=as.factor(celltype1))
+#Structure plots and plot of topic membership
+rownames(omega) <- annotation1$sample_id
+print(CountClust::StructureGGplot(omega=omega,
+                                  annotation=annotation1,
+                                  palette=colclust,
+                                  yaxis_label="Samples",
+                                  order_sample=TRUE,
+                                  axis_tick=list(axis_ticks_length=0.1,
+                                                 axis_ticks_lwd_y=0.1,
+                                                 axis_ticks_lwd_x=0.1,
+                                                 axis_label_size=7,
+                                                 axis_label_face="bold")))
+make_topic_plots(omega=omega, labels=celltype1, angle=0, ncol=5)
+#Test for functional enrichment of top 100 markers for each topic, report only the positive ones
+genes <- annotate_clusters(theta_mat=theta)
+genes[[1]][,1:10]
+x <- data.frame(ONTOLOGY=character(),
+                ID=character(),
+                Description=character(),
+                GeneRatio=character(),
+                BgRatio=character(),
+                pvalue=numeric(),
+                p.adjust=numeric(),
+                qvalue=numeric(),
+                geneID=character(),
+                Count=integer(),
+                Resolution=character(),
+                Topic=character())
+#topic k29
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][29,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k29"
+x <- rbind(x,x.tmp)
+#topic k24
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][24,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k24"
+x <- rbind(x,x.tmp)
+#topic k26
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][26,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k26"
+x <- rbind(x,x.tmp)
+#topic k18
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][18,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k18"
+x <- rbind(x,x.tmp)
+#topic k28
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][28,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k28"
+x <- rbind(x,x.tmp)
+#topic k4
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][4,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k4"
+x <- rbind(x,x.tmp)
+#topic k7
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][7,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k7"
+x <- rbind(x,x.tmp)
+#topic k12
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][12,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k12"
+x <- rbind(x,x.tmp)
+#topic k19
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][19,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k19"
+x <- rbind(x,x.tmp)
+#topic k5
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][5,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k5"
+x <- rbind(x,x.tmp)
+#topic k8
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][8,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k8"
+x <- rbind(x,x.tmp)
+#topic k1
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][1,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k1"
+x <- rbind(x,x.tmp)
+#topic k11
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][11,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k11"
+x <- rbind(x,x.tmp)
+#topic k6
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][6,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k6"
+x <- rbind(x,x.tmp)
+#topic k16
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][16,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k16"
+x <- rbind(x,x.tmp)
+#topic k27
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][27,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k27"
+x <- rbind(x,x.tmp)
+#topic k10
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][10,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k10"
+x <- rbind(x,x.tmp)
+#topic k13
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][13,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k13"
+x <- rbind(x,x.tmp)
+#topic k2
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][2,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k2"
+x <- rbind(x,x.tmp)
+#topic k20
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][20,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k20"
+x <- rbind(x,x.tmp)
+#topic k22
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][22,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k22"
+x <- rbind(x,x.tmp)
+#topic k21
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][21,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k21"
+x <- rbind(x,x.tmp)
+#topic k25
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][25,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k25"
+x <- rbind(x,x.tmp)
+#topic k15
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][15,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k15"
+x <- rbind(x,x.tmp)
+#topic k30
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][30,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k30"
+x <- rbind(x,x.tmp)
+#topic k23
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][23,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k23"
+x <- rbind(x,x.tmp)
+#topic k9
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][9,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k9"
+x <- rbind(x,x.tmp)
+#topic k3
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][3,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k3"
+x <- rbind(x,x.tmp)
+#topic k14
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][14,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k14"
+x <- rbind(x,x.tmp)
+#topic k17
+goTot <- goEnrich(totGenes=geneTot, deGenes=genes[[1]][17,], ontology="ALL")
+x.tmp <- goTot@result
+dim(x.tmp)
+x.tmp$Resolution <- "30-Topic Analysis"
+x.tmp$Topic <- "Topic k17"
+x <- rbind(x,x.tmp)
+#save data
+write.csv(x,"./data/gom-data/topics30.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv")
+#clear data
+rm(genes,goTot,x,x.tmp)
+
+```
+
+### Plot topic model results by osteogenic cluster (as opposed to stage of differentiation)
+
+```{r,eval=FALSE}
+
+#k=3
+fit <- readRDS(paste0("./data/gom-data/topics3.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds"))
+#Compute omega (weights, cells x k) and theta (topics, genes x k) (need to add up to 1)
+l <- fit$L
+f <- fit$F
+omega <- sweep(l, MARGIN=2, colSums(f), `*`)
+scale <- rowSums(omega)
+omega <- omega / scale
+theta <- f/colSums(f)
+#Reorder k and define color
+omega <- omega[,c(3,1,2)]
+colclust <- c("pink","mediumorchid","dodgerblue")
+#Create labels - stages
+labels <- sapply(strsplit(rownames(omega),"_"), `[`, 1)
+celltype1 <- labels
+celltype1[celltype1 %in% c("C1.I","C1r2.I","C2.I","C3.I","C4.I","C5.I","C6.I")] <- "Chimp\nTime0"
+celltype1[celltype1 %in% c("C1.M","C1r2.M","C2.M","C3.M","C4.M","C5.M","C6.M")] <- "Chimp\nTime1"
+celltype1[celltype1 %in% c("C1.O","C1r2.O","C2.O","C3.O","C4.O","C5.O","C6.O")] <- "Chimp\nTime2"
+celltype1[celltype1 %in% c("H1.I","H1r2.I","H2.I","H3.I","H4.I","H5.I","H6.I")] <- "Human\nTime0"
+celltype1[celltype1 %in% c("H1.M","H1r2.M","H2.M","H3.M","H4.M","H5.M","H6.M")] <- "Human\nTime1"
+celltype1[celltype1 %in% c("H1.O","H1r2.O","H2.O","H3.O","H4.O","H5.O","H6.O")] <- "Human\nTime2"
+annotation1 <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=as.factor(celltype1))
+#Create labels - ostadhoc
+ost.cell <- data@meta.data$OstAdHoc.Assign.4gene.thresh0[which(rownames(data@meta.data) %in% rownames(omega))]
+ost.cell <- sub(" ",".",ost.cell)
+spp <- sapply(strsplit(rownames(omega),"[.]"), `[`, 1)
+spp[spp %in% c("C1","C1r2","C2","C3","C4","C5","C6")] <- "Chimp"
+spp[spp %in% c("H1","H1r2","H2","H3","H4","H5","H6")] <- "Human"
+celltype2 <- paste(spp,ost.cell,sep=".")
+celltype2 <- factor(celltype2,
+                    levels=c("Chimp.preosteoblast",
+                             "Chimp.osteoblast",
+                             "Chimp.embedding.osteoblast",
+                             "Chimp.mineralizing.osteoblast",
+                             "Chimp.maturing.osteocyte",
+                             "Human.preosteoblast",
+                             "Human.osteoblast",
+                             "Human.embedding.osteoblast",
+                             "Human.mineralizing.osteoblast",
+                             "Human.maturing.osteocyte"),
+                    labels=c("Chimp\npreosteoblast",
+                             "Chimp\nosteoblast",
+                             "Chimp\nembedding\nosteoblast",
+                             "Chimp\nmineralizing\nosteoblast",
+                             "Chimp\nmaturing\nosteocyte",
+                             "Human\npreosteoblast",
+                             "Human\nosteoblast",
+                             "Human\nembedding\nosteoblast",
+                             "Human\nmineralizing\nosteoblast",
+                             "Human\nmaturing\nosteocyte"))
+annotation2 <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=as.factor(celltype2))
+#Structure plots and plot of topic membership
+rownames(omega) <- annotation1$sample_id
+print(CountClust::StructureGGplot(omega=omega,
+                                  annotation=annotation1,
+                                  palette=colclust,
+                                  yaxis_label="Samples",
+                                  order_sample=TRUE,
+                                  axis_tick=list(axis_ticks_length=0.1,
+                                                 axis_ticks_lwd_y=0.1,
+                                                 axis_ticks_lwd_x=0.1,
+                                                 axis_label_size=7,
+                                                 axis_label_face="bold")))
+make_topic_plots(omega=omega, labels=celltype1, angle=0, ncol=1)
+rownames(omega) <- annotation2$sample_id
+print(CountClust::StructureGGplot(omega=omega,
+                                  annotation=annotation2,
+                                  palette=colclust,
+                                  yaxis_label="Samples",
+                                  order_sample=TRUE,
+                                  axis_tick=list(axis_ticks_length=0.1,
+                                                 axis_ticks_lwd_y=0.1,
+                                                 axis_ticks_lwd_x=0.1,
+                                                 axis_label_size=7,
+                                                 axis_label_face="bold")))
+make_topic_plots(omega=omega, labels=celltype2, angle=0, ncol=1)
+
+#k=7
+fit <- readRDS(paste0("./data/gom-data/topics7.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds"))
+#Compute omega (weights, cells x k) and theta (topics, genes x k) (need to add up to 1)
+l <- fit$L
+f <- fit$F
+omega <- sweep(l, MARGIN=2, colSums(f), `*`)
+scale <- rowSums(omega)
+omega <- omega / scale
+theta <- f/colSums(f)
+#Reorder k and define color
+omega <- omega[,c(6,7,4,2,5,3,1)]
+colclust <- c("pink","pink4","mediumorchid","orchid4","dodgerblue1","dodgerblue4","grey")
+#Create labels - stages
+labels <- sapply(strsplit(rownames(omega),"_"), `[`, 1)
+celltype1 <- labels
+celltype1[celltype1 %in% c("C1.I","C1r2.I","C2.I","C3.I","C4.I","C5.I","C6.I")] <- "Chimp\nTime0"
+celltype1[celltype1 %in% c("C1.M","C1r2.M","C2.M","C3.M","C4.M","C5.M","C6.M")] <- "Chimp\nTime1"
+celltype1[celltype1 %in% c("C1.O","C1r2.O","C2.O","C3.O","C4.O","C5.O","C6.O")] <- "Chimp\nTime2"
+celltype1[celltype1 %in% c("H1.I","H1r2.I","H2.I","H3.I","H4.I","H5.I","H6.I")] <- "Human\nTime0"
+celltype1[celltype1 %in% c("H1.M","H1r2.M","H2.M","H3.M","H4.M","H5.M","H6.M")] <- "Human\nTime1"
+celltype1[celltype1 %in% c("H1.O","H1r2.O","H2.O","H3.O","H4.O","H5.O","H6.O")] <- "Human\nTime2"
+annotation1 <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=as.factor(celltype1))
+#Create labels - ostadhoc
+ost.cell <- data@meta.data$OstAdHoc.Assign.4gene.thresh0[which(rownames(data@meta.data) %in% rownames(omega))]
+ost.cell <- sub(" ",".",ost.cell)
+spp <- sapply(strsplit(rownames(omega),"[.]"), `[`, 1)
+spp[spp %in% c("C1","C1r2","C2","C3","C4","C5","C6")] <- "Chimp"
+spp[spp %in% c("H1","H1r2","H2","H3","H4","H5","H6")] <- "Human"
+celltype2 <- paste(spp,ost.cell,sep=".")
+celltype2 <- factor(celltype2,
+                    levels=c("Chimp.preosteoblast",
+                             "Chimp.osteoblast",
+                             "Chimp.embedding.osteoblast",
+                             "Chimp.mineralizing.osteoblast",
+                             "Chimp.maturing.osteocyte",
+                             "Human.preosteoblast",
+                             "Human.osteoblast",
+                             "Human.embedding.osteoblast",
+                             "Human.mineralizing.osteoblast",
+                             "Human.maturing.osteocyte"),
+                    labels=c("Chimp\npreosteoblast",
+                             "Chimp\nosteoblast",
+                             "Chimp\nembedding\nosteoblast",
+                             "Chimp\nmineralizing\nosteoblast",
+                             "Chimp\nmaturing\nosteocyte",
+                             "Human\npreosteoblast",
+                             "Human\nosteoblast",
+                             "Human\nembedding\nosteoblast",
+                             "Human\nmineralizing\nosteoblast",
+                             "Human\nmaturing\nosteocyte"))
+annotation2 <- data.frame(sample_id=paste0("X", c(1:NROW(omega))), tissue_label=as.factor(celltype2))
+#Structure plots and plot of topic membership
+rownames(omega) <- annotation1$sample_id
+print(CountClust::StructureGGplot(omega=omega,
+                                  annotation=annotation1,
+                                  palette=colclust,
+                                  yaxis_label="Samples",
+                                  order_sample=TRUE,
+                                  axis_tick=list(axis_ticks_length=0.1,
+                                                 axis_ticks_lwd_y=0.1,
+                                                 axis_ticks_lwd_x=0.1,
+                                                 axis_label_size=7,
+                                                 axis_label_face="bold")))
+make_topic_plots(omega=omega, labels=celltype1, angle=0, ncol=1)
+rownames(omega) <- annotation2$sample_id
+print(CountClust::StructureGGplot(omega=omega,
+                                  annotation=annotation2,
+                                  palette=colclust,
+                                  yaxis_label="Samples",
+                                  order_sample=TRUE,
+                                  axis_tick=list(axis_ticks_length=0.1,
+                                                 axis_ticks_lwd_y=0.1,
+                                                 axis_ticks_lwd_x=0.1,
+                                                 axis_label_size=7,
+                                                 axis_label_face="bold")))
+make_topic_plots(omega=omega, labels=celltype2, angle=0, ncol=1)
+
+```
+
+## Why are iPSC.c2, iPSC.c3, and Osteogenic.c2 excluded from further exploration
+
+* Time 0: POU5F1 (OCT4), TDGF1, SOX2, EPCAM
+* Time 1: THY1 (CD90), NT5E (CD73), ENG (CD105), CD44
+* Time 2: COL1A1, COL1A2, ALPL, RUNX2, BGLAP, CAPG, [DMP1], [PHEX], MEPE, [SOST], [HYOU1]
+
+```{r,eval=FALSE}
+
+#general markers (iPSC.c1/iPSC.c2, MSC.c1, and Osteogenic.c1 look the best)
+VlnPlot(data,
+        features=c("POU5F1","CD44","COL1A1"),
+        group.by="Cluster0.05",
+        cols=c("pink","pink3","grey","mediumorchid","dodgerblue","dodgerblue4"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("COL1A1","CD44","POU5F1"),
+        group.by="Cluster0.05",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("COL1A1","CD44","POU5F1"),
+        group.by="Cluster0.05",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
+#pluripotent markers (iPSC.c1 looks better than iPSC.c2 for all markers except POU5F1)
+VlnPlot(data,
+        features=c("POU5F1","TDGF1","SOX2","EPCAM"),
+        group.by="Cluster0.05",
+        cols=c("pink","pink3","grey","mediumorchid","dodgerblue","dodgerblue4"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("POU5F1","TDGF1","SOX2","EPCAM"),
+        group.by="Cluster0.05",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("POU5F1","TDGF1","SOX2","EPCAM"),
+        group.by="Cluster0.05",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
+#mesenchymal markers
+VlnPlot(data,
+        features=c("THY1","NT5E","ENG","CD44"),
+        group.by="Cluster0.05",
+        cols=c("pink","pink3","grey","mediumorchid","dodgerblue","dodgerblue4"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("THY1","NT5E","ENG","CD44"),
+        group.by="Cluster0.05",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("THY1","NT5E","ENG","CD44"),
+        group.by="Cluster0.05",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
+#osteogenic markers (general) (Osteogenic.c1 looks better than Osteogenic.c2 for all markers)
+VlnPlot(data,
+        features=c("COL1A1","COL1A2","ALPL"),
+        group.by="Cluster0.05",
+        cols=c("pink","pink3","grey","mediumorchid","dodgerblue","dodgerblue4"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("COL1A1","COL1A2","ALPL"),
+        group.by="Cluster0.05",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("COL1A1","COL1A2","ALPL"),
+        group.by="Cluster0.05",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
+#osteogenic markers (specific)
+VlnPlot(data,
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="Cluster0.05",
+        cols=c("pink","pink3","grey","mediumorchid","dodgerblue","dodgerblue4"),
+        pt.size=0)
+DotPlot(subset(data,subset=Species=="Human"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="Cluster0.05",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+DotPlot(subset(data,subset=Species=="Chimp"),
+        features=c("RUNX2","BGLAP","CAPG","DMP1","PHEX","MEPE","SOST","HYOU1"),
+        group.by="Cluster0.05",
+        dot.scale=20,
+        cols=c("grey99","black"),
+        col.max=5)
+
+```
+
+## Manually examine 266 stage-specific osteogenic DE genes
+
+Include standard DE gene information (between species) in supplemental table
+
+```{r,eval=FALSE}
+
+compare1  <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.stage.rds")
+compare2  <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.cluster.rds")
+compare3  <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.adhoc.rds")
+compare4  <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.50.rds")
+compare5  <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.rds")
+
+DEdata <- rbind(compare1,compare2,compare3,compare4,compare5)
+colnames(DEdata)[5] <- "FDR"
+DEdata <- as_tibble(DEdata)
+
+rm(compare1,compare2,compare3,compare4,compare5)
+
+DEdataSig <- DEdata %>% filter(FDR<=0.01)
+
+write.csv(DEdataSig,"./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.DE-signif.csv")
+
+```
+
+Include Cormotif DE gene information (between species) in supplemental table
+
+```{r,eval=FALSE}
+
+cormotifData <- readRDS("./data/cormotif-data/cormotif.cnts.v2.pseudo-stage.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+dataUpset <- as.data.frame(cormotifData$bestmotif$p.post)
+dataUpset[dataUpset>0.65] <- 1
+dataUpset[dataUpset<=0.65] <- 0
+dataPlot <- data.frame("cell.subset"=c(rep("Time.0",length(which(dataUpset$Time.0==1))),
+                                       rep("Time.1",length(which(dataUpset$Time.1==1))),
+                                       rep("Time.2",length(which(dataUpset$Time.2==1)))),
+                       "gene"=c(rownames(dataUpset)[which(dataUpset$Time.0==1)],
+                                rownames(dataUpset)[which(dataUpset$Time.1==1)],
+                                rownames(dataUpset)[which(dataUpset$Time.2==1)]),
+                       "post.p"=c(cormotifData$bestmotif$p.post[which(dataUpset$Time.0==1),"Time.0"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$Time.1==1),"Time.1"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$Time.2==1),"Time.2"]),
+                       row.names=NULL)
+dataPlot$cell.subset <- factor(dataPlot$cell.subset,
+                               levels=c("Time.0","Time.1","Time.2"),
+                               labels=c("Time 0","Time 1","Time 2"))
+head(dataPlot)
+write.csv(dataPlot,"./data/cormotif-data/cormotif.cnts.v2.pseudo-stage.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv")
+
+cormotifData <- readRDS("./data/cormotif-data/cormotif.cnts.v2.pseudo-cluster.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+dataUpset <- as.data.frame(cormotifData$bestmotif$p.post)
+dataUpset[dataUpset>0.65] <- 1
+dataUpset[dataUpset<=0.65] <- 0
+dataPlot <- data.frame("cell.subset"=c(rep("iPSC.c1",length(which(dataUpset$iPSC.c1==1))),
+                                       rep("iPSC.c2",length(which(dataUpset$iPSC.c2==1))),
+                                       rep("iPSC.c3",length(which(dataUpset$iPSC.c3==1))),
+                                       rep("MSC.c1",length(which(dataUpset$MSC.c1==1))),
+                                       rep("Osteogenic.c1",length(which(dataUpset$Osteogenic.c1==1))),
+                                       rep("Osteogenic.c2",length(which(dataUpset$Osteogenic.c2==1)))),
+                       "gene"=c(rownames(dataUpset)[which(dataUpset$iPSC.c1==1)],
+                                rownames(dataUpset)[which(dataUpset$iPSC.c2==1)],
+                                rownames(dataUpset)[which(dataUpset$iPSC.c3==1)],
+                                rownames(dataUpset)[which(dataUpset$MSC.c1==1)],
+                                rownames(dataUpset)[which(dataUpset$Osteogenic.c1==1)],
+                                rownames(dataUpset)[which(dataUpset$Osteogenic.c2==1)]),
+                       "post.p"=c(cormotifData$bestmotif$p.post[which(dataUpset$iPSC.c1==1),"iPSC.c1"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$iPSC.c2==1),"iPSC.c2"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$iPSC.c3==1),"iPSC.c3"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$MSC.c1==1),"MSC.c1"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$Osteogenic.c1==1),"Osteogenic.c1"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$Osteogenic.c2==1),"Osteogenic.c2"]),
+                       row.names=NULL)
+dataPlot$cell.subset <- factor(dataPlot$cell.subset,
+                               levels=c("iPSC.c1","iPSC.c2","iPSC.c3","MSC.c1","Osteogenic.c1","Osteogenic.c2"),
+                               labels=c("iPSC.c1","iPSC.c2","iPSC.c3","MSC.c1","Osteogenic.c1","Osteogenic.c2"))
+head(dataPlot)
+write.csv(dataPlot,"./data/cormotif-data/cormotif.cnts.v2.pseudo-cluster.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv")
+
+cormotifData <- readRDS("./data/cormotif-data/cormotif.cnts.v2.pseudo-adhoc.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+dataUpset <- as.data.frame(cormotifData$bestmotif$p.post)
+dataUpset[dataUpset>0.65] <- 1
+dataUpset[dataUpset<=0.65] <- 0
+dataPlot <- data.frame("cell.subset"=c(rep("iPSC",length(which(dataUpset$iPSC==1))),
+                                       rep("MSC",length(which(dataUpset$MSC==1))),
+                                       rep("Osteogenic",length(which(dataUpset$Osteogenic==1)))),
+                       "gene"=c(rownames(dataUpset)[which(dataUpset$iPSC==1)],
+                                rownames(dataUpset)[which(dataUpset$MSC==1)],
+                                rownames(dataUpset)[which(dataUpset$Osteogenic==1)]),
+                       "post.p"=c(cormotifData$bestmotif$p.post[which(dataUpset$iPSC==1),"iPSC"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$MSC==1),"MSC"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$Osteogenic==1),"Osteogenic"]),
+                       row.names=NULL)
+dataPlot$cell.subset <- factor(dataPlot$cell.subset,
+                               levels=c("iPSC","MSC","Osteogenic"),
+                               labels=c("iPSC","MSC","Osteogenic"))
+head(dataPlot)
+write.csv(dataPlot,"./data/cormotif-data/cormotif.cnts.v2.pseudo-adhoc.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv")
+
+cormotifData <- readRDS("./data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4gene.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+dataUpset <- as.data.frame(cormotifData$bestmotif$p.post)
+dataUpset[dataUpset>0.65] <- 1
+dataUpset[dataUpset<=0.65] <- 0
+rownames(dataUpset)[which(dataUpset$preosteoblast==0 &
+                          dataUpset$osteoblast==0 &
+                          dataUpset$embedding.osteoblast==0 &
+                          dataUpset$mineralizing.osteoblast==1 &
+                          dataUpset$maturing.osteocyte==0)]
+dataPlot <- data.frame("cell.subset"=c(rep("preosteoblast",length(which(dataUpset$preosteoblast==1))),
+                                       rep("osteoblast",length(which(dataUpset$osteoblast==1))),
+                                       rep("embedding.osteoblast",length(which(dataUpset$embedding.osteoblast==1))),
+                                       rep("mineralizing.osteoblast",length(which(dataUpset$mineralizing.osteoblast==1))),
+                                       rep("maturing.osteocyte",length(which(dataUpset$maturing.osteocyte==1)))),
+                       "gene"=c(rownames(dataUpset)[which(dataUpset$preosteoblast==1)],
+                                rownames(dataUpset)[which(dataUpset$osteoblast==1)],
+                                rownames(dataUpset)[which(dataUpset$embedding.osteoblast==1)],
+                                rownames(dataUpset)[which(dataUpset$mineralizing.osteoblast==1)],
+                                rownames(dataUpset)[which(dataUpset$maturing.osteocyte==1)]),
+                       "post.p"=c(cormotifData$bestmotif$p.post[which(dataUpset$preosteoblast==1),"preosteoblast"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$osteoblast==1),"osteoblast"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$embedding.osteoblast==1),"embedding.osteoblast"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$mineralizing.osteoblast==1),"mineralizing.osteoblast"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$maturing.osteocyte==1),"maturing.osteocyte"]),
+                       row.names=NULL)
+dataPlot$cell.subset <- factor(dataPlot$cell.subset,
+                               levels=c("preosteoblast","osteoblast","embedding.osteoblast","mineralizing.osteoblast","maturing.osteocyte"),
+                               labels=c("preosteoblast","osteoblast","embedding\nosteoblast","mineralizing\nosteoblast","maturing\nosteocyte"))
+head(dataPlot)
+write.csv(dataPlot,"./data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4gene.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv")
+
+cormotifData <- readRDS("./data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.50.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+dataUpset <- as.data.frame(cormotifData$bestmotif$p.post)
+dataUpset[dataUpset>0.65] <- 1
+dataUpset[dataUpset<=0.65] <- 0
+dataPlot <- data.frame("cell.subset"=c(rep("Osteogenic.c1",length(which(dataUpset$Osteogenic.c1==1))),
+                                       rep("Osteogenic.c2",length(which(dataUpset$Osteogenic.c2==1))),
+                                       rep("Osteogenic.c3",length(which(dataUpset$Osteogenic.c3==1))),
+                                       rep("Osteogenic.c4",length(which(dataUpset$Osteogenic.c4==1)))),
+                       "gene"=c(rownames(dataUpset)[which(dataUpset$Osteogenic.c1==1)],
+                                rownames(dataUpset)[which(dataUpset$Osteogenic.c2==1)],
+                                rownames(dataUpset)[which(dataUpset$Osteogenic.c3==1)],
+                                rownames(dataUpset)[which(dataUpset$Osteogenic.c4==1)]),
+                       "post.p"=c(cormotifData$bestmotif$p.post[which(dataUpset$Osteogenic.c1==1),"Osteogenic.c1"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$Osteogenic.c2==1),"Osteogenic.c2"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$Osteogenic.c3==1),"Osteogenic.c3"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$Osteogenic.c4==1),"Osteogenic.c4"]),
+                       row.names=NULL)
+dataPlot$cell.subset <- factor(dataPlot$cell.subset,
+                               levels=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c4"),
+                               labels=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c4"))
+head(dataPlot)
+write.csv(dataPlot,"./data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.50.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv")
+
+```
+
+Include Cormotif DE gene information (between stages) in supplemental table
+
+```{r,eval=FALSE}
+
+cormotifData <- readRDS("./data/cormotif-data/cormotif.cnts.v2.pseudo-stage4.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+gene.prob <- cormotifData$bestmotif$p.post
+write.csv(gene.prob,"./data/cormotif-data/cormotif.cnts.v2.pseudo-stage4.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv")
+#DE genes between t0 and t1 unique to chimps
+sort(rownames(gene.prob[(gene.prob[,1]<0.65 & gene.prob[,2]<0.65 & gene.prob[,3]>0.65 & gene.prob[,4]<0.65),]))
+#DE genes between t1 and t2 unique to chimps
+sort(rownames(gene.prob[(gene.prob[,1]<0.65 & gene.prob[,2]<0.65 & gene.prob[,3]<0.65 & gene.prob[,4]>0.65),]))
+#DE genes between t0 and t1 unique to humans
+sort(rownames(gene.prob[(gene.prob[,1]>0.65 & gene.prob[,2]<0.65 & gene.prob[,3]<0.65 & gene.prob[,4]<0.65),]))
+#DE genes between t1 and t2 unique to humans
+sort(rownames(gene.prob[(gene.prob[,1]<0.65 & gene.prob[,2]>0.65 & gene.prob[,3]<0.65 & gene.prob[,4]<0.65),]))
+
+cormotifData <- readRDS("./data/cormotif-data/cormotif.cnts.v2.pseudo-cluster4a.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+gene.prob <- cormotifData$bestmotif$p.post
+write.csv(gene.prob,"./data/cormotif-data/cormotif.cnts.v2.pseudo-cluster4a.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv")
+#DE genes between t0 and t1 unique to chimps
+sort(rownames(gene.prob[(gene.prob[,1]<0.65 & gene.prob[,2]<0.65 & gene.prob[,3]>0.65 & gene.prob[,4]<0.65),]))
+#DE genes between t1 and t2 unique to chimps
+sort(rownames(gene.prob[(gene.prob[,1]<0.65 & gene.prob[,2]<0.65 & gene.prob[,3]<0.65 & gene.prob[,4]>0.65),]))
+#DE genes between t0 and t1 unique to humans
+sort(rownames(gene.prob[(gene.prob[,1]>0.65 & gene.prob[,2]<0.65 & gene.prob[,3]<0.65 & gene.prob[,4]<0.65),]))
+#DE genes between t1 and t2 unique to humans
+sort(rownames(gene.prob[(gene.prob[,1]<0.65 & gene.prob[,2]>0.65 & gene.prob[,3]<0.65 & gene.prob[,4]<0.65),]))
+
+cormotifData <- readRDS("./data/cormotif-data/cormotif.cnts.v2.pseudo-adhoc4.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+gene.prob <- cormotifData$bestmotif$p.post
+write.csv(gene.prob,"./data/cormotif-data/cormotif.cnts.v2.pseudo-adhoc4.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv")
+#DE genes between t0 and t1 unique to chimps
+sort(rownames(gene.prob[(gene.prob[,1]<0.65 & gene.prob[,2]<0.65 & gene.prob[,3]>0.65 & gene.prob[,4]<0.65),]))
+#DE genes between t1 and t2 unique to chimps
+sort(rownames(gene.prob[(gene.prob[,1]<0.65 & gene.prob[,2]<0.65 & gene.prob[,3]<0.65 & gene.prob[,4]>0.65),]))
+#DE genes between t0 and t1 unique to humans
+sort(rownames(gene.prob[(gene.prob[,1]>0.65 & gene.prob[,2]<0.65 & gene.prob[,3]<0.65 & gene.prob[,4]<0.65),]))
+#DE genes between t1 and t2 unique to humans
+sort(rownames(gene.prob[(gene.prob[,1]<0.65 & gene.prob[,2]>0.65 & gene.prob[,3]<0.65 & gene.prob[,4]<0.65),]))
+
+```
+
+Check GO enrichment of Cormotif DE genes (between stages) and include in supplemental table
+
+```{r, eval=FALSE}
+
+#Define functions to assess GO functional enrichment
+goEnrich <- function(totGenes, deGenes, ontology) {
+  ref.df <- bitr(totGenes, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+  gene.df <- bitr(deGenes, fromType="SYMBOL", toType=c("ENSEMBL","ENTREZID"), OrgDb=org.Hs.eg.db)
+  ego <- enrichGO(gene          = gene.df$ENSEMBL,
+                  OrgDb         = org.Hs.eg.db,
+                  universe      = ref.df$ENSEMBL,
+                  keyType       = 'ENSEMBL',
+                  ont           = ontology,
+                  pAdjustMethod = "BH",
+                  pvalueCutoff  = 0.01,
+                  qvalueCutoff  = 0.05,
+                  readable      = TRUE)
+  return(ego)
+}
+
+#stage
+cormotifData <- readRDS("./data/cormotif-data/cormotif.cnts.v2.pseudo-stage4.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+dataUpset <- as.data.frame(cormotifData$bestmotif$p.post)
+dataUpset[dataUpset>0.65] <- 1
+dataUpset[dataUpset<=0.65] <- 0
+head(dataUpset)
+dataPlot <- data.frame("cell.subset"=c(rep("H.t0-t1",length(which(dataUpset$'H.t0-t1'==1))),
+                                       rep("H.t1-t2",length(which(dataUpset$'H.t1-t2'==1))),
+                                       rep("C.t0-t1",length(which(dataUpset$'C.t0-t1'==1))),
+                                       rep("C.t1-t2",length(which(dataUpset$'C.t1-t2'==1)))),
+                       "gene"=c(rownames(dataUpset)[which(dataUpset$'H.t0-t1'==1)],
+                                rownames(dataUpset)[which(dataUpset$'H.t1-t2'==1)],
+                                rownames(dataUpset)[which(dataUpset$'C.t0-t1'==1)],
+                                rownames(dataUpset)[which(dataUpset$'C.t1-t2'==1)]),
+                       "post.p"=c(cormotifData$bestmotif$p.post[which(dataUpset$'H.t0-t1'==1),"H.t0-t1"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$'H.t1-t2'==1),"H.t1-t2"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$'C.t0-t1'==1),"C.t0-t1"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$'C.t1-t2'==1),"C.t1-t2"]),
+                       row.names=NULL)
+dataPlot$cell.subset <- factor(dataPlot$cell.subset,
+                               levels=c("H.t0-t1","H.t1-t2","C.t0-t1","C.t1-t2"),
+                               labels=c("H.t0-t1","H.t1-t2","C.t0-t1","C.t1-t2"))
+head(dataPlot)
+#Time 0 vs. Time 1 (humans and chimps)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.t0-t1'==1 &
+                                      dataUpset$'H.t1-t2'==0 &
+                                      dataUpset$'C.t0-t1'==1 &
+                                      dataUpset$'C.t1-t2'==0)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#Time 0 vs. Time 1 (chimps)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.t0-t1'==0 &
+                                      dataUpset$'H.t1-t2'==0 &
+                                      dataUpset$'C.t0-t1'==1 &
+                                      dataUpset$'C.t1-t2'==0)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#Time 1 vs. Time 2 (humans and chimps)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.t0-t1'==0 &
+                                      dataUpset$'H.t1-t2'==1 &
+                                      dataUpset$'C.t0-t1'==0 &
+                                      dataUpset$'C.t1-t2'==1)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#Time 1 vs. Time 2 (humans)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.t0-t1'==0 &
+                                      dataUpset$'H.t1-t2'==1 &
+                                      dataUpset$'C.t0-t1'==0 &
+                                      dataUpset$'C.t1-t2'==0)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#Time 0 vs. Time 1 (humans and chimps) & Time 1 vs. Time 2 (humans and chimps)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.t0-t1'==1 &
+                                      dataUpset$'H.t1-t2'==1 &
+                                      dataUpset$'C.t0-t1'==1 &
+                                      dataUpset$'C.t1-t2'==1)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#Time 0 vs. Time 1 (chimps) & Time 1 vs. Time 2 (humans and chimps)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.t0-t1'==0 &
+                                      dataUpset$'H.t1-t2'==1 &
+                                      dataUpset$'C.t0-t1'==1 &
+                                      dataUpset$'C.t1-t2'==1)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#Time 0 vs. Time 1 (humans and chimps) & Time 1 vs. Time 2 (humans)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.t0-t1'==1 &
+                                      dataUpset$'H.t1-t2'==1 &
+                                      dataUpset$'C.t0-t1'==1 &
+                                      dataUpset$'C.t1-t2'==0)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#Time 0 vs. Time 1 (humans) & Time 1 vs. Time 2 (humans)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.t0-t1'==1 &
+                                      dataUpset$'H.t1-t2'==1 &
+                                      dataUpset$'C.t0-t1'==0 &
+                                      dataUpset$'C.t1-t2'==0)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#Time 0 vs. Time 1 (chimps) & Time 1 vs. Time 2 (humans)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.t0-t1'==0 &
+                                      dataUpset$'H.t1-t2'==1 &
+                                      dataUpset$'C.t0-t1'==1 &
+                                      dataUpset$'C.t1-t2'==0)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+
+#cluster
+cormotifData <- readRDS("./data/cormotif-data/cormotif.cnts.v2.pseudo-cluster4a.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+dataUpset <- as.data.frame(cormotifData$bestmotif$p.post)
+dataUpset[dataUpset>0.65] <- 1
+dataUpset[dataUpset<=0.65] <- 0
+head(dataUpset)
+dataPlot <- data.frame("cell.subset"=c(rep("H.iPSC.c1-MSC.c1",length(which(dataUpset$'H.iPSC.c1-MSC.c1'==1))),
+                                       rep("H.MSC.c1-Osteogenic.c1",length(which(dataUpset$'H.MSC.c1-Osteogenic.c1'==1))),
+                                       rep("C.iPSC.c1-MSC.c1",length(which(dataUpset$'C.iPSC.c1-MSC.c1'==1))),
+                                       rep("C.MSC.c1-Osteogenic.c1",length(which(dataUpset$'C.MSC.c1-Osteogenic.c1'==1)))),
+                       "gene"=c(rownames(dataUpset)[which(dataUpset$'H.iPSC.c1-MSC.c1'==1)],
+                                rownames(dataUpset)[which(dataUpset$'H.MSC.c1-Osteogenic.c1'==1)],
+                                rownames(dataUpset)[which(dataUpset$'C.iPSC.c1-MSC.c1'==1)],
+                                rownames(dataUpset)[which(dataUpset$'C.MSC.c1-Osteogenic.c1'==1)]),
+                       "post.p"=c(cormotifData$bestmotif$p.post[which(dataUpset$'H.iPSC.c1-MSC.c1'==1),"H.iPSC.c1-MSC.c1"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$'H.MSC.c1-Osteogenic.c1'==1),"H.MSC.c1-Osteogenic.c1"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$'C.iPSC.c1-MSC.c1'==1),"C.iPSC.c1-MSC.c1"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$'C.MSC.c1-Osteogenic.c1'==1),"C.MSC.c1-Osteogenic.c1"]),
+                       row.names=NULL)
+dataPlot$cell.subset <- factor(dataPlot$cell.subset,
+                               levels=c("H.iPSC.c1-MSC.c1","H.MSC.c1-Osteogenic.c1","C.iPSC.c1-MSC.c1","C.MSC.c1-Osteogenic.c1"),
+                               labels=c("H.iPSC.c1-MSC.c1","H.MSC.c1-Osteogenic.c1","C.iPSC.c1-MSC.c1","C.MSC.c1-Osteogenic.c1"))
+head(dataPlot)
+#iPSC.c1 vs. MSC.c1 (humans and chimps)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.iPSC.c1-MSC.c1'      ==1 &
+                                      dataUpset$'H.MSC.c1-Osteogenic.c1'==0 &
+                                      dataUpset$'C.iPSC.c1-MSC.c1'      ==1 &
+                                      dataUpset$'C.MSC.c1-Osteogenic.c1'==0)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#iPSC.c1 vs. MSC.c1 (chimps)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.iPSC.c1-MSC.c1'      ==0 &
+                                      dataUpset$'H.MSC.c1-Osteogenic.c1'==0 &
+                                      dataUpset$'C.iPSC.c1-MSC.c1'      ==1 &
+                                      dataUpset$'C.MSC.c1-Osteogenic.c1'==0)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#MSC.c1 vs. Osteogenic.c1 (humans and chimps)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.iPSC.c1-MSC.c1'      ==0 &
+                                      dataUpset$'H.MSC.c1-Osteogenic.c1'==1 &
+                                      dataUpset$'C.iPSC.c1-MSC.c1'      ==0 &
+                                      dataUpset$'C.MSC.c1-Osteogenic.c1'==1)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#MSC.c1 vs. Osteogenic.c1 (humans)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.iPSC.c1-MSC.c1'      ==0 &
+                                      dataUpset$'H.MSC.c1-Osteogenic.c1'==1 &
+                                      dataUpset$'C.iPSC.c1-MSC.c1'      ==0 &
+                                      dataUpset$'C.MSC.c1-Osteogenic.c1'==0)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#iPSC.c1 vs. MSC.c1 (humans and chimps) & MSC.c1 vs. Osteogenic.c1 (humans and chimps)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.iPSC.c1-MSC.c1'      ==1 &
+                                      dataUpset$'H.MSC.c1-Osteogenic.c1'==1 &
+                                      dataUpset$'C.iPSC.c1-MSC.c1'      ==1 &
+                                      dataUpset$'C.MSC.c1-Osteogenic.c1'==1)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#iPSC.c1 vs. MSC.c1 (chimps) & MSC.c1 vs. Osteogenic.c1 (humans and chimps)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.iPSC.c1-MSC.c1'      ==0 &
+                                      dataUpset$'H.MSC.c1-Osteogenic.c1'==1 &
+                                      dataUpset$'C.iPSC.c1-MSC.c1'      ==1 &
+                                      dataUpset$'C.MSC.c1-Osteogenic.c1'==1)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#iPSC.c1 vs. MSC.c1 (humans and chimps) & MSC.c1 vs. Osteogenic.c1 (humans)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.iPSC.c1-MSC.c1'      ==1 &
+                                      dataUpset$'H.MSC.c1-Osteogenic.c1'==1 &
+                                      dataUpset$'C.iPSC.c1-MSC.c1'      ==1 &
+                                      dataUpset$'C.MSC.c1-Osteogenic.c1'==0)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#iPSC.c1 vs. MSC.c1 (chimps) & MSC.c1 vs. Osteogenic.c1 (humans)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.iPSC.c1-MSC.c1'      ==0 &
+                                      dataUpset$'H.MSC.c1-Osteogenic.c1'==1 &
+                                      dataUpset$'C.iPSC.c1-MSC.c1'      ==1 &
+                                      dataUpset$'C.MSC.c1-Osteogenic.c1'==0)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+
+#adhoc
+cormotifData <- readRDS("./data/cormotif-data/cormotif.cnts.v2.pseudo-adhoc4.data.filterC.log.indv-cell.intNo0.reg-tot.rds")
+dataUpset <- as.data.frame(cormotifData$bestmotif$p.post)
+dataUpset[dataUpset>0.65] <- 1
+dataUpset[dataUpset<=0.65] <- 0
+head(dataUpset)
+dataPlot <- data.frame("cell.subset"=c(rep("H.iPSC-MSC",length(which(dataUpset$'H.iPSC-MSC'==1))),
+                                       rep("H.MSC-Osteogenic",length(which(dataUpset$'H.MSC-Osteogenic'==1))),
+                                       rep("C.iPSC-MSC",length(which(dataUpset$'C.iPSC-MSC'==1))),
+                                       rep("C.MSC-Osteogenic",length(which(dataUpset$'C.MSC-Osteogenic'==1)))),
+                       "gene"=c(rownames(dataUpset)[which(dataUpset$'H.iPSC-MSC'==1)],
+                                rownames(dataUpset)[which(dataUpset$'H.MSC-Osteogenic'==1)],
+                                rownames(dataUpset)[which(dataUpset$'C.iPSC-MSC'==1)],
+                                rownames(dataUpset)[which(dataUpset$'C.MSC-Osteogenic'==1)]),
+                       "post.p"=c(cormotifData$bestmotif$p.post[which(dataUpset$'H.iPSC-MSC'==1),"H.iPSC-MSC"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$'H.MSC-Osteogenic'==1),"H.MSC-Osteogenic"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$'C.iPSC-MSC'==1),"C.iPSC-MSC"],
+                                  cormotifData$bestmotif$p.post[which(dataUpset$'C.MSC-Osteogenic'==1),"C.MSC-Osteogenic"]),
+                       row.names=NULL)
+dataPlot$cell.subset <- factor(dataPlot$cell.subset,
+                               levels=c("H.iPSC-MSC","H.MSC-Osteogenic","C.iPSC-MSC","C.MSC-Osteogenic"),
+                               labels=c("H.iPSC-MSC","H.MSC-Osteogenic","C.iPSC-MSC","C.MSC-Osteogenic"))
+head(dataPlot)
+#iPSC vs. MSC (humans and chimps)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.iPSC-MSC'      ==1 &
+                                      dataUpset$'H.MSC-Osteogenic'==0 &
+                                      dataUpset$'C.iPSC-MSC'      ==1 &
+                                      dataUpset$'C.MSC-Osteogenic'==0)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#iPSC vs. MSC (chimps)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.iPSC-MSC'      ==0 &
+                                      dataUpset$'H.MSC-Osteogenic'==0 &
+                                      dataUpset$'C.iPSC-MSC'      ==1 &
+                                      dataUpset$'C.MSC-Osteogenic'==0)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#MSC vs. Osteogenic (humans and chimps)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.iPSC-MSC'      ==0 &
+                                      dataUpset$'H.MSC-Osteogenic'==1 &
+                                      dataUpset$'C.iPSC-MSC'      ==0 &
+                                      dataUpset$'C.MSC-Osteogenic'==1)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#MSC vs. Osteogenic (humans)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.iPSC-MSC'      ==0 &
+                                      dataUpset$'H.MSC-Osteogenic'==1 &
+                                      dataUpset$'C.iPSC-MSC'      ==0 &
+                                      dataUpset$'C.MSC-Osteogenic'==0)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#MSC vs. Osteogenic (chimps)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.iPSC-MSC'      ==0 &
+                                      dataUpset$'H.MSC-Osteogenic'==0 &
+                                      dataUpset$'C.iPSC-MSC'      ==0 &
+                                      dataUpset$'C.MSC-Osteogenic'==1)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#iPSC vs. MSC (humans and chimps) & MSC vs. Osteogenic (humans and chimps)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.iPSC-MSC'      ==1 &
+                                      dataUpset$'H.MSC-Osteogenic'==1 &
+                                      dataUpset$'C.iPSC-MSC'      ==1 &
+                                      dataUpset$'C.MSC-Osteogenic'==1)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#iPSC vs. MSC (humans) & MSC vs. Osteogenic (humans and chimps)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.iPSC-MSC'      ==1 &
+                                      dataUpset$'H.MSC-Osteogenic'==1 &
+                                      dataUpset$'C.iPSC-MSC'      ==0 &
+                                      dataUpset$'C.MSC-Osteogenic'==1)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#iPSC vs. MSC (chimps) & MSC vs. Osteogenic (humans and chimps)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.iPSC-MSC'      ==0 &
+                                      dataUpset$'H.MSC-Osteogenic'==1 &
+                                      dataUpset$'C.iPSC-MSC'      ==1 &
+                                      dataUpset$'C.MSC-Osteogenic'==1)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#iPSC vs. MSC (humans and chimps) & MSC vs. Osteogenic (chimps)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.iPSC-MSC'      ==1 &
+                                      dataUpset$'H.MSC-Osteogenic'==0 &
+                                      dataUpset$'C.iPSC-MSC'      ==1 &
+                                      dataUpset$'C.MSC-Osteogenic'==1)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#iPSC vs. MSC (chimps) & MSC vs. Osteogenic (chimps)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.iPSC-MSC'      ==0 &
+                                      dataUpset$'H.MSC-Osteogenic'==0 &
+                                      dataUpset$'C.iPSC-MSC'      ==1 &
+                                      dataUpset$'C.MSC-Osteogenic'==1)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#iPSC vs. MSC (humans) & MSC vs. Osteogenic (chimps)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.iPSC-MSC'      ==1 &
+                                      dataUpset$'H.MSC-Osteogenic'==0 &
+                                      dataUpset$'C.iPSC-MSC'      ==0 &
+                                      dataUpset$'C.MSC-Osteogenic'==1)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+#iPSC vs. MSC (chimps) & MSC vs. Osteogenic (humans)
+subGenes <- rownames(dataUpset)[which(dataUpset$'H.iPSC-MSC'      ==0 &
+                                      dataUpset$'H.MSC-Osteogenic'==1 &
+                                      dataUpset$'C.iPSC-MSC'      ==1 &
+                                      dataUpset$'C.MSC-Osteogenic'==0)]
+length(subGenes)
+totGenes <- rownames(dataUpset)
+goTot <- goEnrich(totGenes=totGenes, deGenes=subGenes, ontology="ALL")
+goTot@result$Description <- str_wrap(goTot@result$Description, width=30)
+x <- goTot@result
+
+```
+
+## Add standard method label to DE plots
+
+```{r,eval=FALSE}
+
+#Load DE results
+compare1  <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.stage.rds")
+compare2  <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.cluster.rds")
+compare3  <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.adhoc.rds")
+compare4  <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.50.rds")
+compare5  <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.75.rds")
+compare6  <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.50.T2.rds")
+compare7  <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostcluster0.75.T2.rds")
+compare8  <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.rds")
+compare9  <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhocX.rds")
+compare10 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhoc.T2.rds")
+compare11 <- readRDS("./data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.ostadhocX.T2.rds")
+DEdata <- rbind(compare1,compare2,compare3,compare4,compare5,compare6,compare7,compare8,compare9,compare10,compare11)
+colnames(DEdata)[5] <- "FDR"
+DEdata <- as_tibble(DEdata)
+rm(compare1,compare2,compare3,compare4,compare5,compare6,compare7,compare8,compare9,compare10,compare11)
+DEdataSig <- DEdata %>% filter(FDR<=0.01)
+
+#Stages of Differentiation at Collection
+DEgenes <-
+  DEdataSig %>%
+    dplyr::filter(cell.assign=="stage") %>%
+    dplyr::select(cell.subset,gene,logFC)
+ggplot(DEgenes, aes(x=cell.subset, fill=cell.subset)) +
+  geom_bar() +
+  ylab('Number of DE Genes (standard method)') +
+  xlab('') +
+  scale_fill_manual(name="Stage",
+                    labels=c("Time 0","Time 1","Time 2"),
+                    values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=12), legend.text=element_text(size=12))
+
+#Osteogenic Ad Hoc Classification of Cells (scaled integrated data, thresh=0, 4gene flexible)
+DEgenes <-
+  DEdataSig %>%
+    dplyr::filter(cell.assign=="ostadhoc") %>%
+    dplyr::select(cell.subset,gene,logFC)
+DEgenes$cell.subset <- factor(DEgenes$cell.subset,
+                              levels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                              labels=c("preosteoblast","osteoblast","embedding\nosteoblast","mineralizing\nosteoblast","maturing\nosteocyte"))
+ggplot(DEgenes, aes(x=cell.subset, fill=cell.subset)) +
+  geom_bar() +
+  ylab('Number of DE Genes (standard method)') +
+  xlab('') +
+  scale_fill_manual(name="Osteogenic Stage",
+                    labels=c("preosteoblast","osteoblast","embedding osteoblast","mineralizing osteoblast","maturing osteocyte"),
+                    values=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+#General Clusters (res=0.05)
+DEgenes <-
+  DEdataSig %>%
+    dplyr::filter(cell.assign=="cluster") %>%
+    dplyr::select(cell.subset,gene,logFC)
+DEgenes$cell.subset <- factor(DEgenes$cell.subset,
+                              levels=c("iPSC.c1","iPSC.c2","iPSC.c3","MSC.c1","Osteogenic.c1","Osteogenic.c2"))
+ggplot(DEgenes, aes(x=cell.subset, fill=cell.subset)) +
+  geom_bar() +
+  ylab('Number of DE Genes (standard method)') +
+  xlab('') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("iPSC.c1","iPSC.c2","iPSC.c3","MSC.c1","Osteogenic.c1","Osteogenic.c2"),
+                    values=c("pink","pink3","mediumorchid","dodgerblue","dodgerblue4")) +
+  scale_x_discrete(drop=FALSE) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+#General Ad Hoc Classification of Cells (scaled integrated data, threshold=0)
+DEgenes <-
+  DEdataSig %>%
+    dplyr::filter(cell.assign=="adhoc") %>%
+    dplyr::select(cell.subset,gene,logFC)
+ggplot(DEgenes, aes(x=cell.subset, fill=cell.subset)) +
+  geom_bar() +
+  ylab('Number of DE Genes (standard method)') +
+  xlab('') +
+  scale_fill_manual(name="Ad Hoc",
+                    labels=c("iPSC","MSC","Osteogenic"),
+                    values=c("pink","mediumorchid","dodgerblue")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+#Osteogenic Clusters (res=0.50)
+DEgenes <-
+  DEdataSig %>%
+    dplyr::filter(cell.assign=="ostcluster0.50") %>%
+    dplyr::select(cell.subset,gene,logFC)
+DEgenes$cell.subset <- factor(DEgenes$cell.subset,
+                              levels=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c4"))
+ggplot(DEgenes, aes(x=cell.subset, fill=cell.subset)) +
+  geom_bar() +
+  ylab('Number of DE Genes (standard method)') +
+  xlab('') +
+  scale_fill_manual(name="Cluster",
+                    labels=c("Osteogenic.c1","Osteogenic.c2","Osteogenic.c3","Osteogenic.c4"),
+                    values=c("lightblue1","deepskyblue","dodgerblue2","dodgerblue4")) +
+  theme_classic() +
+  theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))
+
+```
+
+## Double check number of osteogenic cells (strict vs. lenient)
+
+```{r,eval=FALSE}
+
+#strict
+table(data@meta.data$OstAdHoc.Assign.4gene.thresh0)
+table(data@meta.data$OstAdHoc.Assign.6gene.thresh0)
+table(data@meta.data$OstAdHoc.Assign.8gene.thresh0)
+
+#lenient
+table(data@meta.data$OstAdHoc.Assign.x.4gene.thresh0)
+table(data@meta.data$OstAdHoc.Assign.x.6gene.thresh0)
+table(data@meta.data$OstAdHoc.Assign.x.8gene.thresh0)
+
+```
+
+## Make figure with all ad hoc osteogenic cells labeled in the same plot
+
+```{r,eval=FALSE}
+
+DimPlot(data,
+        group.by="OstAdHoc.Assign.4gene.thresh0",
+        reduction="umap",
+        cols=c("lightblue1","deepskyblue","dodgerblue2","royalblue3","royalblue4","grey90","grey90","grey90")) +
+  labs(x="UMAP1",y="UMAP2")
+
+```
+
