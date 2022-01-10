@@ -88,7 +88,7 @@ If you are running the files in this repository to recreate the analyses, runnin
 
     + [Pairwise tests](10x-plot-diffexp.html)
 
-    + [Cormotif](10x-plot-cormotif-cnts.html)
+    + [Cormotif](10x-plot-cormotif-cnts_v2.html)
 
 ## Standard validation analyses
 
