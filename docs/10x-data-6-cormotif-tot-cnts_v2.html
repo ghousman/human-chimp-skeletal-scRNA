@@ -427,7 +427,7 @@ div.tocify {
 
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
-<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 </button>
 </p>
 <div id="workflowr-report" class="collapse">
@@ -436,7 +436,7 @@ div.tocify {
 <a data-toggle="tab" href="#summary">Summary</a>
 </li>
 <li>
-<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -445,10 +445,10 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-09-05
+<strong>Last updated:</strong> 2022-01-10
 </p>
 <p>
-<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
 </p>
 <p>
 <strong>Knit directory:</strong> <code>human-chimp-skeletal-scRNA/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
@@ -464,12 +464,12 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown is untracked by Git. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
 </div>
 </div>
 </div>
@@ -536,16 +536,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtree1c012e52cf0c550665750d98f5bce1a68e06adfftargetblank1c012e5a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/1c012e52cf0c550665750d98f5bce1a68e06adff" target="_blank">1c012e5</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtree744bb3c332ca60f1246dd9b4887a0721871208a0targetblank744bb3ca"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/744bb3c332ca60f1246dd9b4887a0721871208a0" target="_blank">744bb3c</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtree1c012e52cf0c550665750d98f5bce1a68e06adfftargetblank1c012e5a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtree744bb3c332ca60f1246dd9b4887a0721871208a0targetblank744bb3ca" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/1c012e52cf0c550665750d98f5bce1a68e06adff" target="_blank">1c012e5</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/744bb3c332ca60f1246dd9b4887a0721871208a0" target="_blank">744bb3c</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -556,14 +556,6 @@ Ignored files:
     Ignored:    .Rproj.user/
 
 Untracked files:
-    Untracked:  analysis/10x-data-6-cormotif-tot-cnts_v1.Rmd
-    Untracked:  analysis/10x-data-6-cormotif-tot-cnts_v2.Rmd
-    Untracked:  analysis/10x-plot-cormotif-cnts-thresh_v1.Rmd
-    Untracked:  analysis/10x-plot-cormotif-cnts-thresh_v2.Rmd
-    Untracked:  analysis/10x-plot-cormotif-cnts_v1.Rmd
-    Untracked:  analysis/10x-plot-cormotif-cnts_v2.Rmd
-    Untracked:  code/CormotifCounts_v1.R
-    Untracked:  code/CormotifCounts_v2.R
     Untracked:  data/HumanPrimaryCellAtlasData-SingleR
     Untracked:  data/HumanPrimaryCellAtlasDetails-SingleR.csv
     Untracked:  data/HumanPrimaryCellAtlasLabels-SingleR.csv
@@ -574,39 +566,33 @@ Untracked files:
     Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-adhoc.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-adhoc4.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-adhoc6.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-cluster.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-cluster4a.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-cluster4b.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-cluster6a.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-adhoc.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-adhoc4.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-cluster.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-cluster4a.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv
     Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-cluster8.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4gene.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4gene.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4gene8.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4gene8.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4geneX.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4geneX.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4geneX8.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4geneX8.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.50.6.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.50.T2.6.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.50.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.50.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4gene.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.50.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv
     Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.75.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-stage.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-stage4.data.filterC.log.indv-cell.intNo0.reg-tot.rds
-    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-stage6.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-stage.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-stage4.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv
     Untracked:  data/cormotif-data/cormotif.cnts.v2.sc-cluster6b.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/corrmatrix.ost
+    Untracked:  data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.DE-signif.csv
+    Untracked:  data/gom-data/topics10.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds
+    Untracked:  data/gom-data/topics15.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds
+    Untracked:  data/gom-data/topics2.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds
+    Untracked:  data/gom-data/topics20.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds
+    Untracked:  data/gom-data/topics30.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds
+    Untracked:  data/gom-data/topics8.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds
+    Untracked:  data/gom-data/topics9.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds
     Untracked:  data/gom-data/v2/gom10.log.indv-cell.int19k.reg-t2.rds
     Untracked:  data/gom-data/v2/gom3.100genes.log.indv-cell.int19k.reg-t2.rds
     Untracked:  data/gom-data/v2/gom3.100genes.log.indv-cell.int19k.reg-tot.rds
@@ -635,15 +621,6 @@ Untracked files:
     Untracked:  output/v2/data-qc-postfilter-subsets-merge-batchviz.pdf
     Untracked:  output/v2/data-qc-postfilter-subsets.reg-batchviz.pdf
 
-Unstaged changes:
-    Deleted:    analysis/10x-data-6-cormotif-tot-cnts.Rmd
-    Deleted:    analysis/10x-plot-cormotif-cnts-thresh.Rmd
-    Deleted:    analysis/10x-plot-cormotif-cnts.Rmd
-    Modified:   analysis/index.Rmd
-    Deleted:    code/CormotifCounts.R
-    Modified:   code/DEdream.R
-    Modified:   code/DEdream.sh
-
 </code></pre>
 <p>
 Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
@@ -655,9 +632,69 @@ Note that any generated files, e.g. HTML, png, CSS, etc., are not included in t
 <hr>
 </div>
 <div id="versions" class="tab-pane fade">
+
 <p>
-There are no past versions. Publish this analysis with <code>wflow_publish()</code> to start tracking its development.
+These are the previous versions of the repository in which changes were made to the R Markdown (<code>analysis/10x-data-6-cormotif-tot-cnts_v2.Rmd</code>) and HTML (<code>docs/10x-data-6-cormotif-tot-cnts_v2.html</code>) files. If you’ve configured a remote Git repository (see <code>?wflow_git_remote</code>), click on the hyperlinks in the table below to view the files as they were in that past version.
 </p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/analysis/10x-data-6-cormotif-tot-cnts_v2.Rmd" target="_blank">de2afe4</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+<td>
+cormotif v2
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/ghousman/human-chimp-skeletal-scRNA/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/10x-data-6-cormotif-tot-cnts_v2.html" target="_blank">de2afe4</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-06
+</td>
+<td>
+cormotif v2
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 <hr>
 </div>
 </div>
@@ -6509,28 +6546,29 @@ loaded via a namespace (and not attached):
  [69] caTools_1.17.1.2         purrr_0.3.4             
  [71] RANN_2.6.1               pbapply_1.4-0           
  [73] future_1.14.0            nlme_3.1-140            
- [75] compiler_3.6.1           beeswarm_0.2.3          
- [77] plotly_4.9.2.1           png_0.1-7               
- [79] lsei_1.2-0               affyio_1.54.0           
- [81] tibble_3.0.4             statmod_1.4.32          
- [83] lattice_0.20-38          Matrix_1.2-18           
- [85] vctrs_0.3.5              pillar_1.4.7            
- [87] lifecycle_0.2.0          BiocManager_1.30.4      
- [89] GlobalOptions_0.1.2      Rdpack_0.11-0           
- [91] lmtest_0.9-37            RcppAnnoy_0.0.12        
- [93] BiocNeighbors_1.2.0      data.table_1.13.2       
- [95] cowplot_1.1.0            bitops_1.0-6            
- [97] irlba_2.3.3              gbRd_0.4-11             
- [99] httpuv_1.5.1             R6_2.5.0                
-[101] promises_1.1.1           KernSmooth_2.23-15      
-[103] gridExtra_2.3            vipor_0.4.5             
-[105] codetools_0.2-16         MASS_7.3-51.4           
-[107] gtools_3.8.1             rjson_0.2.20            
-[109] rprojroot_2.0.2          withr_2.3.0             
-[111] sctransform_0.2.0        GenomeInfoDbData_1.2.1  
-[113] tidyr_1.1.2              rmarkdown_1.13          
-[115] DelayedMatrixStats_1.6.1 Rtsne_0.15              
-[117] git2r_0.26.1             ggbeeswarm_0.6.0        </code></pre>
+ [75] whisker_0.3-2            compiler_3.6.1          
+ [77] beeswarm_0.2.3           plotly_4.9.2.1          
+ [79] png_0.1-7                lsei_1.2-0              
+ [81] affyio_1.54.0            tibble_3.0.4            
+ [83] statmod_1.4.32           lattice_0.20-38         
+ [85] Matrix_1.2-18            vctrs_0.3.5             
+ [87] pillar_1.4.7             lifecycle_0.2.0         
+ [89] BiocManager_1.30.4       GlobalOptions_0.1.2     
+ [91] Rdpack_0.11-0            lmtest_0.9-37           
+ [93] RcppAnnoy_0.0.12         BiocNeighbors_1.2.0     
+ [95] data.table_1.13.2        cowplot_1.1.0           
+ [97] bitops_1.0-6             irlba_2.3.3             
+ [99] gbRd_0.4-11              httpuv_1.5.1            
+[101] R6_2.5.0                 promises_1.1.1          
+[103] KernSmooth_2.23-15       gridExtra_2.3           
+[105] vipor_0.4.5              codetools_0.2-16        
+[107] MASS_7.3-51.4            gtools_3.8.1            
+[109] rjson_0.2.20             rprojroot_2.0.2         
+[111] withr_2.3.0              sctransform_0.2.0       
+[113] GenomeInfoDbData_1.2.1   tidyr_1.1.2             
+[115] rmarkdown_1.13           DelayedMatrixStats_1.6.1
+[117] Rtsne_0.15               git2r_0.26.1            
+[119] ggbeeswarm_0.6.0        </code></pre>
 </div>
 </div>
 </div>

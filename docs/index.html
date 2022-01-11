@@ -327,7 +327,7 @@ $(document).ready(function () {
 
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
-<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 </button>
 </p>
 <div id="workflowr-report" class="collapse">
@@ -336,7 +336,7 @@ $(document).ready(function () {
 <a data-toggle="tab" href="#summary">Summary</a>
 </li>
 <li>
-<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -345,10 +345,10 @@ $(document).ready(function () {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2022-01-10
+<strong>Last updated:</strong> 2022-01-11
 </p>
 <p>
-<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 1 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 2 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
 </p>
 <p>
 <strong>Knit directory:</strong> <code>human-chimp-skeletal-scRNA/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
@@ -364,28 +364,28 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown file has unstaged changes. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
 </div>
 </div>
 </div>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtree942bda299ff597f5686526f07dbec605451f15c9targetblank942bda2a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/942bda299ff597f5686526f07dbec605451f15c9" target="_blank">942bda2</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtree744bb3c332ca60f1246dd9b4887a0721871208a0targetblank744bb3ca"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/744bb3c332ca60f1246dd9b4887a0721871208a0" target="_blank">744bb3c</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtree942bda299ff597f5686526f07dbec605451f15c9targetblank942bda2a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtree744bb3c332ca60f1246dd9b4887a0721871208a0targetblank744bb3ca" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/942bda299ff597f5686526f07dbec605451f15c9" target="_blank">942bda2</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/744bb3c332ca60f1246dd9b4887a0721871208a0" target="_blank">744bb3c</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -396,20 +396,6 @@ Ignored files:
     Ignored:    .Rproj.user/
 
 Untracked files:
-    Untracked:  code/fastTopicsBC_10_tot.err
-    Untracked:  code/fastTopicsBC_10_tot.out
-    Untracked:  code/fastTopicsBC_15_tot.err
-    Untracked:  code/fastTopicsBC_15_tot.out
-    Untracked:  code/fastTopicsBC_20_tot.err
-    Untracked:  code/fastTopicsBC_20_tot.out
-    Untracked:  code/fastTopicsBC_2_tot.err
-    Untracked:  code/fastTopicsBC_2_tot.out
-    Untracked:  code/fastTopicsBC_30_tot.err
-    Untracked:  code/fastTopicsBC_30_tot.out
-    Untracked:  code/fastTopicsBC_8_tot.err
-    Untracked:  code/fastTopicsBC_8_tot.out
-    Untracked:  code/fastTopicsBC_9_tot.err
-    Untracked:  code/fastTopicsBC_9_tot.out
     Untracked:  data/HumanPrimaryCellAtlasData-SingleR
     Untracked:  data/HumanPrimaryCellAtlasDetails-SingleR.csv
     Untracked:  data/HumanPrimaryCellAtlasLabels-SingleR.csv
@@ -440,23 +426,12 @@ Untracked files:
     Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/corrmatrix.ost
     Untracked:  data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.DE-signif.csv
-    Untracked:  data/gom-data/topics10.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv
     Untracked:  data/gom-data/topics10.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds
-    Untracked:  data/gom-data/topics15.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv
     Untracked:  data/gom-data/topics15.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds
     Untracked:  data/gom-data/topics2.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds
-    Untracked:  data/gom-data/topics20.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv
     Untracked:  data/gom-data/topics20.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds
-    Untracked:  data/gom-data/topics3.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv
-    Untracked:  data/gom-data/topics30.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv
     Untracked:  data/gom-data/topics30.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds
-    Untracked:  data/gom-data/topics4.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv
-    Untracked:  data/gom-data/topics5.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv
-    Untracked:  data/gom-data/topics6.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv
-    Untracked:  data/gom-data/topics7.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv
-    Untracked:  data/gom-data/topics8.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv
     Untracked:  data/gom-data/topics8.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds
-    Untracked:  data/gom-data/topics9.data.filterC.log.indv-cell.intNo0.reg-tot.bc1-GOenrich.csv
     Untracked:  data/gom-data/topics9.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds
     Untracked:  data/gom-data/v2/gom10.log.indv-cell.int19k.reg-t2.rds
     Untracked:  data/gom-data/v2/gom3.100genes.log.indv-cell.int19k.reg-t2.rds
@@ -485,9 +460,6 @@ Untracked files:
     Untracked:  output/v2/data-qc-postfilter-subsets-int19k.reg-batchviz.pdf
     Untracked:  output/v2/data-qc-postfilter-subsets-merge-batchviz.pdf
     Untracked:  output/v2/data-qc-postfilter-subsets.reg-batchviz.pdf
-
-Unstaged changes:
-    Modified:   analysis/index.Rmd
 
 </code></pre>
 <p>
@@ -526,6 +498,57 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/744bb3c332ca60f1246dd9b4887a0721871208a0/analysis/index.Rmd" target="_blank">744bb3c</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2022-01-10
+</td>
+<td>
+webpage fix
+</td>
+</tr>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/29538f8ca381f692484b02ec81e487c87431176a/analysis/index.Rmd" target="_blank">29538f8</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2022-01-10
+</td>
+<td>
+webpage edits
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/ghousman/human-chimp-skeletal-scRNA/29538f8ca381f692484b02ec81e487c87431176a/docs/index.html" target="_blank">29538f8</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2022-01-10
+</td>
+<td>
+webpage edits
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -966,7 +989,7 @@ Start workflowr project.
 <li><p>Examined enrichment of GO categories and external gene sets in DE genes identified using:</p>
 <ul>
 <li><p><a href="10x-plot-diffexp.html">Pairwise tests</a></p></li>
-<li><p><a href="10x-plot-cormotif-cnts.html">Cormotif</a></p></li>
+<li><p><a href="10x-plot-cormotif-cnts_v2.html">Cormotif</a></p></li>
 </ul></li>
 </ul>
 </div>

@@ -427,7 +427,7 @@ div.tocify {
 
 <p>
 <button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
-<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 </button>
 </p>
 <div id="workflowr-report" class="collapse">
@@ -436,7 +436,7 @@ div.tocify {
 <a data-toggle="tab" href="#summary">Summary</a>
 </li>
 <li>
-<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> </a>
 </li>
 <li>
 <a data-toggle="tab" href="#versions">Past versions</a>
@@ -445,10 +445,10 @@ div.tocify {
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2021-09-14
+<strong>Last updated:</strong> 2022-01-10
 </p>
 <p>
-<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 0
 </p>
 <p>
 <strong>Knit directory:</strong> <code>human-chimp-skeletal-scRNA/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
@@ -464,12 +464,12 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date </a>
 </p>
 </div>
-<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div id="strongRMarkdownfilestronguptodate" class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown file has unstaged changes. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+<p>Great! Since the R Markdown file has been committed to the Git repository, you know the exact version of the code that produced these results.</p>
 </div>
 </div>
 </div>
@@ -536,16 +536,16 @@ This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreefb816c55da607ebfdd87caca43c792b61b8450d8targetblankfb816c5a"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/fb816c55da607ebfdd87caca43c792b61b8450d8" target="_blank">fb816c5</a> </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtree744bb3c332ca60f1246dd9b4887a0721871208a0targetblank744bb3ca"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/744bb3c332ca60f1246dd9b4887a0721871208a0" target="_blank">744bb3c</a> </a>
 </p>
 </div>
-<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtreefb816c55da607ebfdd87caca43c792b61b8450d8targetblankfb816c5a" class="panel-collapse collapse">
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomghousmanhumanchimpskeletalscRNAtree744bb3c332ca60f1246dd9b4887a0721871208a0targetblank744bb3ca" class="panel-collapse collapse">
 <div class="panel-body">
 <p>
 Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
 </p>
 <p>
-The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/fb816c55da607ebfdd87caca43c792b61b8450d8" target="_blank">fb816c5</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+The results in this page were generated with repository version <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/tree/744bb3c332ca60f1246dd9b4887a0721871208a0" target="_blank">744bb3c</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
 </p>
 <p>
 Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
@@ -566,17 +566,33 @@ Untracked files:
     Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.cnts.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-adhoc.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-adhoc4.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-cluster.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-cluster4a.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv
     Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-cluster8.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc4gene.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.50.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv
     Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.75.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-stage.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv
+    Untracked:  data/cormotif-data/cormotif.cnts.v2.pseudo-stage4.data.filterC.log.indv-cell.intNo0.reg-tot-DE-signif.csv
     Untracked:  data/cormotif-data/cormotif.cnts.v2.sc-cluster6b.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.T2.14.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.T2.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/cormotif-data/cormotif.pseudo-ostcluster0.75.data.filterC.log.indv-cell.intNo0.reg-tot.rds
     Untracked:  data/corrmatrix.ost
+    Untracked:  data/de-data/DEdream.tot.pseudo.logcpm0.fml6.nofc.bh.DE-signif.csv
+    Untracked:  data/gom-data/topics10.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds
+    Untracked:  data/gom-data/topics15.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds
+    Untracked:  data/gom-data/topics2.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds
+    Untracked:  data/gom-data/topics20.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds
+    Untracked:  data/gom-data/topics30.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds
+    Untracked:  data/gom-data/topics8.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds
+    Untracked:  data/gom-data/topics9.data.filterC.log.indv-cell.intNo0.reg-tot.bc1.rds
     Untracked:  data/gom-data/v2/gom10.log.indv-cell.int19k.reg-t2.rds
     Untracked:  data/gom-data/v2/gom3.100genes.log.indv-cell.int19k.reg-t2.rds
     Untracked:  data/gom-data/v2/gom3.100genes.log.indv-cell.int19k.reg-tot.rds
@@ -604,10 +620,6 @@ Untracked files:
     Untracked:  output/v2/data-qc-postfilter-subsets-int19k.reg-batchviz.pdf
     Untracked:  output/v2/data-qc-postfilter-subsets-merge-batchviz.pdf
     Untracked:  output/v2/data-qc-postfilter-subsets.reg-batchviz.pdf
-
-Unstaged changes:
-    Modified:   analysis/10x-plot-cormotif-cnts_v2.Rmd
-    Modified:   analysis/10x-plot-diffexp.Rmd
 
 </code></pre>
 <p>
@@ -646,6 +658,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/analysis/10x-plot-cormotif-cnts_v2.Rmd" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+<td>
+updated enrich overlap
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/ghousman/human-chimp-skeletal-scRNA/535b9e22ebc8ab063d62637e164396414bce3022/docs/10x-plot-cormotif-cnts_v2.html" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+<td>
+updated enrich overlap
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -2519,6 +2565,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-18-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-18-1.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -2581,6 +2638,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-18-2.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-18-2.png" target="_blank">de2afe4</a>
@@ -2759,6 +2827,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-19-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-19-1.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -2822,6 +2901,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-19-2.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-19-2.png" target="_blank">de2afe4</a>
@@ -2911,6 +3001,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-20-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-20-1.png" target="_blank">de2afe4</a>
@@ -3378,6 +3479,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-24-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/2f46ddd62bd0a5f9b758038a09abc6e266f4ac05/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-24-1.png" target="_blank">2f46ddd</a>
 </td>
 <td>
@@ -3446,6 +3558,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-25-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-25-1.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -3499,6 +3622,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-25-2.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-25-2.png" target="_blank">de2afe4</a>
@@ -3591,6 +3725,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-28-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-28-1.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -3655,6 +3800,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-28-2.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-28-2.png" target="_blank">de2afe4</a>
@@ -3794,6 +3950,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-29-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-29-1.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -3850,6 +4017,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-29-2.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-29-2.png" target="_blank">de2afe4</a>
@@ -4295,6 +4473,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-33-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/2f46ddd62bd0a5f9b758038a09abc6e266f4ac05/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-33-1.png" target="_blank">2f46ddd</a>
 </td>
 <td>
@@ -4364,6 +4553,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-34-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-34-1.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -4418,6 +4618,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-34-2.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-34-2.png" target="_blank">de2afe4</a>
@@ -4496,6 +4707,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-37-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-37-1.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -4560,6 +4782,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-37-2.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-37-2.png" target="_blank">de2afe4</a>
@@ -4793,6 +5026,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-38-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-38-1.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -4852,6 +5096,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-38-2.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-38-2.png" target="_blank">de2afe4</a>
@@ -5323,6 +5578,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-42-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/2f46ddd62bd0a5f9b758038a09abc6e266f4ac05/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-42-1.png" target="_blank">2f46ddd</a>
 </td>
 <td>
@@ -5391,6 +5657,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-43-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-43-1.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -5444,6 +5721,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-43-2.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-43-2.png" target="_blank">de2afe4</a>
@@ -5506,6 +5794,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-46-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-46-1.png" target="_blank">de2afe4</a>
@@ -5575,6 +5874,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-46-2.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-46-2.png" target="_blank">de2afe4</a>
@@ -5869,6 +6179,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-47-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-47-1.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -5929,6 +6250,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-47-2.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-47-2.png" target="_blank">de2afe4</a>
@@ -6559,6 +6891,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-52-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/2f46ddd62bd0a5f9b758038a09abc6e266f4ac05/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-52-1.png" target="_blank">2f46ddd</a>
 </td>
 <td>
@@ -6629,6 +6972,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-53-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/2f46ddd62bd0a5f9b758038a09abc6e266f4ac05/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-53-1.png" target="_blank">2f46ddd</a>
 </td>
 <td>
@@ -6695,6 +7049,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-53-2.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/2f46ddd62bd0a5f9b758038a09abc6e266f4ac05/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-53-2.png" target="_blank">2f46ddd</a>
@@ -6770,6 +7135,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-54-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/2f46ddd62bd0a5f9b758038a09abc6e266f4ac05/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-54-1.png" target="_blank">2f46ddd</a>
 </td>
 <td>
@@ -6839,6 +7215,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-54-2.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/2f46ddd62bd0a5f9b758038a09abc6e266f4ac05/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-54-2.png" target="_blank">2f46ddd</a>
@@ -6916,6 +7303,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-55-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-55-1.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -6976,6 +7374,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-55-2.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-55-2.png" target="_blank">de2afe4</a>
@@ -7463,6 +7872,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-60-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-60-1.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -7523,6 +7943,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-60-2.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-60-2.png" target="_blank">de2afe4</a>
@@ -7605,6 +8036,43 @@ ggplot(dataPlot, aes(x=cell.subset, fill=cell.subset)) +
   theme_classic() +
   theme(axis.text=element_text(size=10), axis.title=element_text(size=10), legend.text=element_text(size=10))</code></pre>
 <p><img src="figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-61-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-61-1">
+Past versions of unnamed-chunk-61-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-61-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-61-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>#total number of DE genes identified
 table(dataPlot$cell.subset)</code></pre>
 <pre><code>
@@ -7616,6 +8084,43 @@ mineralizing\nosteoblast      maturing\nosteocyte
 upset(dataUpset,
       text.scale=2)</code></pre>
 <p><img src="figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-61-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-61-2">
+Past versions of unnamed-chunk-61-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-61-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-61-2.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>upset(dataUpset,
       keep.order=TRUE,
       empty.intersections=TRUE,
@@ -7633,6 +8138,43 @@ upset(dataUpset,
                          list(&quot;preosteoblast&quot;,&quot;osteoblast&quot;,&quot;embedding.osteoblast&quot;,&quot;mineralizing.osteoblast&quot;,&quot;maturing.osteocyte&quot;)),
       text.scale=2)</code></pre>
 <p><img src="figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-61-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-61-3">
+Past versions of unnamed-chunk-61-3.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-61-3" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-61-3.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>upset(dataUpset,
       keep.order=TRUE,
       empty.intersections=TRUE,
@@ -7654,6 +8196,43 @@ upset(dataUpset,
                          list(&quot;preosteoblast&quot;,&quot;osteoblast&quot;,&quot;embedding.osteoblast&quot;,&quot;mineralizing.osteoblast&quot;,&quot;maturing.osteocyte&quot;)),
       text.scale=2)</code></pre>
 <p><img src="figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-61-4.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-61-4">
+Past versions of unnamed-chunk-61-4.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-61-4" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-61-4.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>#Save DE gene lists
 write.csv(rownames(dataUpset),&quot;./data/cormotif-data/cormotif.cnts.v2.pseudo-ostadhoc.T2.data.filterC.log.indv-cell.intNo0.reg-tot.DE-tests.csv&quot;)
 write.csv(rownames(dataUpset)[which(dataUpset$preosteoblast==1 &amp;
@@ -7998,6 +8577,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-65-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/2f46ddd62bd0a5f9b758038a09abc6e266f4ac05/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-65-1.png" target="_blank">2f46ddd</a>
 </td>
 <td>
@@ -8068,6 +8658,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-66-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/2f46ddd62bd0a5f9b758038a09abc6e266f4ac05/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-66-1.png" target="_blank">2f46ddd</a>
 </td>
 <td>
@@ -8134,6 +8735,17 @@ Date
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-66-2.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
 <tr>
 <td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/2f46ddd62bd0a5f9b758038a09abc6e266f4ac05/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-66-2.png" target="_blank">2f46ddd</a>
@@ -8210,6 +8822,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-67-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-67-1.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -8271,6 +8894,17 @@ Date
 <tbody>
 <tr>
 <td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-67-2.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+<tr>
+<td>
 <a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/de2afe484d8dd8020aabbe827591a36112cc1a85/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-67-2.png" target="_blank">de2afe4</a>
 </td>
 <td>
@@ -8310,6 +8944,43 @@ ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.valu
           xlim(0,1) +
           scale_y_discrete(limits=rev)</code></pre>
 <p><img src="figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-68-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-68-1">
+Past versions of unnamed-chunk-68-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-68-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-68-1.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>tempGenes &lt;- c(&quot;All Preostoblasts&quot;,
                &quot;All Ostoblasts&quot;,
                &quot;All Embedding Osteoblasts&quot;,
@@ -8334,6 +9005,43 @@ ggplot(DEenrich[index,], aes(x=GeneRatio, y=Source.GenesOfInterest, color=p.valu
           xlim(0,1) +
           scale_y_discrete(limits=rev)</code></pre>
 <p><img src="figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-68-2.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-68-2">
+Past versions of unnamed-chunk-68-2.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-68-2" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/ghousman/human-chimp-skeletal-scRNA/blob/535b9e22ebc8ab063d62637e164396414bce3022/docs/figure/10x-plot-cormotif-cnts_v2.Rmd/unnamed-chunk-68-2.png" target="_blank">535b9e2</a>
+</td>
+<td>
+Genevieve Housman
+</td>
+<td>
+2021-09-14
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Print p-values for significant enrichments:</p>
 <pre class="r"><code>tbl &lt;- unique(DEenrich[which(DEenrich$p.value&lt;0.1),c(1:3,7,9)])
 tbl[order(tbl$p.value),]</code></pre>
